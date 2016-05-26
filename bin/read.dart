@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:attribute/attribute.dart';
 import 'package:io/io.dart';
-import 'package:convert/reader.dart';
+import 'package:convert/convert.dart';
 
 //import 'sop_data.dart';
 
@@ -27,14 +27,14 @@ void main() {
   Uint8List data = readBytesSync(f1);
   print('f1: len= ${data.length}');
 
-  ByteArray buf = new ByteArray(data);
+  ByteArray buf = new DcmByteArray(data);
   Uint8List prefix = readPrefix(buf);
 
   readFileMetaInfo(buf);
 
 }
 
-Uint8List readPrefix(ByteArray buf) {
+Uint8List readPrefix(DcmByteArray buf) {
   Uint8List prefix = buf.readUint8List(128);
   print('"$prefix"');
   String dicm = buf.readString(4);
@@ -45,7 +45,7 @@ Uint8List readPrefix(ByteArray buf) {
   return prefix;
 }
 
-readFileMetaInfo(ByteArray buf) {
+readFileMetaInfo(DcmByteArray buf) {
   // Read the tag and verify
   int tag = buf.readTag();
   print('Tag: ${tagToHex(tag)}');
@@ -55,29 +55,28 @@ readFileMetaInfo(ByteArray buf) {
   }
 
   // Read the VR which must be UL
-  VR vr = VR.readVR(buf);
-  print('VR: ${vrToString(vr)}');
-  if (vr != kUL) {
+  int vr = buf.readVR();
+  print('VR: ${VRBase.vrToString(vr)}');
+  if (vr != VRBase.kUL) {
     buf.seek(-6);
     return null;
   }
 
-  int vfLen = vr.readVFLength(buf);
+  int vfLen = buf.readShortLength();
   print('vfLen: $vfLen');
   int fmiLength = buf.readUint32();
   print('FMI Length: $fmiLength');
 
-  ByteArray fmiBuf = new ByteArray.fromBytes(0, fmiLength);
+  DcmByteArray fmiBuf = buf.slice(0, fmiLength);
 
   Map<int, Attribute> fmi = {};
   fmi[tag] = new UL(tag, vr, value);
 
-  while (fmi.isNotEmpty) {
-    tag = fmi.readTag();
-    vr = fmi.readVR();
-    length = fmi.readVFLength();
-    value = vr.read(fmi)
-    fmi[tag] = new Attribute(tag, vr, value);
+  while (fmiBuf.isNotEmpty) {
+    tag = fmiBuf.readTag();
+    vr = fmiBuf.readVR();
+    fmi.add(buf.readAttribute(tag, vr));
+
   }
 
   group = buf.readUint16();
