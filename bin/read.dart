@@ -5,11 +5,13 @@
 // See the AUTHORS file for other contributors.
 
 //import 'dart:io';
+import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:attribute/attribute.dart';
-import 'package:io/io.dart';
-import 'package:convert/convert.dart';
+import 'package:odwsdk/attribute.dart';
+import 'package:convert/src/dcm_bytebuf/dcm_bytebuf.dart';
+
+
 
 //import 'sop_data.dart';
 
@@ -21,20 +23,18 @@ String f1 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16
 String f2 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255.393386351.1568457295.48879.7.dcm";
 
 void main() {
-
   var files = [f1, f2];
 
   Uint8List data = readBytesSync(f1);
   print('f1: len= ${data.length}');
 
-  ByteArray buf = new DcmByteArray(data);
+  DcmByteBuf buf = new DcmByteBuf.fromUint8List(data);
   Uint8List prefix = readPrefix(buf);
 
-  readFileMetaInfo(buf);
-
+  var fmi = readFileMetaInfo(buf);
 }
 
-Uint8List readPrefix(DcmByteArray buf) {
+Uint8List readPrefix(DcmByteBuf buf) {
   Uint8List prefix = buf.readUint8List(128);
   print('"$prefix"');
   String dicm = buf.readString(4);
@@ -45,19 +45,19 @@ Uint8List readPrefix(DcmByteArray buf) {
   return prefix;
 }
 
-readFileMetaInfo(DcmByteArray buf) {
+readFileMetaInfo(DcmByteBuf buf) {
   // Read the tag and verify
   int tag = buf.readTag();
   print('Tag: ${tagToHex(tag)}');
   if (tag != 0x00020000) {
-    buf.seek(-4);
+    buf.skip(-4);
     return null;
   }
 
   // Read the VR which must be UL
   int vr = buf.readVR();
-  print('VR: ${VRBase.vrToString(vr)}');
-  if (vr != VRBase.kUL) {
+  print('VR: ${VR.vrToString(vr)}');
+  if (vr != VR.kUL) {
     buf.seek(-6);
     return null;
   }
@@ -67,23 +67,23 @@ readFileMetaInfo(DcmByteArray buf) {
   int fmiLength = buf.readUint32();
   print('FMI Length: $fmiLength');
 
-  DcmByteArray fmiBuf = buf.slice(0, fmiLength);
+  DcmByteBuf fmiBuf = buf.readSlice(0, fmiLength);
 
   Map<int, Attribute> fmi = {};
-  fmi[tag] = new UL(tag, vr, value);
+  fmi[tag] = new UL(tag, value);
 
-  while (fmiBuf.isNotEmpty) {
+  while (fmiBuf.isReaderEmpty) {
     tag = fmiBuf.readTag();
     vr = fmiBuf.readVR();
-    fmi.add(buf.readAttribute(tag, vr));
+    fmi[tag] = buf.readAttribute(tag);
 
   }
 
-  group = buf.readUint16();
-  element = buf.readUint16();
+  int group = buf.readUint16();
+  int element = buf.readUint16();
   print('Tag: $group, $element');
   vr = buf.readUint16();
-  print('VR: ${vrToString(vr)}');
+  print('VR: ${VR.vrToString(vr)}');
   if (vfLength(vr) == 2) {
     vfLen = buf.readUint16();
     print('vfLen: $vfLen');
