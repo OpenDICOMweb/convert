@@ -5,5 +5,5 @@
 // See the AUTHORS file for other contributors.
 library odw.sdk.io.reader;
 
-export 'package:convert/src/other/byte_array.dart';
+//export 'package:convert/src/other/byte_array.dart';
 //export 'src/byte_array/dcm_byte_array.dart';

@@ -3,6 +3,6 @@
 // that can be found in the LICENSE file.
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
-library odw.sdk.dicom.io.byte_array;
+library odw.sdk.convert.dcm_bytebuf;
 
-export 'package:convert/src/dcm_bytebuf/dcm_bytebuf.dart';
+export 'package:convert/src/dcmbuf/dcmbuf.dart';

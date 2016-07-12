@@ -5,15 +5,21 @@
 // See the AUTHORS file for other contributors.
 
 //import 'dart:io';
+
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:logger/server_logger.dart';
+
+import 'package:integer/integer.dart';
 import 'package:odwsdk/attribute.dart';
-import 'package:convert/src/dcm_bytebuf/dcm_bytebuf.dart';
+import 'package:odwsdk/tag.dart';
+import 'package:odwsdk/vr.dart';
 
+//import 'package:odwsdk/src/dataset/fmi/constants.dart';
 
-
-//import 'sop_data.dart';
+import 'package:convert/dcmbuf.dart';
+import 'package:convert/src/prefix.dart';
 
 const String tdir = "C:/mint_test_data/CR";
 
@@ -22,77 +28,96 @@ String t1dir = "D:/M2sata/mint_test_data/sfd/cr";
 String f1 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255.393386351.1568457295.17895.5.dcm";
 String f2 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255.393386351.1568457295.48879.7.dcm";
 
+
 void main() {
-  var files = [f1, f2];
+  Logger.root.level = Level.info;
+  ServerLogger server = new ServerLogger("main", Level.info);
+  Logger log = new Logger("main", Level.info);
+  File file1 = new File(f1);
 
-  Uint8List data = readBytesSync(f1);
-  print('f1: len= ${data.length}');
+  Uint8List data = file1.readAsBytesSync();
+  log.info('File(len:${data.length}):${file1.path}');
 
-  DcmByteBuf buf = new DcmByteBuf.fromUint8List(data);
-  Uint8List prefix = readPrefix(buf);
+  DcmBuf buf = new DcmBuf.fromUint8List(data);
 
-  var fmi = readFileMetaInfo(buf);
+  //Move to FMI
+  Map fmi = readFileMetaInfo(buf);
+
+  var aMap = readDataset(buf);
+
+  //String s = "";
+  //s += 'Dataset[${fmi.length} attributes]\n';
+  //for(Attribute a in aMap.values)
+  //  s += "\t" + a.toString() + '\n';
+  //log.info(s);
+
 }
 
-Uint8List readPrefix(DcmByteBuf buf) {
-  Uint8List prefix = buf.readUint8List(128);
-  print('"$prefix"');
-  String dicm = buf.readString(4);
-  print('DICM=$dicm');
-  if (dicm != "DICM") {
-    throw "parseDicom: DICM prefix not found at location 132";
-  }
-  return prefix;
-}
 
-readFileMetaInfo(DcmByteBuf buf) {
-  // Read the tag and verify
-  int tag = buf.readTag();
-  print('Tag: ${tagToHex(tag)}');
-  if (tag != 0x00020000) {
-    buf.skip(-4);
-    return null;
-  }
-
-  // Read the VR which must be UL
-  int vr = buf.readVR();
-  print('VR: ${VR.vrToString(vr)}');
-  if (vr != VR.kUL) {
-    buf.seek(-6);
-    return null;
-  }
-
-  int vfLen = buf.readShortLength();
-  print('vfLen: $vfLen');
-  int fmiLength = buf.readUint32();
-  print('FMI Length: $fmiLength');
-
-  DcmByteBuf fmiBuf = buf.readSlice(0, fmiLength);
+//TODO: When working move to DcmBuf
+Map<int, Attribute> readFileMetaInfo(DcmBuf buf) {
+  final Logger log = new Logger("Fmi", Level.info);
+  // Read the File prefix: skip 128 bytes then read magic = "DICM"
+  Prefix prefix = Prefix.readPrefix(buf);
+  log.debug('Prefix: $prefix');
+  if (prefix == null) return null;
 
   Map<int, Attribute> fmi = {};
-  fmi[tag] = new UL(tag, value);
 
-  while (fmiBuf.isReaderEmpty) {
-    tag = fmiBuf.readTag();
-    vr = fmiBuf.readVR();
-    fmi[tag] = buf.readAttribute(tag);
-
+  // Read the tag and verify. If the first [tag] is not an [FMi] [tag],
+  // unread the [tag] and return [null].
+  int tag = buf.peekTag();
+  log.finest('First Tag: ${tagToHex(tag)}');
+  if (tag != 0x00020000) {
+    log.warning("Invalid FMI Tag: ${toHexString(tag, 8)}");
+    // Unread everything read to this point
+    buf.setReadIndex(0);
+    return null;
   }
 
-  int group = buf.readUint16();
-  int element = buf.readUint16();
-  print('Tag: $group, $element');
-  vr = buf.readUint16();
-  print('VR: ${VR.vrToString(vr)}');
-  if (vfLength(vr) == 2) {
-    vfLen = buf.readUint16();
-    print('vfLen: $vfLen');
+
+  // Read the FMI Group Length
+  var fmiLength;
+  Attribute a = buf.readAttribute();
+  if ((a.tag != kFileMetaInformationGroupLength) || (a.vr != VR.kUL)) {
+    log.finest('VR(${a.vr}): ${intToHex(a.vr.code)}');
+    buf.unreadBytes(6);
+    return null;
   } else {
-    buf.seek(2);
-    vfLen = buf.readUint32();
-    print('vfLen: $vfLen');
+    // The Group Length for FMI
+    fmiLength = buf.readIndex + a.values[0];
+    log.info('Group Length: $fmiLength');
+    log.info('$a');
+    fmi[a.tag] = a;
   }
-  Uint8List value = buf.readUint8List(vfLen);
-  print('value: $value');
 
+  // Read the rest of [Fmi].
+  while (buf.readIndex < fmiLength) {
+    int tag = buf.peekTag();
+    log.finest('peekTag: ${intToHex(tag, 8)}');
+    if (tagGroup(tag) == 0x0002) {
+      Attribute a = buf.readAttribute();
+      log.info('$a');
+      fmi[tag] = a;
+    }
+  }
+  return fmi;
+}
+
+Map readDataset(DcmBuf buf) {
+  final Logger log = new Logger("DS", Level.debug);
+  Map<int, Attribute> aMap = {};
+
+
+  while (buf.isReadable) {
+      Attribute a = buf.readAttribute();
+      aMap[a.tag] = a;
+      if (a.tag == kPixelData) {
+        log.info('PixelData: ${fmtTag(a.tag)}, ${a.vr}, length= ${a.values.length}');
+      } else {
+        log.info('$a');
+      }
+    }
+  log.info('ByteBuf: $buf');
+  return aMap;
 }
