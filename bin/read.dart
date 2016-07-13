@@ -45,6 +45,9 @@ void main() {
 
   var aMap = readDataset(buf);
 
+  for (Attribute a in aMap.values)
+      print(a);
+
   //String s = "";
   //s += 'Dataset[${fmi.length} attributes]\n';
   //for(Attribute a in aMap.values)

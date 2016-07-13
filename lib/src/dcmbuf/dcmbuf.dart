@@ -130,6 +130,14 @@ class DcmBuf extends ByteBuf {
       new DcmBuf._(bytes, start, end - start, end - start);
 
   //****  Core Dataset methods  ****
+
+  /// Returns [true] if the next attribute is private; otherwise false.
+  /// Peeks at the Group part of the next [tag] - doesn't move the [ByteArray.readIndex].
+  bool isPrivateTag() {
+    int group = getUint16(readIndex);
+    return group.isOdd;
+  }
+
   /// Peek at next tag - doesn't move the [ByteArray.position]
   int peekTag() {
     int group = getUint16(readIndex);
@@ -207,7 +215,7 @@ class DcmBuf extends ByteBuf {
   int readLongOrUndefinedLength([int delimiter = kSequenceDelimiterLast16Bits]) {
     int lengthInBytes = readLongLength();
     if (lengthInBytes == kDicomUndefinedLength) {
-      lengthInBytes =  _getUndefinedLength(delimiter);
+      lengthInBytes = _getUndefinedLength(delimiter);
       log.finest('hasUndefinedLength: length=$lengthInBytes');
       return lengthInBytes;
     }
@@ -258,11 +266,32 @@ class DcmBuf extends ByteBuf {
   /// This corresponds to the last 16-bits of [kItemDelimitationItem].
   static const kItemDelimiterLast16bits = 0xE00D;
 
-  //**** Attribute Readers ****
+  /// Returns an [Attribute]or [null].
+  ///
+  /// This is the top-level entry point for reading a [Dataset].
+  Map<int, Attribute> readDataset() {
+    final Logger log = new Logger("Dataset", Level.debug);
+    Map<int, Attribute> aMap = {};
+    while (isReadable) {
+      Attribute a = readAttribute();
+      aMap[a.tag] = a;
+      if (a.tag == kPixelData) {
+        log.info('PixelData: ${fmtTag(a.tag)}, ${a.vr}, length= ${a.values.length}');
+      } else {
+        log.info('$a');
+      }
+    }
+    log.info('DcmBuf: $this');
+    return aMap;
+  }
+
+  /// This is the top-level entry point for reading an [Attributes].
+  Attribute readAttribute() => (isPrivateTag()) ? readPrivateGroup() : _readInternal();
 
   /// Reads the next [Attribute] in the [ByteBuf]
-  Attribute readAttribute() {
-    Map<int, VFReader> vrReaders = {
+  Attribute _readInternal() {
+    // Attribute Readers
+    Map<int, VFReader> vrReaders =  {
       0x4145: readAE,
       0x4153: readAS,
       0x4154: readAT,
@@ -302,28 +331,19 @@ class DcmBuf extends ByteBuf {
       throw msg;
     }
 
-    //**** Dispatcher for each attribute ****
     int tag = readTag();
     int vrCode = readVR();
     VR vr = VR.map[vrCode];
-    log.finest('tag: ${toHexString(tag, 8)}, '
-               'vrCode: $vrCode, VR: $vr');
-
-    if (isPrivateTag(tag)) {
-      List<Attribute> privates = readPrivateAttributes(tag, vr);
-    } else {
-      VFReader read = vrReaders[vrCode];
-      if (read == null) {
-        var msg = "Invalid vrCode(${toHexString(vrCode, 4)})";
-        log.error(msg);
-        throw msg;
-      }
-
-      Attribute a = read(tag, vr);
+    log.fine('tag: ${toHexString(tag, 8)}, vrCode: $vrCode, VR: $vr');
+    VFReader read = vrReaders[vrCode];
+    if (read == null) {
+      var msg = "Invalid vrCode(${toHexString(vrCode, 4)})";
+      log.error(msg);
+      throw msg;
     }
-    log.fine('a');
-    return a;
+    return read(tag, vr);
   }
+
 
   //**** VR Readers ****
 
@@ -494,7 +514,7 @@ class DcmBuf extends ByteBuf {
 
   TM readTM(int tag, [VR vr]) {
     assert(vr == VR.kTM);
-    return  TM.parse(tag, readShortString());
+    return TM.parse(tag, readShortString());
   }
 
   UC readUC(int tag, [VR vr]) {
@@ -506,7 +526,7 @@ class DcmBuf extends ByteBuf {
 
   UI readUI(int tag, [VR vr]) {
     assert(vr == VR.kUI);
-    return UI.parse(tag, readShortString (uidPaddingChar));
+    return UI.parse(tag, readShortString(uidPaddingChar));
   }
 
   UL readUL(int tag, [VR vr]) {
@@ -611,7 +631,7 @@ class DcmBuf extends ByteBuf {
     int lengthInBytes = readUint32();
     //TODO have readLongOrUndefinedLength be negaive if it was undefined
     //int lengthInBytes = readLongOrUndefinedLength();
-    log.debug('readIndex($readIndex): Item Length: '
+    log.debug('Item: readIndex($readIndex): Item Length: '
                   '$lengthInBytes(${toHexString(lengthInBytes, 8)})');
     if (lengthInBytes == kDicomUndefinedLength) {
       lengthInBytes = _getUndefinedLength(kItemDelimiterLast16bits);
@@ -633,7 +653,6 @@ class DcmBuf extends ByteBuf {
   }
 
   //**** String Methods ****
-
 
 
   /// Returns a [List] of {String]s with leading and trailing whitespace removed.
@@ -667,7 +686,40 @@ class DcmBuf extends ByteBuf {
     return s;
   }
 
+  PrivateGroup readPrivateGroup() {
+    if (isNotReadable) {
+      var msg = "Read Buffer empty: readIndex($readIndex), writeIndex($writeIndex)";
+      log.error(msg);
+      throw msg;
+    }
+    Attribute creator = new PrivateCreator(_readInternal());
+    List<Attribute> aMap = readPrivateGroupAttributes(creator.tag);
+    return new PrivateGroup(creator, aMap);
+  }
+
+  List<Attribute> readPrivateGroupAttributes(int creatorTag) {
+    List<Attribute> aList = [];
+    int peek = peekTag();
+    log.fine('readPrivateGroupAttributes: '
+                  'creator: ${fmtTag(creatorTag)}, '
+                  'next:${fmtTag(peek)}, '
+                  'inGroup(${inPrivateGroup(creatorTag, peek)})');
+
+    while ((isPrivateTag() && (! isPrivateCreatorTag(peek)))) {
+      int tag = peekTag();
+      if (isPrivateCreatorTag(tag))
+        return aList;
+      if (! inPrivateGroup(creatorTag, tag))
+        log.error('Attribute(tag=${fmtTag(tag)}) in wrong group(${fmtTag(creatorTag)})');
+      Attribute a = new PrivateData(_readInternal());
+      aList.add(a);
+    }
+    log.fine('aList: $aList');
+    return aList;
+  }
 }
+
+
 
 
 
