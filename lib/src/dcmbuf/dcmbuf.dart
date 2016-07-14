@@ -72,7 +72,7 @@ class DcmBuf extends ByteBuf {
       lengthInBytes = ByteBuf.defaultLengthInBytes;
     if ((lengthInBytes < 0) || (lengthInBytes > ByteBuf.maxMaxCapacity))
       ByteBuf.invalidLength(lengthInBytes);
-    return new DcmBuf._(new Uint8List(lengthInBytes), 0, 0, lengthInBytes);
+    return new DcmBuf.internal(new Uint8List(lengthInBytes), 0, 0, lengthInBytes);
   }
 
   /// Creates a new readable [DcmBuf] from the [Uint8List] [bytes].
@@ -80,7 +80,7 @@ class DcmBuf extends ByteBuf {
     length = (length == null) ? buf.bytes.length : length;
     if ((length < 0) || ((offset < 0) || ((buf.bytes.length - offset) < length)))
       ByteBuf.invalidOffsetOrLength(offset, length, buf.bytes);
-    return new DcmBuf._(buf.bytes, offset, length, length);
+    return new DcmBuf.internal(buf.bytes, offset, length, length);
   }
 
   /// Creates a new readable [DcmBuf] from the [Uint8List] [bytes].
@@ -88,25 +88,25 @@ class DcmBuf extends ByteBuf {
     length = (length == null) ? bytes.length : length;
     if ((length < 0) || ((offset < 0) || ((bytes.length - offset) < length)))
       ByteBuf.invalidOffsetOrLength(offset, length, bytes);
-    return new DcmBuf._(bytes, offset, length, length);
+    return new DcmBuf.internal(bytes, offset, length, length);
   }
 
   /// Creates a [Uint8List] with the same length as the elements in [list],
   /// and copies over the elements.  Values are truncated to fit in the list
   /// when they are copied, the same way storing values truncates them.
   factory DcmBuf.fromList(List<int> list) =>
-      new DcmBuf._(new Uint8List.fromList(list), 0, list.length, list.length);
+      new DcmBuf.internal(new Uint8List.fromList(list), 0, list.length, list.length);
 
   factory DcmBuf.view(ByteBuf buf, [int offset = 0, int length]) {
     length = (length == null) ? buf.bytes.length : length;
     if ((length < 0) || ((offset < 0) || ((buf.bytes.length - offset) < length)))
       ByteBuf.invalidOffsetOrLength(offset, length, buf.bytes);
     Uint8List bytes = buf.bytes.buffer.asUint8List(offset, length);
-    return new DcmBuf._(bytes, offset, length, length);
+    return new DcmBuf.internal(bytes, offset, length, length);
   }
 
   /// Internal Constructor: Returns a [._slice from [bytes].
-  DcmBuf._(Uint8List bytes, int readIndex, int writeIndex, int length)
+  DcmBuf.internal(Uint8List bytes, int readIndex, int writeIndex, int length)
       : super.internal(bytes, readIndex, writeIndex, length);
 
   //**** Methods that Return new [ByteBuf]s.  ****
@@ -115,21 +115,28 @@ class DcmBuf extends ByteBuf {
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
   @override
   DcmBuf readSlice(int offset, int length) =>
-      new DcmBuf._(bytes, offset, length, length);
+      new DcmBuf.internal(bytes, offset, length, length);
 
   /// Creates a new [ByteBuf] that is a view of [this].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
   @override
   DcmBuf writeSlice(int offset, int length) =>
-      new DcmBuf._(bytes, offset, offset, length);
+      new DcmBuf.internal(bytes, offset, offset, length);
 
   /// Creates a new [ByteBuf] that is a [sublist] of [this].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
   @override
   DcmBuf sublist(int start, int end) =>
-      new DcmBuf._(bytes, start, end - start, end - start);
+      new DcmBuf.internal(bytes, start, end - start, end - start);
 
   //****  Core Dataset methods  ****
+
+  /// Returns [true] if the next attribute is a File Meta Information tag; otherwise false.
+  /// Peeks at the Group part of the next [tag] - doesn't move the [ByteArray.readIndex].
+  bool isFmiTag() {
+    int group = getUint16(readIndex);
+    return group == 0x0002;
+  }
 
   /// Returns [true] if the next attribute is private; otherwise false.
   /// Peeks at the Group part of the next [tag] - doesn't move the [ByteArray.readIndex].
@@ -266,11 +273,11 @@ class DcmBuf extends ByteBuf {
   /// This corresponds to the last 16-bits of [kItemDelimitationItem].
   static const kItemDelimiterLast16bits = 0xE00D;
 
-  /// Returns an [Attribute]or [null].
+  /// Returns an [Attribute] or [null].
   ///
   /// This is the top-level entry point for reading a [Dataset].
   Map<int, Attribute> readDataset() {
-    final Logger log = new Logger("Dataset", Level.debug);
+    final Logger log = new Logger("Dataset", Level.info);
     Map<int, Attribute> aMap = {};
     while (isReadable) {
       Attribute a = readAttribute();
@@ -331,10 +338,11 @@ class DcmBuf extends ByteBuf {
       throw msg;
     }
 
+    log.level= Level.finest;
     int tag = readTag();
     int vrCode = readVR();
     VR vr = VR.map[vrCode];
-    log.fine('tag: ${toHexString(tag, 8)}, vrCode: $vrCode, VR: $vr');
+    log.fine('tag: ${toHexString(tag, 8)}, vrCode: ${toHexString(vrCode, 4)}, VR: $vr');
     VFReader read = vrReaders[vrCode];
     if (read == null) {
       var msg = "Invalid vrCode(${toHexString(vrCode, 4)})";

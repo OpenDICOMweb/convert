@@ -13,47 +13,55 @@ import 'package:logger/server_logger.dart';
 
 import 'package:integer/integer.dart';
 import 'package:odwsdk/attribute.dart';
+import 'package:odwsdk/dataset_sop.dart';
 import 'package:odwsdk/tag.dart';
 import 'package:odwsdk/vr.dart';
 
-//import 'package:odwsdk/src/dataset/fmi/constants.dart';
-
 import 'package:convert/dcmbuf.dart';
+import 'package:convert/src/sop/reader.dart';
 import 'package:convert/src/prefix.dart';
 
 const String tdir = "C:/mint_test_data/CR";
 
 String t1dir = "D:/M2sata/mint_test_data/sfd/cr";
 
-String f1 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255.393386351.1568457295.17895.5.dcm";
-String f2 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255.393386351.1568457295.48879.7.dcm";
+String crf1 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255"
+    ".393386351.1568457295.17895.5.dcm";
+String crf2 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255"
+    ".393386351.1568457295.48879.7.dcm";
+
+String Patient_3_Cardiac_CTS =
+    'D:\M2sata\mint_test_data\sfd\CT\Patient_3_Cardiac_CTA\1_DICOM_Original';
+
 
 
 void main() {
   Logger.root.level = Level.info;
   ServerLogger server = new ServerLogger("main", Level.info);
   Logger log = new Logger("main", Level.info);
-  File file1 = new File(f1);
+  File file1 = new File(crf1);
 
-  Uint8List data = file1.readAsBytesSync();
-  log.info('File(len:${data.length}):${file1.path}');
+  List<String> files = [crf1, crf2];
 
-  DcmBuf buf = new DcmBuf.fromUint8List(data);
+  Study study;
 
-  //Move to FMI
-  Map fmi = readFileMetaInfo(buf);
+  for (String s in files) {
+    File file = new File(s);
+    //Uint8List data = file.readAsBytesSync();
+    //log.info('${file1.path}(len=${data.length}):');
 
-  var aMap = readDataset(buf);
+    //DcmReader buf = new DcmReader.fromUint8List(data);
 
-  for (Attribute a in aMap.values)
-      print(a);
+    DcmReader buf = new DcmReader.fromFile(file);
 
-  //String s = "";
-  //s += 'Dataset[${fmi.length} attributes]\n';
-  //for(Attribute a in aMap.values)
-  //  s += "\t" + a.toString() + '\n';
-  //log.info(s);
+    study = buf.readSopInstance(study);
 
+    print('Study: $study');
+    //print('Series: ${study.series}');
+    //print('Instances: ${study.instances}');
+    //study.display();
+
+  }
 }
 
 

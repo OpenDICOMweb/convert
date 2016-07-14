@@ -4,13 +4,15 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-
+import 'package:odwsdk/element.dart';
+import 'package:odwsdk/tag.dart';
 
 void main() {
+  //var s = '1950-07-18T12:06:04.123456-0500';
 
-  var s = '1950-07-18T12:06:04.123456-0500';
-
-  isCSChar
+  print(fmtTag(kPrivateInformation));
+  print(Element.kPrivateInformation);
+  print(Element.kLengthToEnd);
 }
 
 var tz = new RegExp('[\-+Zz]');
@@ -26,6 +28,7 @@ String removeMarks(String s) {
 String timeZone(String s) {
   int i = s.lastIndexOf(tz);
   if (i > 0) return s.substring(i);
+  return null;
 }
 
 final RegExp tzMarks = new RegExp('[\-+Zz]');
@@ -34,6 +37,7 @@ final RegExp tzMarks = new RegExp('[\-+Zz]');
 /// DateTime [String], and returns the corresponding [DcmDateTime].
 //TODO: Make sure TimeZone(s) are being handled correctly
 // in particulate when reading a DT with a tzOffset convert it to local time.
+/*
 DateTime parse(String dt, [int start = 0, int end]) {
   if (end == null) end = dt.length;
   if (end > 26)
@@ -62,3 +66,4 @@ DateTime parse(String dt, [int start = 0, int end]) {
       u);
   return new DcmDateTime._(newDT.add(tz.timeZone), tz);
 }
+*/
