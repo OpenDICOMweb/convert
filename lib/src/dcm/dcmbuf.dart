@@ -8,13 +8,15 @@ library odw.sdk.convert.dcm_bytebuf.dcm_bytebuf;
 import 'dart:typed_data';
 
 import 'package:ascii/ascii.dart';
-import 'package:logger/server_logger.dart';
+import 'package:logger/server.dart';
 import 'package:bytebuf/bytebuf.dart';
 
 import 'package:odwsdk/attribute.dart';
 import 'package:odwsdk/dataset_sop.dart';
 import 'package:odwsdk/tag.dart';
 import 'package:odwsdk/vr.dart';
+
+import 'package:convert/src/constants.dart';
 
 
 //TODO:
@@ -26,23 +28,15 @@ import 'package:odwsdk/vr.dart';
 //     byte streams.
 
 
+/// The type of the different Value Field readers.  Each Value Field Reader
+/// reads the Value Field Length and the Value Field for a particular Value
+/// Representation.
 typedef Attribute VFReader(int tag, [VR vr]);
 
-//enum Trim {left, right, both, none}
-
-//TODO: move these constant to sdk.constants when this has been moved into SKD
-/// This is the value of a DICOM Undefined Length from a 32-bit Value Field Length.
-const kDicomUndefinedLength = 0xFFFFFFFF;
-
-//DICOM constant
-const kMaxUint8LongLength = 0xFFFFFFFF - 1;
-
-const _MB = 1024 * 1024;
-const _GB = 1024 * 1024 * 1024;
 
 /// A library for parsing [Uint8List] containing DICOM File Format [Dataset]s.
 ///
-/// Supports parsing both BIG_ENDIAN and LITTLE_ENDIAN format in the
+/// Supports parsing both [BIG_ENDIAN] and [LITTLE_ENDIAN] format in the
 /// super class [ByteBuf]. The default
 /// Endianness is the endianness of the host [this] is running on, aka
 /// [Endianness.HOST_ENDIAN].
@@ -59,7 +53,7 @@ const _GB = 1024 * 1024 * 1024;
 ///   3. All VFReaders allow the Value Field to be empty.  The [String] [VFReaders] return "",
 ///   and the Integer, FLoat [VFReaders] return [null].
 class DcmBuf extends ByteBuf {
-  static final Logger log = new Logger("DcmBuf", Level.info);
+  static final Logger log = new Logger("DcmBuf", level: Level.info);
 
   bool breakOnError = true;
 
@@ -221,7 +215,7 @@ class DcmBuf extends ByteBuf {
   /// Undefined Length delimiter, and returns the length between them.
   int readLongOrUndefinedLength([int delimiter = kSequenceDelimiterLast16Bits]) {
     int lengthInBytes = readLongLength();
-    if (lengthInBytes == kDicomUndefinedLength) {
+    if (lengthInBytes == kUndefinedLength) {
       lengthInBytes = _getUndefinedLength(delimiter);
       log.finest('hasUndefinedLength: length=$lengthInBytes');
       return lengthInBytes;
@@ -273,32 +267,13 @@ class DcmBuf extends ByteBuf {
   /// This corresponds to the last 16-bits of [kItemDelimitationItem].
   static const kItemDelimiterLast16bits = 0xE00D;
 
-  /// Returns an [Attribute] or [null].
-  ///
-  /// This is the top-level entry point for reading a [Dataset].
-  Map<int, Attribute> readDataset() {
-    final Logger log = new Logger("Dataset", Level.info);
-    Map<int, Attribute> aMap = {};
-    while (isReadable) {
-      Attribute a = readAttribute();
-      aMap[a.tag] = a;
-      if (a.tag == kPixelData) {
-        log.info('PixelData: ${fmtTag(a.tag)}, ${a.vr}, length= ${a.values.length}');
-      } else {
-        log.info('$a');
-      }
-    }
-    log.info('DcmBuf: $this');
-    return aMap;
-  }
-
   /// This is the top-level entry point for reading an [Attributes].
   Attribute readAttribute() => (isPrivateTag()) ? readPrivateGroup() : _readInternal();
 
   /// Reads the next [Attribute] in the [ByteBuf]
   Attribute _readInternal() {
     // Attribute Readers
-    Map<int, VFReader> vrReaders =  {
+    Map<int, VFReader> vrReaders = {
       0x4145: readAE,
       0x4153: readAS,
       0x4154: readAT,
@@ -338,7 +313,7 @@ class DcmBuf extends ByteBuf {
       throw msg;
     }
 
-    log.level= Level.finest;
+    log.level = Level.info;
     int tag = readTag();
     int vrCode = readVR();
     VR vr = VR.map[vrCode];
@@ -438,11 +413,17 @@ class DcmBuf extends ByteBuf {
 
   OB readOB(int tag, [VR vr]) {
     assert(vr == VR.kOB);
+    bool hadUndefinedLength = false;
     var lengthInBytes = readOBLength();
+    if (lengthInBytes == kUndefinedLength) {
+      hadUndefinedLength = true;
+      lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
+    }
     //TODO: use the ByteBuf setMark mechanism
     //setReadIndexMark;
     var values = readUint8List(lengthInBytes);
-    return new OB(tag, values);
+    //TODO: need hadUndefined Length
+    return new OB(tag, values, lengthInBytes, hadUndefinedLength);
   }
 
   OD readOD(int tag, [VR vr]) {
@@ -609,7 +590,7 @@ class DcmBuf extends ByteBuf {
     log.debug('readSequence: tag: ${fmtTag(tag)}, length= $lengthInBytes(${toHexString
         (lengthInBytes, 8)
     })');
-    if (lengthInBytes == kDicomUndefinedLength) {
+    if (lengthInBytes == kUndefinedLength) {
       lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
       hadUndefinedLength = true;
       log.debug('Sequence: hadUndefinedLength: lengthInBytes($lengthInBytes)');
@@ -621,7 +602,7 @@ class DcmBuf extends ByteBuf {
     int end = readIndex + lengthInBytes;
     while (readIndex < end)
       items.add(readItem(tag));
-    SQ sq = new SQ(tag, items, hadUndefinedLength);
+    SQ sq = new SQ(tag, items, lengthInBytes, hadUndefinedLength);
     for (Item item in items)
       item.sequence = sq;
     return sq;
@@ -641,7 +622,7 @@ class DcmBuf extends ByteBuf {
     //int lengthInBytes = readLongOrUndefinedLength();
     log.debug('Item: readIndex($readIndex): Item Length: '
                   '$lengthInBytes(${toHexString(lengthInBytes, 8)})');
-    if (lengthInBytes == kDicomUndefinedLength) {
+    if (lengthInBytes == kUndefinedLength) {
       lengthInBytes = _getUndefinedLength(kItemDelimiterLast16bits);
       hadUndefinedLength = true;
       log.debug('Item: hadUndefinedLength: true: found Length:$lengthInBytes');
@@ -654,7 +635,7 @@ class DcmBuf extends ByteBuf {
       var attribute = readAttribute();
       attributes[attribute.tag] = attribute;
     }
-    Item item = new Item(sqTag, attributes, hadUndefinedLength);
+    Item item = new Item(sqTag, attributes, lengthInBytes, hadUndefinedLength);
     log.debug('readItem: item(${fmtTag(sqTag)}, attributes(${attributes.length}), '
                   'Undefined Length: $hadUndefinedLength)');
     return item;
@@ -694,36 +675,24 @@ class DcmBuf extends ByteBuf {
     return s;
   }
 
+  //Note: private creators are for one group number are all generated before the group tags
   PrivateGroup readPrivateGroup() {
-    if (isNotReadable) {
-      var msg = "Read Buffer empty: readIndex($readIndex), writeIndex($writeIndex)";
-      log.error(msg);
-      throw msg;
+    var pgCreators = <PGCreator>[];
+    var creatorTags = <int>[];
+   // print('isPrivateCreator: ${isPrivateCreatorTag(peekTag())}');
+    while (isPrivateCreatorTag(peekTag())) {
+      var creator = new PGCreator(_readInternal());
+    //  print('creator: $creator');
+      pgCreators.add(creator);
+      creatorTags.add(creator.tag);
+      log.debug('creators = $pgCreators');
     }
-    Attribute creator = new PrivateCreator(_readInternal());
-    List<Attribute> aMap = readPrivateGroupAttributes(creator.tag);
-    return new PrivateGroup(creator, aMap);
-  }
-
-  List<Attribute> readPrivateGroupAttributes(int creatorTag) {
-    List<Attribute> aList = [];
-    int peek = peekTag();
-    log.fine('readPrivateGroupAttributes: '
-                  'creator: ${fmtTag(creatorTag)}, '
-                  'next:${fmtTag(peek)}, '
-                  'inGroup(${inPrivateGroup(creatorTag, peek)})');
-
-    while ((isPrivateTag() && (! isPrivateCreatorTag(peek)))) {
-      int tag = peekTag();
-      if (isPrivateCreatorTag(tag))
-        return aList;
-      if (! inPrivateGroup(creatorTag, tag))
-        log.error('Attribute(tag=${fmtTag(tag)}) in wrong group(${fmtTag(creatorTag)})');
-      Attribute a = new PrivateData(_readInternal());
-      aList.add(a);
+    List<Attribute> pgData = [];
+    while (isInPrivateGroup(creatorTags, peekTag())) {
+      pgData.add(new PGData(_readInternal()));
+      log.debug('data: $pgData');
     }
-    log.fine('aList: $aList');
-    return aList;
+    return new PrivateGroup(pgCreators, pgData);
   }
 }
 

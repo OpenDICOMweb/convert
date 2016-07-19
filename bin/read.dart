@@ -4,22 +4,14 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-//import 'dart:io';
-
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:logger/server_logger.dart';
+import 'package:logger/server.dart';
 
-import 'package:integer/integer.dart';
-import 'package:odwsdk/attribute.dart';
 import 'package:odwsdk/dataset_sop.dart';
-import 'package:odwsdk/tag.dart';
-import 'package:odwsdk/vr.dart';
+import 'package:convert/src/dcm/dcmbuf_decoder.dart';
 
-import 'package:convert/dcmbuf.dart';
-import 'package:convert/src/sop/reader.dart';
-import 'package:convert/src/prefix.dart';
+import 'package:convert/dcm.dart';
 
 const String tdir = "C:/mint_test_data/CR";
 
@@ -30,16 +22,14 @@ String crf1 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.
 String crf2 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255"
     ".393386351.1568457295.48879.7.dcm";
 
-String Patient_3_Cardiac_CTS =
-    'D:\M2sata\mint_test_data\sfd\CT\Patient_3_Cardiac_CTA\1_DICOM_Original';
+String patient3CardiacCT =
+    'D:/M2sata/mint_test_data/sfd/CT/Patient_3_Cardiac_CTA/1_DICOM_Original';
 
 
 
 void main() {
-  Logger.root.level = Level.info;
-  ServerLogger server = new ServerLogger("main", Level.info);
-  Logger log = new Logger("main", Level.info);
-  File file1 = new File(crf1);
+  Logger log = ServerLogger.init(name: "convert/bin/read");
+  log.config('Program convert/bin/read: starting');
 
   List<String> files = [crf1, crf2];
 
@@ -52,10 +42,13 @@ void main() {
 
     //DcmReader buf = new DcmReader.fromUint8List(data);
 
-    DcmReader buf = new DcmReader.fromFile(file);
+    DcmDecoder reader = new DcmDecoder.fromFile(file);
 
-    study = buf.readSopInstance(study);
+    var instance = reader.readSopInstance();
+    study = instance.study;
 
+    Format fmt = new Format();
+    fmt.study(study);
     print('Study: $study');
     //print('Series: ${study.series}');
     //print('Instances: ${study.instances}');
@@ -65,7 +58,8 @@ void main() {
 }
 
 
-//TODO: When working move to DcmBuf
+//TODO: Flush
+/*
 Map<int, Attribute> readFileMetaInfo(DcmBuf buf) {
   final Logger log = new Logger("Fmi", Level.info);
   // Read the File prefix: skip 128 bytes then read magic = "DICM"
@@ -101,8 +95,9 @@ Map<int, Attribute> readFileMetaInfo(DcmBuf buf) {
     log.info('$a');
     fmi[a.tag] = a;
   }
-
+  */
   // Read the rest of [Fmi].
+  /*
   while (buf.readIndex < fmiLength) {
     int tag = buf.peekTag();
     log.finest('peekTag: ${intToHex(tag, 8)}');
@@ -114,7 +109,8 @@ Map<int, Attribute> readFileMetaInfo(DcmBuf buf) {
   }
   return fmi;
 }
-
+*/
+/*
 Map readDataset(DcmBuf buf) {
   final Logger log = new Logger("DS", Level.debug);
   Map<int, Attribute> aMap = {};
@@ -132,3 +128,4 @@ Map readDataset(DcmBuf buf) {
   log.info('ByteBuf: $buf');
   return aMap;
 }
+*/

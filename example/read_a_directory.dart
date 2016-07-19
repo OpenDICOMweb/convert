@@ -6,32 +6,41 @@
 
 import 'dart:io';
 
-import 'package:logger/server_logger.dart';
+import 'package:logger/server.dart';
 import 'package:convert/convert.dart';
 import 'package:odwsdk/dataset_sop.dart';
 
+import 'package:odwsdk/system.dart';
+
 var dirPath0 = 'D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/Group2_dcm4che';
-var dirpath1 = 'D:/M2sata/mint_test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original';
-var dirPath1 = 'D:/M2sata/mint_test_data/sfd/CT/20_phase/1_DICOM_Original';
+var dirPath1 = 'D:/M2sata/mint_test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original';
+var dirPath2 = 'D:/M2sata/mint_test_data/sfd/CT/20_phase/1_DICOM_Original';
 
 void main() {
-  ServerLogger server = new ServerLogger("main", Level.info);
-  Logger log = new Logger("main", Level.warning);
+  Logger log = initializeLogger(level: Level.debug);
 
-  Directory dir = new Directory(dirPath1);
+  Directory dir = new Directory(dirPath0);
 
   List<FileSystemEntity> fList = dir.listSync();
-  print('File count: ${fList.length}');
-  for(File f in fList)
-    print('File: $f');
+  log.info('File count: ${fList.length}');
+  for (File f in fList)
+    log.info('File: $f');
 
   Study study;
 
- for(File f in fList) {
-    DcmReader buf = new DcmReader.fromFile(f);
-    study = buf.readSopInstance(study);
- }
+  for (File f in fList) {
+    var instance = readInstance(f);
+    study = instance.study;
+  }
 
-  print('Study: ${study.series}');
-  print('Study: ${study.instances}');
+  print('series count: ${study.series.length}');
+  print('instance count: ${study.instances.length}');
+  Format fmt = new Format();
+  var s = fmt.study(study);
+  print(s);
+}
+
+Instance readInstance(File f) {
+  DcmDecoder reader = new DcmDecoder.fromFile(f);
+  return reader.readSopInstance();
 }

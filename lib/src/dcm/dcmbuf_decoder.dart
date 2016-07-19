@@ -8,44 +8,48 @@ library odw.sdk.convert.sop.reader;
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:logger/server_logger.dart';
+import 'package:logger/server.dart';
+import 'package:path/path.dart' as path;
 
 import 'package:odwsdk/attribute.dart';
 import 'package:odwsdk/dataset_sop.dart';
 import 'package:odwsdk/tag.dart';
 import 'package:odwsdk/uid.dart';
 
-import '../dcmbuf/dcmbuf.dart';
+import 'package:convert/src/dcm/io.dart';
 
-/// [DcmReader] reads DICOM SOP Instances and returns a [DatasetSop].
+import 'dcmbuf.dart';
+
+/// [DcmDecoder] reads DICOM SOP Instances and returns a [DatasetSop].
 /// TODO: finish doc
-class DcmReader extends DcmBuf {
-  static final Logger log = new Logger("DcmReader", Level.info);
+class DcmDecoder extends DcmBuf {
+  static final Logger log = new Logger("DcmEncoder");
+  final String filePath;
   Uint8List _preamble;
   String _prefix;
 
-  /// Creates a new [DcmReader]
-  factory DcmReader(Uint8List bytes, [int readIndex = 0, int writeIndex, int lengthInBytes]) {
+  /// Creates a new [DcmDecoder]
+  factory DcmDecoder(Uint8List bytes, [int readIndex = 0, int writeIndex, int lengthInBytes]) {
     if (lengthInBytes == null) lengthInBytes = bytes.lengthInBytes - readIndex;
     if (writeIndex == null) writeIndex = lengthInBytes;
-    return new DcmReader._(bytes, readIndex, writeIndex, lengthInBytes);
+    return new DcmDecoder._(bytes, readIndex, writeIndex, lengthInBytes);
   }
 
-  factory DcmReader.fromFile(file) {
-    if (file is String) file = new File(file);
+  factory DcmDecoder.fromFile(File file) {
     if (file is! File) {
       log.error('The "file" parameter must be a String or File');
       return null;
     }
     var bytes = file.readAsBytesSync();
-    return new DcmReader(bytes);
+    var filePath = path.normalize(file.path);
+    return new DcmDecoder._(bytes, 0, bytes.length, bytes.length, filePath);
   }
 
-  factory DcmReader.fromUint8List(Uint8List bytes) =>
-    new DcmReader(bytes, 0, bytes.length, bytes.length);
+  factory DcmDecoder.fromUint8List(Uint8List bytes) =>
+      new DcmDecoder(bytes, 0, bytes.length, bytes.length);
 
   /// Internal Constructor: Returns a [._slice from [bytes].
-  DcmReader._(Uint8List bytes, int readIndex, int writeIndex, int length)
+  DcmDecoder._(Uint8List bytes, int readIndex, int writeIndex, int length, [this.filePath])
       : super.internal(bytes, readIndex, writeIndex, length);
 
   // Read the 128-byte preamble to the DICOM File Format.
@@ -66,49 +70,64 @@ class DcmReader extends DcmBuf {
     return prefix;
   }
 
+  static const littleEndian =
+      WellKnownUid.kImplicitVRLittleEndianDefaultTransferSyntaxforDICOM;
+
   /// Reads and returns the File Meta Information [Fmi], if present. If no [Fmi] [Attributes]
   /// were present an empty [Map] is returned.
   Fmi readFmi() {
     Map<int, Attribute> fmi = {};
-    while(isFmiTag()) {
+    while (isFmiTag()) {
       var a = readAttribute();
       log.debug('$a');
       fmi[a.tag] = a;
     }
+    Uid transferSyntax = fmi[kTransferSyntaxUID].value;
+    log.info('Transfer Syntax: $transferSyntax');
+    if (transferSyntax == littleEndian)
+      throw "little Endian";
     return new Fmi(fmi);
   }
 
-  Study readSopInstance([Study study]) {
-    Logger log = new Logger("DcmReader.readSopInstance");
+  Study readStudy(List paths) {
+    Instance i = readSopInstance();
+    for (var f in paths) {
+      File file = toFile(f);
+      var reader = new DcmDecoder.fromFile(file);
+      reader.readSopInstance();
+    }
+    return i.study;
+  }
+
+  Instance readSopInstance() {
+    Logger log = new Logger("DcmEncoder.readSopInstance");
     _preamble = readPreamble();
     _prefix = readPrefix();
+    //TODO: we could try to figure out what it contained later.
     if (_prefix == null) return null;
     var fmi = readFmi();
     var aMap = readDataset();
-
-    var studyUid = aMap[kStudyInstanceUID].value;
-    if (study == null) {
-      study = new Study(studyUid);
-    }
-    study.createInstance(fmi, aMap);
-    return study;
+    Instance i = new Instance(fmi, aMap, filePath);
+    log.debug('readSopInstance: $i');
+    return i;
   }
 
-  Map readDatase(DcmBuf buf) {
-    final Logger log = new Logger("DS", Level.debug);
+  /// Returns an [Attribute] or [null].
+  ///
+  /// This is the top-level entry point for reading a [Dataset].
+  Map<int, Attribute> readDataset() {
+    final Logger log = new Logger("readDataset");
     Map<int, Attribute> aMap = {};
-
-
-    while (buf.isReadable) {
-      Attribute a = buf.readAttribute();
+    while (isReadable) {
+      Attribute a = readAttribute();
       aMap[a.tag] = a;
       if (a.tag == kPixelData) {
-        log.info('PixelData: ${fmtTag(a.tag)}, ${a.vr}, length= ${a.values.length}');
+        log.debug('PixelData: ${fmtTag(a.tag)}, ${a.vr}, length= ${a.values.length}');
       } else {
-        log.info('$a');
+        log.debug('$a');
       }
     }
-    log.info('ByteBuf: $buf');
+    log.debug('DcmBuf: $this');
     return aMap;
   }
 
