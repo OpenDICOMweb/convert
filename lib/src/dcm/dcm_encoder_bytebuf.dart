@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file.
 // Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
-library odw.sdk.convert.dcm.dcmbuf_writer;
+library odw.sdk.convert.dcm.dcm_encoder_bytebuf;
 
 import 'dart:convert';
 import 'dart:typed_data';
@@ -35,70 +35,69 @@ typedef void VFWriter(a);
 /// super class [ByteBuf]. The default
 /// Endianness is the endianness of the host [this] is running on, aka
 /// [Endianness.HOST_ENDIAN].
-///   * All set* methods _DO NOT_ advance the [writeIndex].
-///   * All write* methods advance the [writeIndex] by the number of bytes written.
+///   * All get* methods _DO NOT_ advance the [readIndex].
+///   * All read* methods advance the [readIndex] by the number of bytes written.
 ///   * All set* methods _DO NOT_ advance the [writeIndex].
 ///   * All write* methods advance the [writeIndex] by the number of bytes written.
 ///
 /// _Notes_:
 ///   1. In all cases DcmBuf writes the Value Fields as they are without modification, except
-///   possibly padding strings to an even length.
-///   This is so they can be written out byte for byte as
-///   they were read. and a bytewise comparitor will find them to be equal.
-///   2. All String minipulation should be handled in the attribute itself.
-///   3. All VRWriters allow the Value Field to be empty.  The [String] [VFWriters] return "",
-///   and the Integer, FLoat [VFWriters] return [null].
-class DcmEncoder extends ByteBuf {
-  static final Logger log = new Logger("DcmEncoder");
+///   possibly padding strings to an even length.  This is so they can be written out byte for
+///   byte as they were read, and a bytewise comparator will find them to be equal.
+///   2. All String manipulation should be handled in the attribute itself.
+///   3. All VRWriters allow the Value Field to be empty.
+class DcmEncoderByteBuf extends ByteBuf {
+  static const defaultLengthInBytes = 1 * kMB;
+  static final Logger log = new Logger("DcmEncoderByteBuf");
 
   bool breakOnError = true;
 
 //*** Constructors ***
   //TODO: what should the default length be
 
-  /// Creates a new [DcmEncoder] of [maxCapacity], where
+  /// Creates a new [DcmEncoderByteBuf] of [maxCapacity], where
   ///  [readIndex] = [writeIndex] = 0.
-  factory DcmEncoder([int lengthInBytes = ByteBuf.defaultLengthInBytes]) {
+  factory DcmEncoderByteBuf([int lengthInBytes = defaultLengthInBytes]) {
     if (lengthInBytes == null)
       lengthInBytes = ByteBuf.defaultLengthInBytes;
     if ((lengthInBytes < 0) || (lengthInBytes > ByteBuf.maxMaxCapacity))
       ByteBuf.invalidLength(lengthInBytes);
-    return new DcmEncoder.internal(new Uint8List(lengthInBytes), 0, 0, lengthInBytes);
+    return new DcmEncoderByteBuf.internal(new Uint8List(lengthInBytes), 0, 0, lengthInBytes);
   }
 
   //TODO: explain use case for this.
-  /// Creates a new writable [DcmEncoder] from the [Uint8List] [bytes].
-  factory DcmEncoder.fromByteBuf(DcmEncoder buf, [int offset = 0, int length]) {
+  /// Creates a new writable [DcmEncoderByteBuf] from the [Uint8List] [bytes].
+  factory DcmEncoderByteBuf.fromByteBuf(DcmEncoderByteBuf buf, [int offset = 0, int length]) {
     length = (length == null) ? buf.bytes.length : length;
     if ((length < 0) || ((offset < 0) || ((buf.bytes.length - offset) < length)))
       ByteBuf.invalidOffsetOrLength(offset, length, buf.bytes);
-    return new DcmEncoder.internal(buf.bytes, offset, length, length);
+    return new DcmEncoderByteBuf.internal(buf.bytes, offset, length, length);
   }
 
-  /// Creates a new writable [DcmEncoder] from the [Uint8List] [bytes].
-  factory DcmEncoder.fromUint8List(Uint8List bytes, [int offset = 0, int length]) {
+  /// Creates a new writable [DcmEncoderByteBuf] from the [Uint8List] [bytes].
+  factory DcmEncoderByteBuf.fromUint8List(Uint8List bytes, [int offset = 0, int length]) {
     length = (length == null) ? bytes.length : length;
     if ((length < 0) || ((offset < 0) || ((bytes.length - offset) < length)))
       ByteBuf.invalidOffsetOrLength(offset, length, bytes);
-    return new DcmEncoder.internal(bytes, offset, length, length);
+    return new DcmEncoderByteBuf.internal(bytes, offset, length, length);
   }
 
   /// Creates a [Uint8List] with the same length as the elements in [list],
   /// and copies over the elements.  Values are truncated to fit in the list
   /// when they are copied, the same way storing values truncates them.
-  factory DcmEncoder.fromList(List<int> list) =>
-      new DcmEncoder.internal(new Uint8List.fromList(list), 0, list.length, list.length);
+  factory DcmEncoderByteBuf.fromList(List<int> list) =>
+      new DcmEncoderByteBuf.internal(new Uint8List.fromList(list), 0, list.length, list.length);
 
-  factory DcmEncoder.view(ByteBuf buf, [int offset = 0, int length]) {
+  factory DcmEncoderByteBuf.view(ByteBuf buf, [int offset = 0, int length]) {
     length = (length == null) ? buf.bytes.length : length;
     if ((length < 0) || ((offset < 0) || ((buf.bytes.length - offset) < length)))
       ByteBuf.invalidOffsetOrLength(offset, length, buf.bytes);
     Uint8List bytes = buf.bytes.buffer.asUint8List(offset, length);
-    return new DcmEncoder.internal(bytes, offset, length, length);
+    return new DcmEncoderByteBuf.internal(bytes, offset, length, length);
   }
 
   /// Internal Constructor: Returns a [._slice from [bytes].
-  DcmEncoder.internal(Uint8List bytes, int readIndex, int writeIndex, int length)
+  DcmEncoderByteBuf.internal(Uint8List bytes, int readIndex, int writeIndex, int length)
       : super.internal(bytes, readIndex, writeIndex, length);
 
   //**** Methods that Return new [ByteBuf]s.  ****
@@ -106,8 +105,8 @@ class DcmEncoder extends ByteBuf {
   /// Creates a new [ByteBuf] that is a view of [this].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
   @override
-  DcmEncoder writeSlice(int offset, int length) =>
-      new DcmEncoder.internal(bytes, offset, length, length);
+  DcmEncoderByteBuf writeSlice(int offset, int length) =>
+      new DcmEncoderByteBuf.internal(bytes, offset, length, length);
 
   //Flush?
   /// Creates a new [ByteBuf] that is a view of [this].  The underlying
@@ -119,8 +118,8 @@ class DcmEncoder extends ByteBuf {
   /// Creates a new [ByteBuf] that is a [sublist] of [this].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
   @override
-  DcmEncoder sublist(int start, int end) =>
-      new DcmEncoder.internal(bytes, start, end - start, end - start);
+  DcmEncoderByteBuf sublist(int start, int end) =>
+      new DcmEncoderByteBuf.internal(bytes, start, end - start, end - start);
 
   //****  Core Dataset methods  ****
 
@@ -183,8 +182,18 @@ class DcmEncoder extends ByteBuf {
 
   static const int kMaxShortLengthInBytes = 0xFFFF;
 
+  void writeLength(int lengthInBytes, bool isShort) {
+    if (isShort) {
+      writeShortLength(lengthInBytes);
+    } else {
+      writeLongLength(lengthInBytes);
+    }
+  }
+
   /// write a 16 bit length field and skip the following 16 bits
-  void writeShortLength(int lengthInBytes) { writeUint16(lengthInBytes); }
+  void writeShortLength(int lengthInBytes) {
+    writeUint16(lengthInBytes);
+  }
 
   ///
   int validFieldLength(int length, int bytesPerElement, int maxLengthInBytes) {
@@ -201,36 +210,25 @@ class DcmEncoder extends ByteBuf {
     if (breakOnError) throw msg;
   }
 
-  /// Converts [lengthInBytes] into element [length].
-  /* flush
-  int toLengthInBytes(int length, int bytesPerElement) =>
-    length * bytesPerElement
-    if ((lengthInBytes % bytesPerElement) != 0)
-      throw "Invalid LengthInBytes($lengthInBytes) for elementSizeInBytes($bytesPerElement)"
-          "the lengthInBytes must be evenly divisible by elementSizeInBytes";
-    return lengthInBytes ~/ bytesPerElement;
-  }
-  */
-
   //TODO: move to constants
   static const int kMaxLongLengthInBytes = (1 << 32) - 1;
 
   /// Skips 2-bytes and then writes and returns a 32-bit length field.
   /// Note: This should only be used for VRs of // OD, OF, OL, UC, UR, UT.
   /// It should not be used for VRs that can have an Undefined Length (-1).
-  void writeLongLength(int value) {
+  void writeLongLength(int lengthInBytes) {
     writeUint16(0);
-    writeUint32(value);
+    writeUint32(lengthInBytes);
   }
 
   /// writes a 32-bit length field that might have an Undefined Length value (0xFFFFFFFF).
   /// If the value is the Undefined Length value, then it searches for the matching
   /// Undefined Length delimiter, and returns the length between them.
-  DcmEncoder writeUndefinedLength() => writeUint32(0xFFFFFFFF);
+  DcmEncoderByteBuf writeUndefinedLength() => writeUint32(0xFFFFFFFF);
 
-  DcmEncoder writeSequenceDelimiter() => writeUint32(kSequenceDelimitationItem);
+  DcmEncoderByteBuf writeSequenceDelimiter() => writeUint32(kSequenceDelimitationItem);
 
-  DcmEncoder writeItemDelimiter() => writeUint32(kItemDelimitationItem);
+  DcmEncoderByteBuf writeItemDelimiter() => writeUint32(kItemDelimitationItem);
 
   /* flush?
   int writeValueWithUndefinedLength(Uint8List bytes, [int delimiter = kSequenceDelimitationItem]) {
@@ -313,7 +311,7 @@ class DcmEncoder extends ByteBuf {
       (a is PrivateGroup) ? writePrivateGroup(a) : _writeInternal(a);
 
   /// writes the next [Attribute] in the [ByteBuf]
-  void _writeInternal(a) {
+  void _writeInternal(Attribute a) {
     // Attribute writers
     Map<int, VFWriter> vfWriter = {
       0x4145: writeAE,
@@ -348,18 +346,17 @@ class DcmEncoder extends ByteBuf {
       0x5553: writeUS,
       0x5554: writeUT
     };
-
     if (isNotWritable) {
       var msg = "Write Buffer empty: readIndex($readIndex), writeIndex($writeIndex)";
       log.error(msg);
       throw msg;
     }
 
-    log.level = Level.info;
+    print('_writeInteral: $a');
     writeTag(a.tag);
     int vrCode = a.vr.code;
     writeVR(vrCode);
-    log.fine('write: $a');
+    log.debug('write: $a');
     VFWriter writer = vfWriter[vrCode];
     if (writer == null) {
       var msg = "Invalid vrCode(${toHexString(vrCode, 4)})";
@@ -370,7 +367,7 @@ class DcmEncoder extends ByteBuf {
   }
 
 
-  //**** VR writeers ****
+  //**** VR writers ****
 
   void writeAE(AE a) {
     assert(a.vr == VR.kAE);
@@ -486,9 +483,9 @@ class DcmEncoder extends ByteBuf {
     writeDcmInt32List(a.values, isShort: true);
   }
 
-  void writeSQ(SQ a) {
-    assert(a.vr == VR.kSQ);
-    writeSequence(a);
+  void writeSQ(SQ sq) {
+    assert(sq.vr == VR.kSQ);
+    writeSequence(sq);
   }
 
   void writeSS(SS a) {
@@ -570,60 +567,78 @@ class DcmEncoder extends ByteBuf {
 
   //int writeSequenceLength() => writeLongOrUndefinedLength(kSequenceDelimiterLast16Bits);
 
+  void writeLengthInBytes(int length, bool isShort, int elementSizeInBytes, int maxLongLength) {
+    if (isShort) {
+      int lengthInBytes = validFieldLength(length, 4, kMaxShortLengthInBytes);
+      writeShortLength(lengthInBytes);
+    } else {
+      int lengthInBytes = validFieldLength(length, 4, maxLongLength);
+      writeLongLength(lengthInBytes);
+    }
+  }
+
   void writeDcmInt32List(List<int> list, {isShort: true}) {
-    //TODO: is there a way to optimize this?
-    Int32List bytes = new Int32List.fromList(list);
-    writeShortLength(bytes.length);
-    writeInt32List(bytes);
+    writeLengthInBytes(list.length, isShort, 4, kMaxInt32LongLength);
+    if (list.length > 0 ) {
+      Int32List bytes = new Int32List.fromList(list);
+      writeInt32List(bytes);
+    }
   }
 
   void writeDcmUint32List(List<int> list, {isShort: true}) {
-    //TODO: is there a way to optimize this?
-    Uint32List bytes = new Uint32List.fromList(list);
-    writeShortLength(bytes.length);
-    writeUint32List(bytes);
+    writeLengthInBytes(list.length, isShort, 4, kMaxUint32LongLength);
+    if (list.length > 0 ) {
+      Uint32List bytes = new Uint32List.fromList(list);
+      writeUint32List(bytes);
+    }
   }
 
   void writeDcmInt16List(List<int> list, {isShort: true}) {
-    //TODO: is there a way to optimize this?
-    Int16List bytes = new Int16List.fromList(list);
-    writeShortLength(bytes.length);
-    writeInt16List(bytes);
+    writeLengthInBytes(list.length, isShort,  2, kMaxInt16LongLength);
+    if (list.length > 0 ) {
+      Int16List bytes = new Int16List.fromList(list);
+      writeInt16List(bytes);
+    }
   }
 
   void writeDcmUint16List(List<int> list, {isShort: true}) {
-    //TODO: is there a way to optimize this?
-    Uint16List bytes = new Uint16List.fromList(list);
-    writeShortLength(bytes.length);
-    writeUint16List(bytes);
+    writeLengthInBytes(list.length, isShort,  2, kMaxUint16LongLength);
+    if (list.length > 0 ) {
+      Uint16List bytes = new Uint16List.fromList(list);
+      writeUint16List(bytes);
+    }
   }
 
   void writeDcmInt8List(List<int> list, {isShort: true}) {
-    //TODO: is there a way to optimize this?
-    Int8List bytes = new Int8List.fromList(list);
-    writeShortLength(bytes.length);
-    writeInt8List(bytes);
+    writeLengthInBytes(list.length, isShort, 1, kMaxInt8LongLength);
+    if (list.length > 0 ) {
+      Int8List bytes = new Int8List.fromList(list);
+      writeInt8List(bytes);
+    }
   }
 
   void writeDcmUint8List(List<int> list, {isShort: true}) {
-    //TODO: is there a way to optimize this?
-    Uint8List bytes = new Uint8List.fromList(list);
-    writeShortLength(bytes.length);
-    writeUint8List(bytes);
+    writeLengthInBytes(list.length, isShort, 1, kMaxUint8LongLength);
+    if (list.length > 0 ) {
+      Uint8List bytes = new Uint8List.fromList(list);
+      writeUint8List(bytes);
+    }
   }
 
   void writeDcmFloat64List(List<double> list, {isShort: true}) {
-    //TODO: is there a way to optimize this?
-    Float64List bytes = new Float64List.fromList(list);
-    writeShortLength(bytes.length);
-    writeFloat64List(bytes);
+    writeLengthInBytes(list.length, isShort, 8, kMaxFloat64LongLength);
+    if (list.length > 0 ) {
+      Float64List bytes = new Float64List.fromList(list);
+      writeFloat64List(bytes);
+    }
   }
 
   void writeDcmFloat32List(List<double> list, {isShort: true}) {
-    //TODO: is there a way to optimize this?
-    Float32List bytes = new Float32List.fromList(list);
-    writeShortLength(bytes.length);
-    writeFloat32List(bytes);
+    writeLengthInBytes(list.length, isShort, 4, kMaxFloat32LongLength);
+    if (list.length > 0 ) {
+      Float32List bytes = new Float32List.fromList(list);
+      writeFloat32List(bytes);
+    }
   }
 
   //**** String Methods ****
@@ -637,80 +652,77 @@ class DcmEncoder extends ByteBuf {
   /// Convert a [List] of [String]s into [Uint8List] with trailing pad character if
   /// necessary, then writes the Value Length Field followed by the Value Field.
   void writeDcmString(String s, {bool isShort: true, String padChar: " "}) {
+    Uint8List bytes;
+    int length = 0;
     if (s.length.isOdd) s += padChar;
-    Uint8List bytes = UTF8.encode(s);
+    if (s.length != 0) {
+      bytes = UTF8.encode(s);
+      length = bytes.length;
+    }
     if (isShort) {
-      if (bytes.length > kMaxShortLengthInBytes)
-        log.error("***");
+      if (length > kMaxShortLengthInBytes) log.error("***");
       writeShortLength(bytes.length);
     } else {
-      if (bytes.length > kMaxLongLengthInBytes)
-        log.error("***");
+      if (length > kMaxLongLengthInBytes) log.error("***");
       writeLongLength(bytes.length);
     }
-    writeUint8List(bytes);
+    if (s.length != 0)
+      writeUint8List(bytes);
   }
 
   //**** Sequences and Items
 
-  void writeSequenceWithUndefinedLength(SQ sq) {
-    assert(sq.hadUndefinedLength == true);
-    writeLongLength(0xFFFFFFFF);
-    writeItems(sq.items);
-    writeUint32(kSequenceDelimitationItem);
-  }
-
   void writeSequence(SQ sq) {
-    assert(sq.hadUndefinedLength == false);
-    writeLongLength(sq.length);
-    writeItems(sq.items);
+    if (sq.hadUndefinedLength) {
+      writeLongLength(0xFFFFFFFF);
+      writeItems(sq.items);
+      writeUint32(kSequenceDelimitationItem);
+    } else {
+      writeLongLength(sq.lengthInBytes);
+      writeItems(sq.items);
+    }
   }
 
+  /// Writes a [List] of [Item]s to [bytes].
   void writeItems(List<Item> items) {
     for (Item item in items) {
       if (item.hadUndefinedLength) {
-        writeUndefinedLengthItem(item);
+        print('item: $item');
+        _writeUndefinedLengthItem(item);
       } else {
-        writeItem(item);
+        print('item: $item');
+        _writeItem(item);
       }
     }
   }
 
-  void writeUndefinedLengthItem(Item item) {
+  void _writeItem(Item item) {
+    assert(item.hadUndefinedLength == false);
+    log.debug('writeItem: $item');
+    writeUint32(item.lengthInBytes);
+    for (int i = 0; i < item.lengthInBytes; i++) {
+      print('item[$i]: ${item[i]}');
+      writeAttribute(item[i]);
+    }
+  }
+
+  void _writeUndefinedLengthItem(Item item) {
     assert(item.hadUndefinedLength == true);
     writeLongLength(0xFFFFFFFF);
-    writeItem(item);
+    for(int i = 0; i < item.lengthInBytes; i++)
+      writeAttribute(item[i]);
     writeUint32(kItemDelimitationItem);
   }
 
-  void writeItem(Item item) {
-    assert(item.hadUndefinedLength == false);
-    writeLongLength(item.length);
-    writeItem(item);
-  }
-
   ///Writes Pixel Data (7FFF,0010) based on the Transfer Syntax.
-  void writePixelData(Attribute a) {
-
-
-  }
+  void writePixelData(Attribute a) => _writeInternal(a);
 
   /// Writes a Private Group of Private Attributes.
   void writePrivateGroup(PrivateGroup pg) {
-    if (isNotWritable) {
-      var msg = "write Buffer empty: readIndex($readIndex), writeIndex($writeIndex)";
-      log.error(msg);
-      throw msg;
-    }
-    _writeInternal(pg.creator);
-    for (PGData d in pg.values)
-      _writeInternal(d);
+    for (int i = 0; i < pg.creators.length; i++)
+      writeLO(pg.creators[i]);
+    for (int i = 0; i < pg.values.length; i++)
+      _writeInternal(pg.creators[i]);
   }
+
 }
-
-
-
-
-
-
-

@@ -17,7 +17,7 @@ var dirPath1 = 'D:/M2sata/mint_test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1
 var dirPath2 = 'D:/M2sata/mint_test_data/sfd/CT/20_phase/1_DICOM_Original';
 
 void main() {
-  Logger log = initializeLogger(level: Level.debug);
+  Logger log = System.init(level: Level.debug);
 
   Directory dir = new Directory(dirPath0);
 

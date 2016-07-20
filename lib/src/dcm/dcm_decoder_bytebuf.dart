@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file.
 // Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
-library odw.sdk.convert.dcm_bytebuf.dcm_bytebuf;
+library odw.sdk.convert.dcm.dcm_decoder_bytebuf;
 
 import 'dart:typed_data';
 
@@ -52,55 +52,55 @@ typedef Attribute VFReader(int tag, [VR vr]);
 ///   2. All String minipulation should be handled in the attribute itself.
 ///   3. All VFReaders allow the Value Field to be empty.  The [String] [VFReaders] return "",
 ///   and the Integer, FLoat [VFReaders] return [null].
-class DcmBuf extends ByteBuf {
-  static final Logger log = new Logger("DcmBuf", level: Level.info);
+class DcmDecoderByteBuf extends ByteBuf {
+  static final Logger log = new Logger("DcmDecoderByteBuf", level: Level.debug);
 
   bool breakOnError = true;
 
 //*** Constructors ***
 
-  /// Creates a new [DcmBuf] of [maxCapacity], where
+  /// Creates a new [DcmDecoderByteBuf] of [maxCapacity], where
   ///  [readIndex] = [writeIndex] = 0.
-  factory DcmBuf([int lengthInBytes = ByteBuf.defaultLengthInBytes]) {
+  factory DcmDecoderByteBuf([int lengthInBytes = ByteBuf.defaultLengthInBytes]) {
     if (lengthInBytes == null)
       lengthInBytes = ByteBuf.defaultLengthInBytes;
     if ((lengthInBytes < 0) || (lengthInBytes > ByteBuf.maxMaxCapacity))
       ByteBuf.invalidLength(lengthInBytes);
-    return new DcmBuf.internal(new Uint8List(lengthInBytes), 0, 0, lengthInBytes);
+    return new DcmDecoderByteBuf.internal(new Uint8List(lengthInBytes), 0, 0, lengthInBytes);
   }
 
-  /// Creates a new readable [DcmBuf] from the [Uint8List] [bytes].
-  factory DcmBuf.fromByteBuf(DcmBuf buf, [int offset = 0, int length]) {
+  /// Creates a new readable [DcmDecoderByteBuf] from the [Uint8List] [bytes].
+  factory DcmDecoderByteBuf.fromByteBuf(DcmDecoderByteBuf buf, [int offset = 0, int length]) {
     length = (length == null) ? buf.bytes.length : length;
     if ((length < 0) || ((offset < 0) || ((buf.bytes.length - offset) < length)))
       ByteBuf.invalidOffsetOrLength(offset, length, buf.bytes);
-    return new DcmBuf.internal(buf.bytes, offset, length, length);
+    return new DcmDecoderByteBuf.internal(buf.bytes, offset, length, length);
   }
 
-  /// Creates a new readable [DcmBuf] from the [Uint8List] [bytes].
-  factory DcmBuf.fromUint8List(Uint8List bytes, [int offset = 0, int length]) {
+  /// Creates a new readable [DcmDecoderByteBuf] from the [Uint8List] [bytes].
+  factory DcmDecoderByteBuf.fromUint8List(Uint8List bytes, [int offset = 0, int length]) {
     length = (length == null) ? bytes.length : length;
     if ((length < 0) || ((offset < 0) || ((bytes.length - offset) < length)))
       ByteBuf.invalidOffsetOrLength(offset, length, bytes);
-    return new DcmBuf.internal(bytes, offset, length, length);
+    return new DcmDecoderByteBuf.internal(bytes, offset, length, length);
   }
 
   /// Creates a [Uint8List] with the same length as the elements in [list],
   /// and copies over the elements.  Values are truncated to fit in the list
   /// when they are copied, the same way storing values truncates them.
-  factory DcmBuf.fromList(List<int> list) =>
-      new DcmBuf.internal(new Uint8List.fromList(list), 0, list.length, list.length);
+  factory DcmDecoderByteBuf.fromList(List<int> list) =>
+      new DcmDecoderByteBuf.internal(new Uint8List.fromList(list), 0, list.length, list.length);
 
-  factory DcmBuf.view(ByteBuf buf, [int offset = 0, int length]) {
+  factory DcmDecoderByteBuf.view(ByteBuf buf, [int offset = 0, int length]) {
     length = (length == null) ? buf.bytes.length : length;
     if ((length < 0) || ((offset < 0) || ((buf.bytes.length - offset) < length)))
       ByteBuf.invalidOffsetOrLength(offset, length, buf.bytes);
     Uint8List bytes = buf.bytes.buffer.asUint8List(offset, length);
-    return new DcmBuf.internal(bytes, offset, length, length);
+    return new DcmDecoderByteBuf.internal(bytes, offset, length, length);
   }
 
   /// Internal Constructor: Returns a [._slice from [bytes].
-  DcmBuf.internal(Uint8List bytes, int readIndex, int writeIndex, int length)
+  DcmDecoderByteBuf.internal(Uint8List bytes, int readIndex, int writeIndex, int length)
       : super.internal(bytes, readIndex, writeIndex, length);
 
   //**** Methods that Return new [ByteBuf]s.  ****
@@ -108,20 +108,20 @@ class DcmBuf extends ByteBuf {
   /// Creates a new [ByteBuf] that is a view of [this].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
   @override
-  DcmBuf readSlice(int offset, int length) =>
-      new DcmBuf.internal(bytes, offset, length, length);
+  DcmDecoderByteBuf readSlice(int offset, int length) =>
+      new DcmDecoderByteBuf.internal(bytes, offset, length, length);
 
   /// Creates a new [ByteBuf] that is a view of [this].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
   @override
-  DcmBuf writeSlice(int offset, int length) =>
-      new DcmBuf.internal(bytes, offset, offset, length);
+  DcmDecoderByteBuf writeSlice(int offset, int length) =>
+      new DcmDecoderByteBuf.internal(bytes, offset, offset, length);
 
   /// Creates a new [ByteBuf] that is a [sublist] of [this].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
   @override
-  DcmBuf sublist(int start, int end) =>
-      new DcmBuf.internal(bytes, start, end - start, end - start);
+  DcmDecoderByteBuf sublist(int start, int end) =>
+      new DcmDecoderByteBuf.internal(bytes, start, end - start, end - start);
 
   //****  Core Dataset methods  ****
 
@@ -220,6 +220,7 @@ class DcmBuf extends ByteBuf {
       log.finest('hasUndefinedLength: length=$lengthInBytes');
       return lengthInBytes;
     }
+    log.debug('readLongOrUndefinedLength: $lengthInBytes');
     return lengthInBytes;
   }
 
@@ -227,6 +228,7 @@ class DcmBuf extends ByteBuf {
   /// The [length] does not include the [kItemDelimitationItem] or the
   /// [kItemDelimitationItem] [length] field, which should be zero.
   int _getUndefinedLength(int delimiter) {
+    //Use SetMark mechanism
     int start = readIndex;
     log.finest('_getUndefinedLength: start($start)');
     while (readIndex < writeIndex) {
@@ -242,6 +244,7 @@ class DcmBuf extends ByteBuf {
                             'at readIndex $readIndex in [_readUndefinedItemLength]');
           }
           log.fine('foundLength: len=$length');
+          readIndex = start;
           return length;
         }
       }
@@ -307,24 +310,22 @@ class DcmBuf extends ByteBuf {
       0x5554: readUT
     };
 
-    if (isNotReadable) {
-      var msg = "Read Buffer empty: readIndex($readIndex), writeIndex($writeIndex)";
-      log.error(msg);
-      throw msg;
-    }
-
     log.level = Level.info;
     int tag = readTag();
     int vrCode = readVR();
     VR vr = VR.map[vrCode];
-    log.fine('tag: ${toHexString(tag, 8)}, vrCode: ${toHexString(vrCode, 4)}, VR: $vr');
-    VFReader read = vrReaders[vrCode];
-    if (read == null) {
+    VFReader reader = vrReaders[vrCode];
+    print('reader: ${reader.runtimeType}, '
+                 'tag: ${toHexString(tag, 8)}, '
+                 'vrCode: ${toHexString(vrCode, 4)}, '
+                 'VR: $vr, '
+                 'readIndex: $readIndex');
+    if (reader == null) {
       var msg = "Invalid vrCode(${toHexString(vrCode, 4)})";
       log.error(msg);
       throw msg;
     }
-    return read(tag, vr);
+    return reader(tag, vr);
   }
 
 
@@ -335,9 +336,16 @@ class DcmBuf extends ByteBuf {
     return AE.parse(tag, readShortString());
   }
 
+  /*
   AS readAS(int tag, [VR vr]) {
     assert(vr == VR.kAS);
     return AS.parse(tag, readShortString());
+  }
+  */
+  AS readAS(int tag, [VR vr]) {
+    assert(vr == VR.kAS);
+    var s = readShortString();
+    return AS.parse(tag, s);
   }
 
   AT readAT(int tag, [VR vr]) {
@@ -409,15 +417,16 @@ class DcmBuf extends ByteBuf {
 
   // Read an Value Field Length for an Attribute that
   // might have an Undefined Length. OB, OW, UN, SQ, or Item
-  int readOBLength() => readLongOrUndefinedLength(kSequenceDelimiterLast16Bits);
-
   OB readOB(int tag, [VR vr]) {
     assert(vr == VR.kOB);
     bool hadUndefinedLength = false;
-    var lengthInBytes = readOBLength();
+    int lengthInBytes = readLongLength();
+    print('readOB: tag: ${fmtTag(tag)}, length= $lengthInBytes(${toHexString(lengthInBytes, 8)})');
     if (lengthInBytes == kUndefinedLength) {
-      hadUndefinedLength = true;
+      print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
       lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
+      hadUndefinedLength = true;
+      print('readOW: hadUndefinedLength: readeIndex($readIndex), lengthInBytes($lengthInBytes)');;
     }
     //TODO: use the ByteBuf setMark mechanism
     //setReadIndexMark;
@@ -450,17 +459,28 @@ class DcmBuf extends ByteBuf {
     return new OL(tag, values);
   }
 
-  int readOWLength() => readLongOrUndefinedLength(kSequenceDelimiterLast16Bits);
-
   // depends on Transfer Syntax
   OW readOW(int tag, [VR vr]) {
     assert(vr == VR.kOW);
-    int lengthInBytes = readOWLength();
+    var hadUndefinedLength = false;
+    int lengthInBytes = readLongLength();
+    //print('readOW: tag: ${fmtTag(tag)}, length= $lengthInBytes(${toHexString(lengthInBytes, 8)
+    // })');
+    if (lengthInBytes == kUndefinedLength) {
+      //print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
+      lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
+      hadUndefinedLength = true;
+      //print('readOW: hadUndefinedLength: readeIndex($readIndex), lengthInBytes($lengthInBytes)');
+    }
+    //print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
     int length = toElementLength(lengthInBytes, OW.bytesPerElement);
+    DcmDecoderByteBuf.log.debug('OW: readIndex: $readIndex, writeIndex: $writeIndex');
+    DcmDecoderByteBuf.log.debug('OW: length: $length, lengthInBytes: $lengthInBytes');
     //TODO: use the ByteBuf setMark mechanism
     //setReadIndexMark;
     var values = readUint16List(length);
-    return new OW(tag, values);
+    if (hadUndefinedLength) readIndex += 8;
+    return new OW(tag, values, lengthInBytes, hadUndefinedLength);
   }
 
   PN readPN(int tag, [VR vr]) {
@@ -527,16 +547,22 @@ class DcmBuf extends ByteBuf {
     return new UL(tag, list);
   }
 
-  int readUNLength() => readLongOrUndefinedLength(kSequenceDelimiterLast16Bits);
-
   UN readUN(int tag, [VR vr]) {
     assert(vr == VR.kUN);
-    int lengthInBytes = readUNLength();
+    bool hadUndefinedLength = false;
+    int lengthInBytes = readLongLength();
+    print('readOB: tag: ${fmtTag(tag)}, length= $lengthInBytes(${toHexString(lengthInBytes, 8)})');
+    if (lengthInBytes == kUndefinedLength) {
+      print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
+      lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
+      hadUndefinedLength = true;
+      print('readOW: hadUndefinedLength: readeIndex($readIndex), lengthInBytes($lengthInBytes)');;
+    }
     //TODO: use the ByteBuf setMark mechanism
     //setReadIndexMark;
     Uint8List list = readUint8List(lengthInBytes);
     log.finest('UN<Uint8>: $list');
-    return new UN(tag, list);
+    return new UN(tag, list, lengthInBytes, hadUndefinedLength);
   }
 
   UR readUR(int tag, [VR vr]) {
@@ -585,15 +611,15 @@ class DcmBuf extends ByteBuf {
   //int readSequenceLength() => readLongOrUndefinedLength(kSequenceDelimiterLast16Bits);
 
   SQ readSequence(int tag) {
-    bool hadUndefinedLength = true;
+    bool hadUndefinedLength = false;
     int lengthInBytes = readLongLength();
-    log.debug('readSequence: tag: ${fmtTag(tag)}, length= $lengthInBytes(${toHexString
+    print('readSequence: tag: ${fmtTag(tag)}, length= $lengthInBytes(${toHexString
         (lengthInBytes, 8)
     })');
     if (lengthInBytes == kUndefinedLength) {
       lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
       hadUndefinedLength = true;
-      log.debug('Sequence: hadUndefinedLength: lengthInBytes($lengthInBytes)');
+      print('Sequence: hadUndefinedLength: lengthInBytes($lengthInBytes)');
     }
 
     List<Item> items = <Item>[];
@@ -632,8 +658,9 @@ class DcmBuf extends ByteBuf {
     //setReadIndexMark;
     int endOfBytes = readIndex + lengthInBytes;
     while (readIndex < endOfBytes) {
-      var attribute = readAttribute();
-      attributes[attribute.tag] = attribute;
+      var a = readAttribute();
+      log.debug('readItem: $a');
+      attributes[a.tag] = a;
     }
     Item item = new Item(sqTag, attributes, lengthInBytes, hadUndefinedLength);
     log.debug('readItem: item(${fmtTag(sqTag)}, attributes(${attributes.length}), '
@@ -668,8 +695,12 @@ class DcmBuf extends ByteBuf {
   String readDcmString(int lengthInBytes, [int padChar = kSpace]) {
     if (lengthInBytes.isOdd) throw "Odd length error";
     int padCharCount = 0;
-    if (bytes[readIndex + (lengthInBytes - 1)] == padChar)
+    int last = bytes[readIndex + (lengthInBytes - 1)];
+    if (last == padChar) padCharCount = 1;
+    if ((last == 0) && (padChar == kSpace)) {
+      log.warning('Invalid nul($last) padChar');
       padCharCount = 1;
+    }
     var s = super.getString(readIndex, lengthInBytes - padCharCount);
     readIndex += lengthInBytes;
     return s;
@@ -679,10 +710,8 @@ class DcmBuf extends ByteBuf {
   PrivateGroup readPrivateGroup() {
     var pgCreators = <PGCreator>[];
     var creatorTags = <int>[];
-   // print('isPrivateCreator: ${isPrivateCreatorTag(peekTag())}');
     while (isPrivateCreatorTag(peekTag())) {
       var creator = new PGCreator(_readInternal());
-    //  print('creator: $creator');
       pgCreators.add(creator);
       creatorTags.add(creator.tag);
       log.debug('creators = $pgCreators');

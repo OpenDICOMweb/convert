@@ -10,9 +10,40 @@ import 'package:odwsdk/tag.dart';
 void main() {
   //var s = '1950-07-18T12:06:04.123456-0500';
 
+  parse(0x00100010, "0");
+
+  /*
   print(fmtTag(kPrivateInformation));
   print(Element.kPrivateInformation);
   print(Element.kLengthToEnd);
+  */
+}
+
+List<double> parse(int tag, String s) {
+  double dsError(String s) {
+    //log.error('Invalid DS (decimal) String: "$s"');
+    throw 'Bad DS String: "$s"';
+    return 0.0;
+  }
+  //if (s.length == 0) return new DS(tag, Float.emptyList);
+  List<String> strings = s.split('\\');
+  List<double> floatList = [];
+  print('DS.strings: $strings');
+  for (String s in strings) {
+    print('DS.s: "$s"');
+    var n = double.parse(s, dsError);
+    floatList.add(n);
+  }
+  print('floatList: $floatList');
+  return floatList;
+}
+
+foo() {
+  var n = double.parse("0", (s) {
+    //** log.error('Invalid DS (decimal) String: $s');
+    throw 'Bad DS String: "$s"';
+  });
+  print('n= $n');
 }
 
 var tz = new RegExp('[\-+Zz]');

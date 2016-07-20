@@ -5,4 +5,4 @@
 // See the AUTHORS file for other contributors.
 library odw.sdk.convert.dcm_bytebuf;
 
-export 'package:convert/src/dcm/dcmbuf.dart';
+export 'package:convert/src/dcm/dcm_decoder_bytebuf.dart';

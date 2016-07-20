@@ -2,7 +2,7 @@
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
-// See the   AUTHORS file for other contributors.
+// See the AUTHORS file for other contributors.
 
 import 'dart:io';
 
@@ -16,18 +16,25 @@ String crf1 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.
 String crf2 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255"
     ".393386351.1568457295.48879.7.dcm";
 
-String bug1 = 'C:/odw/sdk/odwsdk/dcm_files/IM-0001-0002.dcm';
+String outPath = 'output.dcm';
 
 void main() {
   Logger log = System.init(level: Level.debug);
-  var path = bug1;
+  var path = crf1;
 
-  File file = new File(path);
-  log.info('Reading file: $file');
-  DcmDecoder reader = new DcmDecoder.fromFile(file);
-
-  Instance instance = reader.readSopInstance();
+  // Read a File
+  File inFile = new File(path);
+  log.info('Reading file: $inFile');
+  DcmDecoder decoder = new DcmDecoder.fromFile(inFile);
+  Instance instance = decoder.readSopInstance();
   Study study = instance.study;
+
+  // Write a File
+  File outFile = new File(outPath);
+  log.info('Writing file: $outFile');
+  DcmEncoder writer = new DcmEncoder(1024 * 1024);
+  writer.writeSopInstance(instance);
+
   //print(study);
   Format fmt = new Format();
   var s = fmt.study(study);

@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:logger/server.dart';
 
-import 'dcm/dcmbuf.dart';
+import 'dcm/dcm_decoder_bytebuf.dart';
 
 /// A DICOM File Prefix
 class Prefix {
@@ -35,7 +35,7 @@ class Prefix {
   // Read the 128-byte preamble to the DICOM File Format.
   static Uint8List readPreamble(buf) => buf.readUint8List(128);
 
-  static Prefix readPrefix(DcmBuf buf) {
+  static Prefix readPrefix(DcmDecoderByteBuf buf) {
     var preamble = readPreamble(buf);
     var name = buf.readString(4);
     if (!isValidPrefix(name)) {

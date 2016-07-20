@@ -9,7 +9,7 @@ import 'dart:io';
 import 'package:logger/server.dart';
 
 import 'package:odwsdk/dataset_sop.dart';
-import 'package:convert/src/dcm/dcmbuf_decoder.dart';
+import 'package:convert/src/dcm/dcm_decoder.dart';
 
 import 'package:convert/dcm.dart';
 

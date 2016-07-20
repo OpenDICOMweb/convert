@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file.
 // Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
-library odw.sdk.convert.sop.reader;
+library odw.sdk.convert.dcm.dcm_decoder;
 
 import 'dart:io';
 import 'dart:typed_data';
@@ -18,11 +18,11 @@ import 'package:odwsdk/uid.dart';
 
 import 'package:convert/src/dcm/io.dart';
 
-import 'dcmbuf.dart';
+import 'dcm_decoder_bytebuf.dart';
 
 /// [DcmDecoder] reads DICOM SOP Instances and returns a [DatasetSop].
 /// TODO: finish doc
-class DcmDecoder extends DcmBuf {
+class DcmDecoder extends DcmDecoderByteBuf {
   static final Logger log = new Logger("DcmEncoder");
   final String filePath;
   Uint8List _preamble;
@@ -42,6 +42,7 @@ class DcmDecoder extends DcmBuf {
     }
     var bytes = file.readAsBytesSync();
     var filePath = path.normalize(file.path);
+    log.debug('file length: ${bytes.length}, File: $filePath');
     return new DcmDecoder._(bytes, 0, bytes.length, bytes.length, filePath);
   }
 
@@ -129,12 +130,6 @@ class DcmDecoder extends DcmBuf {
     }
     log.debug('DcmBuf: $this');
     return aMap;
-  }
-
-  @override
-  void debug() {
-    print('Preamble: $_preamble');
-    print('Prefix: $_preamble');
   }
 
   //TODO: move to a utilities file for TypedData

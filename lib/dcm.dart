@@ -6,7 +6,7 @@
 library odw.dsk.convert.dcm;
 
 /// A converter DICOM File Format data.  See PS3.10.
-export 'package:convert/src/dcm/dcmbuf.dart';
-export 'package:convert/src/dcm/dcmbuf_decoder.dart';
-export 'package:convert/src/dcm/dcmbuf_encoder.dart';
+export 'package:convert/src/dcm/dcm_decoder_bytebuf.dart';
+export 'package:convert/src/dcm/dcm_decoder.dart';
+export 'package:convert/src/dcm/dcm_encoder_bytebuf.dart';
 export 'package:convert/src/dcm/io.dart';
