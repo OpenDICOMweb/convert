@@ -484,7 +484,7 @@ class DcmDecoderByteBuf extends ByteBuf {
 
   PN readPN(int tag, [VR vr]) {
     assert(vr == VR.kPN);
-    return PN.parse(tag, readShortString());
+    return PN.validateValueField(tag, readShortString());
   }
 
   SH readSH(int tag, [VR vr]) {
@@ -532,7 +532,7 @@ class DcmDecoderByteBuf extends ByteBuf {
 
   UI readUI(int tag, [VR vr]) {
     assert(vr == VR.kUI);
-    return UI.parse(tag, readShortString(kUidPaddingChar));
+    return UI.validateValueField(tag, readShortString(kUidPaddingChar));
   }
 
   UL readUL(int tag, [VR vr]) {
@@ -692,20 +692,25 @@ class DcmDecoderByteBuf extends ByteBuf {
 
   /// Returns a [String] without trailing padding character.
   /// This calls [getString] in [ByteBuf].
+  static const String kSpaceString = " ";
+  static final String kNullString = new String.fromCharCode(kNull);
   String readDcmString(int lengthInBytes, [int padChar = kSpace]) {
     if (lengthInBytes == 0) return "";
     if (lengthInBytes.isOdd) throw "Odd length error";
-    var s = super.readString(lengthInBytes);
-    var lastIndex = s.length - 1;
-    var last = s[lastIndex];
-    if (last == " ") {
-      return s.substring(0, lastIndex);
-    } else if ((last == 0) && (padChar == kSpace)) {
+    String s = super.readString(lengthInBytes);
+    int last = s.codeUnitAt(s.length - 1);
+    if (last == padChar) {
+      print('returning substring 1');
+      return s.substring(0, s.length - 1);
+    } else if ((last == kNull) && (padChar == kSpace)) {
       //TODO: Store this warning with the new attribute
-      log.warning('Invalid nul($last) padChar');
-      return s.substring(0, lastIndex);
+      log.warning('Invalid Nul($last) padChar');
+      print('returning substring 2');
+      return s.substring(0, s.length - 1);
+    } else {
+      print('returning string 0');
+      return s;
     }
-    return s;
   }
 
   //Note: private creators are for one group number are all generated before the group tags

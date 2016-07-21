@@ -76,9 +76,11 @@ class DcmEncoder extends DcmEncoderByteBuf {
   /// Writes the File Meta Information [Fmi] for this [Instance].
   void writeFmi(Fmi fmi) {
     var values = fmi.aMap.values;
+    for(Attribute value in values) print('$value\n');
     //for (int i = 0; i < values.length; i++)
-    for(Attribute a in values)
+    for(Attribute a in values) {
       writeAttribute(a);
+    }
   }
 
   void writeStudy(Study study) {
@@ -91,8 +93,10 @@ class DcmEncoder extends DcmEncoderByteBuf {
     //Logger log = new Logger("DcmEncoder.readSopInstance");
     writePreamble();
     writePrefix();
+    print('fmiDataset: ${instance.fmi}');
     writeFmi(instance.fmi);
-    writeDataset(instance.dataset);
+    print('instance.aMap: ${instance.aMap}');
+    writeDataset(instance.aMap);
   }
 
   /// Returns an [Attribute] or [null].
@@ -101,13 +105,14 @@ class DcmEncoder extends DcmEncoderByteBuf {
   @override
    void writeDataset(Map<int, Attribute> aMap) {
     final Logger log = new Logger("writeDataset");
-    var values = aMap.values;
+    Iterable<Attribute> values = aMap.values;
+    print('writeDataset: $values');
     for (Attribute a in values) {
       if (a.tag == kPixelData) {
         log.debug('PixelData: ${fmtTag(a.tag)}, ${a.vr}, length= ${a.values.length}');
         writePixelData(a);
       } else {
-        log.debug('$a');
+        log.debug('${a.vr.name}: ${fmtTag(a.tag)}, ${a.vr}, length= ${a.values.length}');
         writeAttribute(a);
       }
     }

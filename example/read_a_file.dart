@@ -28,9 +28,12 @@ void main() {
   log.info('Reading file: $file');
   var bytes = file.readAsBytesSync();
   DcmDecoder decoder = new DcmDecoder(bytes);
+  print('decoder: $decoder');
 
-  Instance instance = decoder.readSopInstance();
+  Instance instance = decoder.readSopInstance(path);
+  print('main:instance: $instance');
   Study study = instance.study;
+  print('main:study: $study');
   Format fmt = new Format();
   var s = fmt.study(study);
   print(s);

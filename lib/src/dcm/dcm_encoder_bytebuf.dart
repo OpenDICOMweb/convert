@@ -341,20 +341,25 @@ class DcmEncoderByteBuf extends ByteBuf {
     writeVR(vrCode);
     log.debug('write: $a');
     VFWriter writer = vfWriter[vrCode];
-    /*
+
+   var values = a.values;
     print('writer: ${writer.runtimeType}, '
               'tag: ${toHexString(a.tag, 8)}, '
               'vrCode: ${toHexString(vrCode, 4)}, '
               'VR: ${a.vr}, '
-              'length: ${a.values.length}, '
+              'values: $values. '
+             // 'length: ${values.length}, '
               'writeIndex: $writeIndex');
-    */
+    print('values: ${a.values}');
+
     if (writer == null) {
       var msg = "Invalid vrCode(${toHexString(vrCode, 4)})";
       log.error(msg);
       throw msg;
     }
+    print('before: $a');
     a = (a is PGData) ? a.data : a;
+    print('after: $a');
     writer(a);
   }
 
@@ -373,7 +378,7 @@ class DcmEncoderByteBuf extends ByteBuf {
 
   void writeAT(AT a) {
     assert(a.vr == VR.kAT);
-    writeDcmUint32List(a.values);
+    writeDcmUint32List(a);
   }
 
   void writeBR(BR a) {
@@ -449,7 +454,7 @@ class DcmEncoderByteBuf extends ByteBuf {
   //TODO: need transfer syntax to do this correctly
   void writeOL(OL a) {
     assert(a.vr == VR.kOL);
-    writeDcmUint32List(a.values, isShort: false);
+    writeDcmUint32List(a, isShort: false);
   }
 
   // depends on Transfer Syntax
@@ -509,6 +514,7 @@ class DcmEncoderByteBuf extends ByteBuf {
 
   void writeUL(UL a) {
     assert(a.vr == VR.kUL);
+    print('UL: ${a.values}');
     writeDcmUint32List(a.values);
   }
 
@@ -592,10 +598,11 @@ class DcmEncoderByteBuf extends ByteBuf {
     }
   }
 
-  void writeDcmUint32List(List<int> list, {isShort: true}) {
-    writeLengthInBytes(list.length, isShort, 4, kMaxUint32LongLength);
-    if (list.length > 0 ) {
-      Uint32List bytes = new Uint32List.fromList(list);
+  void writeDcmUint32List(List<int> values, {isShort: true}) {
+    print('writeDcm: $values');
+    writeLengthInBytes(values.length, isShort, 4, kMaxUint32LongLength);
+    if (values.length > 0 ) {
+      Uint32List bytes = new Uint32List.fromList(values);
       writeUint32List(bytes);
     }
   }
@@ -651,7 +658,7 @@ class DcmEncoderByteBuf extends ByteBuf {
   //**** String Methods ****
 
   void writeShortDcmString(Attribute a, {String padChar: " "}) =>
-      writeDcmString(a.toDcmString(), isShort: true);
+      writeDcmString(a.toDcmString(), isShort: true, padChar: padChar);
 
   void writeLongDcmString(Attribute a, {String padChar: " "}) =>
       writeDcmString(a.toDcmString(), isShort: false);

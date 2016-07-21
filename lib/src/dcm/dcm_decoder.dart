@@ -68,23 +68,27 @@ class DcmDecoder extends DcmDecoderByteBuf {
       log.debug('$a');
       fmi[a.tag] = a;
     }
-    var ts = fmi[kTransferSyntaxUID];
-    Uid transferSyntaxUid = (ts != null) ? ts.value : null;
+    UI ts = fmi[kTransferSyntaxUID];
+    print('TS: $ts');
+    String transferSyntaxUid = (ts != null) ? ts.value : null;
     log.info('Transfer Syntax: $transferSyntaxUid');
     if (ts == littleEndian)
       throw "little Endian";
     return new Fmi(fmi);
   }
 
-  Instance readSopInstance() {
+  Instance readSopInstance([String filePath]) {
     Logger log = new Logger("DcmEncoder.readSopInstance");
     _preamble = readPreamble();
     _prefix = readPrefix();
     //TODO: we could try to figure out what it contained later.
     if (_prefix == null) return null;
     var fmi = readFmi();
+    log.debug('readSopInstance: fmi = $fmi');
     var aMap = readDataset();
-    Instance i = new Instance(fmi, aMap);
+    log.debug('aMap: $aMap');
+
+    Instance i = new Instance(fmi, aMap, filePath);
     log.debug('readSopInstance: $i');
     return i;
   }

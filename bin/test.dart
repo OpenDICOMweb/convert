@@ -4,13 +4,15 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-import 'package:odwsdk/element.dart';
-import 'package:odwsdk/tag.dart';
 
 void main() {
   //var s = '1950-07-18T12:06:04.123456-0500';
 
-  parse(0x00100010, "0");
+  var s = "TEST^TEST ";
+  var b = "TEST";
+  var c = [b, b].join('^') + "^";
+  print(c);
+  //parse(0x00100010, "0");
 
   /*
   print(fmtTag(kPrivateInformation));
@@ -23,7 +25,6 @@ List<double> parse(int tag, String s) {
   double dsError(String s) {
     //log.error('Invalid DS (decimal) String: "$s"');
     throw 'Bad DS String: "$s"';
-    return 0.0;
   }
   //if (s.length == 0) return new DS(tag, Float.emptyList);
   List<String> strings = s.split('\\');
@@ -38,7 +39,7 @@ List<double> parse(int tag, String s) {
   return floatList;
 }
 
-foo() {
+void foo() {
   var n = double.parse("0", (s) {
     //** log.error('Invalid DS (decimal) String: $s');
     throw 'Bad DS String: "$s"';
