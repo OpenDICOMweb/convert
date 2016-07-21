@@ -27,15 +27,16 @@ class DcmData {
     return new DcmData(file, data);
   }
 }
+
 /// Returns a [File] if possible.
 File toFile(path) {
   if (path is File) return path;
   if (path is String) return new File(path);
   if (path is Uri) new File.fromUri(path);
-  return new File(path.toString());
+  return null;
 }
 
-Future<Uint8List> readDcmFile(var path) async {
+Future<Uint8List> readDcmFile(path) async {
   File file = toFile(path);
   return await file.readAsBytes();
 }
@@ -52,9 +53,9 @@ Future<Uint8List> readDcmFileList(List pathList) async {
     return await file.readAsBytes();
   }
 }
+*/
 
 Uint8List readDcmFileListSync(List pathList) {
   File file = toFile(pathList);
   return file.readAsBytesSync();
 }
-*/

@@ -19,21 +19,28 @@ String crf2 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.
 String outPath = 'output.dcm';
 
 void main() {
-  Logger log = System.init(level: Level.debug);
+  Logger log = System.init(level: Level.config);
   var path = crf1;
 
   // Read a File
   File inFile = new File(path);
   log.info('Reading file: $inFile');
-  DcmDecoder decoder = new DcmDecoder.fromFile(inFile);
+  var bytes = inFile.readAsBytesSync();
+  print('length= ${bytes.length}');
+  DcmDecoder decoder = new DcmDecoder(bytes);
   Instance instance = decoder.readSopInstance();
   Study study = instance.study;
 
   // Write a File
+  log.level = Level.debug;
   File outFile = new File(outPath);
   log.info('Writing file: $outFile');
-  DcmEncoder writer = new DcmEncoder(1024 * 1024);
+  DcmEncoder writer = new DcmEncoder(bytes.length + 1024);
   writer.writeSopInstance(instance);
+  print('writeIndex: ${writer.writeIndex}');
+  var outBytes = writer.bytes.buffer.asUint8List(0, writer.writeIndex);
+  print('out length: ${bytes.length}');
+  outFile.writeAsBytesSync(outBytes);
 
   //print(study);
   Format fmt = new Format();

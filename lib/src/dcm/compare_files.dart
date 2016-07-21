@@ -10,6 +10,8 @@ import 'dart:typed_data';
 
 import 'package:path/path.dart' as path;
 
+import 'package:ascii/ascii.dart';
+
 //TODO:
 // 1. create log of differences
 // 2. Create a method that slides forward to find the next position where things are equal.
@@ -52,15 +54,34 @@ class FileCompare {
 
     int min = (length0 < length1) ? length0 : length1;
 
+    var maxCount = 3;
+    var status = "the same.";
+    var count = 0;
+
     for(int i = 0; i < min; i++) {
       if (bytes0[i] != bytes1[i]) {
+        if(count++ > maxCount) exit(255);
         print('Difference at position $i');
-        print('  bytes0 = ${bytes0[i]}');
-        print('  bytes1 = ${bytes1[i]}');
-        return "Files are different";
+        print('  bytes0[$i] = ${bytes0[i]}');
+        print('  bytes1[$i] = ${bytes1[i]}');
+        print('  bytes0: ${bytes0.sublist(i-8, i+20)}');
+        print('  bytes1: ${bytes1.sublist(i-8, i+20)}');
+        print('  bytes0: ${toAscii(bytes0.sublist(i-8, i+20))}');
+        print('  bytes1: ${toAscii(bytes1.sublist(i-8, i+20))}');
+        status = "different.";
       }
     }
-    return "Files are the same.";
+    return "Files are $status";
   }
 
+}
+
+List<String> toAscii(List<int> list) {
+  var cList = new List<String>(list.length);
+  for (int i = 0; i < list.length; i++) {
+    int c = list[i];
+    var v = (Ascii.isVisibleChar(c)) ? new String.fromCharCode(c) : c.toString();
+    cList[i] = v;
+  }
+  return cList;
 }

@@ -12,12 +12,10 @@ import 'package:logger/server.dart';
 import 'package:bytebuf/bytebuf.dart';
 
 import 'package:odwsdk/attribute.dart';
+import 'package:odwsdk/constants.dart';
 import 'package:odwsdk/dataset_sop.dart';
 import 'package:odwsdk/tag.dart';
 import 'package:odwsdk/vr.dart';
-
-import 'package:convert/src/constants.dart';
-
 
 //TODO:
 //  1. Move all [String] trimming and validation to the Attribute.  The reader
@@ -195,21 +193,6 @@ class DcmEncoderByteBuf extends ByteBuf {
     writeUint16(lengthInBytes);
   }
 
-  ///
-  int validFieldLength(int length, int bytesPerElement, int maxLengthInBytes) {
-    int lengthInBytes = length * bytesPerElement;
-    if (lengthInBytes > maxLengthInBytes)
-      invalidValueFieldLengthError("length($length) = lengthInBytes($lengthInBytes) "
-                                       "exceeds maxLengthInBytes($maxLengthInBytes);elementSizeInBytes");
-    return lengthInBytes;
-  }
-
-  //Flush?
-  void invalidValueFieldLengthError(String msg) {
-    log.error(msg);
-    if (breakOnError) throw msg;
-  }
-
   //TODO: move to constants
   static const int kMaxLongLengthInBytes = (1 << 32) - 1;
 
@@ -352,17 +335,26 @@ class DcmEncoderByteBuf extends ByteBuf {
       throw msg;
     }
 
-    print('_writeInteral: $a');
+    //print('_writeInteral: $a');
     writeTag(a.tag);
     int vrCode = a.vr.code;
     writeVR(vrCode);
     log.debug('write: $a');
     VFWriter writer = vfWriter[vrCode];
+    /*
+    print('writer: ${writer.runtimeType}, '
+              'tag: ${toHexString(a.tag, 8)}, '
+              'vrCode: ${toHexString(vrCode, 4)}, '
+              'VR: ${a.vr}, '
+              'length: ${a.values.length}, '
+              'writeIndex: $writeIndex');
+    */
     if (writer == null) {
       var msg = "Invalid vrCode(${toHexString(vrCode, 4)})";
       log.error(msg);
       throw msg;
     }
+    a = (a is PGData) ? a.data : a;
     writer(a);
   }
 
@@ -469,7 +461,6 @@ class DcmEncoderByteBuf extends ByteBuf {
 
   void writePN(PN a) {
     assert(a.vr == VR.kPN);
-    //TODO: add toDcmString to string and pn attributes
     writeShortDcmString(a);
   }
 
@@ -567,15 +558,31 @@ class DcmEncoderByteBuf extends ByteBuf {
 
   //int writeSequenceLength() => writeLongOrUndefinedLength(kSequenceDelimiterLast16Bits);
 
-  void writeLengthInBytes(int length, bool isShort, int elementSizeInBytes, int maxLongLength) {
+  void writeLengthInBytes(int length, bool isShort, int bytesPerElement, int maxLongLength) {
     if (isShort) {
-      int lengthInBytes = validFieldLength(length, 4, kMaxShortLengthInBytes);
+      int lengthInBytes = _validFieldLength(length, bytesPerElement, kMaxShortLengthInBytes);
       writeShortLength(lengthInBytes);
     } else {
-      int lengthInBytes = validFieldLength(length, 4, maxLongLength);
+      int lengthInBytes = _validFieldLength(length, bytesPerElement, maxLongLength);
       writeLongLength(lengthInBytes);
     }
   }
+
+  ///
+  int _validFieldLength(int length, int bytesPerElement, int maxLengthInBytes) {
+    int lengthInBytes = length * bytesPerElement;
+    if (lengthInBytes > maxLengthInBytes)
+      _invalidValueFieldLengthError("length($length) = lengthInBytes($lengthInBytes) "
+                                       "exceeds maxLengthInBytes($maxLengthInBytes);elementSizeInBytes");
+    return lengthInBytes;
+  }
+
+  //Flush?
+  void _invalidValueFieldLengthError(String msg) {
+    log.error(msg);
+    if (breakOnError) throw msg;
+  }
+
 
   void writeDcmInt32List(List<int> list, {isShort: true}) {
     writeLengthInBytes(list.length, isShort, 4, kMaxInt32LongLength);
@@ -653,18 +660,26 @@ class DcmEncoderByteBuf extends ByteBuf {
   /// necessary, then writes the Value Length Field followed by the Value Field.
   void writeDcmString(String s, {bool isShort: true, String padChar: " "}) {
     Uint8List bytes;
-    int length = 0;
+    int lengthInBytes = 0;
     if (s.length.isOdd) s += padChar;
     if (s.length != 0) {
       bytes = UTF8.encode(s);
-      length = bytes.length;
+      lengthInBytes = bytes.length;
     }
     if (isShort) {
-      if (length > kMaxShortLengthInBytes) log.error("***");
-      writeShortLength(bytes.length);
+      if (lengthInBytes > kMaxShortLengthInBytes) {
+        var msg = "Short Length($lengthInBytes) exceeds maximum.";
+        log.error(msg);
+        throw msg;
+      }
+      writeShortLength(lengthInBytes);
     } else {
-      if (length > kMaxLongLengthInBytes) log.error("***");
-      writeLongLength(bytes.length);
+      if (lengthInBytes > kMaxLongLengthInBytes) {
+        var msg = "Long Length($lengthInBytes) exceeds maximum.";
+        log.error(msg);
+        throw msg;
+      }
+      writeLongLength(lengthInBytes);
     }
     if (s.length != 0)
       writeUint8List(bytes);
@@ -687,10 +702,10 @@ class DcmEncoderByteBuf extends ByteBuf {
   void writeItems(List<Item> items) {
     for (Item item in items) {
       if (item.hadUndefinedLength) {
-        print('item: $item');
+       // print('item: $item');
         _writeUndefinedLengthItem(item);
       } else {
-        print('item: $item');
+      //  print('item: $item');
         _writeItem(item);
       }
     }
@@ -700,9 +715,9 @@ class DcmEncoderByteBuf extends ByteBuf {
     assert(item.hadUndefinedLength == false);
     log.debug('writeItem: $item');
     writeUint32(item.lengthInBytes);
-    for (int i = 0; i < item.lengthInBytes; i++) {
-      print('item[$i]: ${item[i]}');
-      writeAttribute(item[i]);
+    for (Attribute a in item.aMap.values) {
+     // print('item: $a');
+      writeAttribute(a);
     }
   }
 
@@ -715,14 +730,19 @@ class DcmEncoderByteBuf extends ByteBuf {
   }
 
   ///Writes Pixel Data (7FFF,0010) based on the Transfer Syntax.
-  void writePixelData(Attribute a) => _writeInternal(a);
+  void writePixelData(Attribute a) {
+   // print('pixelData: $a');
+    _writeInternal(a);
+  }
 
   /// Writes a Private Group of Private Attributes.
   void writePrivateGroup(PrivateGroup pg) {
     for (int i = 0; i < pg.creators.length; i++)
       writeLO(pg.creators[i]);
-    for (int i = 0; i < pg.values.length; i++)
-      _writeInternal(pg.creators[i]);
+    for (int i = 0; i < pg.values.length; i++) {
+      // print('pdData: ${pg.values[i]}');
+      _writeInternal(pg.values[i]);
+    }
   }
 
 }

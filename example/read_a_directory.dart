@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:logger/server.dart';
 import 'package:convert/convert.dart';
 import 'package:odwsdk/dataset_sop.dart';
+import 'package:odwsdk/uid.dart';
 
 import 'package:odwsdk/system.dart';
 
@@ -17,7 +18,7 @@ var dirPath1 = 'D:/M2sata/mint_test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1
 var dirPath2 = 'D:/M2sata/mint_test_data/sfd/CT/20_phase/1_DICOM_Original';
 
 void main() {
-  Logger log = System.init(level: Level.debug);
+  Logger log = System.init(level: Level.info);
 
   Directory dir = new Directory(dirPath0);
 
@@ -26,21 +27,26 @@ void main() {
   for (File f in fList)
     log.info('File: $f');
 
-  Study study;
+  Map<Uid, Study> studies = {};
 
   for (File f in fList) {
     var instance = readInstance(f);
-    study = instance.study;
+    var study = instance.study;
+    studies[study.uid] = study;
   }
 
-  print('series count: ${study.series.length}');
-  print('instance count: ${study.instances.length}');
-  Format fmt = new Format();
-  var s = fmt.study(study);
-  print(s);
+  for (Study study in studies.values)
+      printStudy(study);
 }
 
+void printStudy(Study study) =>
+  print('Study(${study.uid}) with ${study.series.length} Series, '
+            'and ${study.instances.length} Instances.');
+
+
+
 Instance readInstance(File f) {
-  DcmDecoder reader = new DcmDecoder.fromFile(f);
-  return reader.readSopInstance();
+  var bytes = f.readAsBytesSync();
+  DcmDecoder decoder = new DcmDecoder(bytes);
+  return decoder.readSopInstance();
 }

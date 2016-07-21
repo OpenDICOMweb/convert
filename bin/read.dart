@@ -7,11 +7,9 @@
 import 'dart:io';
 
 import 'package:logger/server.dart';
-
 import 'package:odwsdk/dataset_sop.dart';
-import 'package:convert/src/dcm/dcm_decoder.dart';
 
-import 'package:convert/dcm.dart';
+import 'package:convert/convert.dart';
 
 const String tdir = "C:/mint_test_data/CR";
 
@@ -42,9 +40,9 @@ void main() {
 
     //DcmReader buf = new DcmReader.fromUint8List(data);
 
-    DcmDecoder reader = new DcmDecoder.fromFile(file);
+    DcmDecoderIO decoder = new DcmDecoderIO.fromFile(file);
 
-    var instance = reader.readSopInstance();
+    var instance = decoder.readSopInstance();
     study = instance.study;
 
     Format fmt = new Format();

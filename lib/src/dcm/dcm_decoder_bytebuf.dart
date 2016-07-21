@@ -12,12 +12,10 @@ import 'package:logger/server.dart';
 import 'package:bytebuf/bytebuf.dart';
 
 import 'package:odwsdk/attribute.dart';
+import 'package:odwsdk/constants.dart';
 import 'package:odwsdk/dataset_sop.dart';
 import 'package:odwsdk/tag.dart';
 import 'package:odwsdk/vr.dart';
-
-import 'package:convert/src/constants.dart';
-
 
 //TODO:
 //  1. Move all [String] trimming and validation to the Attribute.  The reader
@@ -51,7 +49,7 @@ typedef Attribute VFReader(int tag, [VR vr]);
 ///   they were read. and a bytewise comparitor will find them to be equal.
 ///   2. All String minipulation should be handled in the attribute itself.
 ///   3. All VFReaders allow the Value Field to be empty.  The [String] [VFReaders] return "",
-///   and the Integer, FLoat [VFReaders] return [null].
+///   and the Integer, FLoat [VFReaders] return new [null].
 class DcmDecoderByteBuf extends ByteBuf {
   static final Logger log = new Logger("DcmDecoderByteBuf", level: Level.debug);
 
@@ -182,7 +180,6 @@ class DcmDecoderByteBuf extends ByteBuf {
     return a;
   }
 
-  static const int kMaxShortLengthInBytes = 0xFFFF;
 
   /// Read a 16 bit length field and skip the following 16 bits
   int readShortLength() => readUint16();
@@ -199,8 +196,6 @@ class DcmDecoderByteBuf extends ByteBuf {
           "the lengthInBytes must be evenly divisible by elementSizeInBytes";
     return lengthInBytes ~/ bytesPerElement;
   }
-
-  static const int kMaxLongLengthInBytes = (1 << 32) - 1;
 
   /// Skips 2-bytes and then reads and returns a 32-bit length field.
   /// Note: This should only be used for VRs of // OD, OF, OL, UC, UR, UT.
@@ -315,17 +310,20 @@ class DcmDecoderByteBuf extends ByteBuf {
     int vrCode = readVR();
     VR vr = VR.map[vrCode];
     VFReader reader = vrReaders[vrCode];
+
     print('reader: ${reader.runtimeType}, '
                  'tag: ${toHexString(tag, 8)}, '
                  'vrCode: ${toHexString(vrCode, 4)}, '
                  'VR: $vr, '
                  'readIndex: $readIndex');
+
     if (reader == null) {
       var msg = "Invalid vrCode(${toHexString(vrCode, 4)})";
       log.error(msg);
       throw msg;
     }
     return reader(tag, vr);
+
   }
 
 
@@ -333,19 +331,19 @@ class DcmDecoderByteBuf extends ByteBuf {
 
   AE readAE(int tag, [VR vr]) {
     assert(vr == VR.kAE);
-    return AE.parse(tag, readShortString());
+    return AE.validateValueField(tag, readShortString());
   }
 
   /*
   AS readAS(int tag, [VR vr]) {
     assert(vr == VR.kAS);
-    return AS.parse(tag, readShortString());
+    return AS.validateValueField(tag, readShortString());
   }
   */
   AS readAS(int tag, [VR vr]) {
     assert(vr == VR.kAS);
     var s = readShortString();
-    return AS.parse(tag, s);
+    return AS.validateValueField(tag, s);
   }
 
   AT readAT(int tag, [VR vr]) {
@@ -366,21 +364,21 @@ class DcmDecoderByteBuf extends ByteBuf {
 
   CS readCS(int tag, [VR vr]) {
     assert(vr == VR.kCS);
-    return CS.parse(tag, readShortString());
+    return CS.validateValueField(tag, readShortString());
   }
 
   DA readDA(int tag, [VR vr]) {
-    return DA.parse(tag, readShortString());
+    return DA.validateValueField(tag, readShortString());
   }
 
   DS readDS(int tag, [VR vr]) {
     assert(vr == VR.kDS);
-    return DS.parse(tag, readShortString());
+    return DS.validateValueField(tag, readShortString());
   }
 
   DT readDT(int tag, [VR vr]) {
     assert(vr == VR.kDT);
-    return DT.parse(tag, readShortString());
+    return DT.validateValueField(tag, readShortString());
   }
 
   FD readFD(int tag, [VR vr]) {
@@ -401,18 +399,18 @@ class DcmDecoderByteBuf extends ByteBuf {
 
   IS readIS(int tag, [VR vr]) {
     assert(vr == VR.kIS);
-    return IS.parse(tag, readShortString());
+    return IS.validateValueField(tag, readShortString());
   }
 
 
   LO readLO(int tag, [VR vr]) {
     assert(vr == VR.kLO);
-    return LO.parse(tag, readShortString());
+    return LO.validateValueField(tag, readShortString());
   }
 
   LT readLT(int tag, [VR vr]) {
     assert(vr == VR.kLT);
-    return LT.parse(tag, readShortString());
+    return LT.validateValueField(tag, readShortString());
   }
 
   // Read an Value Field Length for an Attribute that
@@ -421,12 +419,13 @@ class DcmDecoderByteBuf extends ByteBuf {
     assert(vr == VR.kOB);
     bool hadUndefinedLength = false;
     int lengthInBytes = readLongLength();
-    print('readOB: tag: ${fmtTag(tag)}, length= $lengthInBytes(${toHexString(lengthInBytes, 8)})');
+    //print('readOB: tag: ${fmtTag(tag)}, length= $lengthInBytes(${toHexString(lengthInBytes, 8)
+    // })');
     if (lengthInBytes == kUndefinedLength) {
-      print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
+      //print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
       lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
       hadUndefinedLength = true;
-      print('readOW: hadUndefinedLength: readeIndex($readIndex), lengthInBytes($lengthInBytes)');;
+      //print('readOW: hadUndefinedLength: readeIndex($readIndex), lengthInBytes($lengthInBytes)');;
     }
     //TODO: use the ByteBuf setMark mechanism
     //setReadIndexMark;
@@ -490,7 +489,7 @@ class DcmDecoderByteBuf extends ByteBuf {
 
   SH readSH(int tag, [VR vr]) {
     assert(vr == VR.kSH);
-    return SH.parse(tag, readShortString());
+    return SH.validateValueField(tag, readShortString());
   }
 
   SL readSL(int tag, [VR vr]) {
@@ -518,32 +517,33 @@ class DcmDecoderByteBuf extends ByteBuf {
 
   ST readST(int tag, [VR vr]) {
     assert(vr == VR.kST);
-    return ST.parse(tag, readShortString());
+    return ST.validateValueField(tag, readShortString());
   }
 
   TM readTM(int tag, [VR vr]) {
     assert(vr == VR.kTM);
-    return TM.parse(tag, readShortString());
+    return TM.validateValueField(tag, readShortString());
   }
 
   UC readUC(int tag, [VR vr]) {
     assert(vr == VR.kUC);
-    return UC.parse(tag, readLongString());
+    return UC.validateValueField(tag, readLongString());
   }
-
-  static const int uidPaddingChar = 0;
 
   UI readUI(int tag, [VR vr]) {
     assert(vr == VR.kUI);
-    return UI.parse(tag, readShortString(uidPaddingChar));
+    return UI.parse(tag, readShortString(kUidPaddingChar));
   }
 
   UL readUL(int tag, [VR vr]) {
     assert(vr == VR.kUL);
     int lengthInBytes = readShortLength();
+    print('length: $lengthInBytes');
     int length = toElementLength(lengthInBytes, UL.bytesPerElement);
+    print('elementLength: $length');
     Uint32List list = readUint32List(length);
-    log.finest('UL<Uint32>: $list');
+    print('list: $list');
+    log.debug('UL<Uint32>: $list');
     return new UL(tag, list);
   }
 
@@ -551,12 +551,13 @@ class DcmDecoderByteBuf extends ByteBuf {
     assert(vr == VR.kUN);
     bool hadUndefinedLength = false;
     int lengthInBytes = readLongLength();
-    print('readOB: tag: ${fmtTag(tag)}, length= $lengthInBytes(${toHexString(lengthInBytes, 8)})');
+    //print('readOB: tag: ${fmtTag(tag)}, length= $lengthInBytes(${toHexString(lengthInBytes, 8)
+    // })');
     if (lengthInBytes == kUndefinedLength) {
-      print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
+      //print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
       lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
       hadUndefinedLength = true;
-      print('readOW: hadUndefinedLength: readeIndex($readIndex), lengthInBytes($lengthInBytes)');;
+      //print('readOW: hadUndefinedLength: readeIndex($readIndex), lengthInBytes($lengthInBytes)');;
     }
     //TODO: use the ByteBuf setMark mechanism
     //setReadIndexMark;
@@ -567,7 +568,7 @@ class DcmDecoderByteBuf extends ByteBuf {
 
   UR readUR(int tag, [VR vr]) {
     assert(vr == VR.kUR);
-    return UR.parse(tag, readLongString());
+    return UR.validateValueField(tag, readLongString());
   }
 
   US readUS(int tag, [VR vr]) {
@@ -582,7 +583,7 @@ class DcmDecoderByteBuf extends ByteBuf {
   /// Unlimited Text (UT) Value Representation
   UT readUT(int tag, [VR vr]) {
     assert(vr == VR.kUT);
-    return UT.parse(tag, readLongString());
+    return UT.validateValueField(tag, readLongString());
   }
 
   /// Returns the [attribute]'s value as a [String].  If [_index] is provided,
@@ -613,13 +614,12 @@ class DcmDecoderByteBuf extends ByteBuf {
   SQ readSequence(int tag) {
     bool hadUndefinedLength = false;
     int lengthInBytes = readLongLength();
-    print('readSequence: tag: ${fmtTag(tag)}, length= $lengthInBytes(${toHexString
-        (lengthInBytes, 8)
-    })');
+    log.debug('readSequence: tag: ${fmtTag(tag)}, '
+                  'length= $lengthInBytes(${toHexString(lengthInBytes, 8)})');
     if (lengthInBytes == kUndefinedLength) {
       lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
       hadUndefinedLength = true;
-      print('Sequence: hadUndefinedLength: lengthInBytes($lengthInBytes)');
+      log.debug('Sequence: hadUndefinedLength: lengthInBytes($lengthInBytes)');
     }
 
     List<Item> items = <Item>[];
@@ -693,16 +693,18 @@ class DcmDecoderByteBuf extends ByteBuf {
   /// Returns a [String] without trailing padding character.
   /// This calls [getString] in [ByteBuf].
   String readDcmString(int lengthInBytes, [int padChar = kSpace]) {
+    if (lengthInBytes == 0) return "";
     if (lengthInBytes.isOdd) throw "Odd length error";
-    int padCharCount = 0;
-    int last = bytes[readIndex + (lengthInBytes - 1)];
-    if (last == padChar) padCharCount = 1;
-    if ((last == 0) && (padChar == kSpace)) {
+    var s = super.readString(lengthInBytes);
+    var lastIndex = s.length - 1;
+    var last = s[lastIndex];
+    if (last == " ") {
+      return s.substring(0, lastIndex);
+    } else if ((last == 0) && (padChar == kSpace)) {
+      //TODO: Store this warning with the new attribute
       log.warning('Invalid nul($last) padChar');
-      padCharCount = 1;
+      return s.substring(0, lastIndex);
     }
-    var s = super.getString(readIndex, lengthInBytes - padCharCount);
-    readIndex += lengthInBytes;
     return s;
   }
 

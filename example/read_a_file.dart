@@ -18,17 +18,19 @@ String crf2 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.
 
 String bug1 = 'C:/odw/sdk/odwsdk/dcm_files/IM-0001-0002.dcm';
 
+String output = "output.dcm";
+
 void main() {
   Logger log = System.init(level: Level.debug);
-  var path = bug1;
+  var path = crf1;;
 
   File file = new File(path);
   log.info('Reading file: $file');
-  DcmDecoder reader = new DcmDecoder.fromFile(file);
+  var bytes = file.readAsBytesSync();
+  DcmDecoder decoder = new DcmDecoder(bytes);
 
-  Instance instance = reader.readSopInstance();
+  Instance instance = decoder.readSopInstance();
   Study study = instance.study;
-  //print(study);
   Format fmt = new Format();
   var s = fmt.study(study);
   print(s);

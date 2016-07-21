@@ -5,18 +5,14 @@
 // See the AUTHORS file for other contributors.
 library odw.sdk.convert.dcm.dcm_decoder;
 
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:logger/server.dart';
-import 'package:path/path.dart' as path;
 
 import 'package:odwsdk/attribute.dart';
 import 'package:odwsdk/dataset_sop.dart';
 import 'package:odwsdk/tag.dart';
 import 'package:odwsdk/uid.dart';
-
-import 'package:convert/src/dcm/io.dart';
 
 import 'dcm_decoder_bytebuf.dart';
 
@@ -24,7 +20,7 @@ import 'dcm_decoder_bytebuf.dart';
 /// TODO: finish doc
 class DcmDecoder extends DcmDecoderByteBuf {
   static final Logger log = new Logger("DcmEncoder");
-  final String filePath;
+  //TODO: add ability to keep non-zero preamble
   Uint8List _preamble;
   String _prefix;
 
@@ -32,25 +28,14 @@ class DcmDecoder extends DcmDecoderByteBuf {
   factory DcmDecoder(Uint8List bytes, [int readIndex = 0, int writeIndex, int lengthInBytes]) {
     if (lengthInBytes == null) lengthInBytes = bytes.lengthInBytes - readIndex;
     if (writeIndex == null) writeIndex = lengthInBytes;
-    return new DcmDecoder._(bytes, readIndex, writeIndex, lengthInBytes);
-  }
-
-  factory DcmDecoder.fromFile(File file) {
-    if (file is! File) {
-      log.error('The "file" parameter must be a String or File');
-      return null;
-    }
-    var bytes = file.readAsBytesSync();
-    var filePath = path.normalize(file.path);
-    log.debug('file length: ${bytes.length}, File: $filePath');
-    return new DcmDecoder._(bytes, 0, bytes.length, bytes.length, filePath);
+    return new DcmDecoder.internal(bytes, readIndex, writeIndex, lengthInBytes);
   }
 
   factory DcmDecoder.fromUint8List(Uint8List bytes) =>
       new DcmDecoder(bytes, 0, bytes.length, bytes.length);
 
   /// Internal Constructor: Returns a [._slice from [bytes].
-  DcmDecoder._(Uint8List bytes, int readIndex, int writeIndex, int length, [this.filePath])
+  DcmDecoder.internal(Uint8List bytes, int readIndex, int writeIndex, int length)
       : super.internal(bytes, readIndex, writeIndex, length);
 
   // Read the 128-byte preamble to the DICOM File Format.
@@ -83,21 +68,12 @@ class DcmDecoder extends DcmDecoderByteBuf {
       log.debug('$a');
       fmi[a.tag] = a;
     }
-    Uid transferSyntax = fmi[kTransferSyntaxUID].value;
-    log.info('Transfer Syntax: $transferSyntax');
-    if (transferSyntax == littleEndian)
+    var ts = fmi[kTransferSyntaxUID];
+    Uid transferSyntaxUid = (ts != null) ? ts.value : null;
+    log.info('Transfer Syntax: $transferSyntaxUid');
+    if (ts == littleEndian)
       throw "little Endian";
     return new Fmi(fmi);
-  }
-
-  Study readStudy(List paths) {
-    Instance i = readSopInstance();
-    for (var f in paths) {
-      File file = toFile(f);
-      var reader = new DcmDecoder.fromFile(file);
-      reader.readSopInstance();
-    }
-    return i.study;
   }
 
   Instance readSopInstance() {
@@ -108,7 +84,7 @@ class DcmDecoder extends DcmDecoderByteBuf {
     if (_prefix == null) return null;
     var fmi = readFmi();
     var aMap = readDataset();
-    Instance i = new Instance(fmi, aMap, filePath);
+    Instance i = new Instance(fmi, aMap);
     log.debug('readSopInstance: $i');
     return i;
   }
@@ -123,7 +99,7 @@ class DcmDecoder extends DcmDecoderByteBuf {
       Attribute a = readAttribute();
       aMap[a.tag] = a;
       if (a.tag == kPixelData) {
-        log.debug('PixelData: ${fmtTag(a.tag)}, ${a.vr}, length= ${a.values.length}');
+        log.debug('PixelData: ${fmtTag(a.tag)}, ${a.vr}, length= ${a.length}');
       } else {
         log.debug('$a');
       }

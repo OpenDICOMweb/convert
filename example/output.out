@@ -1,0 +1,39 @@
+C:\tools\dart\dev\sdk\dart-sdk-1.18.0-dev.4.3\bin\dart.exe --ignore-unrecognized-flags --checked --enable-vm-service:55695 --trace_service_pause_events C:\odw\sdk\convert\example\write_a_file.dart
+Observatory listening on http://127.0.0.1:55695
+Logging to file: odwsdk_2016-7-20.log
+[CONFIG] System Log Created with Root Level: CONFIG
+[CONFIG] Logger is Hierarchical
+[CONFIG] LogFileName: odwsdk_2016-7-20.log
+[CONFIG] System running: /C:/odw/sdk/convert/example/write_a_file.dart
+[CONFIG] Study Cache: {} created.
+length= 14611920
+[INFO] Writing file: File: 'output.dcm'
+writeIndex: 14611877
+out length: 14611920
+Study(2.16.840.1.114255.393386351.1568457295.34445.4) [
+  Series(2.16.840.1.114255.393386351.1568457295.5012.1 ) [
+    Instance(2.16.840.1.114255.393386351.1568457295.17895.5) [
+      UL: (0002,0000), FileMetaInformationGroupLength, [204]
+      OB: (0002,0001), FileMetaInformationVersion, [0, 1]
+      UI: (0002,0002), MediaStorageSOPClassUID, [Uid: 1.2.840.10008.5.1.4.1.1.1 ]
+      UI: (0002,0003), MediaStorageSOPInstanceUID, [Uid: 2.16.840.1.114255.393386351.1568457295.17895.5]
+      UI: (0002,0010), TransferSyntaxUID, [Uid: 1.2.840.10008.1.2.1 ]
+      UI: (0002,0012), ImplementationClassUID, [Uid: 1.2.250.1.59.3.0.3.5.3]
+      SH: (0002,0013), ImplementationVersionName, [ETIAM_DCMTK_353]
+      AE: (0002,0016), SourceApplicationEntityTitle, [IMG_ARCH_UV]
+      CS: (0008,0005), SpecificCharacterSet, [ISO_IR 100]
+      CS: (0008,0008), ImageType, [ORIGINAL, PRIMARY]
+      UI: (0008,0016), SOPClassUID, [Uid: 1.2.840.10008.5.1.4.1.1.1 ]
+      UI: (0008,0018), SOPInstanceUID, [Uid: 2.16.840.1.114255.393386351.1568457295.17895.5]
+      DA: (0008,0020), StudyDate, [1990-08-08]
+      DA: (0008,0021), SeriesDate, [2010-04-08]
+      DA: (0008,0022), AcquisitionDate, [2010-04-08]
+      DA: (0008,0023), ContentDate, [2010-04-08]
+      TM: (0008,0030), StudyTime, [07:28:43]
+      TM: (0008,0031), SeriesTime, [07:30:07]
+      ...
+    ]
+  ]
+]
+
+Process finished with exit code 0
