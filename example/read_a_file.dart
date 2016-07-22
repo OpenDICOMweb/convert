@@ -22,7 +22,7 @@ String output = "output.dcm";
 
 void main() {
   Logger log = System.init(level: Level.debug);
-  var path = crf1;;
+  var path = bug1;;
 
   File file = new File(path);
   log.info('Reading file: $file');

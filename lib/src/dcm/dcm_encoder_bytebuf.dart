@@ -378,7 +378,7 @@ class DcmEncoderByteBuf extends ByteBuf {
 
   void writeAT(AT a) {
     assert(a.vr == VR.kAT);
-    writeDcmUint32List(a);
+    writeDcmUint32List(a.values);
   }
 
   void writeBR(BR a) {
@@ -454,7 +454,7 @@ class DcmEncoderByteBuf extends ByteBuf {
   //TODO: need transfer syntax to do this correctly
   void writeOL(OL a) {
     assert(a.vr == VR.kOL);
-    writeDcmUint32List(a, isShort: false);
+    writeDcmUint32List(a.values, isShort: false);
   }
 
   // depends on Transfer Syntax
@@ -657,10 +657,10 @@ class DcmEncoderByteBuf extends ByteBuf {
 
   //**** String Methods ****
 
-  void writeShortDcmString(Attribute a, {String padChar: " "}) =>
+  void writeShortDcmString(StringBase a, {String padChar: " "}) =>
       writeDcmString(a.toDcmString(), isShort: true, padChar: padChar);
 
-  void writeLongDcmString(Attribute a, {String padChar: " "}) =>
+  void writeLongDcmString(StringBase a, {String padChar: " "}) =>
       writeDcmString(a.toDcmString(), isShort: false);
 
   /// Convert a [List] of [String]s into [Uint8List] with trailing pad character if
