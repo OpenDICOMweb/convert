@@ -74,7 +74,8 @@ class DcmEncoder extends DcmEncoderByteBuf {
       WellKnownUid.kImplicitVRLittleEndianDefaultTransferSyntaxforDICOM;
 
   /// Writes the File Meta Information [Fmi] for this [Instance].
-  void writeFmi(Fmi fmi) {
+  void
+  writeFmi(Fmi fmi) {
     var values = fmi.aMap.values;
     for(Attribute value in values) print('$value\n');
     //for (int i = 0; i < values.length; i++)

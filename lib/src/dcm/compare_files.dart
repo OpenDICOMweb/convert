@@ -39,13 +39,13 @@ class FileCompare {
     File file1 = new File(path1);
     //log.info('Compare files: $path0 and $path1');
 
-    Uint8List bytes0 = file0.readAsBytesSync();
-    Uint8List bytes1 = file1.readAsBytesSync();
+    Uint8List aIn = file0.readAsBytesSync();
+    Uint8List bIn = file1.readAsBytesSync();
 
-    var length0 = bytes0.length;
-    var length1 = bytes1.length;
-    print('bytes0.length: ${bytes0.length}');
-    print('bytes1.length: ${bytes1.length}');
+    var length0 = aIn.length;
+    var length1 = bIn.length;
+    print('A length: ${aIn.length}');
+    print('B length: ${bIn.length}');
 
     if (length0 != length1) {
       print('Unequal Length Error');
@@ -58,16 +58,15 @@ class FileCompare {
     var status = "the same.";
     var count = 0;
 
+    int pre = 16;
+    int post = 24;
+
     for(int i = 0; i < min; i++) {
-      if (bytes0[i] != bytes1[i]) {
+      if (aIn[i] != bIn[i]) {
         if(count++ > maxCount) exit(255);
-        print('Difference at position $i');
-        print('  bytes0[$i] = ${bytes0[i]}');
-        print('  bytes1[$i] = ${bytes1[i]}');
-        print('  bytes0: ${bytes0.sublist(i-8, i+20)}');
-        print('  bytes1: ${bytes1.sublist(i-8, i+20)}');
-        print('  bytes0: ${toAscii(bytes0.sublist(i-8, i+20))}');
-        print('  bytes1: ${toAscii(bytes1.sublist(i-8, i+20))}');
+        print('aIn[$i] = ${aIn[i].toRadixString(16)}');
+        print('bIn[$i] = ${bIn[i].toRadixString(16)}');
+        printIt(aIn, bIn, i - pre, i + post, i);
         status = "different.";
       }
     }
@@ -76,12 +75,59 @@ class FileCompare {
 
 }
 
-List<String> toAscii(List<int> list) {
-  var cList = new List<String>(list.length);
-  for (int i = 0; i < list.length; i++) {
-    int c = list[i];
-    var v = (Ascii.isVisibleChar(c)) ? new String.fromCharCode(c) : c.toString();
-    cList[i] = v;
+
+
+void printIt(List<int> aIn, List<int> bIn, int start, int end, int index) {
+  /*
+  length = (aIn.length > bIn.length) ? bIn.length : aIn.length;
+
+  start = index - pre;
+  if (start < 0) {
+    index = index - start;
+    start = 0;
   }
-  return cList;
+  end = index + post;
+  if (end >= length) end = length;
+  */
+ print('start: $start, end: $end:  index: $index');
+  String mark = "";
+  mark += "".padRight((index - start) * 4, "-");
+  mark += "++--";
+  mark += "".padRight(((end - index) - 2) * 4, "-");
+  print('      $mark');
+
+  List<String> aOut = new List<String>(end - start);
+  List<String> bOut = new List<String>(end - start);
+
+  for (int i = start, j = 0; i < end; i++, j++) {
+    //print('i: $i, j: $j');
+    aOut[j] = aIn[i].toRadixString(16).padLeft(2, " ");
+    bOut[j] = bIn[i].toRadixString(16).padLeft(2, " ");
+  }
+
+  print('  A: $aOut');
+  print('  B: $bOut');
+
+  for (int i = start, j = 0; i < end ; i++, j++) {
+    aOut[j] = (Ascii.isVisibleChar(aIn[i]))
+              ? new String.fromCharCode(aIn[i]).padLeft(2, " ") : " *";
+    bOut[j] = (Ascii.isVisibleChar(bIn[i]))
+              ? new String.fromCharCode(bIn[i]).padLeft(2, " ") : " *";
+  }
+  print('  A: $aOut');
+  print('  B: $bOut');
+
+}
+
+void toAscii(List<int> aIn, List<int> bIn) {
+  var aOut = new List<String>(aIn.length);
+  var bOut = new List<String>(bIn.length);
+  for (int i = 0; i < aIn.length; i++) {
+    int a = aIn[i];
+    int b = bIn[i];
+    aOut[i] = (Ascii.isVisibleChar(a)) ? new String.fromCharCode(a) : "*";
+    bOut[i] = (Ascii.isVisibleChar(b)) ? new String.fromCharCode(b) : "*";
+  }
+  print('  A:  ');
+  print('  B:  ');
 }
