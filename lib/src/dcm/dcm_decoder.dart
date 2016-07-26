@@ -69,7 +69,6 @@ class DcmDecoder extends DcmDecoderByteBuf {
       fmi[a.tag] = a;
     }
     UI ts = fmi[kTransferSyntaxUID];
-    print('TS: $ts');
     String transferSyntaxUid = (ts != null) ? ts.value : null;
     log.info('Transfer Syntax: $transferSyntaxUid');
     if (ts == littleEndian)

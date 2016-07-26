@@ -1,52 +1,68 @@
 // Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
+
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:logger/server.dart';
 import 'package:convert/convert.dart';
 import 'package:odwsdk/dataset_sop.dart';
 import 'package:odwsdk/system.dart';
 
-String crf1 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255"
-    ".393386351.1568457295.17895.5.dcm";
-String crf2 = "D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255"
-    ".393386351.1568457295.48879.7.dcm";
+String test_data = "C:/odw/sdk/convert/test_data/";
+String test_output = "C:/odw/sdk/convert/test_output/";
 
-String outPath = 'output.dcm';
+List pid_mint10 = [
+  "PID_MINT10", [
+    "PID_MINT10/CR.2.16.840.1.114255.393386351.1568457295.17895.5.dcm",
+    "PID_MINT10/CR.2.16.840.1.114255.393386351.1568457295.48879.7.dcm"
+  ]
+];
+String crf1 = "PID_MINT10/CR.2.16.840.1.114255.393386351.1568457295.17895.5.dcm";
+String crf2 = "PID_MINT10/CR.2.16.840.1.114255.393386351.1568457295.48879.7.dcm";
+
 
 void main() {
   Logger log = System.init(level: Level.config);
-  var path = crf2;
+  String inPath = test_data + crf2;
+  String outPath = test_output + crf2;
+  Format fmt;
+  Study study;
+  String fmtOutput;
 
   // Read a File
-  File inFile = new File(path);
+  File inFile = new File(inPath);
   log.info('Reading file: $inFile');
-  var bytes = inFile.readAsBytesSync();
+  Uint8List bytes = inFile.readAsBytesSync();
   print('length= ${bytes.length}');
+
   DcmDecoder decoder = new DcmDecoder(bytes);
   Instance instance = decoder.readSopInstance();
-  Study study = instance.study;
+  study = instance.study;
   //print(study);
-  Format fmt = new Format();
-  var s = fmt.study(study);
+  //fmt = new Format();
+  //fmtOutput = fmt.study(study);
+  // print(fmtOutput);
 
   // Write a File
   log.level = Level.config;
   File outFile = new File(outPath);
   log.info('Writing file: $outFile');
+
   DcmEncoder writer = new DcmEncoder(bytes.length + 1024);
   writer.writeSopInstance(instance);
   print('writeIndex: ${writer.writeIndex}');
+
   var outBytes = writer.bytes.buffer.asUint8List(0, writer.writeIndex);
   print('out length: ${bytes.length}');
   outFile.writeAsBytesSync(outBytes);
 
   //print(study);
   fmt = new Format();
-  s = fmt.study(study);
-  print(s);
+  fmtOutput = fmt.study(study);
+  print(fmtOutput);
 }

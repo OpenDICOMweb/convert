@@ -94,9 +94,9 @@ class DcmEncoder extends DcmEncoderByteBuf {
     //Logger log = new Logger("DcmEncoder.readSopInstance");
     writePreamble();
     writePrefix();
-    print('fmiDataset: ${instance.fmi}');
+    //print('fmiDataset: ${instance.fmi}');
     writeFmi(instance.fmi);
-    print('instance.aMap: ${instance.aMap}');
+    //print('instance.aMap: ${instance.aMap}');
     writeDataset(instance.aMap);
   }
 

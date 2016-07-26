@@ -266,7 +266,13 @@ class DcmDecoderByteBuf extends ByteBuf {
   static const kItemDelimiterLast16bits = 0xE00D;
 
   /// This is the top-level entry point for reading an [Attributes].
-  Attribute readAttribute() => (isPrivateTag()) ? readPrivateGroup() : _readInternal();
+  Attribute readAttribute() {
+    var a = (isPrivateTag()) ? readPrivateGroup() : _readInternal();
+    //if (a is PrivateGroup)
+    //  print('PG: $a');
+    print(a.debug());
+    return a;
+  }
 
   /// Reads the next [Attribute] in the [ByteBuf]
   Attribute _readInternal() {
@@ -310,19 +316,20 @@ class DcmDecoderByteBuf extends ByteBuf {
     int vrCode = readVR();
     VR vr = VR.map[vrCode];
     VFReader reader = vrReaders[vrCode];
-
-    print('reader: ${reader.runtimeType}, '
-                 'tag: ${toHexString(tag, 8)}, '
-                 'vrCode: ${toHexString(vrCode, 4)}, '
-                 'VR: $vr, '
-                 'readIndex: $readIndex');
-
+    if (false) {
+      print('reader: ${reader.runtimeType}, '
+                'tag: ${toHexString(tag, 8)}, '
+                'vrCode: ${toHexString(vrCode, 4)}, '
+                'VR: $vr, '
+                'readIndex: $readIndex');
+    }
     if (reader == null) {
       var msg = "Invalid vrCode(${toHexString(vrCode, 4)})";
       log.error(msg);
       throw msg;
     }
-    return reader(tag, vr);
+    Attribute a = reader(tag, vr);
+    return a;
 
   }
 
@@ -538,11 +545,11 @@ class DcmDecoderByteBuf extends ByteBuf {
   UL readUL(int tag, [VR vr]) {
     assert(vr == VR.kUL);
     int lengthInBytes = readShortLength();
-    print('length: $lengthInBytes');
+    //print('length: $lengthInBytes');
     int length = toElementLength(lengthInBytes, UL.bytesPerElement);
-    print('elementLength: $length');
+    //print('elementLength: $length');
     Uint32List list = readUint32List(length);
-    print('list: $list');
+    //print('list: $list');
     log.debug('UL<Uint32>: $list');
     return new UL(tag, list);
   }
@@ -551,13 +558,12 @@ class DcmDecoderByteBuf extends ByteBuf {
     assert(vr == VR.kUN);
     bool hadUndefinedLength = false;
     int lengthInBytes = readLongLength();
-    //print('readOB: tag: ${fmtTag(tag)}, length= $lengthInBytes(${toHexString(lengthInBytes, 8)
-    // })');
+    print('UN: lengthInBytes=$lengthInBytes');
     if (lengthInBytes == kUndefinedLength) {
-      //print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
+      ////print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
       lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
+      print('UN undefined len=$lengthInBytes');
       hadUndefinedLength = true;
-      //print('readOW: hadUndefinedLength: readeIndex($readIndex), lengthInBytes($lengthInBytes)');;
     }
     //TODO: use the ByteBuf setMark mechanism
     //setReadIndexMark;
@@ -644,8 +650,6 @@ class DcmDecoderByteBuf extends ByteBuf {
     bool hadUndefinedLength = false;
     // Can't use [readLongLength] because there is no [VR].
     int lengthInBytes = readUint32();
-    //TODO have readLongOrUndefinedLength be negaive if it was undefined
-    //int lengthInBytes = readLongOrUndefinedLength();
     log.debug('Item: readIndex($readIndex): Item Length: '
                   '$lengthInBytes(${toHexString(lengthInBytes, 8)})');
     if (lengthInBytes == kUndefinedLength) {
@@ -658,7 +662,7 @@ class DcmDecoderByteBuf extends ByteBuf {
     //setReadIndexMark;
     int endOfBytes = readIndex + lengthInBytes;
     while (readIndex < endOfBytes) {
-      var a = readAttribute();
+      var a = _readInternal();
       log.debug('readItem: $a');
       attributes[a.tag] = a;
     }
@@ -690,27 +694,26 @@ class DcmDecoderByteBuf extends ByteBuf {
     return readDcmString(lengthInBytes, padChar);
   }
 
-  /// Returns a [String] without trailing padding character.
-  /// This calls [getString] in [ByteBuf].
+  /// Returns a [String].  If [padChar] is [kSpace] just returns the [String]
+  /// if [padChar] is [kNull], it is removed by returning a [String] with
+  /// [length - 1].
+  /// Note: This calls [readString] in [ByteBuf].
   static const String kSpaceString = " ";
   static final String kNullString = new String.fromCharCode(kNull);
+
   String readDcmString(int lengthInBytes, [int padChar = kSpace]) {
     if (lengthInBytes == 0) return "";
     if (lengthInBytes.isOdd) throw "Odd length error";
-    String s = super.readString(lengthInBytes);
+    String s = readString(lengthInBytes);
     int last = s.codeUnitAt(s.length - 1);
-    if (last == padChar) {
-      print('returning substring 1');
-      return s.substring(0, s.length - 1);
-    } else if ((last == kNull) && (padChar == kSpace)) {
-      //TODO: Store this warning with the new attribute
-      log.warning('Invalid Nul($last) padChar');
-      print('returning substring 2');
-      return s.substring(0, s.length - 1);
-    } else {
-      print('returning string 0');
-      return s;
+    if (last == kNull) {
+      if (padChar == kSpace) {
+        //TODO: Store this warning with the new attribute
+        log.warning('Invalid Nul($last) padChar');
+      }
+      s = s.substring(0, s.length - 1);
     }
+    return s;
   }
 
   //Note: private creators are for one group number are all generated before the group tags
@@ -725,7 +728,7 @@ class DcmDecoderByteBuf extends ByteBuf {
     }
     List<Attribute> pgData = [];
     while (isInPrivateGroup(creatorTags, peekTag())) {
-      pgData.add(new PGData(_readInternal()));
+      pgData.add(_readInternal());
       log.debug('data: $pgData');
     }
     return new PrivateGroup(pgCreators, pgData);

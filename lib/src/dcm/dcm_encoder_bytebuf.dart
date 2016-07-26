@@ -290,8 +290,20 @@ class DcmEncoderByteBuf extends ByteBuf {
   }
 
   /// This is the top-level entry point for writing an [Attributes].
-  void writeAttribute(Attribute a) =>
-      (a is PrivateGroup) ? writePrivateGroup(a) : _writeInternal(a);
+  void writeAttribute(Attribute a) {
+    //TODO: private group should be handled the same. this if shouldn't be needed.
+    if (a is PrivateGroup) {
+      writePrivateGroup(a);
+    } else {
+      _writeInternal(a);
+    }
+    //print('before: $a');
+    //a = (a is PGData) ? a.data : a;
+    //print('after: $a');
+
+    print(a.debug());
+  }
+
 
   /// writes the next [Attribute] in the [ByteBuf]
   void _writeInternal(Attribute a) {
@@ -343,23 +355,21 @@ class DcmEncoderByteBuf extends ByteBuf {
     VFWriter writer = vfWriter[vrCode];
 
    var values = a.values;
-    print('writer: ${writer.runtimeType}, '
-              'tag: ${toHexString(a.tag, 8)}, '
-              'vrCode: ${toHexString(vrCode, 4)}, '
-              'VR: ${a.vr}, '
-              'values: $values. '
-             // 'length: ${values.length}, '
-              'writeIndex: $writeIndex');
-    print('values: ${a.values}');
-
+    if (false) {
+      print('writer: ${writer.runtimeType}, '
+                'tag: ${toHexString(a.tag, 8)}, '
+                'vrCode: ${toHexString(vrCode, 4)}, '
+                'VR: ${a.vr}, '
+                'values: $values. '
+            // 'length: ${values.length}, '
+                'writeIndex: $writeIndex');
+      print('values: ${a.values}');
+    }
     if (writer == null) {
       var msg = "Invalid vrCode(${toHexString(vrCode, 4)})";
       log.error(msg);
       throw msg;
     }
-    print('before: $a');
-    a = (a is PGData) ? a.data : a;
-    print('after: $a');
     writer(a);
   }
 
@@ -667,9 +677,10 @@ class DcmEncoderByteBuf extends ByteBuf {
   /// necessary, then writes the Value Length Field followed by the Value Field.
   void writeDcmString(String s, {bool isShort: true, String padChar: " "}) {
     Uint8List bytes;
-    int lengthInBytes = 0;
     if (s.length.isOdd) s += padChar;
-    if (s.length != 0) {
+    int lengthInBytes = s.length;
+    //if (lengthInBytes > 0) print('WrDcm: [${s.length}]"$s"');
+    if (lengthInBytes > 0) {
       bytes = UTF8.encode(s);
       lengthInBytes = bytes.length;
     }
@@ -688,7 +699,7 @@ class DcmEncoderByteBuf extends ByteBuf {
       }
       writeLongLength(lengthInBytes);
     }
-    if (s.length != 0)
+    if (s.length > 0)
       writeUint8List(bytes);
   }
 
@@ -709,31 +720,37 @@ class DcmEncoderByteBuf extends ByteBuf {
   void writeItems(List<Item> items) {
     for (Item item in items) {
       if (item.hadUndefinedLength) {
-       // print('item: $item');
         _writeUndefinedLengthItem(item);
       } else {
-      //  print('item: $item');
-        _writeItem(item);
+        assert(item.hadUndefinedLength == false);
+        log.debug('writeItem: $item');
+        writeTag(kItem);
+        writeUint32(item.lengthInBytes);
+        for(var a in item.aMap.values) {
+          //print('${fmtTag(a.tag)}, len=${a.length}');
+          writeAttribute(a);
+        }
       }
     }
   }
 
+  /*
   void _writeItem(Item item) {
     assert(item.hadUndefinedLength == false);
     log.debug('writeItem: $item');
+    writeUint32(kItem);
     writeUint32(item.lengthInBytes);
-    for (Attribute a in item.aMap.values) {
-     // print('item: $a');
-      writeAttribute(a);
-    }
+    for (int i = 0; i < item.lengthInBytes; i++)
+      writeAttribute(item[i]);
   }
-
+*/
   void _writeUndefinedLengthItem(Item item) {
     assert(item.hadUndefinedLength == true);
+    writeTag(kItem);
     writeLongLength(0xFFFFFFFF);
-    for(int i = 0; i < item.lengthInBytes; i++)
-      writeAttribute(item[i]);
-    writeUint32(kItemDelimitationItem);
+    for(Attribute a in item.values)
+      writeAttribute(a);
+    writeTag(kItemDelimitationItem);
   }
 
   ///Writes Pixel Data (7FFF,0010) based on the Transfer Syntax.
@@ -744,10 +761,12 @@ class DcmEncoderByteBuf extends ByteBuf {
 
   /// Writes a Private Group of Private Attributes.
   void writePrivateGroup(PrivateGroup pg) {
-    for (int i = 0; i < pg.creators.length; i++)
-      writeLO(pg.creators[i]);
+    for (int i = 0; i < pg.creators.length; i++) {
+      print('${pg.creators[i]}');
+      _writeInternal(pg.creators[i]);
+    }
     for (int i = 0; i < pg.values.length; i++) {
-      // print('pdData: ${pg.values[i]}');
+      print('${pg.values[i]}');
       _writeInternal(pg.values[i]);
     }
   }
