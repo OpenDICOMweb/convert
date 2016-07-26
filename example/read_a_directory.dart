@@ -8,10 +8,10 @@ import 'dart:io';
 
 import 'package:logger/server.dart';
 import 'package:convert/convert.dart';
-import 'package:odwsdk/dataset_sop.dart';
-import 'package:odwsdk/uid.dart';
+import 'package:core/dataset_sop.dart';
+import 'package:core/uid.dart';
 
-import 'package:odwsdk/system.dart';
+import 'package:core/system.dart';
 
 var dirPath0 = 'D:/M2sata/mint_test_data/sfd/CR/PID_MINT10/Group2_dcm4che';
 var dirPath1 = 'D:/M2sata/mint_test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original';

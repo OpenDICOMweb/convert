@@ -8,13 +8,13 @@ import 'dart:io';
 
 import 'package:logger/server.dart';
 import 'package:convert/convert.dart';
-import 'package:odwsdk/dataset_sop.dart';
-import 'package:odwsdk/system.dart';
+import 'package:core/dataset_sop.dart';
+import 'package:core/system.dart';
 
-String test_data = "C:/odw/sdk/convert/test_data/";
-String test_output = "C:/odw/sdk/convert/test_output/";
+String testData = "C:/odw/sdk/convert/test_data/";
+String testOutput = "C:/odw/sdk/convert/test_output/";
 
-List pid_mint10 = [
+List pidMint10 = [
   "PID_MINT10", [
     "PID_MINT10/CR.2.16.840.1.114255.393386351.1568457295.17895.5.dcm",
     "PID_MINT10/CR.2.16.840.1.114255.393386351.1568457295.48879.7.dcm"
@@ -27,7 +27,7 @@ String output = "output.dcm";
 
 void main() {
   Logger log = System.init(level: Level.config);
-  String inPath = test_data + crf1;
+  String inPath = testData + crf1;
 
   File file = new File(inPath);
   log.config('Reading file: $file');

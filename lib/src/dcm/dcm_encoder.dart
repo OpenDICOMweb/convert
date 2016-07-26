@@ -12,10 +12,10 @@ import 'dart:typed_data';
 import 'package:logger/server.dart';
 import 'package:path/path.dart' as path;
 
-import 'package:odwsdk/attribute.dart';
-import 'package:odwsdk/dataset_sop.dart';
-import 'package:odwsdk/tag.dart';
-import 'package:odwsdk/uid.dart';
+import 'package:core/attribute.dart';
+import 'package:core/dataset_sop.dart';
+import 'package:core/tag.dart';
+import 'package:core/uid.dart';
 
 import 'dcm_encoder_bytebuf.dart';
 

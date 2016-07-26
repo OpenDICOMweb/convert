@@ -9,10 +9,10 @@ import 'dart:typed_data';
 
 import 'package:logger/server.dart';
 
-import 'package:odwsdk/attribute.dart';
-import 'package:odwsdk/dataset_sop.dart';
-import 'package:odwsdk/tag.dart';
-import 'package:odwsdk/uid.dart';
+import 'package:core/attribute.dart';
+import 'package:core/dataset_sop.dart';
+import 'package:core/tag.dart';
+import 'package:core/uid.dart';
 
 import 'dcm_decoder_bytebuf.dart';
 
@@ -39,7 +39,15 @@ class DcmDecoder extends DcmDecoderByteBuf {
       : super.internal(bytes, readIndex, writeIndex, length);
 
   // Read the 128-byte preamble to the DICOM File Format.
-  Uint8List readPreamble() => _preamble = readUint8List(128);
+  Uint8List readPreamble() {
+    _preamble = readUint8List(128);
+    if (! hasAllZeros(_preamble)) {
+      log.info('Preamble all zeros.');
+    } else {
+      log.info('Preamble: $_preamble');
+    }
+    return _preamble;
+  }
 
 
   // Reads the DICOM Prefix "DICM" and returns [null] if not present.

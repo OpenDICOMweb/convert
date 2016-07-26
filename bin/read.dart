@@ -7,7 +7,7 @@
 import 'dart:io';
 
 import 'package:logger/server.dart';
-import 'package:odwsdk/dataset_sop.dart';
+import 'package:core/dataset_sop.dart';
 
 import 'package:convert/convert.dart';
 

@@ -8,7 +8,7 @@
 void main() {
   //var s = '1950-07-18T12:06:04.123456-0500';
 
-  var s = "TEST^TEST ";
+  //var s = "TEST^TEST ";
   var b = "TEST";
   var c = [b, b].join('^') + "^";
   print(c);
