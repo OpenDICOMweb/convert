@@ -19,11 +19,7 @@ class DcmDecoderIO extends DcmDecoder {
   static final Logger log = new Logger("DcmEncoder");
   final String filePath;
 
-  factory DcmDecoderIO.fromFile(file) {
-    if (file is! File) {
-      log.error('The "file" parameter must be a String or File');
-      return null;
-    }
+  factory DcmDecoderIO.fromFile(File file) {
     var bytes = file.readAsBytesSync();
     var filePath = path.normalize(file.path);
     log.debug('file length: ${bytes.length}, File: $filePath');
