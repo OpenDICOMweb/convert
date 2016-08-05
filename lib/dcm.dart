@@ -5,8 +5,10 @@
 // See the AUTHORS file for other contributors.
 library odw.sdk.convert.dcm;
 
-/// A converter for DICOM File Format data.  See PS3.10.
-export 'package:convert/src/dcm/dcm_decoder_bytebuf.dart';
-export 'package:convert/src/dcm/dcm_decoder.dart';
-export 'package:convert/src/dcm/dcm_encoder_bytebuf.dart';
-export 'package:convert/src/dcm/io.dart';
+/// Encoder and Decoder for DICOM File Format octet streams (Uint8List)
+
+/// Decoder for DICOM File Format octet streams (Uint8List)
+export 'src/dcm/dcm_decoder.dart';
+
+/// Encoder for DICOM File Format octet streams (Uint8List)
+export 'src/dcm/dcm_encoder.dart';

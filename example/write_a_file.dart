@@ -9,7 +9,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:logger/server.dart';
-import 'package:convert/convert.dart';
+import 'package:convert/dcm.dart';
 import 'package:core/dataset_sop.dart';
 import 'package:core/system.dart';
 

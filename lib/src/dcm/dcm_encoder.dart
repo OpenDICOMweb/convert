@@ -6,7 +6,6 @@
 library odw.sdk.convert.dcm.dcm_encoder;
 
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:logger/server.dart';
@@ -45,13 +44,6 @@ class DcmEncoder extends DcmEncoderByteBuf {
   DcmEncoder._(Uint8List bytes, int readIndex, int writeIndex, int length, [this.filePath])
       : super.internal(bytes, readIndex, writeIndex, length);
 
-  //TODO: doc
-  void close() {
-    File outFile = new File(filePath);
-    log.info('Writing file: $outFile');
-    Uint8List output = bytes.buffer.asUint8List(0, writeIndex);
-    outFile.writeAsBytesSync(output);
-  }
 
   //Enhancement: if the file has a non-zero preamble, have the ability to write it out if desired.
   /// Write the 128-byte preamble to the DICOM File Format.
