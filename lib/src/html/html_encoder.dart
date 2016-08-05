@@ -5,8 +5,7 @@
 // See the AUTHORS file for other contributors.
 library odw.sdk.convert.html.encoder;
 
-import 'package:core/datset_sop.dart';
-
-class JsonEncoder {
+/// Html media type encoder.
+class Htmlncoder {
 
 }

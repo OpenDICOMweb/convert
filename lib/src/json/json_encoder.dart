@@ -5,8 +5,8 @@
 // See the AUTHORS file for other contributors.
 library odw.sdk.convert.json.encoder;
 
-import 'package:core/core.dart';
 
+/// DICOM+JSON media type encoder;
 class JsonEncoder {
 
 }
