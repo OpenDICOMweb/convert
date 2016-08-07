@@ -8,14 +8,11 @@ library odw.sdk.convert.dcm.dcm_decoder_bytebuf;
 import 'dart:typed_data';
 
 import 'package:ascii/ascii.dart';
-import 'package:logger/server.dart';
+import 'package:logger/logger.dart';
 import 'package:bytebuf/bytebuf.dart';
 
 import 'package:core/attribute.dart';
-import 'package:core/constants.dart';
 import 'package:core/dataset_sop.dart';
-import 'package:core/tag.dart';
-import 'package:core/vr.dart';
 
 //TODO:
 //  1. Move all [String] trimming and validation to the Attribute.  The reader

@@ -8,12 +8,11 @@ library odw.sdk.convert.dcm.dcm_encoder;
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:logger/server.dart';
+import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
 
 import 'package:core/attribute.dart';
 import 'package:core/dataset_sop.dart';
-import 'package:core/tag.dart';
 import 'package:core/uid.dart';
 
 import 'dcm_encoder_bytebuf.dart';

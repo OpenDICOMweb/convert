@@ -8,14 +8,11 @@ library odw.sdk.convert.dcm.dcm_encoder_bytebuf;
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:logger/server.dart';
+import 'package:logger/logger.dart';
 import 'package:bytebuf/bytebuf.dart';
 
 import 'package:core/attribute.dart';
-import 'package:core/constants.dart';
 import 'package:core/dataset_sop.dart';
-import 'package:core/tag.dart';
-import 'package:core/vr.dart';
 
 //TODO:
 //  1. Move all [String] trimming and validation to the Attribute.  The reader
@@ -354,7 +351,8 @@ class DcmEncoderByteBuf extends ByteBuf {
     log.debug('write: $a');
     VFWriter writer = vfWriter[vrCode];
 
-   var values = a.values;
+    /*
+    var values = a.values;
     if (false) {
       print('writer: ${writer.runtimeType}, '
                 'tag: ${toHexString(a.tag, 8)}, '
@@ -365,6 +363,7 @@ class DcmEncoderByteBuf extends ByteBuf {
                 'writeIndex: $writeIndex');
       print('values: ${a.values}');
     }
+    */
     if (writer == null) {
       var msg = "Invalid vrCode(${toHexString(vrCode, 4)})";
       log.error(msg);

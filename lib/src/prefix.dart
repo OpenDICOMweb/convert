@@ -7,9 +7,9 @@ library odw.sdk.convert.prefix;
 
 import 'dart:typed_data';
 
-import 'package:logger/server.dart';
+import 'package:logger/logger.dart';
 
-import 'dcm/dcm_decoder_bytebuf.dart';
+import 'package:convert/other/dcm_decoder_bytebuf.dart';
 
 /// A DICOM File Prefix
 class Prefix {
