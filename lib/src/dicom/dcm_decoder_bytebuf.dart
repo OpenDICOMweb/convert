@@ -10,8 +10,7 @@ import 'package:ascii/constants.dart';
 import 'package:logger/logger.dart';
 import 'package:bytebuf/bytebuf.dart';
 
-import 'package:core/attribute.dart';
-import 'package:core/dataset_sop.dart';
+import 'package:core/dicom.dart';
 
 //TODO:
 //  1. Move all [String] trimming and validation to the Attribute.  The reader

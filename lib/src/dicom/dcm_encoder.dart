@@ -10,11 +10,10 @@ import 'dart:typed_data';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
 
-import 'package:core/attribute.dart';
-import 'package:core/dataset_sop.dart';
-import 'package:core/uid.dart';
 
-import 'package:convert/src/dicom/dcm_encoder_bytebuf.dart';
+import 'package:core/dicom.dart';
+
+import 'dcm_encoder_bytebuf.dart';
 
 /// Encoder for DICOM File Format octet streams (Uint8List)
 /// [DcmEncoder] reads DICOM SOP Instances and returns a [DatasetSop].

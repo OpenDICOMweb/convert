@@ -9,7 +9,7 @@ import 'dart:typed_data';
 import 'package:logger/logger.dart';
 
 import 'package:core/attribute.dart';
-import 'package:core/dataset_sop.dart';
+import 'package:core/dicom.dart';
 import 'package:core/uid.dart';
 
 import 'package:convert/src/dicom/dcm_decoder_bytebuf.dart';

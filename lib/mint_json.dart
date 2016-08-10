@@ -6,7 +6,7 @@
 
 
 /// ODW SDK core SOP Dataset library
-export 'package:core/dataset_sop.dart';
+export 'package:core/mint.dart';
 
 /// Encoder and Decoder for MINT File Format JSON.
 export 'src/mint_json/mint_json_decoder.dart';
