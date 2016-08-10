@@ -1,98 +1,116 @@
 // Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
-// Author: Jim Philbin <jfphilbin@gmail.edu> -
+// Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
+import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:common/constants.dart';
-import 'package:common/logger.dart';
-import 'package:common/number.dart';
-import 'package:core/core.dart';
+import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
 
-import 'dcm_writer.dart';
+import 'package:core/attribute.dart';
+import 'package:core/dataset_sop.dart';
+import 'package:core/uid.dart';
 
-//TODO: create extensible write buffers
+import 'package:convert/src/dicom/dcm_encoder_bytebuf.dart';
 
 /// Encoder for DICOM File Format octet streams (Uint8List)
-/// [DcmEncoder] reads DICOM SOP Instances and returns a [Dataset].
+/// [DcmEncoder] reads DICOM SOP Instances and returns a [DatasetSop].
 /// TODO: finish doc
-class DcmEncoder extends DcmWriter {
-  //TODO: make the buffer grow and shrink adaptively.
-  static const int defaultLengthInBytes = 10 * kMB;
-  static final Logger log = new Logger("DcmEncoder", watermark: Severity.debug);
+class DcmEncoder extends DcmEncoderByteBuf {
+  static final Logger log = new Logger("DcmEncoder");
   final String filePath;
 
   /// Creates a new [DcmEncoder]
-  DcmEncoder({int lengthInBytes = defaultLengthInBytes, this.filePath = ""})
-      : super(lengthInBytes: lengthInBytes) {
-    log.debug('Encoder(${Int.toKB(lengthInBytes)}): $this');
+  factory DcmEncoder([int lengthInBytes = 1024 * 1024]) {
+    var bytes = new Uint8List(lengthInBytes);
+    return new DcmEncoder._(bytes, 0, 0, lengthInBytes);
   }
 
-  DcmEncoder.toFile(String filePath, [int lengthInBytes = defaultLengthInBytes])
-      : filePath = path.normalize(filePath),
-        super(lengthInBytes: lengthInBytes);
-
-  //DcmEncoder.fromList(List<int> list, [this.filePath = ""]) : super.fromList(list);
-
-  //TODO: make this a Tr?ansferSyntax
-  //TODO: where used
-  //static const TransferSyntax littleEndian =
-  //   TransferSyntax.kImplicitVRLittleEndian;
-
-  //TODO: only handles SOP Instances for now
-  void writeInstance(Instance instance) {
-    log.down;
-    log.debug('$wbb writeInstance: ${instance.info}');
-    writeRootDataset(instance.dataset);
-    log.debug('$wee writeInstance.end');
-    log.up;
+  factory DcmEncoder.toFile(String filePath) {
+    var normalizedPath = path.normalize(filePath);
+    //TODO: create extensible write buffers
+    var bytes = new Uint8List(1024 * 1924);
+    return  new DcmEncoder._(bytes, 0, bytes.length, bytes.length, normalizedPath);
   }
 
-  //TODO: only handles SOP Instances for now
-  void writeSeries(Series series) {
-    List<Instance> instances = series.instances;
-    for (int i = 0; i < instances.length; i++) writeInstance(instances[i]);
+  factory DcmEncoder.fromUint8List(Uint8List bytes) =>
+      new DcmEncoder._(bytes, 0, bytes.length, bytes.length);
+
+  /// Internal Constructor: Returns a [._slice from [bytes].
+  DcmEncoder._(Uint8List bytes, int readIndex, int writeIndex, int length, [this.filePath])
+      : super.internal(bytes, readIndex, writeIndex, length);
+
+
+  //Enhancement: if the file has a non-zero preamble, have the ability to write it out if desired.
+  /// Write the 128-byte preamble to the DICOM File Format.
+  void writePreamble() {
+    Uint8List preamble = new Uint8List(128);
+    writeUint8List(preamble);
   }
 
-  //TODO: only handles SOP Instances for now
+
+  /// Write the DICOM Prefix "DICM".
+  // The Prefix is equivalent to a magic number that specifies the [Uint8List] is
+  // in DICOM File Format. See PS3.10.
+  void writePrefix() {
+    const String prefix = "DICM";
+    Uint8List bytes = UTF8.encode(prefix);
+    writeUint8List(bytes);
+  }
+
+  static const littleEndian =
+      WellKnownUid.kImplicitVRLittleEndianDefaultTransferSyntaxforDICOM;
+
+  /// Writes the File Meta Information [Fmi] for this [Instance].
+  void
+  writeFmi(Fmi fmi) {
+    var values = fmi.aMap.values;
+    for(Attribute value in values) print('$value\n');
+    //for (int i = 0; i < values.length; i++)
+    for(Attribute a in values) {
+      writeAttribute(a);
+    }
+  }
+
   void writeStudy(Study study) {
     List<Instance> instances = study.instances;
-    for (int i = 0; i < instances.length; i++) writeInstance(instances[i]);
+    for (int i = 0; i < instances.length; i++)
+      writeSopInstance(instances[i]);
   }
 
-  Uint8List encodeEntity(Entity entity) {
-    log.debug('entity: $entity');
-    if (entity is Instance) {
-      writeInstance(entity);
-    } else if (entity is Series) {
-      writeSeries(entity);
-    } else if (entity is Study) {
-      writeStudy(entity);
-    } else {
-      throw "Unknown Entity: $entity";
+  void writeSopInstance(Instance instance) {
+    //Logger log = new Logger("DcmEncoder.readSopInstance");
+    writePreamble();
+    writePrefix();
+    //print('fmiDataset: ${instance.fmi}');
+    writeFmi(instance.fmi);
+    //print('instance.aMap: ${instance.aMap}');
+    writeDataset(instance.aMap);
+  }
+
+  /// Returns an [Attribute] or [null].
+  ///
+  /// This is the top-level entry point for reading a [Dataset].
+  @override
+   void writeDataset(Map<int, Attribute> aMap) {
+    final Logger log = new Logger("writeDataset");
+    Iterable<Attribute> values = aMap.values;
+    print('writeDataset: $values');
+    for (Attribute a in values) {
+      if (a.tag == kPixelData) {
+        log.debug('PixelData: ${fmtTag(a.tag)}, ${a.vr}, length= ${a.values.length}');
+        writePixelData(a);
+      } else {
+        log.debug('${a.vr.name}: ${fmtTag(a.tag)}, ${a.vr}, length= ${a.values.length}');
+        writeAttribute(a);
+      }
     }
-    return new Uint8List.view(bytes.buffer, 0, writeIndex);
-  }
-
-  static Uint8List encode(Entity entity) {
-    log.debug('DcmEncoder.encode: $entity');
-    int lengthIB = entity.dataset.source.lengthInBytes;
-    log.debug('DcmDecoder.endode: length($lengthIB)');
-    var encoder = new DcmEncoder(lengthInBytes: lengthIB);
-    log.debug('Encoder: $encoder');
-    return encoder.encodeEntity(entity);
-  }
-
-  static Uint8List encodeDataset(RootDataset rds) {
-    log.debug('DcmEncoder.encodeDataset: $rds');
-    int lengthIB = rds.source.lengthInBytes;
-    log.debug('DcmDecoder.endodeDataset: length($lengthIB)');
-    var encoder = new DcmEncoder(lengthInBytes: lengthIB);
-    log.debug('Encoder: $encoder');
-    encoder.writeDataset(rds);
-    return encoder.bytes;
   }
 }
+
+
+
+

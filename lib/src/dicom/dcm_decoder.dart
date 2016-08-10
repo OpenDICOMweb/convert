@@ -1,45 +1,122 @@
 // Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
-// Author: Jim Philbin <jfphilbin@gmail.edu> -
+// Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:common/logger.dart';
-import 'package:core/core.dart';
+import 'package:logger/logger.dart';
 
-import 'dcm_reader.dart';
+import 'package:core/attribute.dart';
+import 'package:core/dataset_sop.dart';
+import 'package:core/uid.dart';
+
+import 'package:convert/src/dicom/dcm_decoder_bytebuf.dart';
 
 /// Decoder for DICOM File Format octet streams (Uint8List)
 
-/// [DcmDecoder] reads DICOM SOP Instances and returns a [RootDataset].
+/// [DcmDecoder] reads DICOM SOP Instances and returns a [DatasetSop].
 /// TODO: finish doc
-class DcmDecoder extends DcmReader {
-  static final Logger log = new Logger("DcmDecoder", watermark: Severity.info);
+class DcmDecoder extends DcmDecoderByteBuf {
+  static final Logger log = new Logger("DcmEncoder");
   //TODO: add ability to keep non-zero preamble
-
-  /// The source of the bytes to be parsed.
-  final DSSource source;
-
-  /// Creates a new [DcmDecoder]
-  DcmDecoder(Uint8List bytes,
-      {String path = "", bool throwOnError = false, bool allowILEVR = true})
-      : source = null,
-        super(bytes,
-            path: path, throwOnError: throwOnError, allowILEVR: allowILEVR);
+  Uint8List _preamble;
+  String _prefix;
 
   /// Creates a new [DcmDecoder]
-  DcmDecoder.fromSource(this.source,
-      {String path = "", bool throwOnError = false, bool allowILEVR = true})
-      : super(source.bytes,
-            path: path, throwOnError: throwOnError, allowILEVR: allowILEVR);
-/*
+  factory DcmDecoder(Uint8List bytes, [int readIndex = 0, int writeIndex, int lengthInBytes]) {
+    if (lengthInBytes == null) lengthInBytes = bytes.lengthInBytes - readIndex;
+    if (writeIndex == null) writeIndex = lengthInBytes;
+    return new DcmDecoder.internal(bytes, readIndex, writeIndex, lengthInBytes);
+  }
+
+  factory DcmDecoder.fromUint8List(Uint8List bytes) =>
+      new DcmDecoder(bytes, 0, bytes.length, bytes.length);
+
+  /// Internal Constructor: Returns a [._slice from [bytes].
+  DcmDecoder.internal(Uint8List bytes, int readIndex, int writeIndex, int length)
+      : super.internal(bytes, readIndex, writeIndex, length);
+
   // Read the 128-byte preamble to the DICOM File Format.
   Uint8List readPreamble() {
     _preamble = readUint8List(128);
+    if (! hasAllZeros(_preamble)) {
+      log.info('Preamble all zeros.');
+    } else {
+      log.info('Preamble: $_preamble');
+    }
     return _preamble;
+  }
+
+
+  // Reads the DICOM Prefix "DICM" and returns [null] if not present.
+  // The Prefix is equivalent to a magic number that specifies the [Uint8List] is
+  // in DICOM File Format. See PS3.10.
+  String readPrefix() {
+    var prefix = readString(4);
+    if (prefix != "DICM") {
+      log.warning('Bad Prefix: $prefix');
+      setReadIndex(0);
+      return null;
+    }
+    _prefix = prefix;
+    return prefix;
+  }
+
+  static const littleEndian =
+      WellKnownUid.kImplicitVRLittleEndianDefaultTransferSyntaxforDICOM;
+
+  /// Reads and returns the File Meta Information [Fmi], if present. If no [Fmi] [Attributes]
+  /// were present an empty [Map] is returned.
+  Fmi readFmi() {
+    Map<int, Attribute> fmi = {};
+    while (isFmiTag()) {
+      var a = readAttribute();
+      log.debug('$a');
+      fmi[a.tag] = a;
+    }
+    UI ts = fmi[kTransferSyntaxUID];
+    String transferSyntaxUid = (ts != null) ? ts.value : null;
+    log.info('Transfer Syntax: $transferSyntaxUid');
+    if (ts == littleEndian)
+      throw "little Endian";
+    return new Fmi(fmi);
+  }
+
+  Instance readSopInstance([String filePath]) {
+    Logger log = new Logger("DcmEncoder.readSopInstance");
+    _preamble = readPreamble();
+    _prefix = readPrefix();
+    //TODO: we could try to figure out what it contained later.
+    if (_prefix == null) return null;
+    var fmi = readFmi();
+    log.debug('readSopInstance: fmi = $fmi');
+    var aMap = readDataset();
+    log.debug('aMap: $aMap');
+
+    Instance i = new Instance(fmi, aMap, filePath);
+    log.debug('readSopInstance: $i');
+    return i;
+  }
+
+  /// Returns an [Attribute] or [null].
+  ///
+  /// This is the top-level entry point for reading a [Dataset].
+  Map<int, Attribute> readDataset() {
+    final Logger log = new Logger("readDataset");
+    Map<int, Attribute> aMap = {};
+    while (isReadable) {
+      Attribute a = readAttribute();
+      aMap[a.tag] = a;
+      if (a.tag == kPixelData) {
+        log.debug('PixelData: ${fmtTag(a.tag)}, ${a.vr}, length= ${a.length}');
+      } else {
+        log.debug('$a');
+      }
+    }
+    log.debug('DcmBuf: $this');
+    return aMap;
   }
 
   //TODO: move to a utilities file for TypedData
@@ -48,74 +125,6 @@ class DcmDecoder extends DcmReader {
       if (preamble[i] != 0) return false;
     return true;
   }
-
-  // Reads the DICOM Prefix "DICM" and returns [null] if not present.
-  // The Prefix is equivalent to a magic number that specifies the [Uint8List] is
-  // in DICOM File Format. See PS3.10.
-  //TODO: is this really needed?
-  String readPrefix() {
-    String prefix = readString(4);
-    if (prefix != "DICM") {
-      throw 'Bad Prefix: $prefix';
-    }
-    _prefix = prefix;
-    return _prefix;
-  }
-*/
-  //TODO: this will need to be modified to handle different types of datasets
-  //TODO for now they are all instances.
-  /// Reads a DICOM SOP [Instance] from a [Uint8List].
-  Entity readInstance([Series series, Study study, Subject subject]) {
-    log.debug('readInstance: $this');
-    log.down;
-    RootDataset ds;
-    //   try {
-    ds = readRootDataset();
-    //   } catch (e) {
-    //     log.error('readInstance: $e');
-    //     return null;
-    //   }
-    if (!ds.hasValidTransferSyntax) return null;
-    log.debug('readInstance RootDataset($ds)');
-    return new Instance.fromDataset(ds, series, study, subject);
-  }
-
-  //TODO: this will need to be modified to handle different types of datasets
-  //TODO for now they are all instances.
-  /// Reads a DICOM SOP [Instance] from a [Uint8List].
-  RootDataset readRDS() {
-    log.debug('readRDS: $this');
-    log.down;
-    RootDataset ds;
-
-    ds = readRootDataset();
-    if (!ds.hasValidTransferSyntax) return null;
-
-    log.debug('readRDS: count(${ds.length})');
-    return ds;
-  }
-
-  ///TODO: doc
-  static Instance decode(DSSource source,
-      [Series series, Study study, Subject subject]) {
-    DcmDecoder decoder = new DcmDecoder.fromSource(source);
-    return decoder.readInstance(series, study, subject);
-  }
-
-  static RootDataset readRoot(Uint8List bytes) {
-    DcmDecoder decoder = new DcmDecoder(bytes);
-    RootDataset rds = decoder.readRootDataset();
-    return rds;
-  }
-
-  static RootDataset readRootNoFMI(Uint8List bytes) {
-    DcmDecoder decoder = new DcmDecoder(bytes);
-    Dataset rds = decoder.readDataset();
-    return rds;
-  }
-
-  static RootDataset readFile(File file) {
-    var bytes = file.readAsBytesSync();
-    return DcmDecoder.readRoot(bytes);
-  }
 }
+
+

@@ -3,7 +3,6 @@
 // that can be found in the LICENSE file.
 // Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
-library odw.sdk.convert.dcm.dcm_encoder_bytebuf;
 
 import 'dart:convert';
 import 'dart:typed_data';
@@ -12,7 +11,6 @@ import 'package:integer/integer.dart';
 import 'package:logger/logger.dart';
 import 'package:bytebuf/bytebuf.dart';
 
-import 'package:core/base.dart';
 import 'package:core/attribute.dart';
 import 'package:core/dataset_sop.dart';
 
@@ -353,8 +351,7 @@ class DcmEncoderByteBuf extends ByteBuf {
     log.debug('write: $a');
     VFWriter writer = vfWriter[vrCode];
 
-    /*
-    var values = a.values;
+   var values = a.values;
     if (false) {
       print('writer: ${writer.runtimeType}, '
                 'tag: ${toHexString(a.tag, 8)}, '
@@ -365,7 +362,6 @@ class DcmEncoderByteBuf extends ByteBuf {
                 'writeIndex: $writeIndex');
       print('values: ${a.values}');
     }
-    */
     if (writer == null) {
       var msg = "Invalid vrCode(${toHexString(vrCode, 4)})";
       log.error(msg);

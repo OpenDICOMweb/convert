@@ -8,6 +8,6 @@
 /// ODW SDK core SOP Dataset library
 export 'package:core/dataset_sop.dart';
 
-/// Encoder and Decoder for DICOM File Format octet streams (Uint8List)
-export 'src/dicom_json/dicom_json_decoder.dart';
-export 'src/dicom_json/dicom_json_encoder.dart';
+/// Encoder and Decoder for MINT File Format JSON.
+export 'src/mint_json/mint_json_decoder.dart';
+export 'src/mint_json/mint_json_encoder.dart';

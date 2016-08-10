@@ -3,11 +3,10 @@
 // that can be found in the LICENSE file.
 // Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
-library odw.sdk.convert.dcm.dcm_decoder_bytebuf;
 
 import 'dart:typed_data';
 
-import 'package:ascii/ascii.dart';
+import 'package:ascii/constants.dart';
 import 'package:logger/logger.dart';
 import 'package:bytebuf/bytebuf.dart';
 
@@ -48,7 +47,7 @@ typedef Attribute VFReader(int tag, [VR vr]);
 ///   3. All VFReaders allow the Value Field to be empty.  The [String] [VFReaders] return "",
 ///   and the Integer, FLoat [VFReaders] return new [null].
 class DcmDecoderByteBuf extends ByteBuf {
-  static final Logger log = new Logger("DcmDecoderByteBuf", level: Level.debug);
+  static final Logger log = new Logger("DcmDecoderByteBuf", Level.debug);
 
   bool breakOnError = true;
 

@@ -3,10 +3,10 @@
 // that can be found in the LICENSE file.
 // Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
-library odw.sdk.convert.json.decoder;
+library odw.sdk.convert.json.encoder;
 
 
-/// DICOM+JSON media type decoder.
-class JsonDecoder {
+/// DICOM+JSON media type encoder;
+class DicomJsonEncoder {
 
 }
