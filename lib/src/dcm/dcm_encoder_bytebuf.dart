@@ -8,9 +8,11 @@ library odw.sdk.convert.dcm.dcm_encoder_bytebuf;
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:integer/integer.dart';
 import 'package:logger/logger.dart';
 import 'package:bytebuf/bytebuf.dart';
 
+import 'package:core/base.dart';
 import 'package:core/attribute.dart';
 import 'package:core/dataset_sop.dart';
 
