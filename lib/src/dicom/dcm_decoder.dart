@@ -10,7 +10,6 @@ import 'package:logger/logger.dart';
 
 import 'package:core/attribute.dart';
 import 'package:core/dicom.dart';
-import 'package:core/uid.dart';
 
 import 'package:convert/src/dicom/dcm_decoder_bytebuf.dart';
 
@@ -49,7 +48,6 @@ class DcmDecoder extends DcmDecoderByteBuf {
     return _preamble;
   }
 
-
   // Reads the DICOM Prefix "DICM" and returns [null] if not present.
   // The Prefix is equivalent to a magic number that specifies the [Uint8List] is
   // in DICOM File Format. See PS3.10.
@@ -70,34 +68,30 @@ class DcmDecoder extends DcmDecoderByteBuf {
   /// Reads and returns the File Meta Information [Fmi], if present. If no [Fmi] [Attributes]
   /// were present an empty [Map] is returned.
   Fmi readFmi() {
-    Map<int, Attribute> fmi = {};
+    Map<int, Attribute> fmiMap = {};
     while (isFmiTag()) {
       var a = readAttribute();
-      log.debug('$a');
-      fmi[a.tag] = a;
+      fmiMap[a.tag] = a;
     }
-    UI ts = fmi[kTransferSyntaxUID];
-    String transferSyntaxUid = (ts != null) ? ts.value : null;
-    log.info('Transfer Syntax: $transferSyntaxUid');
-    if (ts == littleEndian)
-      throw "little Endian";
-    return new Fmi(fmi);
+    return Fmi.parse(fmiMap);
   }
 
-  Instance readSopInstance([String filePath]) {
+  Study readSopInstance([String path]) {
     Logger log = new Logger("DcmEncoder.readSopInstance");
     _preamble = readPreamble();
     _prefix = readPrefix();
     //TODO: we could try to figure out what it contained later.
     if (_prefix == null) return null;
-    var fmi = readFmi();
-    log.debug('readSopInstance: fmi = $fmi');
-    var aMap = readDataset();
-    log.debug('aMap: $aMap');
+    Fmi fmi = readFmi();
 
-    Instance i = new Instance(fmi, aMap, filePath);
-    log.debug('readSopInstance: $i');
-    return i;
+    log.debug('readSopInstance: fmi = $fmi');
+    int start = readIndex;
+    var aMap = readDataset();
+    int lengthInBytes = readIndex - start;
+    Dataset ds = new Dataset(aMap, false, lengthInBytes);
+
+    Study study = ActivePatients.studyFromSopDataset(path, lengthInBytes, fmi, ds);
+    return study;
   }
 
   /// Returns an [Attribute] or [null].
@@ -110,7 +104,7 @@ class DcmDecoder extends DcmDecoderByteBuf {
       Attribute a = readAttribute();
       aMap[a.tag] = a;
       if (a.tag == kPixelData) {
-        log.debug('PixelData: ${fmtTag(a.tag)}, ${a.vr}, length= ${a.length}');
+        log.debug('PixelData(${tagToDcm(a.tag)}): ${a.vr}, length= ${a.length}');
       } else {
         log.debug('$a');
       }

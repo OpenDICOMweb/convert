@@ -276,7 +276,7 @@ class DcmEncoderByteBuf extends ByteBuf {
       if (isNotWritable)
         throw "End of buffer error: $this";
       if (a.tag == kPixelData) {
-        log.info('PixelData: ${fmtTag(a.tag)}, ${a.vr}, length= ${a.values.length}');
+        log.info('PixelData: ${tagToHex(a.tag)}, ${a.vr}, length= ${a.values.length}');
         writePixelData(a);
       } else {
         writeAttribute(a);
@@ -722,7 +722,7 @@ class DcmEncoderByteBuf extends ByteBuf {
         log.debug('writeItem: $item');
         writeTag(kItem);
         writeUint32(item.lengthInBytes);
-        for(var a in item.aMap.values) {
+        for(var a in item.deMap.values) {
           //print('${fmtTag(a.tag)}, len=${a.length}');
           writeAttribute(a);
         }

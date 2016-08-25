@@ -615,7 +615,7 @@ class DcmDecoderByteBuf extends ByteBuf {
   SQ readSequence(int tag) {
     bool hadUndefinedLength = false;
     int lengthInBytes = readLongLength();
-    log.debug('readSequence: tag: ${fmtTag(tag)}, '
+    log.debug('readSequence: tag: ${tagToHex(tag)}, '
                   'length= $lengthInBytes(${toHexString(lengthInBytes, 8)})');
     if (lengthInBytes == kUndefinedLength) {
       lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
@@ -662,7 +662,7 @@ class DcmDecoderByteBuf extends ByteBuf {
       attributes[a.tag] = a;
     }
     Item item = new Item(sqTag, attributes, lengthInBytes, hadUndefinedLength);
-    log.debug('readItem: item(${fmtTag(sqTag)}, attributes(${attributes.length}), '
+    log.debug('readItem: item(${tagToHex(sqTag)}, attributes(${attributes.length}), '
                   'Undefined Length: $hadUndefinedLength)');
     return item;
   }
@@ -722,7 +722,7 @@ class DcmDecoderByteBuf extends ByteBuf {
       log.debug('creators = $pgCreators');
     }
     List<Attribute> pgData = [];
-    while (isInPrivateGroup(creatorTags, peekTag())) {
+    while (inPrivateGroup(creatorTags, peekTag())) {
       pgData.add(_readInternal());
       log.debug('data: $pgData');
     }
