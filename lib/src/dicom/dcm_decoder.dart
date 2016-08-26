@@ -76,7 +76,7 @@ class DcmDecoder extends DcmDecoderByteBuf {
     return Fmi.parse(fmiMap);
   }
 
-  Study readSopInstance([String path]) {
+  Instance readSopInstance([String path]) {
     Logger log = new Logger("DcmEncoder.readSopInstance");
     _preamble = readPreamble();
     _prefix = readPrefix();
@@ -90,8 +90,8 @@ class DcmDecoder extends DcmDecoderByteBuf {
     int lengthInBytes = readIndex - start;
     Dataset ds = new Dataset(aMap, false, lengthInBytes);
 
-    Study study = ActivePatients.studyFromSopDataset(path, lengthInBytes, fmi, ds);
-    return study;
+    Instance instance = ActivePatients.addSopDataset(path, lengthInBytes, fmi, ds);
+    return instance;
   }
 
   /// Returns an [Attribute] or [null].

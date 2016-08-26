@@ -125,13 +125,6 @@ class DcmDecoderByteBuf extends ByteBuf {
     return group == 0x0002;
   }
 
-  /// Returns [true] if the next attribute is private; otherwise false.
-  /// Peeks at the Group part of the next [tag] - doesn't move the [ByteArray.readIndex].
-  bool isPrivateTag() {
-    int group = getUint16(readIndex);
-    return group.isOdd;
-  }
-
   /// Peek at next tag - doesn't move the [ByteArray.position]
   int peekTag() {
     int group = getUint16(readIndex);
@@ -260,17 +253,28 @@ class DcmDecoderByteBuf extends ByteBuf {
   /// This corresponds to the last 16-bits of [kItemDelimitationItem].
   static const kItemDelimiterLast16bits = 0xE00D;
 
+  /// Returns [true] if the next attribute is private; otherwise false.
+  /// Peeks at the Group part of the next [tag] - doesn't move the [ByteArray.readIndex].
+  bool _isPrivateTag() {
+    int group = getUint16(readIndex);
+    //print('inPrivateTag: ${intToHex(group, 4)}, isOdd= ${group.isOdd}');
+    return group.isOdd;
+  }
   /// This is the top-level entry point for reading an [Attributes].
   Attribute readAttribute() {
-    var a = (isPrivateTag()) ? readPrivateGroup() : _readInternal();
-    //if (a is PrivateGroup)
-    //  print('PG: $a');
-    print(a.debug());
-    return a;
+    if (isReadable) {
+      var a = (_isPrivateTag()) ? readPrivateGroup() : _readInternal();
+      //if (a is PrivateGroup)
+      //  print('PG: $a');
+      //print(a.debug());
+      return a;
+    }
+    return null;
   }
 
   /// Reads the next [Attribute] in the [ByteBuf]
   Attribute _readInternal() {
+    bool shouldPrint = false;
     // Attribute Readers
     Map<int, VFReader> vrReaders = {
       0x4145: readAE,
@@ -305,14 +309,14 @@ class DcmDecoderByteBuf extends ByteBuf {
       0x5553: readUS,
       0x5554: readUT
     };
-
+    
     log.level = Level.info;
     int tag = readTag();
     int vrCode = readVR();
     VR vr = VR.map[vrCode];
     VFReader reader = vrReaders[vrCode];
-    if (false) {
-      print('reader: ${reader.runtimeType}, '
+    if (shouldPrint) {
+      print('start: ${reader.runtimeType}, '
                 'tag: ${toHexString(tag, 8)}, '
                 'vrCode: ${toHexString(vrCode, 4)}, '
                 'VR: $vr, '
@@ -324,6 +328,7 @@ class DcmDecoderByteBuf extends ByteBuf {
       throw msg;
     }
     Attribute a = reader(tag, vr);
+    if (shouldPrint) print('end: ${a.debug()}');
     return a;
 
   }
@@ -465,15 +470,15 @@ class DcmDecoderByteBuf extends ByteBuf {
     assert(vr == VR.kOW);
     var hadUndefinedLength = false;
     int lengthInBytes = readLongLength();
-    //print('readOW: tag: ${fmtTag(tag)}, length= $lengthInBytes(${toHexString(lengthInBytes, 8)
-    // })');
+   // print('readOW: tag${tagToDcm(tag)}: length= $lengthInBytes(${toHexString(lengthInBytes, 8)
+  //   })');
     if (lengthInBytes == kUndefinedLength) {
-      //print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
+     // print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
       lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
       hadUndefinedLength = true;
-      //print('readOW: hadUndefinedLength: readeIndex($readIndex), lengthInBytes($lengthInBytes)');
+    //  print('readOW: hadUndefinedLength: readeIndex($readIndex), lengthInBytes($lengthInBytes)');
     }
-    //print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
+   // print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
     int length = toElementLength(lengthInBytes, OW.bytesPerElement);
     DcmDecoderByteBuf.log.debug('OW: readIndex: $readIndex, writeIndex: $writeIndex');
     DcmDecoderByteBuf.log.debug('OW: length: $length, lengthInBytes: $lengthInBytes');
@@ -553,11 +558,11 @@ class DcmDecoderByteBuf extends ByteBuf {
     assert(vr == VR.kUN);
     bool hadUndefinedLength = false;
     int lengthInBytes = readLongLength();
-    print('UN: lengthInBytes=$lengthInBytes');
+    //print('UN: lengthInBytes=$lengthInBytes');
     if (lengthInBytes == kUndefinedLength) {
       ////print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
       lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
-      print('UN undefined len=$lengthInBytes');
+     // print('UN undefined len=$lengthInBytes');
       hadUndefinedLength = true;
     }
     //TODO: use the ByteBuf setMark mechanism
@@ -712,21 +717,96 @@ class DcmDecoderByteBuf extends ByteBuf {
   }
 
   //Note: private creators are for one group number are all generated before the group tags
-  PrivateGroup readPrivateGroup() {
+  /* TODO: delete when fully debugged.
+  PrivateGroup readPrivateGroup0() {
+    print('***readPrivateGroup start');
+    var group = tagGroup(peekTag());
     var pgCreators = <PGCreator>[];
     var creatorTags = <int>[];
+    int tag = peekTag();
+    print('initial Creator: ${tagToDcm(tag)}');
+    print('hasPrivateGroup: ${hasPrivateGroup(tag)}');
+    print('hasCreatorElement: ${hasCreatorElement(tag)}');
+    print('isPrivateCreator: ${isPrivateCreatorTag(tag)}');
     while (isPrivateCreatorTag(peekTag())) {
       var creator = new PGCreator(_readInternal());
+      print('readPrivateGroup: $creator');
       pgCreators.add(creator);
       creatorTags.add(creator.tag);
       log.debug('creators = $pgCreators');
     }
     List<Attribute> pgData = [];
     while (inPrivateGroup(creatorTags, peekTag())) {
-      pgData.add(_readInternal());
+      print('creatorTags: $creatorTags, ${tagToDcm(peekTag())}');
+      var a = _readInternal();
+      print('pgData.add: $a');
+      pgData.add(a);
       log.debug('data: $pgData');
     }
+    print('*** readPrivateGroup end');
     return new PrivateGroup(pgCreators, pgData);
+  }
+*/
+  /// Reads and returns a [PrivateGroup].
+  ///
+  /// A [PrivateGroup] contains all the  [PrivateCreator] and the corresponding
+  /// [PrivateData] Data [Element]s with the same private group number.
+  ///
+  /// Note: All [PrivateCreators] are read before any of the [PrivateData]
+  /// [Element]s are read.
+  PrivateGroup readPrivateGroup() {
+    //print('***readPrivateGroup start');
+    var pgCreators = <PGCreator>[];
+    var creatorElements = <int>[];
+
+    var tag = peekTag();
+    var groupMaster = tagGroup(tag);
+    if (groupMaster.isEven) throw "Bad group(${intToHex(groupMaster, 4)} in readPrivateGroup";
+
+    var group;
+    var element;
+    do {
+      group = tagGroup(tag);
+      if (group != groupMaster) throw 'Bad group(${intToHex(group, 4)} while reading creators';
+      element = tagElement(tag);
+      if ((0x10 <= element) && (element <= 0xFF)) {
+        Attribute a = _readInternal();
+        if (a is! LO) throw 'Invalid VR in Creator: $a';
+        var creator = new PGCreator(a);
+       // print('readPrivateGroup Creator: $creator');
+        pgCreators.add(creator);
+        creatorElements.add(element);
+        log.debug('creators = $pgCreators');
+
+        // get the next tag to process
+        tag = peekTag();
+      } else {
+        break;
+      }
+    } while (true);
+
+    // Read the Private Group Data
+    List<Attribute> pgData = [];
+    for (int i = 0; i < creatorElements.length; i++) {
+      int base = creatorElements[i] << 8;
+      int limit = base + 0xFF;
+      while ((element < base) || (limit > element)) {
+        Attribute a = _readInternal();
+       // print('pgData.add: $a');
+        pgData.add(a);
+        log.debug('data: $pgData');
+
+        // get next tag to process
+        tag = peekTag();
+        if (tagGroup(tag) != groupMaster) break;
+        element = tagElement(tag);
+      }
+      if (group != groupMaster) break;
+    }
+    var pg = new PrivateGroup(pgCreators, pgData);
+   // print('Private Group($groupMaster): $pg');
+   // print('*** readPrivateGroup end');
+    return pg;
   }
 }
 
