@@ -62,8 +62,31 @@ class DcmDecoder extends DcmDecoderByteBuf {
     return prefix;
   }
 
-  static const littleEndian =
-      WellKnownUid.kImplicitVRLittleEndianDefaultTransferSyntaxforDICOM;
+  //static const littleEndian =
+  //    WellKnownUid.kImplicitVRLittleEndianDefaultTransferSyntaxforDICOM;
+
+  Instance readSopInstance([String path]) {
+    Logger log = new Logger("DcmEncoder.readSopInstance");
+    _preamble = readPreamble();
+  //  print('preamble: $_preamble');
+    _prefix = readPrefix();
+  //  print('prefix: $_prefix');
+    //TODO: we could try to figure out what it contained later.
+    if (_prefix == null) return null;
+    Fmi fmi = readFmi();
+  //  print('Fmi: $fmi');
+
+    log.debug('readSopInstance: fmi = $fmi');
+    int start = readIndex;
+    var aMap = readDataset();
+    int lengthInBytes = readIndex - start;
+    Dataset ds = new Dataset(aMap, false, lengthInBytes);
+
+    Instance instance = ActivePatients.addSopDataset(path, lengthInBytes, fmi, ds);
+
+  //  print('***${instance.format(new Prefixer())}');
+    return instance;
+  }
 
   /// Reads and returns the File Meta Information [Fmi], if present. If no [Fmi] [Attributes]
   /// were present an empty [Map] is returned.
@@ -73,25 +96,8 @@ class DcmDecoder extends DcmDecoderByteBuf {
       var a = readAttribute();
       fmiMap[a.tag] = a;
     }
+  ///  print('fmiMap: $fmiMap');
     return Fmi.parse(fmiMap);
-  }
-
-  Instance readSopInstance([String path]) {
-    Logger log = new Logger("DcmEncoder.readSopInstance");
-    _preamble = readPreamble();
-    _prefix = readPrefix();
-    //TODO: we could try to figure out what it contained later.
-    if (_prefix == null) return null;
-    Fmi fmi = readFmi();
-
-    log.debug('readSopInstance: fmi = $fmi');
-    int start = readIndex;
-    var aMap = readDataset();
-    int lengthInBytes = readIndex - start;
-    Dataset ds = new Dataset(aMap, false, lengthInBytes);
-
-    Instance instance = ActivePatients.addSopDataset(path, lengthInBytes, fmi, ds);
-    return instance;
   }
 
   /// Returns an [Attribute] or [null].
@@ -104,6 +110,7 @@ class DcmDecoder extends DcmDecoderByteBuf {
       Attribute a = readAttribute();
       aMap[a.tag] = a;
       if (a.tag == kPixelData) {
+        print('PixelData(${tagToDcm(a.tag)}): ${a.vr}, length= ${a.length}');
         log.debug('PixelData(${tagToDcm(a.tag)}): ${a.vr}, length= ${a.length}');
       } else {
         log.debug('$a');

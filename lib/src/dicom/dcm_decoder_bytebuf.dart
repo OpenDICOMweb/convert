@@ -125,9 +125,12 @@ class DcmDecoderByteBuf extends ByteBuf {
     return group == 0x0002;
   }
 
+  /// Peek at the next group
+  int _peekGroup() => getUint16(readIndex);
+
   /// Peek at next tag - doesn't move the [ByteArray.position]
   int peekTag() {
-    int group = getUint16(readIndex);
+    int group = _peekGroup();
     int element = getUint16(readIndex + 2);
     int tag = (group << 16) + element;
     log.finest('peekTag: ${toHexString(tag, 8)}');
@@ -168,8 +171,7 @@ class DcmDecoderByteBuf extends ByteBuf {
     return a;
   }
 
-
-  /// Read a 16 bit length field and skip the following 16 bits
+  /// Read a 16 bit length field.
   int readShortLength() => readUint16();
 
   void invalidValueFieldLengthError(String msg) {
@@ -255,11 +257,8 @@ class DcmDecoderByteBuf extends ByteBuf {
 
   /// Returns [true] if the next attribute is private; otherwise false.
   /// Peeks at the Group part of the next [tag] - doesn't move the [ByteArray.readIndex].
-  bool _isPrivateTag() {
-    int group = getUint16(readIndex);
-    //print('inPrivateTag: ${intToHex(group, 4)}, isOdd= ${group.isOdd}');
-    return group.isOdd;
-  }
+  bool _isPrivateTag() => _peekGroup().isOdd;
+
   /// This is the top-level entry point for reading an [Attributes].
   Attribute readAttribute() {
     if (isReadable) {
@@ -309,7 +308,7 @@ class DcmDecoderByteBuf extends ByteBuf {
       0x5553: readUS,
       0x5554: readUT
     };
-    
+
     log.level = Level.info;
     int tag = readTag();
     int vrCode = readVR();
@@ -426,19 +425,22 @@ class DcmDecoderByteBuf extends ByteBuf {
     assert(vr == VR.kOB);
     bool hadUndefinedLength = false;
     int lengthInBytes = readLongLength();
-    //print('readOB: tag: ${fmtTag(tag)}, length= $lengthInBytes(${toHexString(lengthInBytes, 8)
-    // })');
+    //print('readOB: tag: ${tagToDcm(tag)}, '
+    //          'length= $lengthInBytes(${toHexString(lengthInBytes, 8)})');
     if (lengthInBytes == kUndefinedLength) {
-      //print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
+  //    print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
       lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
+  //    print('detected length: $lengthInBytes');
       hadUndefinedLength = true;
-      //print('readOW: hadUndefinedLength: readeIndex($readIndex), lengthInBytes($lengthInBytes)');;
+  //    print('readOB: hadUndefinedLength: readeIndex($readIndex), lengthInBytes($lengthInBytes)');;
     }
     //TODO: use the ByteBuf setMark mechanism
     //setReadIndexMark;
+  //  print('readIndex: $readIndex');
     var values = readUint8List(lengthInBytes);
-    //TODO: need hadUndefined Length
-    return new OB(tag, values, lengthInBytes, hadUndefinedLength);
+    if (hadUndefinedLength) readIndex += 8;
+    //return new OB(tag, values, hadUndefinedLength);
+    return new OB(tag, values, hadUndefinedLength);
   }
 
   OD readOD(int tag, [VR vr]) {
@@ -568,6 +570,7 @@ class DcmDecoderByteBuf extends ByteBuf {
     //TODO: use the ByteBuf setMark mechanism
     //setReadIndexMark;
     Uint8List list = readUint8List(lengthInBytes);
+    if (hadUndefinedLength) readIndex += 8;
     log.finest('UN<Uint8>: $list');
     return new UN(tag, list, lengthInBytes, hadUndefinedLength);
   }
@@ -634,6 +637,7 @@ class DcmDecoderByteBuf extends ByteBuf {
     int end = readIndex + lengthInBytes;
     while (readIndex < end)
       items.add(readItem(tag));
+    if (hadUndefinedLength) readIndex += 8;
     SQ sq = new SQ(tag, items, lengthInBytes, hadUndefinedLength);
     for (Item item in items)
       item.sequence = sq;
@@ -666,6 +670,7 @@ class DcmDecoderByteBuf extends ByteBuf {
       log.debug('readItem: $a');
       attributes[a.tag] = a;
     }
+    if (hadUndefinedLength) readIndex += 8;
     Item item = new Item(sqTag, attributes, lengthInBytes, hadUndefinedLength);
     log.debug('readItem: item(${tagToHex(sqTag)}, attributes(${attributes.length}), '
                   'Undefined Length: $hadUndefinedLength)');
@@ -716,37 +721,6 @@ class DcmDecoderByteBuf extends ByteBuf {
     return s;
   }
 
-  //Note: private creators are for one group number are all generated before the group tags
-  /* TODO: delete when fully debugged.
-  PrivateGroup readPrivateGroup0() {
-    print('***readPrivateGroup start');
-    var group = tagGroup(peekTag());
-    var pgCreators = <PGCreator>[];
-    var creatorTags = <int>[];
-    int tag = peekTag();
-    print('initial Creator: ${tagToDcm(tag)}');
-    print('hasPrivateGroup: ${hasPrivateGroup(tag)}');
-    print('hasCreatorElement: ${hasCreatorElement(tag)}');
-    print('isPrivateCreator: ${isPrivateCreatorTag(tag)}');
-    while (isPrivateCreatorTag(peekTag())) {
-      var creator = new PGCreator(_readInternal());
-      print('readPrivateGroup: $creator');
-      pgCreators.add(creator);
-      creatorTags.add(creator.tag);
-      log.debug('creators = $pgCreators');
-    }
-    List<Attribute> pgData = [];
-    while (inPrivateGroup(creatorTags, peekTag())) {
-      print('creatorTags: $creatorTags, ${tagToDcm(peekTag())}');
-      var a = _readInternal();
-      print('pgData.add: $a');
-      pgData.add(a);
-      log.debug('data: $pgData');
-    }
-    print('*** readPrivateGroup end');
-    return new PrivateGroup(pgCreators, pgData);
-  }
-*/
   /// Reads and returns a [PrivateGroup].
   ///
   /// A [PrivateGroup] contains all the  [PrivateCreator] and the corresponding
@@ -754,6 +728,9 @@ class DcmDecoderByteBuf extends ByteBuf {
   ///
   /// Note: All [PrivateCreators] are read before any of the [PrivateData]
   /// [Element]s are read.
+  ///
+  /// Note: [PrivateCreators] for one private group all occur before their
+  /// corresponding Private Data Elements.
   PrivateGroup readPrivateGroup() {
     //print('***readPrivateGroup start');
     var pgCreators = <PGCreator>[];
@@ -803,7 +780,7 @@ class DcmDecoderByteBuf extends ByteBuf {
       }
       if (group != groupMaster) break;
     }
-    var pg = new PrivateGroup(pgCreators, pgData);
+    var pg = new PrivateGroup(groupMaster, pgCreators, pgData);
    // print('Private Group($groupMaster): $pg');
    // print('*** readPrivateGroup end');
     return pg;
