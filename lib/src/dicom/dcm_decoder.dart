@@ -110,7 +110,7 @@ class DcmDecoder extends DcmDecoderByteBuf {
       Attribute a = readAttribute();
       aMap[a.tag] = a;
       if (a.tag == kPixelData) {
-        print('PixelData(${tagToDcm(a.tag)}): ${a.vr}, length= ${a.length}');
+        //print('PixelData(${tagToDcm(a.tag)}): ${a.vr}, length= ${a.length}');
         log.debug('PixelData(${tagToDcm(a.tag)}): ${a.vr}, length= ${a.length}');
       } else {
         log.debug('$a');

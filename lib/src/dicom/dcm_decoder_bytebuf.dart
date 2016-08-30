@@ -425,21 +425,14 @@ class DcmDecoderByteBuf extends ByteBuf {
     assert(vr == VR.kOB);
     bool hadUndefinedLength = false;
     int lengthInBytes = readLongLength();
-    //print('readOB: tag: ${tagToDcm(tag)}, '
-    //          'length= $lengthInBytes(${toHexString(lengthInBytes, 8)})');
     if (lengthInBytes == kUndefinedLength) {
-  //    print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
       lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
-  //    print('detected length: $lengthInBytes');
       hadUndefinedLength = true;
-  //    print('readOB: hadUndefinedLength: readeIndex($readIndex), lengthInBytes($lengthInBytes)');;
     }
     //TODO: use the ByteBuf setMark mechanism
     //setReadIndexMark;
-  //  print('readIndex: $readIndex');
-    var values = readUint8List(lengthInBytes);
+    Uint8List values = readUint8List(lengthInBytes);
     if (hadUndefinedLength) readIndex += 8;
-    //return new OB(tag, values, hadUndefinedLength);
     return new OB(tag, values, hadUndefinedLength);
   }
 
@@ -472,21 +465,14 @@ class DcmDecoderByteBuf extends ByteBuf {
     assert(vr == VR.kOW);
     var hadUndefinedLength = false;
     int lengthInBytes = readLongLength();
-   // print('readOW: tag${tagToDcm(tag)}: length= $lengthInBytes(${toHexString(lengthInBytes, 8)
-  //   })');
     if (lengthInBytes == kUndefinedLength) {
-     // print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
       lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
       hadUndefinedLength = true;
-    //  print('readOW: hadUndefinedLength: readeIndex($readIndex), lengthInBytes($lengthInBytes)');
     }
-   // print('readIndex: $readIndex, lengthInBytes: $lengthInBytes');
     int length = toElementLength(lengthInBytes, OW.bytesPerElement);
-    DcmDecoderByteBuf.log.debug('OW: readIndex: $readIndex, writeIndex: $writeIndex');
-    DcmDecoderByteBuf.log.debug('OW: length: $length, lengthInBytes: $lengthInBytes');
     //TODO: use the ByteBuf setMark mechanism
     //setReadIndexMark;
-    var values = readUint16List(length);
+    Uint16List values = readUint16List(length);
     if (hadUndefinedLength) readIndex += 8;
     return new OW(tag, values, lengthInBytes, hadUndefinedLength);
   }
