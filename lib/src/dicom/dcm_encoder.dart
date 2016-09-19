@@ -12,7 +12,6 @@ import 'package:path/path.dart' as path;
 
 
 import 'package:core/dicom.dart';
-
 import 'dcm_encoder_bytebuf.dart';
 
 /// Encoder for DICOM File Format octet streams (Uint8List)
@@ -61,7 +60,7 @@ class DcmEncoder extends DcmEncoderByteBuf {
   }
 
   static const littleEndian =
-      WellKnownUid.kImplicitVRLittleEndianDefaultTransferSyntaxforDICOM;
+      WKUid.kImplicitVRLittleEndianDefaultTransferSyntaxforDICOM;
 
   /// Writes the File Meta Information [Fmi] for this [Instance].
   void

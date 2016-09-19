@@ -273,7 +273,6 @@ class DcmDecoderByteBuf extends ByteBuf {
 
   /// Reads the next [Attribute] in the [ByteBuf]
   Attribute _readInternal() {
-    bool shouldPrint = false;
     // Attribute Readers
     Map<int, VFReader> vrReaders = {
       0x4145: readAE,
@@ -313,7 +312,18 @@ class DcmDecoderByteBuf extends ByteBuf {
     int tag = readTag();
     int vrCode = readVR();
     VR vr = VR.map[vrCode];
+    if (vr == null) {
+      print('Bad VR: ${intToHex(vrCode, 4)}');
+      int sLength = getUint16(readIndex);
+      print('short Length: ${toHexString(sLength, 4)}');
+      int lLength = getUint32(readIndex + 2);
+      print('long Length: ${toHexString(lLength, 8)}');
+      print('bytes: ${toHex(readIndex - 6, readIndex + 12)}');
+      print('string: ${getString(readIndex + 2, 12)}');
+     // debug();
+    }
     VFReader reader = vrReaders[vrCode];
+    bool shouldPrint = false;
     if (shouldPrint) {
       print('start: ${reader.runtimeType}, '
                 'tag: ${toHexString(tag, 8)}, '

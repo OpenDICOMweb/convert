@@ -7,7 +7,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:integer/integer.dart';
 import 'package:logger/logger.dart';
 import 'package:bytebuf/bytebuf.dart';
 
@@ -351,7 +350,8 @@ class DcmEncoderByteBuf extends ByteBuf {
     VFWriter writer = vfWriter[vrCode];
 
    var values = a.values;
-    if (false) {
+    bool shouldPrint = true;
+    if (shouldPrint) {
       print('writer: ${writer.runtimeType}, '
                 'tag: ${toHexString(a.tag, 8)}, '
                 'vrCode: ${toHexString(vrCode, 4)}, '
@@ -597,7 +597,7 @@ class DcmEncoderByteBuf extends ByteBuf {
 
 
   void writeDcmInt32List(List<int> list, {isShort: true}) {
-    writeLengthInBytes(list.length, isShort, 4, kMaxInt32LongLength);
+    writeLengthInBytes(list.length, isShort, 4, Int32.maxLongLength);
     if (list.length > 0 ) {
       Int32List bytes = new Int32List.fromList(list);
       writeInt32List(bytes);
@@ -606,7 +606,7 @@ class DcmEncoderByteBuf extends ByteBuf {
 
   void writeDcmUint32List(List<int> values, {isShort: true}) {
     print('writeDcm: $values');
-    writeLengthInBytes(values.length, isShort, 4, kMaxUint32LongLength);
+    writeLengthInBytes(values.length, isShort, 4, Uint32.maxLongLength);
     if (values.length > 0 ) {
       Uint32List bytes = new Uint32List.fromList(values);
       writeUint32List(bytes);
@@ -614,7 +614,7 @@ class DcmEncoderByteBuf extends ByteBuf {
   }
 
   void writeDcmInt16List(List<int> list, {isShort: true}) {
-    writeLengthInBytes(list.length, isShort,  2, kMaxInt16LongLength);
+    writeLengthInBytes(list.length, isShort,  2, Int16.maxLongLength);
     if (list.length > 0 ) {
       Int16List bytes = new Int16List.fromList(list);
       writeInt16List(bytes);
@@ -622,7 +622,7 @@ class DcmEncoderByteBuf extends ByteBuf {
   }
 
   void writeDcmUint16List(List<int> list, {isShort: true}) {
-    writeLengthInBytes(list.length, isShort,  2, kMaxUint16LongLength);
+    writeLengthInBytes(list.length, isShort,  2, Uint16.maxLongLength);
     if (list.length > 0 ) {
       Uint16List bytes = new Uint16List.fromList(list);
       writeUint16List(bytes);
@@ -630,7 +630,7 @@ class DcmEncoderByteBuf extends ByteBuf {
   }
 
   void writeDcmInt8List(List<int> list, {isShort: true}) {
-    writeLengthInBytes(list.length, isShort, 1, kMaxInt8LongLength);
+    writeLengthInBytes(list.length, isShort, 1, Int8.maxLongLength);
     if (list.length > 0 ) {
       Int8List bytes = new Int8List.fromList(list);
       writeInt8List(bytes);
@@ -638,7 +638,7 @@ class DcmEncoderByteBuf extends ByteBuf {
   }
 
   void writeDcmUint8List(List<int> list, {isShort: true}) {
-    writeLengthInBytes(list.length, isShort, 1, kMaxUint8LongLength);
+    writeLengthInBytes(list.length, isShort, 1, Uint8.maxLongLength);
     if (list.length > 0 ) {
       Uint8List bytes = new Uint8List.fromList(list);
       writeUint8List(bytes);
@@ -646,7 +646,7 @@ class DcmEncoderByteBuf extends ByteBuf {
   }
 
   void writeDcmFloat64List(List<double> list, {isShort: true}) {
-    writeLengthInBytes(list.length, isShort, 8, kMaxFloat64LongLength);
+    writeLengthInBytes(list.length, isShort, 8, Float64.maxLongLength);
     if (list.length > 0 ) {
       Float64List bytes = new Float64List.fromList(list);
       writeFloat64List(bytes);
@@ -654,7 +654,7 @@ class DcmEncoderByteBuf extends ByteBuf {
   }
 
   void writeDcmFloat32List(List<double> list, {isShort: true}) {
-    writeLengthInBytes(list.length, isShort, 4, kMaxFloat32LongLength);
+    writeLengthInBytes(list.length, isShort, 4, Float32.maxLongLength);
     if (list.length > 0 ) {
       Float32List bytes = new Float32List.fromList(list);
       writeFloat32List(bytes);
