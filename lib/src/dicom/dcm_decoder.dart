@@ -78,9 +78,9 @@ class DcmDecoder extends DcmDecoderByteBuf {
 
     log.debug('readSopInstance: fmi = $fmi');
     int start = readIndex;
-    var aMap = readDataset();
+    var deMap = readDataset();
     int lengthInBytes = readIndex - start;
-    Dataset ds = new Dataset(aMap, false, lengthInBytes);
+    Dataset ds = new Dataset.root(deMap, lengthInBytes: lengthInBytes);
 
     Instance instance = ActivePatients.addSopDataset(path, lengthInBytes, fmi, ds);
 
@@ -105,10 +105,10 @@ class DcmDecoder extends DcmDecoderByteBuf {
   /// This is the top-level entry point for reading a [Dataset].
   Map<int, Attribute> readDataset() {
     final Logger log = new Logger("readDataset");
-    Map<int, Attribute> aMap = {};
+    Map<int, Attribute> deMap = {};
     while (isReadable) {
       Attribute a = readAttribute();
-      aMap[a.tag] = a;
+      deMap[a.tag] = a;
       if (a.tag == kPixelData) {
         //print('PixelData(${tagToDcm(a.tag)}): ${a.vr}, length= ${a.length}');
         log.debug('PixelData(${tagToDcm(a.tag)}): ${a.vr}, length= ${a.length}');
@@ -117,7 +117,7 @@ class DcmDecoder extends DcmDecoderByteBuf {
       }
     }
     log.debug('DcmBuf: $this');
-    return aMap;
+    return deMap;
   }
 
   //TODO: move to a utilities file for TypedData
