@@ -8,7 +8,7 @@ import 'dart:typed_data';
 
 import 'package:logger/logger.dart';
 
-import 'package:core/attribute.dart';
+import 'package:core/element.dart';
 import 'package:core/dicom.dart';
 
 import 'package:convert/src/dicom/dcm_decoder_bytebuf.dart';
@@ -73,41 +73,41 @@ class DcmDecoder extends DcmDecoderByteBuf {
   //  print('prefix: $_prefix');
     //TODO: we could try to figure out what it contained later.
     if (_prefix == null) return null;
-    Fmi fmi = readFmi();
+    Map<int, Element> fmi = readFmi();
   //  print('Fmi: $fmi');
 
     log.debug('readSopInstance: fmi = $fmi');
     int start = readIndex;
-    var deMap = readDataset();
+    var eMap = readDataset();
     int lengthInBytes = readIndex - start;
-    Dataset ds = new Dataset.root(deMap, lengthInBytes: lengthInBytes);
+    Dataset ds = new Dataset(fmi, eMap, lengthInBytes, false);
 
-    Instance instance = ActivePatients.addSopDataset(path, lengthInBytes, fmi, ds);
+    Instance instance = ActiveStudies.addSopInstance(ds);
 
   //  print('***${instance.format(new Prefixer())}');
     return instance;
   }
 
-  /// Reads and returns the File Meta Information [Fmi], if present. If no [Fmi] [Attributes]
+  /// Reads and returns the File Meta Information [Fmi], if present. If no [Fmi] [Elements]
   /// were present an empty [Map] is returned.
-  Fmi readFmi() {
-    Map<int, Attribute> fmiMap = {};
+  Map<int, Element> readFmi() {
+    Map<int, Element> fmiMap = {};
     while (isFmiTag()) {
-      var a = readAttribute();
+      var a = readElement();
       fmiMap[a.tag] = a;
     }
   ///  print('fmiMap: $fmiMap');
-    return Fmi.parse(fmiMap);
+    return fmiMap;
   }
 
-  /// Returns an [Attribute] or [null].
+  /// Returns an [Element] or [null].
   ///
   /// This is the top-level entry point for reading a [Dataset].
-  Map<int, Attribute> readDataset() {
+  Map<int, Element> readDataset() {
     final Logger log = new Logger("readDataset");
-    Map<int, Attribute> deMap = {};
+    Map<int, Element> deMap = {};
     while (isReadable) {
-      Attribute a = readAttribute();
+      Element a = readElement();
       deMap[a.tag] = a;
       if (a.tag == kPixelData) {
         //print('PixelData(${tagToDcm(a.tag)}): ${a.vr}, length= ${a.length}');

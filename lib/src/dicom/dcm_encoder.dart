@@ -63,13 +63,12 @@ class DcmEncoder extends DcmEncoderByteBuf {
       WKUid.kImplicitVRLittleEndianDefaultTransferSyntaxforDICOM;
 
   /// Writes the File Meta Information [Fmi] for this [Instance].
-  void
-  writeFmi(Fmi fmi) {
-    var values = fmi.deMap.values;
-    for(Attribute value in values) print('$value\n');
+  void writeFmi(Map<int, Element>  fmi) {
+    var values = fmi.values;
+    for(Element value in values) print('$value\n');
     //for (int i = 0; i < values.length; i++)
-    for(Attribute a in values) {
-      writeAttribute(a);
+    for(Element a in values) {
+      writeElement(a);
     }
   }
 
@@ -86,24 +85,24 @@ class DcmEncoder extends DcmEncoderByteBuf {
     //print('fmiDataset: ${instance.fmi}');
     writeFmi(instance.fmi);
     //print('instance.aMap: ${instance.aMap}');
-    writeDataset(instance.dataset.deMap);
+    writeDataset(instance.dataset.eMap);
   }
 
-  /// Returns an [Attribute] or [null].
+  /// Returns an [Element] or [null].
   ///
   /// This is the top-level entry point for reading a [Dataset].
   @override
-   void writeDataset(Map<int, Attribute> aMap) {
+   void writeDataset(Map<int, Element> aMap) {
     final Logger log = new Logger("writeDataset");
-    Iterable<Attribute> values = aMap.values;
+    Iterable<Element> values = aMap.values;
     print('writeDataset: $values');
-    for (Attribute a in values) {
+    for (Element a in values) {
       if (a.tag == kPixelData) {
         log.debug('PixelData: ${tagToHex(a.tag)}, ${a.vr}, length= ${a.values.length}');
         writePixelData(a);
       } else {
         log.debug('${a.vr.name}: ${tagToHex(a.tag)}, ${a.vr}, length= ${a.values.length}');
-        writeAttribute(a);
+        writeElement(a);
       }
     }
   }

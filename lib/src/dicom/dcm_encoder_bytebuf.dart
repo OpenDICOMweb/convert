@@ -13,7 +13,7 @@ import 'package:bytebuf/bytebuf.dart';
 import 'package:core/dicom.dart';
 
 //TODO:
-//  1. Move all [String] trimming and validation to the Attribute.  The reader
+//  1. Move all [String] trimming and validation to the Element.  The reader
 //     and writer should write the values as given.
 //  3. Add a mode that will write with/without [String]s padded to an even length
 //  4. Need a mode where read followed by write will produce two byte for byte identical
@@ -142,10 +142,10 @@ class DcmEncoderByteBuf extends ByteBuf {
     return tag;
   }
 
-  //**** Attribute writeer and Auxillary Methods  ****
+  //**** Element writeer and Auxillary Methods  ****
 
   ///TODO: this is expensive! Is there a better way?
-  /// write the DICOM Attribute Tag
+  /// write the DICOM Element Tag
   void writeTag(int tag) {
     int group = tagGroup(tag);
     writeUint16(group);
@@ -266,26 +266,26 @@ class DcmEncoderByteBuf extends ByteBuf {
   /// This corresponds to the last 16-bits of [kItemDelimitationItem].
   static const kItemDelimiterLast16bits = 0xE00D;
 
-  /// Returns an [Attribute] or [null].
+  /// Returns an [Element] or [null].
   ///
   /// This is the top-level entry point for writeing a [Dataset].
-  void writeDataset(Map<int, Attribute> aMap) {
+  void writeDataset(Map<int, Element> aMap) {
     final Logger log = new Logger("Write Dataset");
-    for (Attribute a in aMap.values) {
+    for (Element a in aMap.values) {
       if (isNotWritable)
         throw "End of buffer error: $this";
       if (a.tag == kPixelData) {
         log.info('PixelData: ${tagToHex(a.tag)}, ${a.vr}, length= ${a.values.length}');
         writePixelData(a);
       } else {
-        writeAttribute(a);
+        writeElement(a);
       }
     }
     log.info('DcmWriteBuf: $this');
   }
 
-  /// This is the top-level entry point for writing an [Attributes].
-  void writeAttribute(Attribute a) {
+  /// This is the top-level entry point for writing an [Elements].
+  void writeElement(Element a) {
     //TODO: private group should be handled the same. this if shouldn't be needed.
     if (a is PrivateGroup) {
       writePrivateGroup(a);
@@ -300,9 +300,9 @@ class DcmEncoderByteBuf extends ByteBuf {
   }
 
 
-  /// writes the next [Attribute] in the [ByteBuf]
-  void _writeInternal(Attribute a) {
-    // Attribute writers
+  /// writes the next [Element] in the [ByteBuf]
+  void _writeInternal(Element a) {
+    // Element writers
     Map<int, VFWriter> vfWriter = {
       0x4145: writeAE,
       0x4153: writeAS,
@@ -722,9 +722,9 @@ class DcmEncoderByteBuf extends ByteBuf {
         log.debug('writeItem: $item');
         writeTag(kItem);
         writeUint32(item.lengthInBytes);
-        for(var a in item.deMap.values) {
+        for(var a in item.eMap.values) {
           //print('${fmtTag(a.tag)}, len=${a.length}');
-          writeAttribute(a);
+          writeElement(a);
         }
       }
     }
@@ -737,25 +737,25 @@ class DcmEncoderByteBuf extends ByteBuf {
     writeUint32(kItem);
     writeUint32(item.lengthInBytes);
     for (int i = 0; i < item.lengthInBytes; i++)
-      writeAttribute(item[i]);
+      writeElement(item[i]);
   }
 */
   void _writeUndefinedLengthItem(Item item) {
     assert(item.hadUndefinedLength == true);
     writeTag(kItem);
     writeLongLength(0xFFFFFFFF);
-    for(Attribute a in item.values)
-      writeAttribute(a);
+    for(Element a in item.values)
+      writeElement(a);
     writeTag(kItemDelimitationItem);
   }
 
   ///Writes Pixel Data (7FFF,0010) based on the Transfer Syntax.
-  void writePixelData(Attribute a) {
+  void writePixelData(Element a) {
    // print('pixelData: $a');
     _writeInternal(a);
   }
 
-  /// Writes a Private Group of Private Attributes.
+  /// Writes a Private Group of Private Elements.
   void writePrivateGroup(PrivateGroup pg) {
     for (int i = 0; i < pg.creators.length; i++) {
       print('${pg.creators[i]}');

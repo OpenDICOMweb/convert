@@ -13,7 +13,7 @@ import 'package:bytebuf/bytebuf.dart';
 import 'package:core/dicom.dart';
 
 //TODO:
-//  1. Move all [String] trimming and validation to the Attribute.  The reader
+//  1. Move all [String] trimming and validation to the Element.  The reader
 //     and writer should write the values as given.
 //  2. Add a mode that will read with/without [String]s padded to an even length
 //  3. Add a mode that will write with/without [String]s padded to an even length
@@ -24,7 +24,7 @@ import 'package:core/dicom.dart';
 /// The type of the different Value Field readers.  Each Value Field Reader
 /// reads the Value Field Length and the Value Field for a particular Value
 /// Representation.
-typedef Attribute VFReader(int tag, [VR vr]);
+typedef Element VFReader(int tag, [VR vr]);
 
 
 /// A library for parsing [Uint8List] containing DICOM File Format [Dataset]s.
@@ -94,7 +94,9 @@ class DcmDecoderByteBuf extends ByteBuf {
 
   /// Internal Constructor: Returns a [._slice from [bytes].
   DcmDecoderByteBuf.internal(Uint8List bytes, int readIndex, int writeIndex, int length)
-      : super.internal(bytes, readIndex, writeIndex, length);
+      : super.internal(bytes, readIndex, writeIndex, length) {
+    vfReaders = getVRReaders();
+  }
 
   //**** Methods that Return new [ByteBuf]s.  ****
 //TODO: these next three don't do error checking and they should
@@ -137,10 +139,10 @@ class DcmDecoderByteBuf extends ByteBuf {
     return tag;
   }
 
-  //**** Attribute Reader and Auxillary Methods  ****
+  //**** Element Reader and Auxillary Methods  ****
 
   ///TODO: this is expensive! Is there a better way?
-  /// Read the DICOM Attribute Tag
+  /// Read the DICOM Element Tag
   int readTag() {
     int group = readUint16();
     log.finest('\treadTag: group(${toHexString(group, 4)})');
@@ -259,8 +261,8 @@ class DcmDecoderByteBuf extends ByteBuf {
   /// Peeks at the Group part of the next [tag] - doesn't move the [ByteArray.readIndex].
   bool _isPrivateTag() => _peekGroup().isOdd;
 
-  /// This is the top-level entry point for reading an [Attributes].
-  Attribute readAttribute() {
+  /// This is the top-level entry point for reading an [Elements].
+  Element readElement() {
     if (isReadable) {
       var a = (_isPrivateTag()) ? readPrivateGroup() : _readInternal();
       //if (a is PrivateGroup)
@@ -271,43 +273,11 @@ class DcmDecoderByteBuf extends ByteBuf {
     return null;
   }
 
-  /// Reads the next [Attribute] in the [ByteBuf]
-  Attribute _readInternal() {
-    // Attribute Readers
-    Map<int, VFReader> vrReaders = {
-      0x4145: readAE,
-      0x4153: readAS,
-      0x4154: readAT,
-      // 0x4252: readBR,
-      0x4353: readCS,
-      0x4441: readDA,
-      0x4453: readDS,
-      0x4454: readDT,
-      0x4644: readFD,
-      0x464c: readFL,
-      0x4953: readIS,
-      0x4c4f: readLO,
-      0x4c54: readLT,
-      0x4f42: readOB,
-      0x4f44: readOD,
-      0x4f46: readOF,
-      0x4f57: readOW,
-      0x504e: readPN,
-      0x5348: readSH,
-      0x534c: readSL,
-      0x5351: readSQ,
-      0x5353: readSS,
-      0x5354: readST,
-      0x544d: readTM,
-      0x5543: readUC,
-      0x5549: readUI,
-      0x554c: readUL,
-      0x554e: readUN,
-      0x5552: readUR,
-      0x5553: readUS,
-      0x5554: readUT
-    };
+  Map<int, VFReader> vfReaders;
 
+  /// Reads the next [Element] in the [ByteBuf]
+  Element _readInternal() {
+    // Element Readers
     log.level = Level.info;
     int tag = readTag();
     int vrCode = readVR();
@@ -322,7 +292,7 @@ class DcmDecoderByteBuf extends ByteBuf {
       print('string: ${getString(readIndex + 2, 12)}');
      // debug();
     }
-    VFReader reader = vrReaders[vrCode];
+    VFReader reader = vfReaders[vrCode];
     bool shouldPrint = false;
     if (shouldPrint) {
       print('start: ${reader.runtimeType}, '
@@ -336,11 +306,45 @@ class DcmDecoderByteBuf extends ByteBuf {
       log.error(msg);
       throw msg;
     }
-    Attribute a = reader(tag, vr);
+    Element a = reader(tag, vr);
     if (shouldPrint) print('end: ${a.debug()}');
     return a;
 
   }
+
+  Map<int, Function> getVRReaders() => {
+    0x4145: readAE,
+    0x4153: readAS,
+    0x4154: readAT,
+    // 0x4252: readBR,
+    0x4353: readCS,
+    0x4441: readDA,
+    0x4453: readDS,
+    0x4454: readDT,
+    0x4644: readFD,
+    0x464c: readFL,
+    0x4953: readIS,
+    0x4c4f: readLO,
+    0x4c54: readLT,
+    0x4f42: readOB,
+    0x4f44: readOD,
+    0x4f46: readOF,
+    0x4f57: readOW,
+    0x504e: readPN,
+    0x5348: readSH,
+    0x534c: readSL,
+    0x5351: readSQ,
+    0x5353: readSS,
+    0x5354: readST,
+    0x544d: readTM,
+    0x5543: readUC,
+    0x5549: readUI,
+    0x554c: readUL,
+    0x554e: readUN,
+    0x5552: readUR,
+    0x5553: readUS,
+    0x5554: readUT
+  };
 
 
   //**** VR Readers ****
@@ -366,7 +370,7 @@ class DcmDecoderByteBuf extends ByteBuf {
     assert(vr == VR.kAT);
     //Special case becasue [tag]s have to be read specially
     int lengthInBytes = readShortLength();
-    int length = toElementLength(lengthInBytes, AT.bytesPerElement);
+    int length = toElementLength(lengthInBytes, AT.sizeInBytes);
     Uint32List list = new Uint32List(length);
     for (int i = 0; i < length; i++)
       list[i] = readTag();
@@ -400,7 +404,7 @@ class DcmDecoderByteBuf extends ByteBuf {
   FD readFD(int tag, [VR vr]) {
     assert(vr == VR.kFD);
     int lengthInBytes = readShortLength();
-    int length = toElementLength(lengthInBytes, FD.bytesPerElement);
+    int length = toElementLength(lengthInBytes, FD.sizeInBytes);
     List<double> doubles = readFloat64List(length);
     return new FD(tag, doubles);
   }
@@ -408,7 +412,7 @@ class DcmDecoderByteBuf extends ByteBuf {
   FL readFL(int tag, [VR vr]) {
     assert(vr == VR.kFD);
     int lengthInBytes = readShortLength();
-    int length = toElementLength(lengthInBytes, FL.bytesPerElement);
+    int length = toElementLength(lengthInBytes, FL.sizeInBytes);
     List<double> doubles = readFloat32List(length);
     return new FL(tag, doubles);
   }
@@ -429,7 +433,7 @@ class DcmDecoderByteBuf extends ByteBuf {
     return LT.validateValueField(tag, readShortString());
   }
 
-  // Read an Value Field Length for an Attribute that
+  // Read an Value Field Length for an Element that
   // might have an Undefined Length. OB, OW, UN, SQ, or Item
   OB readOB(int tag, [VR vr]) {
     assert(vr == VR.kOB);
@@ -449,7 +453,7 @@ class DcmDecoderByteBuf extends ByteBuf {
   OD readOD(int tag, [VR vr]) {
     assert(vr == VR.kOD);
     int lengthInBytes = readLongLength();
-    int length = toElementLength(lengthInBytes, OD.bytesPerElement);
+    int length = toElementLength(lengthInBytes, OD.sizeInBytes);
     var values = readFloat64List(length);
     return new OD(tag, values);
   }
@@ -457,7 +461,7 @@ class DcmDecoderByteBuf extends ByteBuf {
   OF readOF(int tag, [VR vr]) {
     assert(vr == VR.kOF);
     int lengthInBytes = readLongLength();
-    int length = toElementLength(lengthInBytes, OF.bytesPerElement);
+    int length = toElementLength(lengthInBytes, OF.sizeInBytes);
     var values = readFloat32List(length);
     return new OF(tag, values);
   }
@@ -465,7 +469,7 @@ class DcmDecoderByteBuf extends ByteBuf {
   OL readOL(int tag, [VR vr]) {
     assert(vr == VR.kOL);
     int lengthInBytes = readLongLength();
-    int length = toElementLength(lengthInBytes, OL.bytesPerElement);
+    int length = toElementLength(lengthInBytes, OL.sizeInBytes);
     var values = readUint32List(length);
     return new OL(tag, values);
   }
@@ -479,7 +483,7 @@ class DcmDecoderByteBuf extends ByteBuf {
       lengthInBytes = _getUndefinedLength(kSequenceDelimiterLast16Bits);
       hadUndefinedLength = true;
     }
-    int length = toElementLength(lengthInBytes, OW.bytesPerElement);
+    int length = toElementLength(lengthInBytes, OW.sizeInBytes);
     //TODO: use the ByteBuf setMark mechanism
     //setReadIndexMark;
     Uint16List values = readUint16List(length);
@@ -500,7 +504,7 @@ class DcmDecoderByteBuf extends ByteBuf {
   SL readSL(int tag, [VR vr]) {
     assert(vr == VR.kSL);
     int lengthInBytes = readShortLength();
-    int length = toElementLength(lengthInBytes, SL.bytesPerElement);
+    int length = toElementLength(lengthInBytes, SL.sizeInBytes);
     Int32List list = readInt32List(length);
     log.fine('SL<int32>: $list');
     return new SL(tag, list);
@@ -514,7 +518,7 @@ class DcmDecoderByteBuf extends ByteBuf {
   SS readSS(int tag, [VR vr]) {
     assert(vr == VR.kSS);
     int lengthInBytes = readShortLength();
-    int length = toElementLength(lengthInBytes, SS.bytesPerElement);
+    int length = toElementLength(lengthInBytes, SS.sizeInBytes);
     Int16List list = readInt16List(length);
     log.finest('SS<int16>: $list');
     return new SS(tag, list);
@@ -544,7 +548,7 @@ class DcmDecoderByteBuf extends ByteBuf {
     assert(vr == VR.kUL);
     int lengthInBytes = readShortLength();
     //print('length: $lengthInBytes');
-    int length = toElementLength(lengthInBytes, UL.bytesPerElement);
+    int length = toElementLength(lengthInBytes, UL.sizeInBytes);
     //print('elementLength: $length');
     Uint32List list = readUint32List(length);
     //print('list: $list');
@@ -579,7 +583,7 @@ class DcmDecoderByteBuf extends ByteBuf {
   US readUS(int tag, [VR vr]) {
     assert(vr == VR.kUS);
     int lengthInBytes = readShortLength();
-    int length = toElementLength(lengthInBytes, US.bytesPerElement);
+    int length = toElementLength(lengthInBytes, US.sizeInBytes);
     Uint16List list = readUint16List(length);
     log.finest('US<Uint16>: $list');
     return new US(tag, list);
@@ -642,7 +646,7 @@ class DcmDecoderByteBuf extends ByteBuf {
 
   int readItemLength() => readLongOrUndefinedLength(kItemDelimiterLast16bits);
 
-  //TODO this can be moved to Dataset_base if we abstract DatasetExplicit & readAttributeExplicit
+  //TODO this can be moved to Dataset_base if we abstract DatasetExplicit & readElementExplicit
   Item readItem(int sqTag) {
     int tag = readTag();
     if (tag != kItem)
@@ -657,7 +661,7 @@ class DcmDecoderByteBuf extends ByteBuf {
       hadUndefinedLength = true;
       log.debug('Item: hadUndefinedLength: true: found Length:$lengthInBytes');
     }
-    Map<int, Attribute> attributes = {};
+    Map<int, Element> attributes = {};
     //TODO: use the ByteBuf setMark mechanism
     //setReadIndexMark;
     int endOfBytes = readIndex + lengthInBytes;
@@ -743,7 +747,7 @@ class DcmDecoderByteBuf extends ByteBuf {
       if (group != groupMaster) throw 'Bad group(${intToHex(group, 4)} while reading creators';
       element = tagElement(tag);
       if ((0x10 <= element) && (element <= 0xFF)) {
-        Attribute a = _readInternal();
+        Element a = _readInternal();
         if (a is! LO) throw 'Invalid VR in Creator: $a';
         var creator = new PGCreator(a);
        // print('readPrivateGroup Creator: $creator');
@@ -759,12 +763,12 @@ class DcmDecoderByteBuf extends ByteBuf {
     } while (true);
 
     // Read the Private Group Data
-    List<Attribute> pgData = [];
+    List<Element> pgData = [];
     for (int i = 0; i < creatorElements.length; i++) {
       int base = creatorElements[i] << 8;
       int limit = base + 0xFF;
       while ((element < base) || (limit > element)) {
-        Attribute a = _readInternal();
+        Element a = _readInternal();
        // print('pgData.add: $a');
         pgData.add(a);
         log.debug('data: $pgData');
@@ -781,7 +785,9 @@ class DcmDecoderByteBuf extends ByteBuf {
    // print('*** readPrivateGroup end');
     return pg;
   }
+
 }
+
 
 
 

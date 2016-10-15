@@ -4,7 +4,6 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:bytebuf/bytebuf.dart';
@@ -89,18 +88,16 @@ class DcmJsonEncoderByteBuf extends ByteBuf {
       new DcmJsonEncoderByteBuf.internal(bytes, start, end - start, end - start);
 
 
-  Uint8List encode(Study study) {
+  void encode(Study study) {
     Prefixer fmt = new Prefixer();
-    for (Series series in study.children.values)
-      for (Instance instance in series.children.values)
+    for (Series series in study.series.values)
+      for (Instance instance in series.instances.values)
         writeInstance(instance, fmt);
   }
 
   void writeInstance(Instance instance, Prefixer fmt) {
     writeString('[\n');
     fmt.down;
-    if (instance.fmi != null)
-      writeDataset(instance.fmi, fmt);
     writeDataset(instance.dataset, fmt);
     fmt.up;
     writeString('\n]\n');
@@ -114,7 +111,7 @@ class DcmJsonEncoderByteBuf extends ByteBuf {
   ///         }
   ///     }
   void writeDataset(Dataset ds, Prefixer fmt) {
-    for(Attribute e in ds.deMap.values) {
+    for(Element e in ds.eMap.values) {
       fmt.down;
       writeString('\n$fmt"${tagToHex(e.tag)}": {'
                       '\n$fmt"vr": "${e.vr.name}",'
@@ -125,10 +122,10 @@ class DcmJsonEncoderByteBuf extends ByteBuf {
     }
   }
 
-  ByteBuf writeValues(Attribute e, Prefixer fmt) {
+  ByteBuf writeValues(Element e, Prefixer fmt) {
     String s;
     if ((e is OB) || (e is OD) || (e is OF) || (e is OL) || (e is OW) || (e is UN)) {
-      s = BASE64.encode(e.value.buffer.asUint8List());
+      s = e.base64;
     } else {
       s = e.valuesString;
     }
@@ -186,16 +183,16 @@ class DcmJsonEncoderByteBuf extends ByteBuf {
   }
   */
 
-  ByteBuf writeSequence(Attribute e, Prefixer fmt) {
+  void writeSequence(Element e, Prefixer fmt) {
 
   }
 
   /// Note: empty items are represented as empty JSON objects "{}".
-  ByteBuf writeItem(Item item, Prefixer fmt) {
+  void writeItem(Item item, Prefixer fmt) {
 
   }
 
-  ByteBuf writePrivateGroup(Attribute e, Prefixer fmt) {
+  void writePrivateGroup(Element e, Prefixer fmt) {
 
   }
 
