@@ -1,7 +1,7 @@
 // Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
-// Author: Jim Philbin <jfphilbin@gmail.edu> - 
+// Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
 import 'dart:typed_data';
@@ -10,7 +10,7 @@ import 'package:ascii/constants.dart';
 import 'package:logger/logger.dart';
 import 'package:bytebuf/bytebuf.dart';
 
-import 'package:core/dicom.dart';
+import 'package:core/core.dart';
 
 //TODO:
 //  1. Move all [String] trimming and validation to the Element.  The reader

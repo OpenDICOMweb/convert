@@ -9,9 +9,8 @@ import 'dart:typed_data';
 
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
+import 'package:core/core.dart';
 
-
-import 'package:core/dicom.dart';
 import 'dcm_encoder_bytebuf.dart';
 
 /// Encoder for DICOM File Format octet streams (Uint8List)

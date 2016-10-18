@@ -7,7 +7,7 @@
 import 'dart:typed_data';
 
 import 'package:bytebuf/bytebuf.dart';
-import 'package:core/dicom.dart';
+import 'package:core/core.dart';
 
 /// Encoder for DICOM File Format octet streams (Uint8List)
 /// [DcmEncoder] reads DICOM SOP Instances and returns a [DatasetSop].

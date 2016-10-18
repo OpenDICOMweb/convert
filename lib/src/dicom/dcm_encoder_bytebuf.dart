@@ -10,7 +10,7 @@ import 'dart:typed_data';
 import 'package:logger/logger.dart';
 import 'package:bytebuf/bytebuf.dart';
 
-import 'package:core/dicom.dart';
+import 'package:core/core.dart';
 
 //TODO:
 //  1. Move all [String] trimming and validation to the Element.  The reader
@@ -138,7 +138,7 @@ class DcmEncoderByteBuf extends ByteBuf {
     int group = getUint16(readIndex);
     int element = getUint16(readIndex + 2);
     int tag = (group << 16) + element;
-    log.finest('peekTag: ${toHexString(tag, 8)}');
+    log.finest('peekTag: ${toHex(tag, 8)}');
     return tag;
   }
 
@@ -744,7 +744,7 @@ class DcmEncoderByteBuf extends ByteBuf {
     assert(item.hadUndefinedLength == true);
     writeTag(kItem);
     writeLongLength(0xFFFFFFFF);
-    for(Element a in item.values)
+    for(Element a in item.elements)
       writeElement(a);
     writeTag(kItemDelimitationItem);
   }

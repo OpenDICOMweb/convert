@@ -7,9 +7,7 @@
 import 'dart:typed_data';
 
 import 'package:logger/logger.dart';
-
-import 'package:core/element.dart';
-import 'package:core/dicom.dart';
+import 'package:core/core.dart';
 
 import 'package:convert/src/dicom/dcm_decoder_bytebuf.dart';
 
