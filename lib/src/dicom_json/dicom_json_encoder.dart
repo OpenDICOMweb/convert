@@ -89,13 +89,13 @@ class DcmJsonEncoderByteBuf extends ByteBuf {
 
 
   void encode(Study study) {
-    Prefixer fmt = new Prefixer();
+    Formatter fmt = new Formatter();
     for (Series series in study.series.values)
       for (Instance instance in series.instances.values)
         writeInstance(instance, fmt);
   }
 
-  void writeInstance(Instance instance, Prefixer fmt) {
+  void writeInstance(Instance instance, Formatter fmt) {
     writeString('[\n');
     fmt.down;
     writeDataset(instance.dataset, fmt);
@@ -110,7 +110,7 @@ class DcmJsonEncoderByteBuf extends ByteBuf {
   ///         "value": [ values ]
   ///         }
   ///     }
-  void writeDataset(Dataset ds, Prefixer fmt) {
+  void writeDataset(Dataset ds, Formatter fmt) {
     for(Element e in ds.eMap.values) {
       fmt.down;
       writeString('\n$fmt"${tagToHex(e.tag)}": {'
@@ -122,7 +122,7 @@ class DcmJsonEncoderByteBuf extends ByteBuf {
     }
   }
 
-  ByteBuf writeValues(Element e, Prefixer fmt) {
+  ByteBuf writeValues(Element e, Formatter fmt) {
     String s;
     if ((e is OB) || (e is OD) || (e is OF) || (e is OL) || (e is OW) || (e is UN)) {
       s = e.base64;
@@ -183,16 +183,16 @@ class DcmJsonEncoderByteBuf extends ByteBuf {
   }
   */
 
-  void writeSequence(Element e, Prefixer fmt) {
+  void writeSequence(Element e, Formatter fmt) {
 
   }
 
   /// Note: empty items are represented as empty JSON objects "{}".
-  void writeItem(Item item, Prefixer fmt) {
+  void writeItem(Item item, Formatter fmt) {
 
   }
 
-  void writePrivateGroup(Element e, Prefixer fmt) {
+  void writePrivateGroup(Element e, Formatter fmt) {
 
   }
 

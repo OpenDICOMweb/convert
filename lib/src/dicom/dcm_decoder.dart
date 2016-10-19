@@ -6,10 +6,9 @@
 
 import 'dart:typed_data';
 
-import 'package:logger/logger.dart';
-import 'package:core/core.dart';
-
 import 'package:convert/src/dicom/dcm_decoder_bytebuf.dart';
+import 'package:core/core.dart';
+import 'package:logger/logger.dart';
 
 /// Decoder for DICOM File Format octet streams (Uint8List)
 
@@ -82,7 +81,7 @@ class DcmDecoder extends DcmDecoderByteBuf {
 
     Instance instance = ActiveStudies.addSopInstance(ds);
 
-  //  print('***${instance.format(new Prefixer())}');
+  //  print('***${instance.format(new Formatter())}');
     return instance;
   }
 
