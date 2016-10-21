@@ -510,7 +510,7 @@ class DcmEncoderByteBuf extends ByteBuf {
     writeLongDcmString(a);
   }
 
-  //TODO: move to convert Dcm/ constants
+  //TODO: move to encode Dcm/ constants
   static const String uidPaddingChar = "\x00";
 
   void writeUI(UI a) {

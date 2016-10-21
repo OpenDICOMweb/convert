@@ -9,11 +9,11 @@ import 'dart:typed_data';
 
 import 'package:logger/logger.dart';
 
-import 'package:convert/src/dicom/dcm_decoder_bytebuf.dart';
+import 'package:convert/src/dicom/decoder_bytebuf.dart';
 
 /// A DICOM File Prefix
 class Prefix {
-  static final log = new Logger("convert.prefix");
+  static final log = new Logger("encode.prefix");
   final Uint8List preamble;
   final isAllZeros;
   final String name;

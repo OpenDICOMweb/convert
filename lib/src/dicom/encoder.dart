@@ -11,7 +11,7 @@ import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/core.dart';
 
-import 'dcm_encoder_bytebuf.dart';
+import 'encoder_bytebuf.dart';
 
 /// Encoder for DICOM File Format octet streams (Uint8List)
 /// [DcmEncoder] reads DICOM SOP Instances and returns a [DatasetSop].
