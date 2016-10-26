@@ -4,37 +4,40 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:typed_data';
-
 import 'package:core/core.dart';
-import 'decoder.dart';
 import 'encoder.dart';
+
+//TODO: figure out what the best allocation size is two avoid splitting the buffer.
+
+
 
 class Dicom {
 
-  static Uint8List encodeSync(Entity entity) {
-    if (entity is Study) return encodeStudySync(entity);
-    if (entity is Series) return encodeSeriesSync(entity);
-    if (entity is Instance) return encodeInstanceSync(entity);
+  /// Encode a [Study], [Series], or [Instance].
+  static DcmEncoder  encode(Entity entity) {
+    if (entity is Study) return encodeStudy(entity);
+    if (entity is Series) return encodeSeries(entity);
+    if (entity is Instance) return encodeInstance(entity);
     throw new ArgumentError('$entity is not of type $Entity');
   }
 
-  static Uint8List encodeStudySync(Study study) {
-    for (Series s in study) {
-
-    }
+  /// Encode a [Study].
+  static DcmEncoder encodeStudy(Study study, [DcmEncoder encoder]) {
+     if (encoder == null) encoder = new DcmEncoder();
+    for (Series s in study)
+      encodeSeries(s, encoder);
+    return encoder;
   }
 
-  static Uint8List encodeSeriesSync(Series series) {
-    for(Instance instance in series) {
-
-    }
+  /// Encode a [Series].
+  static DcmEncoder  encodeSeries(Series series, [DcmEncoder encoder]) {
+    for(Instance instance in series)
+      encodeInstance(instance, encoder);
+    return encoder;
   }
 
-  static Uint8List encodeInstanceSync(Instance instance) {
-
-  }
-
-  //TODO: add async methods
+  /// Encode an [Instance].
+  static DcmEncoder  encodeInstance(Instance instance, [DcmEncoder encoder]) =>
+    encoder.encodeSopInstance(instance);
 
 }

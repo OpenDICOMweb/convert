@@ -3,13 +3,12 @@
 // that can be found in the LICENSE file.
 // Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
-library odw.sdk.convert.prefix;
 
 import 'dart:typed_data';
 
 import 'package:logger/logger.dart';
 
-import 'package:convert/src/dicom/decoder_bytebuf.dart';
+import 'package:encode/src/dicom/decoder_bytebuf.dart';
 
 /// A DICOM File Prefix
 class Prefix {

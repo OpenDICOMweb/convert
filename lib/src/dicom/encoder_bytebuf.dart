@@ -278,14 +278,14 @@ class DcmEncoderByteBuf extends ByteBuf {
         log.info('PixelData: ${tagToHex(a.tag)}, ${a.vr}, length= ${a.values.length}');
         writePixelData(a);
       } else {
-        writeElement(a);
+        encodeElement(a);
       }
     }
     log.info('DcmWriteBuf: $this');
   }
 
   /// This is the top-level entry point for writing an [Elements].
-  void writeElement(Element a) {
+  void encodeElement(Element a) {
     //TODO: private group should be handled the same. this if shouldn't be needed.
     if (a is PrivateGroup) {
       writePrivateGroup(a);
@@ -724,7 +724,7 @@ class DcmEncoderByteBuf extends ByteBuf {
         writeUint32(item.lengthInBytes);
         for(var a in item.eMap.values) {
           //print('${fmtTag(a.tag)}, len=${a.length}');
-          writeElement(a);
+          encodeElement(a);
         }
       }
     }
@@ -745,7 +745,7 @@ class DcmEncoderByteBuf extends ByteBuf {
     writeTag(kItem);
     writeLongLength(0xFFFFFFFF);
     for(Element a in item.elements)
-      writeElement(a);
+      encodeElement(a);
     writeTag(kItemDelimitationItem);
   }
 

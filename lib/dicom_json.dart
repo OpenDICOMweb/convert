@@ -9,5 +9,5 @@
 export 'package:core/core.dart';
 
 /// Encoder and Decoder for DICOM File Format octet streams (Uint8List)
-export 'src/dicom_json/decoder.dart';
-export 'src/dicom_json/encoder.dart';
+export 'src/dicom_json/json_decoder.dart';
+export 'src/dicom_json/json_encoder.dart';

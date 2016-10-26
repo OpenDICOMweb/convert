@@ -410,7 +410,7 @@ class DcmDecoderByteBuf extends ByteBuf {
   }
 
   FL readFL(int tag, [VR vr]) {
-    assert(vr == VR.kFD);
+    assert(vr == VR.kFL);
     int lengthInBytes = readShortLength();
     int length = toElementLength(lengthInBytes, FL.sizeInBytes);
     List<double> doubles = readFloat32List(length);

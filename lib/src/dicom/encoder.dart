@@ -28,7 +28,7 @@ class DcmEncoder extends DcmEncoderByteBuf {
 
   factory DcmEncoder.toFile(String filePath) {
     var normalizedPath = path.normalize(filePath);
-    //TODO: create extensible write buffers
+    //TODO: create extensible encode buffers
     var bytes = new Uint8List(1024 * 1924);
     return  new DcmEncoder._(bytes, 0, bytes.length, bytes.length, normalizedPath);
   }
@@ -37,13 +37,13 @@ class DcmEncoder extends DcmEncoderByteBuf {
       new DcmEncoder._(bytes, 0, bytes.length, bytes.length);
 
   /// Internal Constructor: Returns a [._slice from [bytes].
-  DcmEncoder._(Uint8List bytes, int readIndex, int writeIndex, int length, [this.filePath])
-      : super.internal(bytes, readIndex, writeIndex, length);
+  DcmEncoder._(Uint8List bytes, int readIndex, int encodeIndex, int length, [this.filePath])
+      : super.internal(bytes, readIndex, encodeIndex, length);
 
 
-  //Enhancement: if the file has a non-zero preamble, have the ability to write it out if desired.
+  //Enhancement: if the file has a non-zero preamble, have the ability to encode it out if desired.
   /// Write the 128-byte preamble to the DICOM File Format.
-  void writePreamble() {
+  void encodePreamble() {
     Uint8List preamble = new Uint8List(128);
     writeUint8List(preamble);
   }
@@ -52,7 +52,7 @@ class DcmEncoder extends DcmEncoderByteBuf {
   /// Write the DICOM Prefix "DICM".
   // The Prefix is equivalent to a magic number that specifies the [Uint8List] is
   // in DICOM File Format. See PS3.10.
-  void writePrefix() {
+  void encodePrefix() {
     const String prefix = "DICM";
     Uint8List bytes = UTF8.encode(prefix);
     writeUint8List(bytes);
@@ -62,48 +62,50 @@ class DcmEncoder extends DcmEncoderByteBuf {
       WKUid.kImplicitVRLittleEndianDefaultTransferSyntaxforDICOM;
 
   /// Writes the File Meta Information [Fmi] for this [Instance].
-  void writeFmi(Map<int, Element>  fmi) {
+  void encodeFmi(Map<int, Element>  fmi) {
     var values = fmi.values;
     for(Element value in values) print('$value\n');
     //for (int i = 0; i < values.length; i++)
     for(Element a in values) {
-      writeElement(a);
+      encodeElement(a);
     }
   }
 
-  void writeStudy(Study study) {
+  DcmEncoder encodeStudy(Study study) {
     List<Instance> instances = study.instances;
     for (int i = 0; i < instances.length; i++)
-      writeSopInstance(instances[i]);
+      encodeSopInstance(instances[i]);
+    return this;
   }
 
-  void writeSopInstance(Instance instance) {
+  DcmEncoder encodeSopInstance(Instance instance) {
     //Logger log = new Logger("DcmEncoder.readSopInstance");
-    writePreamble();
-    writePrefix();
+    encodePreamble();
+    encodePrefix();
     //print('fmiDataset: ${instance.fmi}');
-    writeFmi(instance.fmi);
+    encodeFmi(instance.fmi);
     //print('instance.aMap: ${instance.aMap}');
-    writeDataset(instance.dataset.eMap);
+    encodeDataset(instance.dataset.eMap);
+    return this;
   }
 
   /// Returns an [Element] or [null].
   ///
   /// This is the top-level entry point for reading a [Dataset].
-  @override
-   void writeDataset(Map<int, Element> aMap) {
-    final Logger log = new Logger("writeDataset");
+   DcmEncoder encodeDataset(Map<int, Element> aMap) {
+    final Logger log = new Logger("encodeDataset");
     Iterable<Element> values = aMap.values;
-    print('writeDataset: $values');
+    print('encodeDataset: $values');
     for (Element a in values) {
       if (a.tag == kPixelData) {
         log.debug('PixelData: ${tagToHex(a.tag)}, ${a.vr}, length= ${a.values.length}');
         writePixelData(a);
       } else {
         log.debug('${a.vr.name}: ${tagToHex(a.tag)}, ${a.vr}, length= ${a.values.length}');
-        writeElement(a);
+        encodeElement(a);
       }
     }
+    return this;
   }
 }
 

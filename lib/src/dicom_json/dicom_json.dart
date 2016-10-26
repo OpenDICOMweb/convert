@@ -4,37 +4,42 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:typed_data';
+import 'json_encoder.dart';
+import 'json_type.dart';
 
-import 'package:core/core.dart';
-import 'decoder.dart';
-import 'encoder.dart';
+class DicomJson {
 
-class Dicom {
-
-  static Uint8List encodeSync(Entity entity) {
-    if (entity is Study) return encodeStudySync(entity);
-    if (entity is Series) return encodeSeriesSync(entity);
-    if (entity is Instance) return encodeInstanceSync(entity);
+  /// Encode a [Study], [Series], or [Instance].
+  static String encode(JsonType type, Entity entity) {
+    if (entity is Study) return encodeStudy(type, entity);
+    if (entity is Series) return encodeSeries(type, entity);
+    if (entity is Instance) return encodeInstance(type, entity);
     throw new ArgumentError('$entity is not of type $Entity');
   }
 
-  static Uint8List encodeStudySync(Study study) {
-    for (Series s in study) {
-
-    }
+  /// Encode a [Study].
+  static String encodeStudy(JsonType type, Study study, [JsonEncoder encoder]) {
+    if (encoder == null) encoder = new JsonEncoder(type);
+    for (Series series in study)
+      encoder.encodeSeries(series);
+    return encoder.output;
   }
 
-  static Uint8List encodeSeriesSync(Series series) {
-    for(Instance instance in series) {
-
-    }
+  /// Encode a [Series].
+  static String encodeSeries(JsonType type, Series series, [JsonEncoder encoder]) {
+    if (encoder == null) encoder = new JsonEncoder(type);
+    for (Instance instance in series)
+      encoder.encodeInstance(instance);
+    return encoder.output;
   }
 
-  static Uint8List encodeInstanceSync(Instance instance) {
-
+  /// Encode an [Instance].
+  static String encodeInstance(JsonType type, Instance instance, [JsonEncoder encoder]) {
+    if (encoder == null) encoder = new JsonEncoder(type);
+    encoder.encodeInstance(instance);
+    return encoder.output;
   }
 
-  //TODO: add async methods
 
 }
+

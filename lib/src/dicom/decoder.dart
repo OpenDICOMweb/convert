@@ -6,7 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:convert/src/dicom/dcm_decoder_bytebuf.dart';
+import 'package:encode/src/dicom/decoder_bytebuf.dart';
 import 'package:core/core.dart';
 import 'package:logger/logger.dart';
 
