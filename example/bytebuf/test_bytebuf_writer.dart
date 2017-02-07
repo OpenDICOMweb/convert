@@ -27,10 +27,8 @@ void main() {
 
   buf.writeInt32List(list1);
 
-
   var list2 = buf.readInt32List(list.length);
   print('list2: $list2');
-
 
 /*
   List<int> uints = [0, 1, 2, 3, 4];

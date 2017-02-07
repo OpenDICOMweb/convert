@@ -1,7 +1,7 @@
 // Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
-// Author: Jim Philbin <jfphilbin@gmail.edu> - 
+// Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
 import 'package:test/test.dart';
@@ -11,7 +11,7 @@ main() {
 }
 
 simpleTest() {
-  test("Simple BytesToX Test", (){
+  test("Simple BytesToX Test", () {
     int v;
 
     v = _bytesToWords(0);
@@ -61,22 +61,19 @@ simpleTest() {
     v = _bytesToDoubles(17);
     expect(v != 4, true);
   });
-
 }
 
 /// Converts [lengthInBytes] to [length] for 2-byte value types.
 int _bytesToWords(int lengthIB) => ((lengthIB & 0x1) == 0) ? lengthIB >> 1 : null;
 
 /// Converts [lengthInBytes] to [length] for 4-byte value types.
-int _bytesToLongs(int lengthIB) =>
-    ((lengthIB & 0x3) == 0) ? lengthIB >> 2: null;
+int _bytesToLongs(int lengthIB) => ((lengthIB & 0x3) == 0) ? lengthIB >> 2 : null;
 
 /// Converts [lengthInBytes] to [length] for 4-byte value types.
-int _bytesToDoubles(int lengthIB) =>
-    ((lengthIB & 0x7) == 0) ? lengthIB >> 3: null;
+int _bytesToDoubles(int lengthIB) => ((lengthIB & 0x7) == 0) ? lengthIB >> 3 : null;
 
 int _lengthError(int vfLength, int sizeInBytes) {
   print('Invalid vfLength($vfLength) for elementSize($sizeInBytes)'
-                'the vfLength must be evenly divisible by elementSize');
+      'the vfLength must be evenly divisible by elementSize');
   return -1;
 }

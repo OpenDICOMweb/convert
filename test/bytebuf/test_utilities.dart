@@ -22,6 +22,3 @@ ByteBuf byteBufFromString(String s) {
   Uint8List v = UTF8.encode(s);
   return new ByteBuf.reader(v);
 }
-
-
-

@@ -71,7 +71,6 @@ class JsonDecoder extends Converter<String, Object> {
   // Override the base class's bind, to provide a better type.
   @override
   Stream<Object> bind(Stream<String> stream) => super.bind(stream);
-
 }
 
 /*
@@ -101,6 +100,3 @@ class JsonUtf8Decoder extends Converter<String, List<int>>
   }
   }
 */
-
-
-

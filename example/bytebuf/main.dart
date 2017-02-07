@@ -7,7 +7,6 @@
 import 'dart:typed_data';
 
 void main() {
-
   var a = <int>[0, 1, 2, 3];
   Uint8List b = new Uint8List.fromList(a);
   Uint8List c = b.buffer.asUint8List(1);
@@ -32,6 +31,4 @@ void main() {
   print('\na: $a');
   print('b: $b');
   print('c: $c');
-
-
 }

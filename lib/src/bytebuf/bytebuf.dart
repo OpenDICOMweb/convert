@@ -115,7 +115,8 @@ class ByteBuf {
 
   /// Creates a new [ByteBuf] that is a view of [this].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
-  ByteBuf writeView(int offset, int lengthInBytes) => _getBufView(_bytes, 0, 0, lengthInBytes);
+  ByteBuf writeView(int offset, int lengthInBytes) =>
+      _getBufView(_bytes, 0, 0, lengthInBytes);
 
   /// Creates a new [ByteBuf] that is a [sublist] of [this].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
@@ -242,7 +243,6 @@ class ByteBuf {
   int get setReadIndexMark => _readIndexMark = _readIndex;
   int get resetReadIndexMark => _readIndex = _readIndexMark;
 
-
   //TODO: move to ByteBuf
   /// The current readIndex as a string.
   String get rrr => 'R@$_readIndex';
@@ -279,7 +279,8 @@ class ByteBuf {
   @deprecated
   void checkReadableBytes(int minimumReadableBytes) {
     if (minimumReadableBytes < 0)
-      throw new ArgumentError("minimumReadableBytes: $minimumReadableBytes (expected: >= 0)");
+      throw new ArgumentError(
+          "minimumReadableBytes: $minimumReadableBytes (expected: >= 0)");
     _checkReadableBytes(minimumReadableBytes);
   }
 
@@ -287,7 +288,8 @@ class ByteBuf {
   @deprecated
   void checkWritableBytes(int minimumWritableBytes) {
     if (minimumWritableBytes < 0)
-      throw new ArgumentError("minimumWritableBytes: $minimumWritableBytes (expected: >= 0)");
+      throw new ArgumentError(
+          "minimumWritableBytes: $minimumWritableBytes (expected: >= 0)");
     _checkWritableBytes(minimumWritableBytes);
   }
 
@@ -938,6 +940,7 @@ class ByteBuf {
     _readIndex += 8;
     return v;
   }
+
   final Float64List emptyFloat64List = new Float64List(0);
 
   Float64List _getFloat64List(int index, int length) {
@@ -1610,7 +1613,8 @@ class ByteBuf {
 
   /// Checks that the [readIndex] is valid;
   bool _checkReadIndexAligned(int index, int length, elementSize) {
-    if ((index + (length * elementSize)) > writeIndex) _readIndexOutOfBounds(index, lengthInBytes);
+    if ((index + (length * elementSize)) > writeIndex)
+      _readIndexOutOfBounds(index, lengthInBytes);
     int remainder = (index % elementSize);
     return remainder == 0;
   }
@@ -1645,13 +1649,15 @@ class ByteBuf {
 
   //TODO: make this two different methods
   void _readIndexOutOfBounds(int index, lengthInBytes) {
-    String s = "Read Index Out Of Bounds: read($_readIndex) <= index($index) < write($_writeIndex)";
+    String s =
+        "Read Index Out Of Bounds: read($_readIndex) <= index($index) < write($_writeIndex)";
     log.error(s);
     throw new RangeError(s);
   }
 
   void _writeIndexOutOfBounds(int index) {
-    String s = "Invalid Write Index($index): $index \nto ByteBuf($this) with $lengthInBytes";
+    String s =
+        "Invalid Write Index($index): $index \nto ByteBuf($this) with $lengthInBytes";
     log.error(s);
     throw new RangeError(s);
   }
@@ -1659,7 +1665,8 @@ class ByteBuf {
 
 //**** Auxiliary Functions
 
-Uint8List _copyBytes(Uint8List bytes, [int offset = 0, int lengthInBytes, maxCapacity = kGB]) {
+Uint8List _copyBytes(Uint8List bytes,
+    [int offset = 0, int lengthInBytes, maxCapacity = kGB]) {
   lengthInBytes = _validateLengthIB(bytes.length, lengthInBytes, maxCapacity);
   return bytes.sublist(offset, lengthInBytes);
 }
@@ -1693,7 +1700,8 @@ ByteBuf _getBufView(Uint8List bytes, [int rIndex = 0, int wIndex, int lengthIB])
 ///
 /// [bytesLength] is the max [lengthInBytes] of an allocated [Uint8List].
 /// [lengthInBytes] is the desired length of the allocated [Uint8List].
-int _validateLengthIB(int bytesLength, [int lengthInBytes, int maxCapacity = kMaxCapacity]) {
+int _validateLengthIB(int bytesLength,
+    [int lengthInBytes, int maxCapacity = kMaxCapacity]) {
   if (lengthInBytes == null) return bytesLength;
   if (lengthInBytes < 0 || maxCapacity < lengthInBytes) {
     throw new ArgumentError(

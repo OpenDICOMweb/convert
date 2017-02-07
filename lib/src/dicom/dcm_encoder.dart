@@ -1,7 +1,7 @@
 // Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
-// Author: Jim Philbin <jfphilbin@gmail.edu> - 
+// Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
 import 'dart:typed_data';
@@ -19,7 +19,7 @@ import 'dcm_writer.dart';
 /// TODO: finish doc
 class DcmEncoder extends DcmWriter {
   //TODO: make the buffer grow and shrink adaptively.
-  static const defaultLengthInBytes = 10 *  kMB;
+  static const defaultLengthInBytes = 10 * kMB;
   static final Logger log = new Logger("DcmEncoder", logLevel: Level.debug);
   final String filePath;
 
@@ -35,10 +35,7 @@ class DcmEncoder extends DcmWriter {
 
   //DcmEncoder.fromList(List<int> list, [this.filePath = ""]) : super.fromList(list);
 
-
-
-  static const littleEndian =
-      WKUid.kImplicitVRLittleEndianDefaultTransferSyntaxforDICOM;
+  static const littleEndian = WKUid.kImplicitVRLittleEndianDefaultTransferSyntaxforDICOM;
 
   //TODO: only handles SOP Instances for now
   void writeInstance(Instance instance) {
@@ -51,16 +48,14 @@ class DcmEncoder extends DcmWriter {
 
   //TODO: only handles SOP Instances for now
   void writeSeries(Series series) {
-    List <Instance> instances = series.instances.values;
-    for (int i = 0; i < instances.length; i++)
-      writeInstance(instances[i]);
+    List<Instance> instances = series.instances.values;
+    for (int i = 0; i < instances.length; i++) writeInstance(instances[i]);
   }
 
   //TODO: only handles SOP Instances for now
   void writeStudy(Study study) {
     List<Instance> instances = study.instances;
-    for (int i = 0; i < instances.length; i++)
-      writeInstance(instances[i]);
+    for (int i = 0; i < instances.length; i++) writeInstance(instances[i]);
   }
 
   Uint8List encodeEntity(Entity entity) {
@@ -86,7 +81,3 @@ class DcmEncoder extends DcmWriter {
     return encoder.encodeEntity(entity);
   }
 }
-
-
-
-

@@ -7,7 +7,6 @@
 import '../../lib/bytebuf.dart';
 
 void main() {
-
   print('int8List: ${RandomList.int8(8)}');
   print('uint8List: ${RandomList.uint8(8)}');
   print('int16List: ${RandomList.int16(8)}');

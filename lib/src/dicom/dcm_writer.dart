@@ -28,7 +28,6 @@ import '../bytebuf/bytebuf.dart';
 /// The type of Value Field Writers.
 typedef dynamic VFWriter<E>(Element<E> e);
 
-
 /// A library for parsing [Uint8List] containing DICOM File Format [Dataset]s.
 ///
 /// Supports parsing both BIG_ENDIAN and LITTLE_ENDIAN format in the
@@ -62,7 +61,8 @@ class DcmWriter extends ByteBuf {
 
   //TODO: explain use case for this.
   /// Creates a new writable [DcmWriter] from the [Uint8List] [bytes].
-  DcmWriter.from(DcmWriter buf, [int offset = 0, int length]) : super.from(buf, offset, length);
+  DcmWriter.from(DcmWriter buf, [int offset = 0, int length])
+      : super.from(buf, offset, length);
 
   /// Creates a [Uint8List] with the same length as the elements in [list],
   /// and copies over the elements.  Values are truncated to fit in the list
@@ -70,7 +70,8 @@ class DcmWriter extends ByteBuf {
   DcmWriter.fromList(List<int> list) : super.fromList(list);
 
   /// Create a view of [this].
-  DcmWriter.view(ByteBuf buf, [int offset = 0, int length]) : super.view(buf, offset, length);
+  DcmWriter.view(ByteBuf buf, [int offset = 0, int length])
+      : super.view(buf, offset, length);
 
   //**** Methods that Return new [ByteBuf]s.  ****
   //TODO: these next three don't do error checking and they should
@@ -102,8 +103,7 @@ class DcmWriter extends ByteBuf {
     writePrefix();
     log.debug('$rmm isExplicitVR($rootDS.isExplicitVR)');
 
-    for (Element e in rootDS.elements) writeElement(e, isExplicitVR: rootDS
-        .isExplicitVR);
+    for (Element e in rootDS.elements) writeElement(e, isExplicitVR: rootDS.isExplicitVR);
     log.debug('$ree writeRootDataset.end');
     log.up;
     return;
@@ -313,7 +313,8 @@ class DcmWriter extends ByteBuf {
   void _writeSequenceDelimiter() => _writeDelimiter(kSequenceDelimiterLast16Bits);
 
   /// Writes a 32-bit [kItem] value, followed by a 32-bit length.
-  void _writeItemHeader(int lengthInBytes) => _writeDelimiter(kItemLast16bits, lengthInBytes);
+  void _writeItemHeader(int lengthInBytes) =>
+      _writeDelimiter(kItemLast16bits, lengthInBytes);
 
   /// Writes a 32-bit [kItemDelimitationItem] value, followed by a 32-bit 0 length.
   void _writeItemDelimiter() => _writeDelimiter(kItemDelimiterLast16bits);
@@ -386,7 +387,8 @@ class DcmWriter extends ByteBuf {
       // log.debug('$mmm $writeIndex: wrote Sequence Delimter');
     } else {
       writeUint16List(e.values);
-      log.debug('$wee writeOW: Length(${e.values.length}), LengthInBytes(${e.lengthInBytes})');
+      log.debug(
+          '$wee writeOW: Length(${e.values.length}), LengthInBytes(${e.lengthInBytes})');
     }
     log.up;
   }

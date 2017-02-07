@@ -26,8 +26,7 @@ class ByteBufWriter extends ByteBufReader {
   /// Creates a new [ByteBufWriter] of [maxCapacity], where
   ///  [readIndex] = [writeIndex] = 0.
   factory ByteBufWriter([int lengthInBytes = ByteBufReader.defaultLengthInBytes]) {
-    if (lengthInBytes == null)
-      lengthInBytes = ByteBufReader.defaultLengthInBytes;
+    if (lengthInBytes == null) lengthInBytes = ByteBufReader.defaultLengthInBytes;
     if ((lengthInBytes < 0) || (lengthInBytes > ByteBufReader.maxMaxCapacity))
       throw new ArgumentError("lengthInBytes: $lengthInBytes "
           "(expected: 0 <= lengthInBytes <= maxCapacity($ByteBufReader.maxMaxCapacity)");
@@ -40,14 +39,12 @@ class ByteBufWriter extends ByteBufReader {
 
   //*** Operators ***
 
-
   /// Sets the byte (Uint8) at [index] to [value].
   void operator []=(int index, int value) {
     setUint8(index, value);
   }
 
   //*** Internal
-
 
   /// Checks that the [writeIndex] is valid;
   void _checkWriteIndex(int index, [int lengthInBytes = 1]) {
@@ -62,7 +59,7 @@ class ByteBufWriter extends ByteBufReader {
     if ((_writeIndex + minimumWritableBytes) > lengthInBytes)
       throw new RangeError(
           "writeIndex($writeIndex) + minimumWritableBytes($minimumWritableBytes) "
-              "exceeds lengthInBytes($lengthInBytes): $this");
+          "exceeds lengthInBytes($lengthInBytes): $this");
   }
   //*** Bytes set, write
 
@@ -93,8 +90,7 @@ class ByteBufWriter extends ByteBufReader {
   /// where 0 = [false], and any other value = [true].
   ByteBufWriter setBooleanList(int index, List<int> list) {
     _checkWriteIndex(index, list.length);
-    for (int i = 0; i < list.length; i++)
-      setInt8(index, list[i]);
+    for (int i = 0; i < list.length; i++) setInt8(index, list[i]);
     return this;
   }
 
@@ -105,7 +101,6 @@ class ByteBufWriter extends ByteBufReader {
     writeIndex += list.length;
     return this;
   }
-
 
   //*** Write Int8
 
@@ -161,8 +156,7 @@ class ByteBufWriter extends ByteBufReader {
   /// Stores a [List] of Uint8 values at [index].
   ByteBufWriter setUint8List(int index, List<int> list) {
     _checkWriteIndex(index, list.length);
-    for (int i = 0; i < list.length; i++)
-      setUint8(index + i, list[i]);
+    for (int i = 0; i < list.length; i++) setUint8(index + i, list[i]);
     return this;
   }
 
@@ -179,7 +173,7 @@ class ByteBufWriter extends ByteBufReader {
   /// Stores an Int16 value at [index].
   ByteBufWriter setInt16(int index, int value) {
     _checkWriteIndex(index, 2);
-    _bd.setInt16(index, value,endianness);
+    _bd.setInt16(index, value, endianness);
     return this;
   }
 
@@ -461,8 +455,7 @@ class ByteBufWriter extends ByteBufReader {
   int _setString(int index, String value) {
     Uint8List list = UTF8.encode(value);
     _checkWriteIndex(index, list.length);
-    for (int i = 0; i < list.length; i++)
-      _bytes[index + i] = list[i];
+    for (int i = 0; i < list.length; i++) _bytes[index + i] = list[i];
     return list.length;
   }
 
@@ -482,7 +475,7 @@ class ByteBufWriter extends ByteBufReader {
 
   int stringListLength(List<String> list) {
     int length = 0;
-    for(int i = 0; i < list.length; i++) {
+    for (int i = 0; i < list.length; i++) {
       length += list[i].length;
       length++;
     }
@@ -510,8 +503,6 @@ class ByteBufWriter extends ByteBufReader {
     return this;
   }
 
-
-
   ByteBufWriter skipReadBytes(int length) {
     checkReadableBytes(length);
     readIndex += length;
@@ -519,9 +510,8 @@ class ByteBufWriter extends ByteBufReader {
   }
 
   ByteBufWriter unwriteBytes(int length) {
-    _checkWriteIndex(_writeIndex, - length);
+    _checkWriteIndex(_writeIndex, -length);
     _writeIndex -= length;
     return this;
   }
-
 }

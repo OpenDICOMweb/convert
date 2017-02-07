@@ -4,7 +4,6 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See the AUTHORS file for other contributors.
 
-
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -40,7 +39,7 @@ class RandomList {
     //log.debug('length: $length');
     if (name == "Int8") {
       list = new Int8List(length);
-     // log.debug('Int8List: $list');
+      // log.debug('Int8List: $list');
     } else if (name == "Uint8") {
       list = new Uint8List(length);
     } else if (name == "Int16") {
@@ -75,15 +74,15 @@ class RandomList {
   List _fill64List(List list) {
     for (int i = 0; i < list.length; i++) {
       int sign = (i.isEven) ? -1 : 1;
-      int n1 = _rng.nextInt(1<<32);
-      int n2 = _rng.nextInt(1<<32);
+      int n1 = _rng.nextInt(1 << 32);
+      int n2 = _rng.nextInt(1 << 32);
       list[i] = sign * n1 * n2;
     }
     return list;
   }
+
   List _fillFloatList(List list) {
-    for (int i = 0; i < list.length; i++)
-      list[i] = _rng.nextDouble();
+    for (int i = 0; i < list.length; i++) list[i] = _rng.nextDouble();
     return list;
   }
 }
