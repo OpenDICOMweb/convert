@@ -124,6 +124,14 @@ class DcmReader<E> extends ByteBuf {
           break;
         }
       }
+
+      UI e = rootDS.map[kTransferSyntaxUID];
+      TransferSyntax ts = (e != null)
+                          ? TransferSyntax.lookup(e.value) : TransferSyntax
+          .defaultForDicomWeb;
+      rootDS.transferSyntax = ts;
+      //TODO: decide if this is useful, if not flush ts from DSSouce
+       rootDS.source.transferSyntax = ts;
     }
     log.debug('$ree readFmi: ${rootDS.transferSyntax}');
     log.up;
@@ -148,7 +156,11 @@ class DcmReader<E> extends ByteBuf {
     log.down;
     final int code = _peekTagCode();
     log.debug('$rbb readElement: _peekTag${Tag.toDcm(code)}');
-
+    print('tag.isPublic: code(${Tag.toHex(code)}, isPublic(${Tag.isPublicCode(code)})');
+    int group = Group.fromTag(code);
+    print('group.isPublic: ${Group.isPublic(group)}');
+    print('group: ${Group.hex(group)}');
+    print('isPublicGroup: ${Group.hex(Group.fromTag(code))}');
     if (Tag.isPublicCode(code)) {
       Element e = (isExplicitVR) ? _readExplicit() : _readImplicit();
       log.debug('$rmm readElement:${e.info}');
