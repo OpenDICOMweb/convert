@@ -9,14 +9,27 @@ environment:
 
 dependencies:
   common:
-    path: C:/odw/sdk/common
-    version: ^0.5.2
+    git:
+      url: https://github.com/OpenDICOMweb/common
+      ref: 0.5.2-dev.0.1
+      version: ^0.5.2
+ #   path: C:/odw/sdk/common
+ #   version: ^0.5.2
+  crypto: ^2.0.1
   dictionary:
-    path: C:/odw/sdk/dictionary
-    version: ^0.5.1
+    git:
+      url: https://github.com/OpenDICOMweb/dictionary
+      ref: ^0.5.1
+      version: ^0.5.1
+  #  path: C:/odw/sdk/dictionary
+  #  version: ^0.5.1
   core:
-    path: C:/odw/sdk/core
-    version: ^0.5.1
+    git:
+      url: https://github.com/OpenDICOMweb/core
+      ref: 0.5.1-dev.0.5
+      version: ^0.5.1
+  #  path: C:/odw/sdk/core
+  #  version: ^0.5.1
 
 dev_dependencies:
   benchmark_harness: ^1.0.4
