@@ -9,13 +9,22 @@ environment:
 
 dependencies:
   common:
-    path: C:/odw/sdk/common
+    git:
+      url: https://github.com/OpenDICOMweb/common
+      ref: 0.5.2-dev.0.1
+ #   path: C:/odw/sdk/common
     version: ^0.5.2
   dictionary:
-    path: C:/odw/sdk/dictionary
+    git:
+      url: https://github.com/OpenDICOMweb/dictionary
+      ref: 0.5.1-dev.0.1
+ #   path: C:/odw/sdk/dictionary
     version: ^0.5.1
   core:
-    path: C:/odw/sdk/core
+    git:
+      url: https://github.com/OpenDICOMweb/core
+      ref: ^0.5.1-dev.0.5
+  #  path: C:/odw/sdk/core
     version: ^0.5.1
 
 dev_dependencies:
