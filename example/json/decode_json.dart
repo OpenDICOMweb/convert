@@ -15,7 +15,7 @@ void main(List<String> args) {
 
   File inFile = new File('C:/odw/sdk/encode/example/json/example.json');
   String s = inFile.readAsStringSync();
-  List code = JSON.decode(s);
+  var code = JSON.decode(s);
   print('json array(${code.length}');
   Map ds0 = code[0];
   Map ds1 = code[1];

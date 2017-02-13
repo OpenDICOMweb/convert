@@ -9,7 +9,7 @@ import 'dart:typed_data';
 import '../../lib/bytebuf.dart';
 
 void main() {
-  var buf = new ByteBuf();
+  ByteBuf buf = new ByteBuf();
   /*
   var s = "aaaaaaa aaaaaaa aaaaaaa aaaaaaaab";
   print('s(${s.length}): $s');
@@ -20,14 +20,14 @@ void main() {
   print('t(${s.length}): $t');
   */
   //var l = [-1, -2, -3, -4];
-  var list = [0x01, 0x02, 0x03, 0x04];
+  List<int> list = <int>[0x01, 0x02, 0x03, 0x04];
   print('List<int> list: $list');
-  var list1 = new Int32List.fromList(list);
+  Int32List list1 = new Int32List.fromList(list);
   print('Int32List list1: $list1');
 
   buf.writeInt32List(list1);
 
-  var list2 = buf.readInt32List(list.length);
+  Int32List list2 = buf.readInt32List(list.length);
   print('list2: $list2');
 
 /*

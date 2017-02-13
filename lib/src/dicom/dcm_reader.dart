@@ -6,13 +6,13 @@
 
 import 'dart:typed_data';
 
-import 'package:core/log.dart';
 import 'package:core/dataset.dart';
 import 'package:core/element.dart';
+import 'package:core/log.dart';
 import 'package:dictionary/dictionary.dart';
 
-import '../bytebuf/bytebuf.dart';
 import '../../src/dataset_stack.dart';
+import '../bytebuf/bytebuf.dart';
 
 //TODO:
 //  1. Move all [String] trimming and validation to the Element.  The reader
@@ -95,8 +95,7 @@ class DcmReader<E> extends ByteBuf {
     log.debug('$rmm readRootDataset: transferSyntax(${rootDS.transferSyntax})');
     log.debug('$rmm readRootDataset: ${rootDS.hasValidTransferSyntax}');
     if (!rootDS.hasValidTransferSyntax) return rootDS;
-    final bool isExplicitVR =
-        rootDS.transferSyntax != TransferSyntax.kImplicitVRLittleEndian;
+    final bool isExplicitVR = rootDS.transferSyntax != TransferSyntax.kImplicitVRLittleEndian;
     log.debug('$rmm readRootDataset: isExplicitVR($isExplicitVR)');
     while (isReadable) readElement(isExplicitVR: isExplicitVR);
     log.debug('$ree readRootDataset: $rootDS');
@@ -126,12 +125,11 @@ class DcmReader<E> extends ByteBuf {
       }
 
       UI e = rootDS.map[kTransferSyntaxUID];
-      TransferSyntax ts = (e != null)
-                          ? TransferSyntax.lookup(e.value) : TransferSyntax
-          .defaultForDicomWeb;
+      TransferSyntax ts =
+          (e != null) ? TransferSyntax.lookup(e.value) : TransferSyntax.defaultForDicomWeb;
       rootDS.transferSyntax = ts;
       //TODO: decide if this is useful, if not flush ts from DSSouce
-       rootDS.source.transferSyntax = ts;
+      rootDS.source.transferSyntax = ts;
     }
     log.debug('$ree readFmi: ${rootDS.transferSyntax}');
     log.up;
@@ -380,12 +378,10 @@ class DcmReader<E> extends ByteBuf {
   bool _foundDelimiter(int target) {
     int delimiter = _peekTagCode();
     bool v = delimiter == target;
-    log.debug(
-        '$rmm _delimiterFound($v) target${Int.hex(target)}, value${Int.hex(delimiter)}');
+    log.debug('$rmm _delimiterFound($v) target${Int.hex(target)}, value${Int.hex(delimiter)}');
     if (delimiter == target) {
       int length = getUint32(4);
-      log.debug(
-          '$rmm target(${Int.hex(target)}), delimiter(${Int.hex(delimiter)}), length(${Int.hex
+      log.debug('$rmm target(${Int.hex(target)}), delimiter(${Int.hex(delimiter)}), length(${Int.hex
                 (length, 8)
             }');
       if (length != 0) {
@@ -475,11 +471,9 @@ class DcmReader<E> extends ByteBuf {
       int end = readIndex - 8;
       lengthInBytes = end - start;
       log.debug('$rmm start($start), length($lengthInBytes)');
-      values =
-          (lengthInBytes == 0) ? Uint8.emptyList : getUint8View(start, lengthInBytes);
+      values = (lengthInBytes == 0) ? Uint8.emptyList : getUint8View(start, lengthInBytes);
       log.debug('$rmm values.length(${values.length}');
-      log.debug(
-          '$rmm Undefined vfLength(${Int32.hex(vfLength)}), lengthInBytes($lengthInBytes)');
+      log.debug('$rmm Undefined vfLength(${Int32.hex(vfLength)}), lengthInBytes($lengthInBytes)');
     } else {
       lengthInBytes = vfLength;
       log.debug('$wmm vfLength($vfLength)');
@@ -494,11 +488,11 @@ class DcmReader<E> extends ByteBuf {
   /// Read and return an [OB] [Element].
   ///
   /// Note: this should not be used for PixelData Elements.
-  OB _readOB(Tag tag, int vfLength) {
+  Element _readOB(Tag tag, int vfLength) {
     log.down;
     log.debug('$rbb readOB vfLength(${Int32.hex(vfLength)})');
-    OB e;
     Uint8List bytes = _uLengthGetBytes(vfLength);
+    Element e;
     if (tag == Tag.kPixelData) {
       UI tsUid = currentDS[kTransferSyntaxUID];
       TransferSyntax ts = tsUid.uid;
@@ -512,7 +506,7 @@ class DcmReader<E> extends ByteBuf {
     return e;
   }
 
-  OW _readOW(Tag tag, int vfLength) {
+  Element _readOW(Tag tag, int vfLength) {
     Uint8List vf = _uLengthGetBytes(vfLength);
     if (tag == Tag.kPixelData) return _readOWPixelData(tag, vfLength, vf);
     log.down;
@@ -535,8 +529,7 @@ class DcmReader<E> extends ByteBuf {
     log.down;
     log.debug('$rbb tag${tag.dcm}');
     Uint8List bytes = _uLengthGetBytes(vfLength);
-    log.debug(
-        '$rmm vfLength($vfLength, ${Int32.hex(vfLength)}), bytes.length(${bytes.length})');
+    log.debug('$rmm vfLength($vfLength, ${Int32.hex(vfLength)}), bytes.length(${bytes.length})');
     UN e = new UN(tag, vfLength, bytes);
     log.debug('$ree ${e.info}');
     log.up;
@@ -583,8 +576,7 @@ class DcmReader<E> extends ByteBuf {
     log.debug('$rbb readPrivateCreators');
     do {
       log.down;
-      log.debug(
-          '$rbb readPrivateCreator: peekTag(${Tag.toDcm(code)}) ${Tag.isPrivateCreatorCode
+      log.debug('$rbb readPrivateCreator: peekTag(${Tag.toDcm(code)}) ${Tag.isPrivateCreatorCode
         (code)}');
       int g = Group.fromTag(code);
       log.debug('$rmm PC group(${Group.hex(g)})');
@@ -640,12 +632,10 @@ class DcmReader<E> extends ByteBuf {
       int limit = tag.limit;
 
       log.down;
-      log.debug(
-          '$rbb readPrivateDataSet: base(${Elt.hex(base)}), limit(${Elt.hex(limit)})');
+      log.debug('$rbb readPrivateDataSet: base(${Elt.hex(base)}), limit(${Elt.hex(limit)})');
       while (Tag.isPrivateDataCode(code)) {
         log.down;
-        log.debug(
-            '$rbb readPD: peekTag(${Tag.toDcm(code)}), isPD(${Tag.isPrivateDataCode(code)})');
+        log.debug('$rbb readPD: peekTag(${Tag.toDcm(code)}), isPD(${Tag.isPrivateDataCode(code)})');
         PrivateData e = (isExplicitVR) ? _readExplicit() : _readImplicit();
         PrivateDataTag tag = e.tag;
         if (!tag.isPrivateData)

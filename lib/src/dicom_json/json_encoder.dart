@@ -22,13 +22,11 @@ class JsonEncoder extends ByteBuf {
   //TODO: what should the default length be
 
   /// Creates a new [JsonEncoder], where [readIndex] = [writeIndex] = 0.
-  JsonEncoder([int lengthInBytes = ByteBuf.defaultLengthInBytes])
-      : super.writer(lengthInBytes);
+  JsonEncoder([int lengthInBytes = ByteBuf.defaultLengthInBytes]) : super.writer(lengthInBytes);
 
   //TODO: explain use case for this.
   /// Creates a new writable [JsonEncoder] from the [Uint8List] [bytes].
-  JsonEncoder.from(JsonEncoder buf, [int offset = 0, int length])
-      : super.from(buf, offset, length);
+  JsonEncoder.from(JsonEncoder buf, [int offset = 0, int length]) : super.from(buf, offset, length);
 
   /// Creates a [Uint8List] with the same length as the elements in [list],
   /// and copies over the elements.  Values are truncated to fit in the list
@@ -36,16 +34,14 @@ class JsonEncoder extends ByteBuf {
   JsonEncoder.fromList(List<int> list) : super.fromList(list);
 
   /// Returns a view of [this].
-  JsonEncoder.view(ByteBuf buf, [int offset = 0, int length])
-      : super.view(buf, offset, length);
+  JsonEncoder.view(ByteBuf buf, [int offset = 0, int length]) : super.view(buf, offset, length);
 
   //**** Methods that Return new [ByteBuf]s.  ****
   //TODO: these next three don't do error checking and they should
   /// Creates a new [ByteBuf] that is a view of [this].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
   @override
-  JsonEncoder writeView(int offset, int length) =>
-      new JsonEncoder.view(this, offset, length);
+  JsonEncoder writeView(int offset, int length) => new JsonEncoder.view(this, offset, length);
 
   //Flush?
   /// Creates a new [ByteBuf] that is a view of [this].  The underlying

@@ -70,12 +70,11 @@ class ByteBufReader {
   /// Creates a [Uint8List] with the same length as the elements in [list],
   /// and copies over the elements.  Values are truncated to fit in the list
   /// when they are copied, the same way storing values truncates them.
-  factory ByteBufReader.fromList(List<int> list) => new ByteBufReader.internal(
-      new Uint8List.fromList(list), 0, list.length, list.length);
+  factory ByteBufReader.fromList(List<int> list) =>
+      new ByteBufReader.internal(new Uint8List.fromList(list), 0, list.length, list.length);
 
   /// Internal Constructor: Returns a [ByteBufReader] view from [bytes].
-  ByteBufReader.internal(
-      Uint8List bytes, int readIndex, int writeIndex, int lengthInBytes)
+  ByteBufReader.internal(Uint8List bytes, int readIndex, int writeIndex, int lengthInBytes)
       : _bytes = bytes.buffer.asUint8List(readIndex, lengthInBytes),
         _bd = bytes.buffer.asByteData(readIndex, lengthInBytes),
         _readIndex = readIndex,
@@ -98,8 +97,7 @@ class ByteBufReader {
 
   @override
   bool operator ==(Object object) =>
-      (this == object) ||
-      ((object is ByteBufReader) && (this.hashCode == object.hashCode));
+      (this == object) || ((object is ByteBufReader) && (this.hashCode == object.hashCode));
 
   //*** Internal Utilities ***
 
@@ -132,8 +130,7 @@ class ByteBufReader {
   /// Checks that there are at least [minimumWritableableBytes] available.
   void _checkWritableBytes(int minimumWritableBytes) {
     if ((_writeIndex + minimumWritableBytes) > lengthInBytes)
-      throw new RangeError(
-          "writeIndex($writeIndex) + minimumWritableBytes($minimumWritableBytes) "
+      throw new RangeError("writeIndex($writeIndex) + minimumWritableBytes($minimumWritableBytes) "
           "exceeds lengthInBytes($lengthInBytes): $this");
   }
 
@@ -221,15 +218,13 @@ class ByteBufReader {
 
   void checkReadableBytes(int minimumReadableBytes) {
     if (minimumReadableBytes < 0)
-      throw new ArgumentError(
-          "minimumReadableBytes: $minimumReadableBytes (expected: >= 0)");
+      throw new ArgumentError("minimumReadableBytes: $minimumReadableBytes (expected: >= 0)");
     _checkReadableBytes(minimumReadableBytes);
   }
 
   void checkWritableBytes(int minimumWritableBytes) {
     if (minimumWritableBytes < 0)
-      throw new ArgumentError(
-          "minimumWritableBytes: $minimumWritableBytes (expected: >= 0)");
+      throw new ArgumentError("minimumWritableBytes: $minimumWritableBytes (expected: >= 0)");
     _checkWritableBytes(minimumWritableBytes);
   }
 
@@ -274,8 +269,7 @@ class ByteBufReader {
 
   String toHex(int start, int end) {
     var s = "";
-    for (int i = start; i < end; i++)
-      s += _bytes[i].toRadixString(16).padLeft(2, " 0") + " ";
+    for (int i = start; i < end; i++) s += _bytes[i].toRadixString(16).padLeft(2, " 0") + " ";
     return s;
   }
 
