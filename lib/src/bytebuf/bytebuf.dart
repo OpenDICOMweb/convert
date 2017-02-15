@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:common/common.dart';
 import 'package:core/core.dart';
 
 //TODO:
@@ -36,10 +37,10 @@ import 'package:core/core.dart';
 /// [ByteBuf] is always equal to the [length] of the underlying [Uint8List].
 //TODO: finish description
 
-const kKB = 1024 * 1024;
-const kMB = kKB * 1024;
-const kGB = kMB * 1024;
-const kMaxCapacity = kGB;
+//const kKB = 1024 * 1024;
+//const kMB = kKB * 1024;
+//const kGB = kMB * 1024;
+const int kMaxCapacity = kGB;
 
 /// A skeletal implementation of a buffer.
 class ByteBuf {

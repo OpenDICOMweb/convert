@@ -150,7 +150,7 @@ class DcmReader<E> extends ByteBuf {
 
   /// Reads a zero or more [Private Groups] and then read an returns
   /// a Public [Element].
-  void readElement({bool isExplicitVR: true}) {
+  void readElement<E>({bool isExplicitVR: true}) {
     log.down;
     final int code = _peekTagCode();
     log.debug('$rbb readElement: _peekTag${Tag.toDcm(code)}');
@@ -160,7 +160,7 @@ class DcmReader<E> extends ByteBuf {
     print('group: ${Group.hex(group)}');
     print('isPublicGroup: ${Group.hex(Group.fromTag(code))}');
     if (Tag.isPublicCode(code)) {
-      Element e = (isExplicitVR) ? _readExplicit() : _readImplicit();
+      Element<E> e = (isExplicitVR) ? _readExplicit() : _readImplicit();
       log.debug('$rmm readElement:${e.info}');
       currentDS[e.tag.code] = e;
     } else {
@@ -170,7 +170,7 @@ class DcmReader<E> extends ByteBuf {
     log.up;
   }
 
-  Element _readExplicit() {
+  Element<E> _readExplicit<E>() {
     // Element Readers
     log.down;
     Tag tag = _readTag();
@@ -183,20 +183,20 @@ class DcmReader<E> extends ByteBuf {
     log.debug('$rmm _readExplicit: ${tag.dcm} VR[$vrIndex] $vr');
     int vfLength = (vr.hasShortVF) ? readUint16() : _readLongLength();
     log.debug('$rmm _readExplicit: vfLength($vfLength)');
-    Element e = _readValueField(tag, vfLength, vrIndex);
+    Element<E> e = _readValueField(tag, vfLength, vrIndex);
     log.debug('$ree _readExplicit: ${e.info}');
     log.up;
     return e;
   }
 
-  Element _readImplicit() {
+  Element<E> _readImplicit<E>() {
     // Element Readers
     log.down;
     Tag tag = _readTag();
     int vrIndex = tag.vrIndex;
     log.debug('$rbb _readElement: $tag');
     int vfLength = readUint32();
-    Element e = _readValueField(tag, vfLength, vrIndex);
+    Element<E> e = _readValueField(tag, vfLength, vrIndex);
     log.debug('$ree _readImplicit: ${e.info}');
     log.up;
     return e;
@@ -224,7 +224,7 @@ class DcmReader<E> extends ByteBuf {
     return readUint32();
   }
 
-  Element _readValueField(Tag tag, int vfLength, int index) {
+  Element<E> _readValueField<E>(Tag tag, int vfLength, int index) {
     /// The order of the VRs in this [List] MUST correspond to the [index]
     /// in the definitions of [VR].  Note: the [index]es start at 1, so
     /// in this [List] the 0th dictionary is [_debugReader].
@@ -244,7 +244,7 @@ class DcmReader<E> extends ByteBuf {
     //TODO: make this work
     // VFReader vfReader = _getVFReader(vrIndex);
     final Function vfReader = _readers[index];
-    Element e = vfReader(tag, vfLength);
+    Element<E> e = vfReader(tag, vfLength);
     log.debug('$ree _readValueField: ${e.info}');
     log.up;
     return e;
@@ -343,10 +343,10 @@ class DcmReader<E> extends ByteBuf {
   /// There are four [Element]s that might have an Undefined Length value
   /// (0xFFFFFFFF), [SQ], [OB], [OW], [UN]. If the length is the
   /// Undefined, then it searches for the matching [kSequenceDelimitationItem]
-  /// to determine the length. Returns a [ULength], which is used for reading
+  /// to determine the length. Returns a [kUndefinedLength], which is used for reading
   /// the value field of these [Element]s.
 
-  /// Returns an [SQ] [Attribute].
+  /// Returns an [SQ] [Element].
   SQ _readSequence(Tag tag, int vfLength) {
     log.down;
     List<Item> items = <Item>[];
@@ -405,7 +405,7 @@ class DcmReader<E> extends ByteBuf {
   bool _itemDelimiterFound() => _foundDelimiter(kItemDelimitationItem);
 
   //TODO this can be moved to Dataset_base if we abstract DatasetExplicit & readElementExplicit
-  /// Returns an [Item] or [Fragment].
+  /// Returns an [Item] or Fragment.
   Item _readItem(SQ sq) {
     log.down;
     log.debug('$rbb readItem for ${sq.info}');
@@ -541,10 +541,10 @@ class DcmReader<E> extends ByteBuf {
   /// A [PrivateGroup] contains all the  [PrivateCreator] and the corresponding
   /// [PrivateData] Data [Element]s with the same private group number.
   ///
-  /// Note: All [PrivateCreators] are read before any of the [PrivateData]
+  /// Note: All PrivateCreators are read before any of the [PrivateData]
   /// [Element]s are read.
   ///
-  /// Note: [PrivateCreators] for one private group all occur before their
+  /// Note: PrivateCreators for one private group all occur before their
   /// corresponding Private Data Elements.
   /*
         while (true) {
@@ -641,7 +641,7 @@ class DcmReader<E> extends ByteBuf {
         if (!tag.isPrivateData)
           //TODO: decide what to do
           //IssueType.invalidPrivateDataTagNoCreator,
-          IssueElement issue = new IssueElement(e);
+         // IssueElement issue = new IssueElement(e);
         pgData.add(e);
         currentDS.add(e);
         // Peek at the next tag for the loop;
@@ -692,11 +692,13 @@ class DcmReader<E> extends ByteBuf {
 
   // Returns the position of the next valid Public or Private tag.
   //TODO: eventually to be used in trying to read corrupted studies.
+  /*
   int _findNextValidTag() {
     int start = readIndex;
     //TODO: finish
     return -1;
   }
+  */
 
   //TODO: improve
   void _debugReader(tag, obj, [int vfLength, String msg]) {
