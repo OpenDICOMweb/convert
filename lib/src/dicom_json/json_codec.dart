@@ -7,7 +7,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-const JsonCodec JSON = const JsonCodec();
+
 
 typedef Object _Reviver(var key, var value);
 typedef String _ToEncodable(var o);
@@ -47,6 +47,8 @@ class JsonCodec extends Codec<Object, String> {
     if (toEncodable == null) return encoder.convert(value);
     return new JsonEncoder(toEncodable).convert(value);
   }
+
+  static const JsonCodec json = const JsonCodec();
 }
 
 class JsonDecoder extends Converter<String, Object> {

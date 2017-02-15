@@ -8,11 +8,15 @@
 // governed by a BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:io';
+
 import 'package:grinder/grinder.dart';
 
-import 'grind_core.dart';
 
 Future main(List<String> args) => grind(args);
+
+/// The dartdoc [Directory].
+Directory dartDocDir = new Directory('doc');
 
 // Uncomment if needed
 /* @Task('Initializing...')
@@ -20,6 +24,17 @@ init() {
   log("Initializing stuff...");
 }
 */
+
+@DefaultTask('Running Default Tasks...')
+void myDefault() {
+  test();
+  testformat();
+}
+
+@Task('Testing Dart...')
+void test() {
+  new PubApp.local('test').run(<String>[]);
+}
 
 @Task('Cleaning...')
 void clean() {
@@ -29,8 +44,8 @@ void clean() {
 }
 
 @Task('Dry Run of Formating Source...')
-void fmtdryrun() {
-  log("Formatting Source...");
+void testformat() {
+  log("Test Formatting Source...");
   DartFmt.dryRun('lib', lineLength: 100);
 }
 
@@ -68,13 +83,13 @@ void compile() {
 
 @Task('Testing Dart...')
 void test() {
-  new PubApp.local('test').run([]);
+  new PubApp.local('test').run(<String>[]);
 }
 
 @Task('Testing JavaScript...')
 @Depends(build)
 void testJavaScript() {
-  new PubApp.local('test').run([]);
+  new PubApp.local('test').run(<String>[]);
 }
 
 @Task('Deploy...')
