@@ -57,8 +57,7 @@ class ByteBufWriter extends ByteBufReader {
   @override
   void checkWritableBytes(int minimumWritableBytes) {
     if ((_writeIndex + minimumWritableBytes) > lengthInBytes)
-      throw new RangeError(
-          "writeIndex($writeIndex) + minimumWritableBytes($minimumWritableBytes) "
+      throw new RangeError("writeIndex($writeIndex) + minimumWritableBytes($minimumWritableBytes) "
           "exceeds lengthInBytes($lengthInBytes): $this");
   }
   //*** Bytes set, write

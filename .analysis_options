@@ -1,11 +1,10 @@
 analyzer:
   strong-mode: true
-  exclude:
 
 linter:
   rules:
     - always_declare_return_types
-    - always_specify_types
+  #  - always_specify_types
     - annotate_overrides
     - avoid_as
     - avoid_empty_else
