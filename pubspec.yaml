@@ -3,7 +3,8 @@ name: convertX
 version: 0.5.0
 description: A package for encoding/decoding DICOM binary, json, ...
 author: Jim Philbin <jfphilbin@gmail.com>
-homepage: https://github.com/OpenDICOMweb/convert
+
+homepage: https://github.com/OpenDICOMweb/convert.git
 
 environment:
   sdk: ^1.21.0
