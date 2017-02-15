@@ -44,15 +44,15 @@ const int kMaxCapacity = kGB;
 
 /// A skeletal implementation of a buffer.
 class ByteBuf {
-  static const defaultLengthInBytes = 1 * kKB;
-  static const defaultMaxCapacity = 1 * kGB;
-  static const maxMaxCapacity = 2 * kGB;
-  static const endianness = Endianness.LITTLE_ENDIAN;
+  static const int defaultLengthInBytes = 1 * kKB;
+  static const int defaultMaxCapacity = 1 * kGB;
+  static const int maxMaxCapacity = 2 * kGB;
+  static const Endianness endianness = Endianness.LITTLE_ENDIAN;
 
   //TODO: Make the argument an optional arg to contructor
-  static final log = new Logger('ByteBuf', logLevel: Level.info);
+  static final Logger log = new Logger('ByteBuf', logLevel: Level.info);
 
-  /// The complete buffer from 0 to [_bytes.lengthInBytes].
+  /// The complete buffer from 0 to [_bytes].[lengthInBytes].
   final Uint8List _bytes;
 
   //TODO: document these
@@ -86,7 +86,8 @@ class ByteBuf {
     _bd = _bytes.buffer.asByteData();
   }
 
-  ByteBuf.from(ByteBuf buf, [int readIndex = 0, int writeIndex, int lengthInBytes = kKB])
+  ByteBuf.from(ByteBuf buf,
+      [int readIndex = 0, int writeIndex, int lengthInBytes = kKB])
       : _bytes = _copyBytes(buf._bytes, readIndex, lengthInBytes),
         _readIndex = 0,
         _writeIndex = _validateWriteIndex(0, writeIndex, lengthInBytes) {
@@ -116,11 +117,13 @@ class ByteBuf {
 
   /// Creates a new [ByteBuf] that is a view of [this].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
-  ByteBuf writeView(int offset, int lengthInBytes) => _getBufView(_bytes, 0, 0, lengthInBytes);
+  ByteBuf writeView(int offset, int lengthInBytes) =>
+      _getBufView(_bytes, 0, 0, lengthInBytes);
 
   /// Creates a new [ByteBuf] that is a [sublist] of [this].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
-  ByteBuf sublist(int start, int end) => _getByteBuf(start, end - start, end - start);
+  ByteBuf sublist(int start, int end) =>
+      _getByteBuf(start, end - start, end - start);
 
   //*** Operators ***
 
@@ -134,7 +137,8 @@ class ByteBuf {
 
   @override
   bool operator ==(Object object) =>
-      (this == object) || ((object is ByteBuf) && (this.hashCode == object.hashCode));
+      (this == object) ||
+      ((object is ByteBuf) && (this.hashCode == object.hashCode));
 
   //*** Internal Utilities ***
 
@@ -279,7 +283,8 @@ class ByteBuf {
   @deprecated
   void checkReadableBytes(int minimumReadableBytes) {
     if (minimumReadableBytes < 0)
-      throw new ArgumentError("minimumReadableBytes: $minimumReadableBytes (expected: >= 0)");
+      throw new ArgumentError(
+          "minimumReadableBytes: $minimumReadableBytes (expected: >= 0)");
     _checkReadableBytes(minimumReadableBytes);
   }
 
@@ -287,7 +292,8 @@ class ByteBuf {
   @deprecated
   void checkWritableBytes(int minimumWritableBytes) {
     if (minimumWritableBytes < 0)
-      throw new ArgumentError("minimumWritableBytes: $minimumWritableBytes (expected: >= 0)");
+      throw new ArgumentError(
+          "minimumWritableBytes: $minimumWritableBytes (expected: >= 0)");
     _checkWritableBytes(minimumWritableBytes);
   }
 
@@ -296,7 +302,8 @@ class ByteBuf {
   @deprecated
   void ensureReadable(int minReadableBytes) {
     if (minReadableBytes < 0)
-      throw new ArgumentError("minWritableBytes: $minReadableBytes (expected: >= 0)");
+      throw new ArgumentError(
+          "minWritableBytes: $minReadableBytes (expected: >= 0)");
     if (minReadableBytes > readableBytes)
       throw new RangeError("writeIndex($_writeIndex) + "
           "minWritableBytes($minReadableBytes) exceeds lengthInBytes($lengthInBytes): $this");
@@ -308,7 +315,8 @@ class ByteBuf {
   @deprecated
   void ensureWritable(int minWritableBytes) {
     if (minWritableBytes < 0)
-      throw new ArgumentError("minWritableBytes: $minWritableBytes (expected: >= 0)");
+      throw new ArgumentError(
+          "minWritableBytes: $minWritableBytes (expected: >= 0)");
     if (minWritableBytes > writableBytes)
       throw new RangeError("writeIndex($_writeIndex) + "
           "minWritableBytes($minWritableBytes) exceeds lengthInBytes($lengthInBytes): $this");
@@ -1024,7 +1032,8 @@ class ByteBuf {
     return s;
   }
 
-  final emptyStringList = const <String>[];
+  //TODO: rename
+  final List<String> emptyStringList = const <String>[];
 
   /// Returns an [List] of [String] by decoding the bytes from [index]
   /// to [length] as a UTF-8 string, and then uses [delimeter] to
@@ -1479,7 +1488,8 @@ class ByteBuf {
   /// Converts the [List] of [String] into a single [String] separated
   /// by [delimiter], encodes that string into UTF-8, and store the
   /// UTF-8 string at [index].
-  ByteBuf setStringList(int index, List<String> list, [String delimiter = r"\"]) {
+  ByteBuf setStringList(int index, List<String> list,
+      [String delimiter = r"\"]) {
     String s = list.join(delimiter);
     _checkWriteIndex(index, s.length);
     _setString(index, s);
@@ -1571,7 +1581,8 @@ class ByteBuf {
 
   // Auxiliary used for debugging
   String toAscii(int start, int end, [int pos]) {
-    String vChar(int c) => (isVisibleChar(c)) ? '_' + new String.fromCharCode(c) : '__';
+    String vChar(int c) =>
+        (isVisibleChar(c)) ? '_' + new String.fromCharCode(c) : '__';
 
     log.debug('$rrr toHex: start($start), end($end), pos($pos');
     if (pos == null) pos = start;
@@ -1606,19 +1617,22 @@ class ByteBuf {
 
   /// Checks that the [readIndex] is valid;
   void _checkReadIndex(int index, int elementSize) {
-    if ((index + elementSize) > writeIndex) _readIndexOutOfBounds(index, elementSize);
+    if ((index + elementSize) > writeIndex)
+      _readIndexOutOfBounds(index, elementSize);
   }
 
   /// Checks that the [readIndex] is valid;
   bool _checkReadIndexAligned(int index, int length, elementSize) {
-    if ((index + (length * elementSize)) > writeIndex) _readIndexOutOfBounds(index, lengthInBytes);
+    if ((index + (length * elementSize)) > writeIndex)
+      _readIndexOutOfBounds(index, lengthInBytes);
     int remainder = (index % elementSize);
     return remainder == 0;
   }
 
   /// Checks that the [writeIndex] is valid;
   void _checkWriteIndex(int index, lengthInBytes) {
-    if (((index < _writeIndex) || (index + lengthInBytes) > _bytes.lengthInBytes))
+    if (((index < _writeIndex) ||
+        (index + lengthInBytes) > _bytes.lengthInBytes))
       _writeIndexOutOfBounds(index + lengthInBytes);
   }
 
@@ -1646,13 +1660,15 @@ class ByteBuf {
 
   //TODO: make this two different methods
   void _readIndexOutOfBounds(int index, lengthInBytes) {
-    String s = "Read Index Out Of Bounds: read($_readIndex) <= index($index) < write($_writeIndex)";
+    String s =
+        "Read Index Out Of Bounds: read($_readIndex) <= index($index) < write($_writeIndex)";
     log.error(s);
     throw new RangeError(s);
   }
 
   void _writeIndexOutOfBounds(int index) {
-    String s = "Invalid Write Index($index): $index \nto ByteBuf($this) with $lengthInBytes";
+    String s =
+        "Invalid Write Index($index): $index \nto ByteBuf($this) with $lengthInBytes";
     log.error(s);
     throw new RangeError(s);
   }
@@ -1660,7 +1676,8 @@ class ByteBuf {
 
 //**** Auxiliary Functions
 
-Uint8List _copyBytes(Uint8List bytes, [int offset = 0, int lengthInBytes, maxCapacity = kGB]) {
+Uint8List _copyBytes(Uint8List bytes,
+    [int offset = 0, int lengthInBytes, maxCapacity = kGB]) {
   lengthInBytes = _validateLengthIB(bytes.length, lengthInBytes, maxCapacity);
   return bytes.sublist(offset, lengthInBytes);
 }
@@ -1670,20 +1687,25 @@ Uint8List _getBytes([int lengthInBytes = kKB]) {
   return new Uint8List(lengthInBytes);
 }
 
-Uint8List _getByteView(Uint8List bytes, [int rIndex = 0, int wIndex, int lengthIB]) {
+Uint8List _getByteView(Uint8List bytes,
+    [int rIndex = 0, int wIndex, int lengthIB]) {
   lengthIB = _validateLengthIB(bytes.lengthInBytes, lengthIB);
   wIndex = _validateWriteIndex(rIndex, wIndex, lengthIB);
   return bytes.buffer.asUint8List(rIndex, lengthIB);
 }
 
 ByteBuf _getByteBuf(
-    [int readIndex = 0, int writeIndex, int lengthInBytes = kKB, int maxCapacity = kGB]) {
+    [int readIndex = 0,
+    int writeIndex,
+    int lengthInBytes = kKB,
+    int maxCapacity = kGB]) {
   lengthInBytes = _validateLengthIB(lengthInBytes, lengthInBytes, maxCapacity);
   var _bytes = new Uint8List(lengthInBytes);
   return new ByteBuf._(_bytes, readIndex, writeIndex);
 }
 
-ByteBuf _getBufView(Uint8List bytes, [int rIndex = 0, int wIndex, int lengthIB]) {
+ByteBuf _getBufView(Uint8List bytes,
+    [int rIndex = 0, int wIndex, int lengthIB]) {
   lengthIB = _validateLengthIB(bytes.lengthInBytes, lengthIB);
   wIndex = _validateWriteIndex(rIndex, wIndex, lengthIB);
   var _bytes = bytes.buffer.asUint8List(rIndex, lengthIB);
@@ -1694,7 +1716,8 @@ ByteBuf _getBufView(Uint8List bytes, [int rIndex = 0, int wIndex, int lengthIB])
 ///
 /// [bytesLength] is the max [lengthInBytes] of an allocated [Uint8List].
 /// [lengthInBytes] is the desired length of the allocated [Uint8List].
-int _validateLengthIB(int bytesLength, [int lengthInBytes, int maxCapacity = kMaxCapacity]) {
+int _validateLengthIB(int bytesLength,
+    [int lengthInBytes, int maxCapacity = kMaxCapacity]) {
   if (lengthInBytes == null) return bytesLength;
   if (lengthInBytes < 0 || maxCapacity < lengthInBytes) {
     throw new ArgumentError(

@@ -12,7 +12,6 @@ import 'dart:io';
 
 import 'package:grinder/grinder.dart';
 
-
 Future main(List<String> args) => grind(args);
 
 /// The dartdoc [Directory].
@@ -46,13 +45,21 @@ void clean() {
 @Task('Dry Run of Formating Source...')
 void testformat() {
   log("Test Formatting Source...");
-  DartFmt.dryRun('lib', lineLength: 100);
+  DartFmt.dryRun('lib', lineLength: 80);
+  DartFmt.dryRun('bin', lineLength: 80);
+  DartFmt.dryRun('example', lineLength: 80);
+  DartFmt.dryRun('test', lineLength: 80);
+  DartFmt.dryRun('tool', lineLength: 80);
 }
 
 @Task('Formating Source...')
 void format() {
   log("Formatting Source...");
-  DartFmt.dryRun('lib', lineLength: 100);
+  DartFmt.format('lib', lineLength: 80);
+  DartFmt.format('bin', lineLength: 80);
+  DartFmt.format('example', lineLength: 80);
+  DartFmt.format('test', lineLength: 80);
+  DartFmt.format('tool', lineLength: 80);
 }
 
 @Task('DartDoc')
@@ -79,11 +86,6 @@ void buildRelease() {
 //@Depends(init)
 void compile() {
   log("Compiling...");
-}
-
-@Task('Testing Dart...')
-void test() {
-  new PubApp.local('test').run(<String>[]);
 }
 
 @Task('Testing JavaScript...')

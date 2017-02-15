@@ -61,7 +61,8 @@ class DcmWriter extends ByteBuf {
 
   //TODO: explain use case for this.
   /// Creates a new writable [DcmWriter] from the [Uint8List] [bytes].
-  DcmWriter.from(DcmWriter buf, [int offset = 0, int length]) : super.from(buf, offset, length);
+  DcmWriter.from(DcmWriter buf, [int offset = 0, int length])
+      : super.from(buf, offset, length);
 
   /// Creates a [Uint8List] with the same length as the elements in [list],
   /// and copies over the elements.  Values are truncated to fit in the list
@@ -69,7 +70,8 @@ class DcmWriter extends ByteBuf {
   DcmWriter.fromList(List<int> list) : super.fromList(list);
 
   /// Create a view of [this].
-  DcmWriter.view(ByteBuf buf, [int offset = 0, int length]) : super.view(buf, offset, length);
+  DcmWriter.view(ByteBuf buf, [int offset = 0, int length])
+      : super.view(buf, offset, length);
 
   //**** Methods that Return new [ByteBuf]s.  ****
   //TODO: these next three don't do error checking and they should
@@ -101,7 +103,8 @@ class DcmWriter extends ByteBuf {
     writePrefix();
     log.debug('$rmm isExplicitVR($rootDS.isExplicitVR)');
 
-    for (Element e in rootDS.elements) writeElement(e, isExplicitVR: rootDS.isExplicitVR);
+    for (Element e in rootDS.elements)
+      writeElement(e, isExplicitVR: rootDS.isExplicitVR);
     log.debug('$ree writeRootDataset.end');
     log.up;
     return;
@@ -184,7 +187,8 @@ class DcmWriter extends ByteBuf {
     log.debug('$wbb _writeImplicit: ${e.info}');
     Element e0 = _maybeGetElement(e);
     _writeTag(e0.tag);
-    int vfLength = (e0.hadUndefinedLength) ? kUndefinedLength : e0.lengthInBytes;
+    int vfLength =
+        (e0.hadUndefinedLength) ? kUndefinedLength : e0.lengthInBytes;
     writeUint32(vfLength);
     _write(e0);
     log.debug('$wee _writeImplicit-end');
@@ -308,10 +312,12 @@ class DcmWriter extends ByteBuf {
   void _writeUndefinedLength() => _writeLongLength(kUndefinedLength);
 
   /// Writes a  32-bit [kSequenceDelimitationItem] value, followed by a 32-bit 0 length.
-  void _writeSequenceDelimiter() => _writeDelimiter(kSequenceDelimiterLast16Bits);
+  void _writeSequenceDelimiter() =>
+      _writeDelimiter(kSequenceDelimiterLast16Bits);
 
   /// Writes a 32-bit [kItem] value, followed by a 32-bit length.
-  void _writeItemHeader(int lengthInBytes) => _writeDelimiter(kItemLast16bits, lengthInBytes);
+  void _writeItemHeader(int lengthInBytes) =>
+      _writeDelimiter(kItemLast16bits, lengthInBytes);
 
   /// Writes a 32-bit [kItemDelimitationItem] value, followed by a 32-bit 0 length.
   void _writeItemDelimiter() => _writeDelimiter(kItemDelimiterLast16bits);
@@ -346,7 +352,8 @@ class DcmWriter extends ByteBuf {
     } else {
       log.debug('$wbb write-end');
       _writeItemHeader(item.vfLength);
-      log.debug('$wbb writeItem vfLength(${item.vfLength}, ${Int.hex(item.vfLength)}');
+      log.debug(
+          '$wbb writeItem vfLength(${item.vfLength}, ${Int.hex(item.vfLength)}');
       for (Element e in item.elements) writeElement(e);
     }
     log.debug('$wee writeItem-end');
@@ -384,7 +391,8 @@ class DcmWriter extends ByteBuf {
       // log.debug('$mmm $writeIndex: wrote Sequence Delimter');
     } else {
       writeUint16List(e.values);
-      log.debug('$wee writeOW: Length(${e.values.length}), LengthInBytes(${e.lengthInBytes})');
+      log.debug(
+          '$wee writeOW: Length(${e.values.length}), LengthInBytes(${e.lengthInBytes})');
     }
     log.up;
   }

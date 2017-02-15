@@ -33,6 +33,7 @@ void main(List<String> args) {
   outFile.writeAsStringSync(pretty);
 }
 
+/// Convert a JSON [Map] to a [Dataset] [Map]
 Map<int, Element> toDataset(Map jsMap) {
   Map<int, Element> eMap = {};
   jsMap.forEach((String s, Map map) {

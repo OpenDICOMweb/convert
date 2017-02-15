@@ -282,7 +282,13 @@ void main() {
   });
 
   test("Read Int64 Values", () {
-    List<int> int64s = [-25700000000, 34010000000, -200000000000, 300000000000, -4000000000000];
+    List<int> int64s = [
+      -25700000000,
+      34010000000,
+      -200000000000,
+      300000000000,
+      -4000000000000
+    ];
     Int64List int64list = new Int64List.fromList(int64s);
     Uint8List bytes = int64list.buffer.asUint8List();
     ByteBuf buf = new ByteBuf.reader(bytes);
@@ -298,7 +304,13 @@ void main() {
   });
 
   test("Read Int64List Values", () {
-    List<int> int64s = [-25700000000, 34010000000, -200000000000, 300000000000, -4000000000000];
+    List<int> int64s = [
+      -25700000000,
+      34010000000,
+      -200000000000,
+      300000000000,
+      -4000000000000
+    ];
     Int64List int64list = new Int64List.fromList(int64s);
     Uint8List bytes = int64list.buffer.asUint8List();
     ByteBuf buf = new ByteBuf.reader(bytes);
@@ -313,7 +325,13 @@ void main() {
   });
 
   test("Read Uint64 Values", () {
-    List<int> uint64s = [25700000000, 34010000000, 200000000000, 300000000000, 4000000000000];
+    List<int> uint64s = [
+      25700000000,
+      34010000000,
+      200000000000,
+      300000000000,
+      4000000000000
+    ];
     Uint64List uint64list = new Uint64List.fromList(uint64s);
     Uint8List bytes = uint64list.buffer.asUint8List();
     ByteBuf buf = new ByteBuf.reader(bytes);
@@ -329,7 +347,13 @@ void main() {
   });
 
   test("Read Uint64List Values", () {
-    List<int> uint64s = [25700000000, 34010000000, 200000000000, 300000000000, 4000000000000];
+    List<int> uint64s = [
+      25700000000,
+      34010000000,
+      200000000000,
+      300000000000,
+      4000000000000
+    ];
     Uint64List uint64list = new Uint64List.fromList(uint64s);
     Uint8List bytes = uint64list.buffer.asUint8List();
     ByteBuf buf = new ByteBuf.reader(bytes);

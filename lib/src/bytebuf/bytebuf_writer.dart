@@ -7,34 +7,40 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:common/common.dart';
+
 import 'bytebuf_reader.dart';
 
-const _MB = 1024 * 1024;
-const _GB = 1024 * 1024 * 1024;
+//const int kMB = 1024 * 1024;
+//const int kGB = 1024 * 1024 * 1024;
 
 class ByteBufWriter extends ByteBufReader {
-  static const defaultLengthInBytes = 1024;
-  static const defaultMaxCapacity = 1 * _MB;
-  static const maxMaxCapacity = 2 * _GB;
-  static const endianness = Endianness.LITTLE_ENDIAN;
+  static const int defaultLengthInBytes = 1024;
+  static const int defaultMaxCapacity = 1 * kMB;
+  static const int maxMaxCapacity = 2 * kGB;
+  static const Endianness endianness = Endianness.LITTLE_ENDIAN;
 
   Uint8List _bytes;
   ByteData _bd;
   //int _readIndex;
   int _writeIndex;
 
-  /// Creates a new [ByteBufWriter] of [maxCapacity], where
+  /// Creates a new [ByteBufWriter] of maxCapacity, where
   ///  [readIndex] = [writeIndex] = 0.
-  factory ByteBufWriter([int lengthInBytes = ByteBufReader.defaultLengthInBytes]) {
-    if (lengthInBytes == null) lengthInBytes = ByteBufReader.defaultLengthInBytes;
+  factory ByteBufWriter(
+      [int lengthInBytes = ByteBufReader.defaultLengthInBytes]) {
+    if (lengthInBytes == null)
+      lengthInBytes = ByteBufReader.defaultLengthInBytes;
     if ((lengthInBytes < 0) || (lengthInBytes > ByteBufReader.maxMaxCapacity))
       throw new ArgumentError("lengthInBytes: $lengthInBytes "
           "(expected: 0 <= lengthInBytes <= maxCapacity($ByteBufReader.maxMaxCapacity)");
-    return new ByteBufWriter._(new Uint8List(lengthInBytes), 0, 0, lengthInBytes);
+    return new ByteBufWriter._(
+        new Uint8List(lengthInBytes), 0, 0, lengthInBytes);
   }
 
   //TODO: fix this
-  ByteBufWriter._(Uint8List bytes, [int readIndex = 0, int writeIndex = 0, lengthInBytes])
+  ByteBufWriter._(Uint8List bytes,
+      [int readIndex = 0, int writeIndex = 0, lengthInBytes])
       : super.internal(bytes, readIndex, writeIndex, lengthInBytes);
 
   //*** Operators ***
@@ -48,16 +54,18 @@ class ByteBufWriter extends ByteBufReader {
 
   /// Checks that the [writeIndex] is valid;
   void _checkWriteIndex(int index, [int lengthInBytes = 1]) {
-    if (((index < _writeIndex) || (index + lengthInBytes) >= _bytes.lengthInBytes))
+    if (((index < _writeIndex) ||
+        (index + lengthInBytes) >= _bytes.lengthInBytes))
       indexOutOfBounds(index, "write");
   }
 
   //TODO: check wht=ether this shoulbe in here or in bytebuf_reader
-  /// Checks that there are at least [minimumWritableableBytes] available.
+  /// Checks that there are at least [minimumWritableBytes] available.
   @override
   void checkWritableBytes(int minimumWritableBytes) {
     if ((_writeIndex + minimumWritableBytes) > lengthInBytes)
-      throw new RangeError("writeIndex($writeIndex) + minimumWritableBytes($minimumWritableBytes) "
+      throw new RangeError(
+          "writeIndex($writeIndex) + minimumWritableBytes($minimumWritableBytes) "
           "exceeds lengthInBytes($lengthInBytes): $this");
   }
   //*** Bytes set, write
@@ -484,7 +492,8 @@ class ByteBufWriter extends ByteBufReader {
   /// Converts the [List] of [String] into a single [String] separated
   /// by [delimiter], encodes that string into UTF-8, and store the
   /// UTF-8 string at [index].
-  ByteBufWriter setStringList(int index, List<String> list, [String delimiter = r"\"]) {
+  ByteBufWriter setStringList(int index, List<String> list,
+      [String delimiter = r"\"]) {
     String s = list.join(delimiter);
     _checkWriteIndex(index, s.length);
     _setString(index, s);

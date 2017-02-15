@@ -15,11 +15,11 @@ import 'dcm_writer.dart';
 //TODO: create extensible write buffers
 
 /// Encoder for DICOM File Format octet streams (Uint8List)
-/// [DcmEncoder] reads DICOM SOP Instances and returns a [DatasetSop].
+/// [DcmEncoder] reads DICOM SOP Instances and returns a [Dataset].
 /// TODO: finish doc
 class DcmEncoder extends DcmWriter {
   //TODO: make the buffer grow and shrink adaptively.
-  static const defaultLengthInBytes = 10 * kMB;
+  static const int defaultLengthInBytes = 10 * kMB;
   static final Logger log = new Logger("DcmEncoder", logLevel: Level.debug);
   final String filePath;
 
@@ -35,7 +35,9 @@ class DcmEncoder extends DcmWriter {
 
   //DcmEncoder.fromList(List<int> list, [this.filePath = ""]) : super.fromList(list);
 
-  static const littleEndian = WKUid.kImplicitVRLittleEndianDefaultTransferSyntaxforDICOM;
+  //TODO: make this a TransferSyntax
+  static const WKUid littleEndian =
+      WKUid.kImplicitVRLittleEndianDefaultTransferSyntaxforDICOM;
 
   //TODO: only handles SOP Instances for now
   void writeInstance(Instance instance) {

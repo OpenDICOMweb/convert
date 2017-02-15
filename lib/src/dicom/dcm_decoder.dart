@@ -34,7 +34,8 @@ class DcmDecoder extends DcmReader {
 
   //TODO: move to a utilities file for TypedData
   static bool hasAllZeros(Uint8List preamble) {
-    for (int i = 0; i < preamble.length; i++) if (preamble[i] != 0) return false;
+    for (int i = 0; i < preamble.length; i++)
+      if (preamble[i] != 0) return false;
     return true;
   }
 

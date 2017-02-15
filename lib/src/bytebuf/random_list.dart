@@ -8,26 +8,28 @@ import 'dart:math';
 import 'dart:typed_data';
 
 //TODO: there should be a better way to do this.
+/// TODO: doc
 class RandomList {
   static final _rng = new Random(1);
   final String name;
   final Type type;
-  final elementSizeInBytes;
+  final int elementSizeInBytes;
   final num max;
 
   const RandomList(this.name, this.type, this.elementSizeInBytes, this.max);
 
-  static const int8 = const RandomList("Int8", Int8List, 1, (1 << 8));
-  static const uint8 = const RandomList("Uint8", Uint8List, 1, (1 << 8));
-  static const int16 = const RandomList("Int16", Int16List, 2, (1 << 16));
-  static const uint16 = const RandomList("Uint16", Uint16List, 2, (1 << 16));
-  static const int32 = const RandomList("Int32", Int32List, 4, (1 << 32));
-  static const uint32 = const RandomList("Uint32", Uint32List, 4, (1 << 32));
+  //TODO: add Type variable T
+  static const RandomList int8 = const RandomList("Int8", Int8List, 1, (1 << 8));
+  static const RandomList uint8 = const RandomList("Uint8", Uint8List, 1, (1 << 8));
+  static const RandomList int16 = const RandomList("Int16", Int16List, 2, (1 << 16));
+  static const RandomList uint16 = const RandomList("Uint16", Uint16List, 2, (1 << 16));
+  static const RandomList int32 = const RandomList("Int32", Int32List, 4, (1 << 32));
+  static const RandomList uint32 = const RandomList("Uint32", Uint32List, 4, (1 << 32));
 
-  static const int64 = const RandomList("Int64", Int64List, 8, (1 << 32));
-  static const uint64 = const RandomList("Uint64", Uint64List, 8, (1 << 32));
-  static const float32 = const RandomList("Float32", Float32List, 4, null);
-  static const float64 = const RandomList("Float64", Float64List, 4, null);
+  static const RandomList int64 = const RandomList("Int64", Int64List, 8, (1 << 32));
+  static const RandomList uint64 = const RandomList("Uint64", Uint64List, 8, (1 << 32));
+  static const RandomList float32 = const RandomList("Float32", Float32List, 4, null);
+  static const RandomList float64 = const RandomList("Float64", Float64List, 4, null);
 
   List call(int length) {
     return _makeList(length);

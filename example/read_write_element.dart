@@ -7,12 +7,16 @@
 import 'package:core/core.dart';
 import '../lib/encoder.dart';
 
+/// Logger
 Logger log = new Logger("read_write_element");
+
+/// Simple [Element] test
 void main(List<String> args) {
   AE ae = new AE(Tag.kReceivingApplicationEntityTitle, ["foo bar"]);
   elementTest(ae, ["abc", "def"]);
 }
 
+/// Test
 bool elementTest(Element e0, List values) {
   DcmWriter wBuf = new DcmWriter(128);
   Element e1 = e0.update(values);

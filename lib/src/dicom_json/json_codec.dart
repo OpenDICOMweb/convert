@@ -7,8 +7,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-
-
 typedef Object _Reviver(var key, var value);
 typedef String _ToEncodable(var o);
 
@@ -16,7 +14,8 @@ class JsonCodec extends Codec<Object, String> {
   final _Reviver _reviver;
   final _ToEncodable _toEncodable;
 
-  const JsonCodec({Object reviver(var key, var value), String toEncodable(var object)})
+  const JsonCodec(
+      {Object reviver(var key, var value), String toEncodable(var object)})
       : _reviver = reviver,
         _toEncodable = toEncodable;
 
@@ -35,14 +34,14 @@ class JsonCodec extends Codec<Object, String> {
   }
 
   @override
-  dynamic decode(String source, {Object reviver(var key, var value)}) {
+  dynamic decode(String source, {Object reviver(key, value)}) {
     if (reviver == null) reviver = _reviver;
     if (reviver == null) return decoder.convert(source);
     return new JsonDecoder(reviver).convert(source);
   }
 
   @override
-  String encode(Object value, {String toEncodable(object)}) {
+  String encode(Object value, {String toEncodable(dynamic object)}) {
     if (toEncodable == null) toEncodable = _toEncodable;
     if (toEncodable == null) return encoder.convert(value);
     return new JsonEncoder(toEncodable).convert(value);

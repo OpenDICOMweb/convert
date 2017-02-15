@@ -6,11 +6,11 @@
 
 import 'package:test/test.dart';
 
-main() {
+void main() {
   simpleTest();
 }
 
-simpleTest() {
+void simpleTest() {
   test("Simple BytesToX Test", () {
     int v;
 
@@ -64,13 +64,16 @@ simpleTest() {
 }
 
 /// Converts [lengthInBytes] to [length] for 2-byte value types.
-int _bytesToWords(int lengthIB) => ((lengthIB & 0x1) == 0) ? lengthIB >> 1 : null;
+int _bytesToWords(int lengthIB) =>
+    ((lengthIB & 0x1) == 0) ? lengthIB >> 1 : null;
 
 /// Converts [lengthInBytes] to [length] for 4-byte value types.
-int _bytesToLongs(int lengthIB) => ((lengthIB & 0x3) == 0) ? lengthIB >> 2 : null;
+int _bytesToLongs(int lengthIB) =>
+    ((lengthIB & 0x3) == 0) ? lengthIB >> 2 : null;
 
 /// Converts [lengthInBytes] to [length] for 4-byte value types.
-int _bytesToDoubles(int lengthIB) => ((lengthIB & 0x7) == 0) ? lengthIB >> 3 : null;
+int _bytesToDoubles(int lengthIB) =>
+    ((lengthIB & 0x7) == 0) ? lengthIB >> 3 : null;
 
 int _lengthError(int vfLength, int sizeInBytes) {
   print('Invalid vfLength($vfLength) for elementSize($sizeInBytes)'
