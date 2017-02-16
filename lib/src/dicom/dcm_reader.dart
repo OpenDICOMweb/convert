@@ -91,7 +91,8 @@ class DcmReader<E> extends ByteBuf {
     if (!_hasPrefix()) return null;
     log.down;
     log.debug('$rbb readRootDataset: $rootDS');
-    _readFmi();
+    TransferSyntax ts = _readFmi();
+    if (ts == null) throw "Unsupported Null TransferSyntax";
     log.debug('$rmm readRootDataset: transferSyntax(${rootDS.transferSyntax})');
     log.debug('$rmm readRootDataset: ${rootDS.hasValidTransferSyntax}');
     if (!rootDS.hasValidTransferSyntax) return rootDS;
@@ -111,7 +112,7 @@ class DcmReader<E> extends ByteBuf {
   }
 
   /// Reads File Meta Information ([Fmi]). If any [Fmi] [Element]s were present returns true.
-  void _readFmi() {
+  TransferSyntax _readFmi() {
     log.down;
     log.debug('$rbb readFmi($currentDS)');
     if (isReadable && currentDS is RootDataset) {
@@ -127,7 +128,7 @@ class DcmReader<E> extends ByteBuf {
     }
     log.debug('$ree readFmi: ${rootDS.transferSyntax}');
     log.up;
-    return;
+    return rootDS.transferSyntax;
   }
 
   /// Peek at next tag - doesn't move the [readIndex].
