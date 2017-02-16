@@ -201,14 +201,14 @@ void main() {
 
   test("Read Uint16List Values", () {
     List<int> uint16s = <int>[257, 3401, 2000, 3000, 4000];
-    print('length0:${uint16s.length}: $uint16s');
+    //  print('length0:${uint16s.length}: $uint16s');
     Uint16List uint16List = new Uint16List.fromList(uint16s);
-    print('length1:${uint16List.length}: $uint16List');
+    //  print('length1:${uint16List.length}: $uint16List');
     Uint8List bytes = uint16List.buffer.asUint8List();
-    print('length2:${bytes.length}: $bytes');
+    //  print('length2:${bytes.length}: $bytes');
     ByteBuf buf = new ByteBuf.reader(bytes);
 
-    print(buf.info);
+    //  print(buf.info);
     List<int> list = buf.readUint16List(uint16List.length);
 
     expect(uint16s, equals(uint16s));

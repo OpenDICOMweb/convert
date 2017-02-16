@@ -148,12 +148,11 @@ class DcmReader<E> extends ByteBuf {
     log.down;
     final int code = _peekTagCode();
     log.debug('$rbb readElement: _peekTag${Tag.toDcm(code)}');
-    print(
-        'tag.isPublic: code(${Tag.toHex(code)}, isPublic(${Tag.isPublicCode(code)})');
-    int group = Group.fromTag(code);
-    print('group.isPublic: ${Group.isPublic(group)}');
-    print('group: ${Group.hex(group)}');
-    print('isPublicGroup: ${Group.hex(Group.fromTag(code))}');
+    //  print('tag.isPublic: code(${Tag.toHex(code)}, isPublic(${Tag.isPublicCode(code)})');
+    // int group = Group.fromTag(code);
+    //  print('group.isPublic: ${Group.isPublic(group)}');
+    //  print('group: ${Group.hex(group)}');
+    //  print('isPublicGroup: ${Group.hex(Group.fromTag(code))}');
     if (Tag.isPublicCode(code)) {
       Element<E> e = (isExplicitVR) ? _readExplicit() : _readImplicit();
       log.debug('$rmm readElement:${e.info}');
@@ -471,11 +470,11 @@ class DcmReader<E> extends ByteBuf {
     if (vfLength == kUndefinedLength) {
       int start = readIndex;
       //TODO: clean this up
-      while (true) {
+      do {
         if (readUint16() != kDelimiterFirst16Bits) continue;
         if (readUint16() != kSequenceDelimiterLast16Bits) continue;
         break;
-      }
+      } while (true);
       // int delimiterLengthField = readUint32();
       if (readUint32() != 0) log.warn('Sequence Delimter with non-zero value');
       int end = readIndex - 8;

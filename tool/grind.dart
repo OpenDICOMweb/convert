@@ -17,17 +17,10 @@ Future main(List<String> args) => grind(args);
 /// The dartdoc [Directory].
 Directory dartDocDir = new Directory('doc');
 
-// Uncomment if needed
-/* @Task('Initializing...')
-init() {
-  log("Initializing stuff...");
-}
-*/
-
 @DefaultTask('Running Default Tasks...')
 void myDefault() {
   test();
-  testformat();
+  format();
 }
 
 @Task('Testing Dart...')
@@ -46,7 +39,7 @@ void clean() {
 void testformat() {
   log("Test Formatting Source...");
   DartFmt.dryRun('lib', lineLength: 80);
-  DartFmt.dryRun('bin', lineLength: 80);
+  // DartFmt.dryRun('bin', lineLength: 80);
   DartFmt.dryRun('example', lineLength: 80);
   DartFmt.dryRun('test', lineLength: 80);
   DartFmt.dryRun('tool', lineLength: 80);
@@ -56,7 +49,7 @@ void testformat() {
 void format() {
   log("Formatting Source...");
   DartFmt.format('lib', lineLength: 80);
-  DartFmt.format('bin', lineLength: 80);
+  // DartFmt.format('bin', lineLength: 80);
   DartFmt.format('example', lineLength: 80);
   DartFmt.format('test', lineLength: 80);
   DartFmt.format('tool', lineLength: 80);

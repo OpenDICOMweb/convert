@@ -50,7 +50,7 @@ class ByteBuf {
   static const Endianness endianness = Endianness.LITTLE_ENDIAN;
 
   //TODO: Make the argument an optional arg to contructor
-  static final Logger log = new Logger('ByteBuf', logLevel: Level.info);
+  static final Logger log = new Logger('ByteBuf', logLevel: Level.config);
 
   /// The complete buffer from 0 to [_bytes].[lengthInBytes].
   final Uint8List _bytes;
@@ -573,7 +573,7 @@ class ByteBuf {
     var list = new Uint16List(length);
     for (int i = 0; i < length; i++) {
       list[i] = getUint16(index + i * 2);
-      print('$i: ${list[i]}');
+      //  print('$i: ${list[i]}');
     }
     return list;
   }
@@ -581,7 +581,7 @@ class ByteBuf {
   /// Returns an [Uint16List] of unsigned 16-bit integers.
   /// [length] is the number of elements in the returned list.
   Uint16List getUint16List(int index, int length) {
-    print('getUint16: $index: $length');
+    //  print('getUint16: $index: $length');
     _checkReadIndex(index, length * 2);
     return _getUint16List(index, length);
   }
@@ -591,7 +591,7 @@ class ByteBuf {
   Uint16List readUint16List(int length) {
     var list = getUint16List(_readIndex, length);
     _readIndex += length * 2;
-    print('** $list');
+    //  print('** $list');
     return list;
   }
 
@@ -733,7 +733,7 @@ class ByteBuf {
   /// Reads and Returns an [Uint32List] view of unsigned 32-bit integers,
   /// and advances the [readIndex] by the number of byte read.
   Uint32List readUint32View(int length) {
-    print('rU32View: l($length)');
+    //  print('rU32View: l($length)');
     var list = getUint32View(_readIndex, length);
     _readIndex += length * 4;
     return list;
