@@ -469,12 +469,11 @@ class DcmReader<E> extends ByteBuf {
     Uint8List values;
     if (vfLength == kUndefinedLength) {
       int start = readIndex;
-      //TODO: clean this up
       do {
         if (readUint16() != kDelimiterFirst16Bits) continue;
         if (readUint16() != kSequenceDelimiterLast16Bits) continue;
         break;
-      } while (true);
+      } while (isReadable);
       // int delimiterLengthField = readUint32();
       if (readUint32() != 0) log.warn('Sequence Delimter with non-zero value');
       int end = readIndex - 8;
