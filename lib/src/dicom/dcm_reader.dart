@@ -275,7 +275,7 @@ class DcmReader<E> extends ByteBuf {
   List<String> _readDcmString(int vfLength, [int padChar = kSpace]) {
     if (vfLength == 0) return const <String>[];
     if (vfLength.isOdd || vfLength == kUndefinedLength)
-      log.fatal('_readDcmStringError: $vfLength(${Int32.hex(vfLength)}');
+      log.fatal('_readDcmStringError: vfLength=$vfLength(${Int32.hex(vfLength)})');
     String s = readString(vfLength);
     int last = s.codeUnitAt(s.length - 1);
     if (last == kNull || last == kSpace) {

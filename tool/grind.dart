@@ -15,11 +15,14 @@ import 'package:grinder/grinder.dart';
 Future main(List<String> args) => grind(args);
 
 /// The dartdoc [Directory].
-Directory dartDocDir = new Directory('doc');
+Directory dartDocDir = new Directory('doc/api');
 
 @DefaultTask('Running Default Tasks...')
 void myDefault() {
+  log('Running Grind Defaults...');
+  log('  Running Tests...');
   test();
+  log('  Running format...');
   format();
 }
 
