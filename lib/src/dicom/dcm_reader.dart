@@ -170,10 +170,11 @@ class DcmReader<E> extends ByteBuf {
     log.down;
     Tag tag = _readTag();
     int vrCode = readUint16();
+    log.debug('$rbb _readExpligit: ${tag.dcm} ${Uint16.hex(vrCode)}');
     int vrIndex = VR.indexOf(vrCode);
-    log.debug('$rbb _readExplicit: ${tag.dcm}, vrIndex($vrIndex)');
     if (vrIndex == null) throw "bad vrIndex";
     VR vr = VR.vrs[vrIndex];
+    log.debug('$rmm _readExplicit: vrIndex($vrIndex), $vr)');
     if (vr == null) _debugReader(tag, vr);
     log.debug('$rmm _readExplicit: ${tag.dcm} VR[$vrIndex] $vr');
     int vfLength = (vr.hasShortVF) ? readUint16() : _readLongLength();
