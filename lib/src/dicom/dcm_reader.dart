@@ -89,7 +89,7 @@ class DcmReader<E> extends ByteBuf {
   //TODO: flush count argument when working
   Dataset readRootDataset([int count = 100000]) {
     if (!_hasPrefix()) return null;
-    log.down;
+  //  log.down;
     log.debug('$rbb readRootDataset: $rootDS');
     TransferSyntax ts = _readFmi();
     if (ts == null) throw "Unsupported Null TransferSyntax";
@@ -101,7 +101,7 @@ class DcmReader<E> extends ByteBuf {
     log.debug('$rmm readRootDataset: isExplicitVR($isExplicitVR)');
     while (isReadable) readElement(isExplicitVR: isExplicitVR);
     log.debug('$ree readRootDataset: $rootDS');
-    log.up;
+  //  log.up;
     return rootDS;
   }
 
