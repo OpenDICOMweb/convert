@@ -156,10 +156,12 @@ class DcmReader<E> extends ByteBuf {
     //  print('isPublicGroup: ${Group.hex(Group.fromTag(code))}');
     Element<E> e;
     if (Tag.isPublicCode(code)) {
+      log.debug('$rmm readElement: isExplicitVR($isExplicitVR)');
       e = (isExplicitVR) ? _readExplicit() : _readImplicit();
       log.debug('$rmm readElement:${e.info}');
       currentDS[e.tag.code] = e;
     } else {
+      log.debug('$rmm readElement: _readPrivateGroup');
       _readPrivateGroup(code, isExplicitVR: isExplicitVR);
     }
     log.debug('$ree readElement: ${e.info}');
@@ -191,7 +193,7 @@ class DcmReader<E> extends ByteBuf {
     log.down;
     Tag tag = _readTag();
     int vrIndex = tag.vrIndex;
-    log.debug('$rbb _readElement: $tag');
+    log.debug('$rbb _readImplicit: $tag');
     int vfLength = readUint32();
     Element<E> e = _readValueField(tag, vfLength, vrIndex);
     log.debug('$ree _readImplicit: ${e.info}');
