@@ -35,9 +35,10 @@ class DcmEncoder extends DcmWriter {
 
   //DcmEncoder.fromList(List<int> list, [this.filePath = ""]) : super.fromList(list);
 
-  //TODO: make this a TransferSyntax
-  static const WKUid littleEndian =
-      WKUid.kImplicitVRLittleEndianDefaultTransferSyntaxforDICOM;
+  //TODO: make this a Tr?ansferSyntax
+  //TODO: where used
+  //static const TransferSyntax littleEndian =
+   //   TransferSyntax.kImplicitVRLittleEndian;
 
   //TODO: only handles SOP Instances for now
   void writeInstance(Instance instance) {

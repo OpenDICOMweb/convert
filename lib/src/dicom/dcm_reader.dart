@@ -89,7 +89,7 @@ class DcmReader<E> extends ByteBuf {
   //TODO: flush count argument when working
   Dataset readRootDataset([int count = 100000]) {
     if (!_hasPrefix()) return null;
-  //  log.down;
+    //  log.down;
     log.debug('$rbb readRootDataset: $rootDS');
     TransferSyntax ts = _readFmi();
     if (ts == null) throw "Unsupported Null TransferSyntax";
@@ -101,7 +101,7 @@ class DcmReader<E> extends ByteBuf {
     log.debug('$rmm readRootDataset: isExplicitVR($isExplicitVR)');
     while (isReadable) readElement(isExplicitVR: isExplicitVR);
     log.debug('$ree readRootDataset: $rootDS');
-  //  log.up;
+    //  log.up;
     return rootDS;
   }
 
@@ -240,11 +240,12 @@ class DcmReader<E> extends ByteBuf {
 
     log.down;
     log.debug(
-        '$rbb _readValueField: tag${tag.dcm}, vfLength($vfLength), index($index)');
+        '$rbb _readValueField: tag${tag.dcm}, vfLength(${Int32.hex(vfLength)}), index($index)');
     //TODO: make this work
     // VFReader vfReader = _getVFReader(vrIndex);
     final Function vfReader = _readers[index];
     Element<E> e = vfReader(tag, vfLength);
+    print('e: $e');
     log.debug('$ree _readValueField: ${e.info}');
     log.up;
     return e;
@@ -429,13 +430,8 @@ class DcmReader<E> extends ByteBuf {
     if (itemStartCode != kItem) _debugReader(itemStartCode, "Bad Item Tag");
     int vfLength = readUint32();
     log.debug('$rmm item length(${vfLength.toRadixString(16)})');
-    Item item = new Item(
-      currentDS,
-      <int, Element>{},
-      sq,
-      vfLength,
-    );
-    log.debug('$rmm ${item.info}');
+    Item item = new Item(currentDS, <int, Element>{}, sq, vfLength);
+    log.debug('$rmm Item ${item.info}');
 
     // Save parent [Dataset], and make [item] is new parent [Dataset].
     dsStack.push(currentDS);
@@ -490,7 +486,7 @@ class DcmReader<E> extends ByteBuf {
       values = (lengthInBytes == 0)
           ? Uint8.emptyList
           : getUint8View(start, lengthInBytes);
-      log.debug('$rmm values.length(${values.length}');
+      log.debug('$rmm values.length(${values.length})');
       log.debug(
           '$rmm Undefined vfLength(${Int32.hex(vfLength)}), lengthInBytes($lengthInBytes)');
     } else {
@@ -529,21 +525,27 @@ class DcmReader<E> extends ByteBuf {
 
   Element _readOW(Tag tag, int vfLength) {
     Uint8List vf = _uLengthGetBytes(vfLength);
-    if (tag == Tag.kPixelData) return _readOWPixelData(tag, vfLength, vf);
+    print('$tag, $vfLength, $vf.length');
     log.down;
-    log.debug('$rbb readOW bytes.length(${vf.length}');
-    OW e = new OW(tag, vfLength, vf);
+    log.debug('$rbb readOW $tag, vfLength($vfLength), vf.field(${vf.length})');
+    Element e;
+    if (tag == Tag.kPixelData) {
+      TransferSyntax ts = currentDS.transferSyntax;
+      log.debug('$rmm PixelData: $ts');
+      int nFrames = currentDS[kNumberOfFrames].value;
+      log.debug('$rmm nFrames: $nFrames, ts: $ts');
+      e = new OWPixelData.fromBytes(tag, vfLength, ts, nFrames, bytes);
+    } else {
+      e = new OW(tag, vfLength, vf);
+    }
     log.debug('$ree ${e.info}');
     log.up;
     return e;
   }
 
   /// Reads and decodes Pixel Data into BulkPixelData.
-  OWPixelData _readOWPixelData(tag, int vfLength, Uint8List vf) {
-    UI tsUid = currentDS[kTransferSyntaxUID];
-    TransferSyntax ts = tsUid.uid;
-    int nFrames = currentDS[kNumberOfFrames].value;
-    return new OWPixelData.fromBytes(tag, vfLength, ts, nFrames, bytes);
+  Element _readOWPixelData(tag, int vfLength, Uint8List vf) {
+
   }
 
   UN _readUN(Tag tag, int vfLength) {
