@@ -1,6 +1,6 @@
 # TODO: figure out why "convert" doesn't work for name.
 name: convertX
-version: 0.5.0
+version: 0.5.1
 description: A package for encoding/decoding DICOM binary, json, ...
 author: Jim Philbin <jfphilbin@gmail.com>
 
