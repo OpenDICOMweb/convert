@@ -207,10 +207,12 @@ class DcmReader<E> extends ByteBuf {
     int group = readUint16();
     int element = readUint16();
     int code = (group << 16) + element;
+    print(
+        'group(${Group.hex(group)}), elt(${Elt.hex(element)}), code(${Tag.toHex(code)})');
     return code;
   }
 
-  Tag _readTag() => Tag.lookupCode(_readTagCode());
+  Tag _readTag() => Tag.lookup(_readTagCode());
 
   /// Read a 32-bit Value Field Length field.
   ///
@@ -536,7 +538,7 @@ class DcmReader<E> extends ByteBuf {
       log.debug('$rmm nFrames: $nFrames, ts: $ts');
       e = new OWPixelData.fromBytes(tag, vfLength, ts, nFrames, bytes);
     } else {
-      e = new OW(tag, vfLength, vf);
+      e = new OW.fromBytes(tag, vfLength, vf);
     }
     log.debug('$ree ${e.info}');
     log.up;
@@ -544,9 +546,7 @@ class DcmReader<E> extends ByteBuf {
   }
 
   /// Reads and decodes Pixel Data into BulkPixelData.
-  Element _readOWPixelData(tag, int vfLength, Uint8List vf) {
-
-  }
+  Element _readOWPixelData(tag, int vfLength, Uint8List vf) {}
 
   UN _readUN(Tag tag, int vfLength) {
     log.down;
@@ -590,7 +590,7 @@ class DcmReader<E> extends ByteBuf {
     if (Group.isNotPrivate(group))
       _debugReader(code, '_readPrivateGroups: non-Private Group($group)');
     log.down;
-    log.debug('$rbb readPrivateGroup: tag(${Group.hex(group)}');
+    log.debug('$rbb readPrivateGroup: code${Tag.toHex(code)}');
 
     // Read the Private Group Creators
     // There can be up to 240 creators with [Elt]s from 0x10 to 0xFF.
