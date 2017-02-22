@@ -634,7 +634,7 @@ class DcmReader<E> extends ByteBuf {
       log.debug('$rmm _readPrivateData: ${Tag.toDcm(code)}, $tag, tagVR($tagVR');
       Element e = _readValueField(tag, vfLength, tag.vr.index);
       log.debug('$ree _readPrivateData e: $e');
-      PrivateData pd = new PrivateData(e);
+      PrivateData pd = new PrivateData(code, e);
       currentDS.add(pd);
       pData.add(pd);
       log.debug('$ree _readPrivateData pd: ${pd.info}');
