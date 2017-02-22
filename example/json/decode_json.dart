@@ -10,7 +10,6 @@ import 'dart:io';
 import 'package:dictionary/dictionary.dart';
 import 'package:core/core.dart';
 
-
 void main(List<String> args) {
   // ArgParser parser = getArgParser();
 

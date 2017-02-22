@@ -38,7 +38,7 @@ class DcmEncoder extends DcmWriter {
   //TODO: make this a Tr?ansferSyntax
   //TODO: where used
   //static const TransferSyntax littleEndian =
-   //   TransferSyntax.kImplicitVRLittleEndian;
+  //   TransferSyntax.kImplicitVRLittleEndian;
 
   //TODO: only handles SOP Instances for now
   void writeInstance(Instance instance) {
