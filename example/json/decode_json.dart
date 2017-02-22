@@ -7,8 +7,9 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dictionary/dictionary.dart';
 import 'package:core/core.dart';
-//import 'package:args/args.dart';
+
 
 void main(List<String> args) {
   // ArgParser parser = getArgParser();
@@ -38,7 +39,7 @@ Map<int, Element> toDataset(Map jsMap) {
   Map<int, Element> eMap = {};
   jsMap.forEach((String s, Map map) {
     int code = int.parse(s, radix: 16);
-    Tag tag = Tag.lookupCode(code);
+    Tag tag = Tag.lookupPublicCode(code);
     VR vr;
     var values;
     if (map.length == 0) {

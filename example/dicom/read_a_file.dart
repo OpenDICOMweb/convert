@@ -23,11 +23,11 @@ String outPath = 'C:/odw/sdk/io/example/output/out.dcm';
 
 void main(List<String> args) {
   final log = new Logger("read_file", logLevel: Level.debug);
-  File file = new File(path2);
+  File file = new File(path5);
   Uint8List bytes = file.readAsBytesSync();
   Instance instance = DcmDecoder.decode(new DSSource(bytes, file.path));
   log.debug('Instance: $instance');
-  log.debug('dataset length: ${instance.dataset.length} elements');
+  log.debug('Dataset length: ${instance.dataset.length} elements');
   log.debug(instance.format(new Formatter(maxDepth: 146)));
 
 }
