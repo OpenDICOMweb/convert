@@ -164,8 +164,8 @@ class DcmReader<E> extends ByteBuf {
     log.debug('$rmm _readExplicitVR: $vr');
     //VR vr = VR.vrList[vrIndex];
     log.debug('$rmm _readExplicitVR: VR($vr)');
-    if (vr == null) _debugReader(null,
-        'Invalid null VR: code(${Uint16.hex(vrCode)})');
+    if (vr == null)
+      _debugReader(null, 'Invalid null VR: code(${Uint16.hex(vrCode)})');
     assert(vr != null);
     return vr;
   }
