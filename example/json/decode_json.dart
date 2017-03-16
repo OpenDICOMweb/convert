@@ -10,7 +10,6 @@ import 'dart:io';
 import 'package:dictionary/dictionary.dart';
 import 'package:core/core.dart';
 
-
 void main(List<String> args) {
   // ArgParser parser = getArgParser();
 
@@ -45,7 +44,7 @@ Map<int, Element> toDataset(Map jsMap) {
     if (map.length == 0) {
       values = [];
     } else {
-      vr = VR.strings[map["vr"]];
+      vr = VR.vrMap[map["vr"]];
       values = map["Value"];
       if (values == null) {
         values = map["InlineBinary"];

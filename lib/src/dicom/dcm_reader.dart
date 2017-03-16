@@ -6,9 +6,9 @@
 
 import 'dart:typed_data';
 
+import 'package:common/logger.dart';
 import 'package:core/dataset.dart';
 import 'package:core/element.dart';
-import 'package:core/log.dart';
 import 'package:dictionary/dictionary.dart';
 
 import '../../src/dataset_stack.dart';
@@ -50,7 +50,7 @@ typedef Element<E> VFReader<E>(int tag, VR<E> vr, int vfLength);
 ///   and the Integer, FLoat VFReaders return new [null].
 class DcmReader<E> extends ByteBuf {
   ///TODO: doc
-  static final Logger log = new Logger("DcmReader", logLevel: Level.debug1);
+  static final Logger log = new Logger("DcmReader", watermark: Severity.debug1);
 
   /// The root Dataset for the object being read.
   final RootDataset rootDS;
@@ -99,7 +99,7 @@ class DcmReader<E> extends ByteBuf {
     final bool isExplicitVR =
         rootDS.transferSyntax != TransferSyntax.kImplicitVRLittleEndian;
     log.debug('$rmm readRootDataset: isExplicitVR($isExplicitVR)');
-    while (isReadable)  {
+    while (isReadable) {
       log.debug('$rmm buf: $this');
       readElement(isExplicitVR: isExplicitVR);
     }
@@ -156,25 +156,28 @@ class DcmReader<E> extends ByteBuf {
     return code;
   }
 
-  VR _readExplicitVR(int code) {
+  VR _readExplicitVR() {
     //TODO: merge into one call _readExplicitVR()
     int vrCode = readUint16();
-    log.debug('$rmm _readExplicitVR: ${Tag.toDcm(code)} ${Uint16.hex(vrCode)}');
-    int vrIndex = VR.indexOf(vrCode);
-    assert(vrIndex != null);
-    return VR.vrs[vrIndex];
+    log.debug('$rmm _readExplicitVR( ${Uint16.hex(vrCode)})');
+    int vrIndex = VR.lookup(vrCode).index;
+    VR vr = VR.vrMap[vrIndex];
+    assert(vr != null);
+    return vr;
   }
 
+  //TODO: rewrite doc
   /// Reads a zero or more [Private Groups] and then read an returns
   /// a Public [Element].
   void readElement({bool isExplicitVR: true}) {
     log.down;
-    final int code = _peekTagCode();
+    final int code = _readTagCode();
     log.debug('$rbb readElement: _peekTag${Tag.toDcm(code)}');
     if (Tag.isPublicCode(code)) {
+      Tag tag = Tag.lookupPublicCode(code);
       log.down;
       log.debug('$rbb readPublicElement: isExplicitVR($isExplicitVR)');
-      Element e = _readPublicElement(isExplicitVR);
+      Element e = _readElement(tag, isExplicitVR);
       currentDS[e.tag.code] = e;
       log.debug('$ree readPublicElement: ${e.info}');
       log.up;
@@ -193,29 +196,27 @@ class DcmReader<E> extends ByteBuf {
     log.up;
   }
 
-  Element _readPublicElement(bool isExplicitVR) {
-    // Element Readers
+  /// Reads an [Element], either Public or Private. Does not inspect
+  /// [Tag]; rather, assumes it is correct, but reads [VR], if explicit,
+  /// [vfLength] and Value Field;
+  Element _readElement(Tag tag, bool isExplicitVR) {
     log.down;
-    log.debug('$rbb _readPublicElement:');
-    int code = _readTagCode();
-    log.debug('$rmm code=${Tag.toDcm(code)}');
-    Tag tag = Tag.lookupPublicCode(code);
-    assert(tag != null);
-    log.debug('$rmm _readPublicElement: ${tag.info}');
-    int vfLength;
+    log.debug('$rbb _readElement: ${tag.info}');
+
     VR vr;
+    int vfLength;
     if (isExplicitVR) {
-      vr = _readExplicitVR(code);
+      vr = _readExplicitVR();
+      if (vr != tag.vr) throw 'Bad VR($vr) != tag.vr(${tag.vr})';
       vfLength = (vr.hasShortVF) ? readUint16() : _readLongLength();
-      log.debug('$rmm _readExplicitVR: ${tag.dcm} $vr, vfLength($vfLength})');
+      log.debug('$rmm _readExplicitVR: ${tag.info} $vr, vfLength($vfLength})');
     } else {
       vr = tag.vr;
       vfLength = readUint32();
-      log.debug('$rmm _readImplicitVR: ${tag.dcm} $vr, vfLength($vfLength})');
+      log.debug('$rmm _readImplicitVR: $tag $vr, vfLength($vfLength})');
     }
-    log.debug('$rmm _readPublicElement: vfLength($vfLength)');
     Element e = _readValueField(tag, vfLength, vr.index);
-    log.debug('$ree _readPublicElement: ${e.info}');
+    log.debug('$ree _readElement: ${e.info}');
     log.up;
     return e;
   }
@@ -499,9 +500,8 @@ class DcmReader<E> extends ByteBuf {
     } else {
       lengthInBytes = vfLength;
       log.debug('$rmm vfLength($vfLength)');
-      values = (lengthInBytes == 0)
-          ? Uint8.emptyList
-          : readUint8View(lengthInBytes);
+      values =
+          (lengthInBytes == 0) ? Uint8.emptyList : readUint8View(lengthInBytes);
       log.debug('$rmm vfLength(${Int32.hex(vfLength)}), '
           'lengthInBytes($lengthInBytes)');
     }
@@ -525,7 +525,7 @@ class DcmReader<E> extends ByteBuf {
       IS e0 = currentDS[kNumberOfFrames];
       int nFrames = (e == null) ? 1 : e0.value;
       log.debug('$rmm nFrames: $nFrames, ts: $ts');
-      e = new OBPixelData.fromBytes(tag, vfLength, ts, nFrames, vf);
+      e = new OBPixelData.fromBytes(tag, vfLength, ts, vf, nFrames);
     } else {
       e = new OB(tag, vfLength, vf);
     }
@@ -545,7 +545,7 @@ class DcmReader<E> extends ByteBuf {
       IS e0 = currentDS[kNumberOfFrames];
       int nFrames = (e == null) ? 1 : e0.value;
       log.debug('$rmm nFrames: $nFrames, ts: $ts');
-      e = new OWPixelData.fromBytes(tag, vfLength, ts, nFrames, vf);
+      e = new OWPixelData.fromBytes(tag, vfLength, ts, vf, nFrames);
     } else {
       e = new OW.fromBytes(tag, vfLength, vf);
     }
@@ -584,21 +584,36 @@ class DcmReader<E> extends ByteBuf {
   ///
   ///     3. It is possible to encounter a Private Data Element that does
   ///     not have a creator. This should be recorded in [Dataset].exceptions.
+  ///
+  /// Note: designed to read just one PrivateGroup and return it.
   PrivateGroup _readPrivateGroup(int code, {bool isExplicitVR: true}) {
     assert(Group.isPrivate(Group.fromTag(code)),
         "Non Private Group ${Tag.toHex(code)}");
-    int group = Group.fromTag(code);
+
     log.down;
     log.debug('$rbb readPrivateGroup: code${Tag.toHex(code)}');
-
-    // Check for Private Data without Creator.
-    if (Tag.isPrivateDataCode(code))
-      _readInvalidPrivateData(group, code, isExplicitVR);
-
-    List<PrivateCreator> pCreators = _readPCreators(group, isExplicitVR);
-    _readAllPData(group, pCreators, isExplicitVR);
-    PrivateGroup pg = new PrivateGroup(group, pCreators);
+    int group = Group.fromTag(code);
+    int elt = Elt.fromTag(code);
+    PrivateGroup pg = new PrivateGroup(group);
     currentDS.privateGroups.add(pg);
+
+    int nextCode;
+    // Private Group Lengths are retired but still might be present.
+    if (elt == 0x0000) nextCode = _readPGLength(group, code, isExplicitVR, pg);
+
+    // There should be no [Element]s with [Elt] numbers between 0x01 and 0x0F.
+    // [Elt]s between 0x01 and 0x0F are illegal.
+    if (elt < 0x0010) nextCode = _readPIllegal(group, code, isExplicitVR, pg);
+
+    // [Elt]s between 0x10 and 0xFF are [PrivateCreator]s.
+
+    if (elt >= 0x10 && elt <= 0xFF)
+      nextCode = _readPCreators(group, code, isExplicitVR, pg);
+
+    // Read the PrivateData
+    if (Group.fromTag(nextCode) == group)
+      _readAllPData(group, nextCode, isExplicitVR, pg);
+
     log.debug('$ree readPrivateGroup-end $pg');
     log.up;
     return pg;
@@ -606,163 +621,177 @@ class DcmReader<E> extends ByteBuf {
 
   // Check for Private Data 'in the wild', i.e. invalid.
   // This group has no creators
-  PrivateGroup _readInvalidPrivateData(int group, int code, bool isExplicitVR) {
-    assert(Tag.isPrivateDataCode(code));
+  int _readPGLength(int group, int code, bool isExplicitVR, PrivateGroup pg) {
     log.down;
-    log.debug('_readInvalidPrivateData: ${Tag.toDcm(code)}');
-    var pData  = <PrivateData>[];
-
-    do {
-      log.down;
-      int code = _readTagCode();
-      log.debug('$rbb _readPrivateData: ${Tag.toDcm(code)}');
-      int vfLength;
-      VR vr;
-      if (isExplicitVR) {
-        vr = _readExplicitVR(code);
-        vfLength = (vr.hasShortVF) ? readUint16() : _readLongLength();
-        log.debug('$rmm _readExplicitVR: ${Tag.toDcm(code)} $vr, vfLength($vfLength})');
-      } else {
-        vr = VR.kUnknown;
-        vfLength = readUint32();
-        log.debug('$rmm _readImplicitVR: ${Tag.toDcm(code)} $vr, vfLength($vfLength})');
-      }
-      //Urgent: try to look this up.
-      //PrivateDataTag tag = pc.lookupData(code);
-      PrivateDataTag tag = new PrivateDataTag.unknown(code);
-      VR tagVR = tag.vr;
-      log.debug('$rmm _readPrivateData: ${Tag.toDcm(code)}, $tag, tagVR($tagVR');
-      Element e = _readValueField(tag, vfLength, tag.vr.index);
-      log.debug('$ree _readPrivateData e: $e');
-      PrivateData pd = new PrivateData(code, e);
-      currentDS.add(pd);
-      pData.add(pd);
-      log.debug('$ree _readPrivateData pd: ${pd.info}');
-      log.up;
-    } while (group == Group.fromTag(_peekTagCode()));
-
-    PrivateGroup pg = new BadPrivateGroup(group, pData);
-    currentDS.privateGroups.add(pg);
-    log.debug('_readInvalidPrivateData-end: $pg');
+    log.debug('$rbb _readPGroupLength: ${Tag.toDcm(code)}');
+    Tag tag = new PrivateTag.groupLength(code);
+    Element e = _readElement(tag, isExplicitVR);
+    log.debug('$rmm _readPGroupLength e: $e');
+    PrivateGroupLength pe = new PrivateGroupLength(tag, e);
+    currentDS.add(pe);
+    pg.gLength = pe;
+    log.debug('$ree _readPGroupLength pe: ${pe.info}');
     log.up;
-    return pg;
+    return _readTagCode();
+  }
+
+  // Reads 'Illegal' [PrivateElement]s in the range (gggg,0000) - (gggg,000F).
+  int _readPIllegal(int group, int code, bool isExplicitVR, PrivateGroup pg) {
+    log.down;
+    log.debug('$rbb _readPIllegal: ${Tag.toDcm(code)}');
+    int nextCode = code;
+    int g;
+    int elt;
+    while (g == group && elt < 0x10) {
+      log.debug('$rbb _readPIllegal: ${Tag.toDcm(code)}');
+      PrivateTag tag = new PrivateTag.illegal(code);
+      Element e = _readElement(tag, isExplicitVR);
+      log.debug('$rmm _readPIllegal e: $e');
+      PrivateElement pe = new PrivateIllegal(e);
+      pg.illegal.add(pe);
+      currentDS.add(pe);
+      log.debug('$ree _readPIllegal pe: ${pe.info}');
+      log.up;
+
+      // Check the next TagCode.
+      nextCode = _readTagCode();
+      g = Group.fromTag(nextCode);
+      elt = Elt.fromTag(nextCode);
+      log.debug('$rmm Next group(${Group.hex(g)}), Elt(${Group.hex(g)})');
+    }
+    return nextCode;
   }
 
   // Read the Private Group Creators.  There can be up to 240 creators
   // with [Elt]s from 0x10 to 0xFF. All the creators come before the
   // [PrivateData] [Element]s. So, read all the [PrivateCreator]s first.
+  // Returns when the first non-creator code is encountered.
+  // VR = LO or UN
+  // Returns the code of the next element.
   //TODO: this can be cleaned up and optimized if needed
-  List<PrivateCreator> _readPCreators(int group, bool isExplicitVR) {
-    var pCreators = <PrivateCreator>[];
+  int _readPCreators(int group, int code, bool isExplicitVR, PrivateGroup pg) {
+    //   pg.creators = <PrivateCreator>[];
     log.down;
-    log.debug('$rbb readPCreators');
+    log.debug('$rbb readAllPCreators');
+    int nextCode = code;
+    int g;
+    int elt;
     do {
       log.down;
-      int code = _peekTagCode();
-      log.debug('$rbb readPCreator: ${Tag.toDcm(code)}');
-      int g = Group.fromTag(code);
-      log.debug('$rmm PC group(${Group.hex(g)})');
-      if (g != group) log.error('$rmm Bad Group(${Group.hex(g)} '
-            'while reading ${Group.hex(group)}');
-      PrivateCreator e = _readPrivateCreator(isExplicitVR);
-      pCreators.add(e);
-      currentDS.add(e);
-      log.debug('$ree readPCreato-end: $e, ${e.info}');
+      log.debug('$rbb _readPCreator: ${Tag.toDcm(nextCode)}');
+      VR vr;
+      int vfLength;
+      // **** read PCreator
+      if (isExplicitVR) {
+        vr = _readExplicitVR();
+        if (vr != VR.kLO || vr != VR.kUN) throw 'Bad Private Creator VR($vr)';
+        vfLength = (vr.hasShortVF) ? readUint16() : _readLongLength();
+      } else {
+        log.debug(
+            '$rmm _readImplicitVR: ${Tag.toDcm(nextCode)} vfLength($vfLength})');
+        vr = VR.kUN;
+        vfLength = readUint32();
+      }
+      // Read the Value Field for the creator token.
+      List<String> values = _readDcmString(vfLength);
+      if (values.length != 1) throw 'InvalidCreatorToken($values)';
+      String token = values[0];
+      var tag = PrivateCreatorTag.lookup(token, vr);
+      LO e = new LO(tag, values);
+      var pc = new PrivateCreator(tag, e, vr == VR.kUN);
+      log.debug('$ree _readElement: ${pc.info}');
       log.up;
-    } while (Tag.isPrivateCreatorCode(_peekTagCode()));
-    log.debug('$ree readPCreators-end: $pCreators');
+      pg.add(new PrivateSubGroup(pc));
+      currentDS.add(pc);
+      // **** end read PCreator
+
+      nextCode = _readTagCode();
+      g = Group.fromTag(nextCode);
+      elt = Elt.fromTag(nextCode);
+      log.debug('$rmm Next group(${Group.hex(g)}), Elt(${Group.hex(g)})');
+    } while (g == group && (elt >= 0x10 && elt <= 0xFF));
+
+    log.debug('$ree readAllPCreators-end: $pg');
     log.up;
-    return pCreators;
+    return nextCode;
   }
 
-  Element   _readPrivateCreator(bool isExplicitVR) {
-    log.down;
-    int code = _readTagCode();
-    log.debug('$rbb _readPCreator:: ${Tag.toDcm(code)}');
-    int vfLength;
-    VR vr;
-    if (isExplicitVR) {
-      vr = _readExplicitVR(code);
-      vfLength = (vr.hasShortVF) ? readUint16() : _readLongLength();
-      log.debug('$rmm _readExplicitVR: ${Tag.toDcm(code)} $vr, vfLength($vfLength})');
-    } else {
-      vr = VR.kUnknown;
-      vfLength = readUint32();
-      log.debug('$rmm _readImplicitVR: ${Tag.toDcm(code)} $vr, vfLength($vfLength})');
-    }
-    List<String> values = _readDcmString(vfLength);
-    Element e = new PrivateCreator(code, vr, values);
-    log.debug('$ree _readPCreator:: ${e.info}');
-    log.up;
-    return e;
-  }
-
-  void _readAllPData(
-      int group, List<PrivateCreator> pCreators, bool isExplicitVR) {
+  void _readAllPData(int group, int code, bool isExplicitVR, PrivateGroup pg) {
     // Now read the [PrivateData] [Element]s for each creator, in order.
+    log.down;
     log.debug('$rbb readAllPData');
-    for (int i = 0; i < pCreators.length; i++) {
-      PrivateCreator pc = pCreators[i];
-      PrivateCreatorTag tag = pc.tag;
-      int base = tag.base;
-      int limit = tag.limit;
-      List<Element> pgData = [];
+    int nextCode = code;
+    int i = 0;
 
-      log.down;
-      log.debug('$rbb readPData: base(${Elt.hex(base)}), '
-          'limit(${Elt.hex(limit)})');
-
-      int code = _peekTagCode();
-      do {
-        log.down;
-        log.debug('$rbb readPD: code(${Tag.toDcm(code)})');
-        Element e = _readPrivateData(isExplicitVR, pc);
-        log.debug('$rmm readPD: ${e.info})');
-        pc.add(e);
-        currentDS.add(e);
-        log.debug('$rmm readPD: ${e.info}');
-        log.up;
-        code = _peekTagCode();
-        bool valid = Tag.isValidPrivateDataTag(code, pc.code);
-        log.debug('$rmm ${Tag.toDcm(code)}, pc${Tag.toDcm(pc.code)} $valid');
-      } while (Tag.isValidPrivateDataTag(code, pc.code));
-      log.debug('$ree readAllPDataset end: ${pgData.length} data elements');
-      log.up;
+    while (pg.inGroup(nextCode)) {
+      PrivateSubGroup sg = pg[i];
+      if (sg.inSubgroup(nextCode)) {
+        i++;
+        nextCode = _readPDSubgroup(code, isExplicitVR, sg);
+      } else {
+        sg = new PrivateSubGroup(PrivateCreator.kNotPresent);
+        nextCode = _readPDSubgroup(code, isExplicitVR, sg);
+      }
     }
-    //Urgent: what if there are other private elements without creators.
     log.debug('$ree readAllPData-end');
     log.up;
   }
 
-  Element   _readPrivateData(bool isExplicitVR, PrivateCreator pc) {
+  int _readPDSubgroup(int code, bool isExplicitVR, PrivateSubGroup sg) {
+    int nextCode = code;
+    //?? while (pcTag.isValidDataCode(nextCode)) {
+    PrivateCreator pc = sg.creator;
+    PrivateCreatorTag pcTag = pc.tag;
+    while (pc.inSubgroup(nextCode)) {
+      log.down;
+      log.debug('$rbb readPData: base(${Elt.hex(pc.base)}), '
+          'limit(${Elt.hex(pc.limit)})');
+
+      PrivateDataTag dTag = pcTag.lookupData(code);
+      Element e = _readElement(dTag, isExplicitVR);
+      pc.add(e);
+      currentDS.add(e);
+
+      log.debug('$rmm readPD: ${e.info})');
+      log.up;
+      nextCode = _peekTagCode();
+    }
+    return nextCode;
+  }
+
+  /* Flush if not needed.
+  Element _readPrivateData(bool isExplicitVR, PrivateCreator pc) {
     log.down;
     int code = _readTagCode();
     log.debug('$rbb _readPrivateData: ${Tag.toDcm(code)} $pc');
     int vfLength;
     VR vr;
     if (isExplicitVR) {
-      vr = _readExplicitVR(code);
+      vr = _readExplicitVR();
       vfLength = (vr.hasShortVF) ? readUint16() : _readLongLength();
-      log.debug('$rmm _readExplicitVR: ${Tag.toDcm(code)} $vr, vfLength($vfLength})');
+      log.debug(
+          '$rmm _readExplicitVR: ${Tag.toDcm(code)} $vr, vfLength($vfLength})');
     } else {
-      vr = VR.kUnknown;
+      vr = VR.kUN;
       vfLength = readUint32();
-      log.debug('$rmm _readImplicitVR: ${Tag.toDcm(code)} $vr, vfLength($vfLength})');
+      log.debug(
+          '$rmm _readImplicitVR: ${Tag.toDcm(code)} $vr, vfLength($vfLength})');
     }
-    PrivateDataTag tag = pc.lookupData(code);
-    log.debug('$rmm _readPrivateData: $tag');
-    if (tag == null) tag = new PrivateDataTag.unknown(code, pc.token);
-    assert(tag != null);
+    //Urgent: there are two cases here known and unknown privateTag.
+    PrivateData pd = pc.lookupData(code);
+    log.debug('$rmm _readPrivateData: $pd');
+    Tag tag = pd.tag;
+    assert(pd.tag != null);
     VR tagVR = tag.vr;
     log.debug('$rmm _readPrivateData: ${Tag.toDcm(code)}, $tag, tagVR($tagVR');
     Element e = _readValueField(tag, vfLength, tag.vr.index);
     log.debug('$ree _readPrivateData code: ${Tag.toDcm(code)}, e: $e');
-    PrivateData pd = new PrivateData(code, e);
+  //  PrivateData pd = new PrivateData(code, e);
     log.debug('$ree _readPrivateData pd: ${pd.info}');
     log.up;
     return pd;
   }
-
+*/
   // Returns the position of the next valid Public or Private tag.
   //TODO: eventually to be used in trying to read corrupted studies.
   /*

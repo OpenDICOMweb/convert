@@ -35,7 +35,7 @@ class JsonCodec extends Codec<Object, String> {
 
   //TODO: add correct types to key and value
   @override
-  dynamic decode(String source, {Object reviver(key, value)}) {
+  dynamic decode(String source, {Object reviver(dynamic key, dynamic value)}) {
     if (reviver == null) reviver = _reviver;
     if (reviver == null) return decoder.convert(source);
     return new JsonDecoder(reviver).convert(source);

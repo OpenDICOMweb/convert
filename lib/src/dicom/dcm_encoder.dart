@@ -20,7 +20,7 @@ import 'dcm_writer.dart';
 class DcmEncoder extends DcmWriter {
   //TODO: make the buffer grow and shrink adaptively.
   static const int defaultLengthInBytes = 10 * kMB;
-  static final Logger log = new Logger("DcmEncoder", logLevel: Level.debug);
+  static final Logger log = new Logger("DcmEncoder", watermark: Severity.debug);
   final String filePath;
 
   /// Creates a new [DcmEncoder]
@@ -38,7 +38,7 @@ class DcmEncoder extends DcmWriter {
   //TODO: make this a Tr?ansferSyntax
   //TODO: where used
   //static const TransferSyntax littleEndian =
-   //   TransferSyntax.kImplicitVRLittleEndian;
+  //   TransferSyntax.kImplicitVRLittleEndian;
 
   //TODO: only handles SOP Instances for now
   void writeInstance(Instance instance) {
