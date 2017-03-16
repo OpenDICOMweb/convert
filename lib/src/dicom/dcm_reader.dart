@@ -160,10 +160,12 @@ class DcmReader<E> extends ByteBuf {
     //TODO: merge into one call _readExplicitVR()
     int vrCode = readUint16();
     log.debug('$rmm _readExplicitVR( ${Uint16.hex(vrCode)})');
-    int vrIndex = VR.lookup(vrCode).index;
-    //log.debug('$rmm _readExplicitVR:index($vrIndex)');
-    VR vr = VR.vrList[vrIndex];
+    VR vr = VR.lookup(vrCode);
+    log.debug('$rmm _readExplicitVR: $vr');
+    //VR vr = VR.vrList[vrIndex];
     log.debug('$rmm _readExplicitVR: VR($vr)');
+    if (vr == null) _debugReader(null,
+        'Invalid null VR: code(${Uint16.hex(vrCode)})');
     assert(vr != null);
     return vr;
   }
@@ -209,14 +211,25 @@ class DcmReader<E> extends ByteBuf {
     int vfLength;
     if (isExplicitVR) {
       vr = _readExplicitVR();
+      log.debug('$rmm _readElement: vr($vr), tag.vr(${tag.vr})');
       if (vr != tag.vr) {
-        if (tag != Tag.kPixelData || (vr != VR.kOB && vr != VR.kOW))
-            throw 'Bad VR($vr) != tag.vr(${tag.vr})';
+        if (vr == VR.kUN) {
+          vr = tag.vr;
+        } else if (tag != Tag.kPixelData ||
+            (vr != VR.kOB && vr != VR.kOW) && vr != VR.kUN)
+          throw 'Bad VR($vr) != tag.vr(${tag.vr})';
       }
       vfLength = (vr.hasShortVF) ? readUint16() : _readLongLength();
       log.debug('$rmm _readExplicitVR: ${tag.info} $vr, vfLength($vfLength})');
     } else {
       vr = tag.vr;
+      if (vr != tag.vr) {
+        if (tag == Tag.kPixelData) {
+          vr = VR.kUN;
+        } else {
+          throw 'Bad VR($vr) != tag.vr(${tag.vr})';
+        }
+      }
       vfLength = readUint32();
       log.debug('$rmm _readImplicitVR: $tag $vr, vfLength($vfLength})');
     }
@@ -241,7 +254,7 @@ class DcmReader<E> extends ByteBuf {
     /// The order of the VRs in this [List] MUST correspond to the [index]
     /// in the definitions of [VR].  Note: the [index]es start at 1, so
     /// in this [List] the 0th dictionary is [_debugReader].
-    /*
+    /* Flush when working
     final List<Function> _readers = <Function>[
       _debugReader,
       _readSQ, _readSS, _readSL, _readOB, _readUN, _readOW,

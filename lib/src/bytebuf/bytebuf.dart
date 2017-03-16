@@ -999,7 +999,7 @@ class ByteBuf {
 
   String getAsciiString(int index, int length) {
     if (length == 0) return "";
-     return ASCII.decode(getStringBytes(index, length), allowInvalid: true);
+    return ASCII.decode(getStringBytes(index, length), allowInvalid: true);
   }
 
   String readAsciiString(int length) {
