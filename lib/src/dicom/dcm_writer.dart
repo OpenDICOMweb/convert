@@ -271,6 +271,7 @@ class DcmWriter extends ByteBuf {
     writeUint8List(UTF8.encode(s));
     return true;
   }
+
   /// Convert a [List] of [String]s into [Uint8List] with trailing pad character if
   /// necessary, then writes the Value Length Field followed by the Value Field.
   String _toDcmString(StringBase e, padChar) {
@@ -402,8 +403,7 @@ class DcmWriter extends ByteBuf {
       // log.debug('$mmm $writeIndex: wrote Sequence Delimter');
     } else {
       writeUint16List(e.values);
-      log.debug(
-          '$wee writeOW: Length(${e.values.length}), LengthInBytes(${e
+      log.debug('$wee writeOW: Length(${e.values.length}), LengthInBytes(${e
               .bytes.lengthInBytes})');
     }
     log.up;

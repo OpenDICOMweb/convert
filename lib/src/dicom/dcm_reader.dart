@@ -161,7 +161,7 @@ class DcmReader<E> extends ByteBuf {
     int vrCode = readUint16();
     log.debug('$rmm _readExplicitVR( ${Uint16.hex(vrCode)})');
     int vrIndex = VR.lookup(vrCode).index;
-    VR vr =  VR.vrMap[vrIndex];
+    VR vr = VR.vrMap[vrIndex];
     assert(vr != null);
     return vr;
   }
@@ -587,7 +587,6 @@ class DcmReader<E> extends ByteBuf {
   ///
   /// Note: designed to read just one PrivateGroup and return it.
   PrivateGroup _readPrivateGroup(int code, {bool isExplicitVR: true}) {
-
     assert(Group.isPrivate(Group.fromTag(code)),
         "Non Private Group ${Tag.toHex(code)}");
 
@@ -600,20 +599,18 @@ class DcmReader<E> extends ByteBuf {
 
     int nextCode;
     // Private Group Lengths are retired but still might be present.
-    if (elt == 0x0000)
-      nextCode = _readPGLength(group, code, isExplicitVR, pg);
+    if (elt == 0x0000) nextCode = _readPGLength(group, code, isExplicitVR, pg);
 
     // There should be no [Element]s with [Elt] numbers between 0x01 and 0x0F.
     // [Elt]s between 0x01 and 0x0F are illegal.
-    if (elt < 0x0010)
-      nextCode = _readPIllegal(group, code, isExplicitVR, pg);
+    if (elt < 0x0010) nextCode = _readPIllegal(group, code, isExplicitVR, pg);
 
     // [Elt]s between 0x10 and 0xFF are [PrivateCreator]s.
 
     if (elt >= 0x10 && elt <= 0xFF)
       nextCode = _readPCreators(group, code, isExplicitVR, pg);
 
-      // Read the PrivateData
+    // Read the PrivateData
     if (Group.fromTag(nextCode) == group)
       _readAllPData(group, nextCode, isExplicitVR, pg);
 
@@ -673,7 +670,7 @@ class DcmReader<E> extends ByteBuf {
   // Returns the code of the next element.
   //TODO: this can be cleaned up and optimized if needed
   int _readPCreators(int group, int code, bool isExplicitVR, PrivateGroup pg) {
- //   pg.creators = <PrivateCreator>[];
+    //   pg.creators = <PrivateCreator>[];
     log.down;
     log.debug('$rbb readAllPCreators');
     int nextCode = code;
