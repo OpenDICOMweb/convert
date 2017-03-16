@@ -111,7 +111,7 @@ class DcmReader<E> extends ByteBuf {
 
   bool _hasPrefix() {
     skipReadBytes(128);
-    final String prefix = readString(4);
+    final String prefix = readAsciiString(4);
     return (prefix == "DICM");
   }
 
@@ -161,7 +161,9 @@ class DcmReader<E> extends ByteBuf {
     int vrCode = readUint16();
     log.debug('$rmm _readExplicitVR( ${Uint16.hex(vrCode)})');
     int vrIndex = VR.lookup(vrCode).index;
-    VR vr = VR.vrMap[vrIndex];
+    //log.debug('$rmm _readExplicitVR:index($vrIndex)');
+    VR vr = VR.vrList[vrIndex];
+    log.debug('$rmm _readExplicitVR: VR($vr)');
     assert(vr != null);
     return vr;
   }
@@ -207,7 +209,10 @@ class DcmReader<E> extends ByteBuf {
     int vfLength;
     if (isExplicitVR) {
       vr = _readExplicitVR();
-      if (vr != tag.vr) throw 'Bad VR($vr) != tag.vr(${tag.vr})';
+      if (vr != tag.vr) {
+        if (tag != Tag.kPixelData || (vr != VR.kOB && vr != VR.kOW))
+            throw 'Bad VR($vr) != tag.vr(${tag.vr})';
+      }
       vfLength = (vr.hasShortVF) ? readUint16() : _readLongLength();
       log.debug('$rmm _readExplicitVR: ${tag.info} $vr, vfLength($vfLength})');
     } else {
@@ -236,6 +241,7 @@ class DcmReader<E> extends ByteBuf {
     /// The order of the VRs in this [List] MUST correspond to the [index]
     /// in the definitions of [VR].  Note: the [index]es start at 1, so
     /// in this [List] the 0th dictionary is [_debugReader].
+    /*
     final List<Function> _readers = <Function>[
       _debugReader,
       _readSQ, _readSS, _readSL, _readOB, _readUN, _readOW,
@@ -245,6 +251,17 @@ class DcmReader<E> extends ByteBuf {
       _readDA, _readDT, _readTM, _readPN, _readUI, _readUR,
       _readAS, _debugReader // VR.kBR is not implemented.
       // preserve formatting
+    ];
+    */
+    final List<Function> _readers = <Function>[
+      _debugReader,
+      _readAE, _readAS, _readAT, _debugReader, _readCS,
+      _readDA, _readDS, _readDT, _readFD, _readFL,
+      _readIS, _readLO, _readLT, _readOB, _readOD,
+      _readOF, _readOL, _readOW, _readPN, _readSH,
+      _readSL, _readSQ, _readSS, _readST, _readTM,
+      _readUC, _readUI, _readUL, _readUN, _readUR,
+      _readUS, _readUT // stop reformat
     ];
 
     log.down;
@@ -262,37 +279,55 @@ class DcmReader<E> extends ByteBuf {
   //**** VR Readers ****
 
   //**** Readers of [String] [Element]s
-  AE _readAE(Tag tag, int vfLength) => new AE(tag, _readDcmString(vfLength));
-  AS _readAS(Tag tag, int vfLength) => new AS(tag, _readDcmString(vfLength));
-  CS _readCS(Tag tag, int vfLength) => new CS(tag, _readDcmString(vfLength));
-  DA _readDA(Tag tag, int vfLength) => new DA(tag, _readDcmString(vfLength));
-  DS _readDS(Tag tag, int vfLength) => new DS(tag, _readDcmString(vfLength));
-  DT _readDT(Tag tag, int vfLength) => new DT(tag, _readDcmString(vfLength));
-  IS _readIS(Tag tag, int vfLength) => new IS(tag, _readDcmString(vfLength));
-  LO _readLO(Tag tag, int vfLength) => new LO(tag, _readDcmString(vfLength));
-  LT _readLT(Tag tag, int vfLength) => new LT(tag, _readDcmString(vfLength));
-  PN _readPN(Tag tag, int vfLength) => new PN(tag, _readDcmString(vfLength));
-  SH _readSH(Tag tag, int vfLength) => new SH(tag, _readDcmString(vfLength));
-  ST _readST(Tag tag, int vfLength) => new ST(tag, _readDcmString(vfLength));
-  TM _readTM(Tag tag, int vfLength) => new TM(tag, _readDcmString(vfLength));
-  UC _readUC(Tag tag, int vfLength) => new UC(tag, _readDcmString(vfLength));
+  AE _readAE(Tag tag, int vfLength) => new AE(tag, _readDcmAsciiVF(vfLength));
+  AS _readAS(Tag tag, int vfLength) => new AS(tag, _readDcmAsciiVF(vfLength));
+  CS _readCS(Tag tag, int vfLength) => new CS(tag, _readDcmAsciiVF(vfLength));
+  DA _readDA(Tag tag, int vfLength) => new DA(tag, _readDcmAsciiVF(vfLength));
+  DS _readDS(Tag tag, int vfLength) => new DS(tag, _readDcmAsciiVF(vfLength));
+  DT _readDT(Tag tag, int vfLength) => new DT(tag, _readDcmAsciiVF(vfLength));
+  IS _readIS(Tag tag, int vfLength) => new IS(tag, _readDcmAsciiVF(vfLength));
+  LO _readLO(Tag tag, int vfLength) => new LO(tag, _readDcmUtf8VF(vfLength));
+  LT _readLT(Tag tag, int vfLength) => new LT(tag, _readDcmUtf8VF(vfLength));
+  PN _readPN(Tag tag, int vfLength) => new PN(tag, _readDcmUtf8VF(vfLength));
+  SH _readSH(Tag tag, int vfLength) => new SH(tag, _readDcmUtf8VF(vfLength));
+  ST _readST(Tag tag, int vfLength) => new ST(tag, _readDcmUtf8VF(vfLength));
+  TM _readTM(Tag tag, int vfLength) => new TM(tag, _readDcmAsciiVF(vfLength));
+  UC _readUC(Tag tag, int vfLength) => new UC(tag, _readDcmUtf8VF(vfLength));
   UI _readUI(Tag tag, int vfLength) =>
-      new UI(tag, _readDcmString(vfLength, kNull));
-  UR _readUR(Tag tag, int vfLength) => new UR(tag, _readDcmString(vfLength));
-  UT _readUT(Tag tag, int vfLength) => new UT(tag, _readDcmString(vfLength));
+      new UI(tag, _readDcmAsciiVF(vfLength, kNull));
+  UR _readUR(Tag tag, int vfLength) => new UR(tag, _readDcmUtf8VF(vfLength));
+  UT _readUT(Tag tag, int vfLength) => new UT(tag, _readDcmUtf8VF(vfLength));
 
-  /// Returns a [String].  If [padChar] is [kSpace] just returns the [String]
+  static const List<String> _emptyStringList = const <String>[];
+
+  /// Returns a [List[String].  If [padChar] is [kSpace] just returns the
+  /// [String]
   /// if [padChar] is [kNull], it is removed by returning a [String] with
   /// [length - 1].
   /// Note: This calls [readString] in [ByteBuf].
-  List<String> _readDcmString(int vfLength, [int padChar = kSpace]) {
-    if (vfLength == 0) return const <String>[];
-    if (vfLength.isOdd || vfLength == kUndefinedLength) {
-      _debugReader(null, null, vfLength, "bad vfLength");
-      log.fatal(
-          '_readDcmStringError: vfLength=$vfLength(${Int32.hex(vfLength)})');
-    }
-    String s = readString(vfLength);
+  List<String> _readDcmAsciiVF(vfLength, [int padChar = kSpace]) {
+    if (vfLength == 0) return _emptyStringList;
+    _checkStringVF(vfLength);
+    return _dicomStringToList(readUtf8String(vfLength), padChar);
+  }
+
+  List<String> _readDcmUtf8VF(vfLength, [int padChar = kSpace]) {
+    if (vfLength == 0) return _emptyStringList;
+    _checkStringVF(vfLength);
+    return _dicomStringToList(readUtf8String(vfLength), padChar);
+  }
+
+  void _checkStringVF(int vfLength) {
+    if (vfLength.isOdd || vfLength == kUndefinedLength)
+      _debugReader(null, null, vfLength,
+          "bad vfLength:$vfLength(${Int32.hex(vfLength)})");
+  }
+
+  //Urgent: How to get the warning to the Dataset
+  /// Convert a DICOM Value Field [String] to [List] [String].
+  /// No validation, just removes padding.
+  List<String> _dicomStringToList(String s, padChar) {
+    if (s.length.isOdd) throw '_dicomStringToList oddLength(${s.length}: "$s"';
     int last = s.codeUnitAt(s.length - 1);
     if (last == kNull || last == kSpace) {
       //TODO: move to Warning
@@ -527,7 +562,7 @@ class DcmReader<E> extends ByteBuf {
       log.debug('$rmm nFrames: $nFrames, ts: $ts');
       e = new OBPixelData.fromBytes(tag, vfLength, ts, vf, nFrames);
     } else {
-      e = new OB(tag, vfLength, vf);
+      e = new OB.fromBytes(tag, vfLength, vf);
     }
     log.debug('$ree readOB ${e.info}');
     log.up;
@@ -693,7 +728,7 @@ class DcmReader<E> extends ByteBuf {
         vfLength = readUint32();
       }
       // Read the Value Field for the creator token.
-      List<String> values = _readDcmString(vfLength);
+      List<String> values = _readDcmUtf8VF(vfLength);
       if (values.length != 1) throw 'InvalidCreatorToken($values)';
       String token = values[0];
       var tag = PrivateCreatorTag.lookup(token, vr);

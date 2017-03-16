@@ -997,21 +997,38 @@ class ByteBuf {
   //TODO: add a [Charset charset = UTF8] argument to String methods.
   //      See dart encode encoding.
 
-  /// Returns a [String] by decoding the bytes from [offset]
-  /// to [length] as a UTF-8 string.
-  String getString(int index, int length) {
+  String getAsciiString(int index, int length) {
     if (length == 0) return "";
+     return ASCII.decode(getStringBytes(index, length), allowInvalid: true);
+  }
+
+  String readAsciiString(int length) {
+    var s = getAsciiString(_readIndex, length);
+    _readIndex += length;
+    return s;
+  }
+
+  String getUtf8String(int index, int length) {
+    if (length == 0) return "";
+    return UTF8.decode(getStringBytes(index, length), allowMalformed: true);
+  }
+
+  String readUtf8String(int length) {
+    var s = getUtf8String(_readIndex, length);
+    _readIndex += length;
+    return s;
+  }
+
+  /// Returns a [Uint] by decoding the bytes from [offset]
+  /// to [length] as a UTF-8 string.
+  Uint8List getStringBytes(int index, int length) {
     _checkReadIndex(index, length);
-    return UTF8.decode(getUint8List(index, length), allowMalformed: false);
+    return getUint8List(index, length);
   }
 
   /// Returns a [String] by decoding the bytes from [readIndex]
   /// to [length] as a UTF-8 string, and advances the [readIndex] by [length].
-  String readString(int length) {
-    var s = getString(_readIndex, length);
-    _readIndex += length;
-    return s;
-  }
+  String readString(int length) => readUtf8String(length);
 
   /// A canonical value for empty (zero length) StringBytes.
   static final _emptyStringBytes = new Uint8List(0);
