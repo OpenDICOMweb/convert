@@ -100,10 +100,10 @@ class JsonEncoder extends ByteBuf {
   ByteBuf writeValues(Element e, Formatter fmt) {
     String s;
     //  if ((e is OB) || (e is OD) || (e is OF) || (e is OL) || (e is OW) || (e is UN)) {
-    if ((e is IntBase) || (e is Float)) {
+    if ((e is IntBase) || (e is FloatBase)) {
       s = e.base64FromBytes(e.bytes);
     } else {
-      s = e.valuesString;
+      s = e.asString;
     }
     return writeString(s);
   }

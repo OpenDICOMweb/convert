@@ -44,7 +44,7 @@ Map<int, Element> toDataset(Map jsMap) {
     if (map.length == 0) {
       values = [];
     } else {
-      vr = VR.strings[map["vr"]];
+      vr = VR.vrMap[map["vr"]];
       values = map["Value"];
       if (values == null) {
         values = map["InlineBinary"];

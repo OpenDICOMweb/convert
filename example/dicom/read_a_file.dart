@@ -7,6 +7,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:common/logger.dart';
 import 'package:convertX/convert.dart';
 import 'package:core/core.dart';
 
@@ -26,7 +27,7 @@ String path5 =
 String outPath = 'C:/odw/sdk/io/example/output/out.dcm';
 
 void main(List<String> args) {
-  final log = new Logger("read_file", logLevel: Level.debug);
+  final log = new Logger("read_file", watermark: Severity.debug);
   File file = new File(path4);
   Uint8List bytes = file.readAsBytesSync();
   Instance instance = DcmDecoder.decode(new DSSource(bytes, file.path));

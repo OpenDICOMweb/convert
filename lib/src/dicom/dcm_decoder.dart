@@ -15,7 +15,7 @@ import 'dcm_reader.dart';
 /// [DcmDecoder] reads DICOM SOP Instances and returns a [RootDataset].
 /// TODO: finish doc
 class DcmDecoder extends DcmReader {
-  static final Logger log = new Logger("DcmDecoder", logLevel: Level.info);
+  static final Logger log = new Logger("DcmDecoder", watermark: Severity.info);
   //TODO: add ability to keep non-zero preamble
   Uint8List _preamble;
   String _prefix;

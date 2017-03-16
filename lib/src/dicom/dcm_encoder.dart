@@ -20,7 +20,7 @@ import 'dcm_writer.dart';
 class DcmEncoder extends DcmWriter {
   //TODO: make the buffer grow and shrink adaptively.
   static const int defaultLengthInBytes = 10 * kMB;
-  static final Logger log = new Logger("DcmEncoder", logLevel: Level.debug);
+  static final Logger log = new Logger("DcmEncoder", watermark: Severity.debug);
   final String filePath;
 
   /// Creates a new [DcmEncoder]

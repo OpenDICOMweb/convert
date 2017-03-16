@@ -7,9 +7,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:common/logger.dart';
 import 'package:core/dataset.dart';
 import 'package:core/element.dart';
-import 'package:core/log.dart';
+
 import 'package:dictionary/dictionary.dart';
 
 import '../bytebuf/bytebuf.dart';
@@ -48,7 +49,7 @@ typedef dynamic VFWriter<E>(Element<E> e);
 class DcmWriter extends ByteBuf {
   //TODO: make the buffer grow and shrink adaptively.
   /// The log for debug output.
-  static final Logger log = new Logger("DcmWriter", logLevel: Level.debug);
+  static final Logger log = new Logger("DcmWriter", watermark: Severity.debug);
 
   /// If [true] the writer should [throw] when an [Error] occurs.
   bool breakOnError = true;
@@ -156,10 +157,10 @@ class DcmWriter extends ByteBuf {
     } else {
       _writeTag(e.tag);
       // write VR
-      writeUint16(e.vr.code16Bit);
+      writeUint16(e.vr.code);
       // Write Value Field length.
-      log.debug('$wmm e.lengthInBytes: ${e.lengthInBytes}, ${e.info}');
-      int lengthIB = e.lengthInBytes;
+      log.debug('$wmm e.lengthInBytes: ${e.bytes.lengthInBytes}, ${e.info}');
+      int lengthIB = e.bytes.lengthInBytes;
       log.debug('$wmm  _writeExplicit: lengthInBytes($lengthIB)');
       (e.vr.hasShortVF) ? writeUint16(lengthIB) : _writeLongLength(lengthIB);
       _write(e);
@@ -188,7 +189,7 @@ class DcmWriter extends ByteBuf {
     Element e0 = _maybeGetElement(e);
     _writeTag(e0.tag);
     int vfLength =
-        (e0.hadUndefinedLength) ? kUndefinedLength : e0.lengthInBytes;
+        (e0.hadUndefinedLength) ? kUndefinedLength : e0.bytes.lengthInBytes;
     writeUint32(vfLength);
     _write(e0);
     log.debug('$wee _writeImplicit-end');
@@ -240,32 +241,42 @@ class DcmWriter extends ByteBuf {
   }
 
   //**** VR writers ****
-  bool _writeAE(AE e) => _writeDcmString(e);
-  bool _writeAS(AS e) => _writeDcmString(e);
-  bool _writeCS(CS e) => _writeDcmString(e);
-  bool _writeDA(DA e) => _writeDcmString(e);
-  bool _writeDS(DS e) => _writeDcmString(e);
-  bool _writeDT(DT e) => _writeDcmString(e);
-  bool _writeIS(IS e) => _writeDcmString(e);
-  bool _writeLO(LO e) => _writeDcmString(e);
-  bool _writeLT(LT e) => _writeDcmString(e);
-  bool _writePN(PN e) => _writeDcmString(e);
-  bool _writeSH(SH e) => _writeDcmString(e);
-  bool _writeST(ST e) => _writeDcmString(e);
-  bool _writeTM(TM e) => _writeDcmString(e);
-  bool _writeUC(UC e) => _writeDcmString(e);
-  bool _writeUI(UI e) => _writeDcmString(e, uidPaddingChar);
-  bool _writeUR(UR e) => _writeDcmString(e);
-  bool _writeUT(UT e) => _writeDcmString(e);
+  bool _writeAE(AE e) => _writeDcmAsciiString(e);
+  bool _writeAS(AS e) => _writeDcmAsciiString(e);
+  bool _writeCS(CS e) => _writeDcmAsciiString(e);
+  bool _writeDA(DA e) => _writeDcmAsciiString(e);
+  bool _writeDS(DS e) => _writeDcmAsciiString(e);
+  bool _writeDT(DT e) => _writeDcmAsciiString(e);
+  bool _writeIS(IS e) => _writeDcmAsciiString(e);
+  bool _writeLO(LO e) => _writeDcmUtf8String(e);
+  bool _writeLT(LT e) => _writeDcmUtf8String(e);
+  bool _writePN(PN e) => _writeDcmUtf8String(e);
+  bool _writeSH(SH e) => _writeDcmUtf8String(e);
+  bool _writeST(ST e) => _writeDcmUtf8String(e);
+  bool _writeTM(TM e) => _writeDcmAsciiString(e);
+  bool _writeUC(UC e) => _writeDcmUtf8String(e);
+  bool _writeUI(UI e) => _writeDcmAsciiString(e, uidPaddingChar);
+  bool _writeUR(UR e) => _writeDcmUtf8String(e);
+  bool _writeUT(UT e) => _writeDcmUtf8String(e);
 
-  /// Convert a [List] of [String]s into [Uint8List] with trailing pad character if
-  /// necessary, then writes the Value Length Field followed by the Value Field.
-  bool _writeDcmString(StringBase e, [String padChar = " "]) {
-    String s = e.dcm;
-    if (s.length == 0) return false;
-    if (s.length.isOdd) s += padChar;
+  bool _writeDcmAsciiString(StringBase e, [String padChar = " "]) {
+    if (e.values.length == 0) return false;
+    String s = _toDcmString(e, padChar);
+    writeUint8List(ASCII.encode(s));
+    return true;
+  }
+
+  bool _writeDcmUtf8String(StringBase e, [String padChar = " "]) {
+    String s = _toDcmString(e, padChar);
     writeUint8List(UTF8.encode(s));
     return true;
+  }
+  /// Convert a [List] of [String]s into [Uint8List] with trailing pad character if
+  /// necessary, then writes the Value Length Field followed by the Value Field.
+  String _toDcmString(StringBase e, padChar) {
+    String s = e.values.join('\\');
+    if (s.length.isOdd) s += padChar;
+    return s;
   }
 
   //**** Writers for 2-byte [Element]s.
@@ -372,7 +383,7 @@ class DcmWriter extends ByteBuf {
       log.debug('$wmm WriteOB: ${e.info}');
       writeUint8List(e.values);
     }
-    log.debug('$wee writeOB, lengthInBytes(${e.lengthInBytes})');
+    log.debug('$wee writeOB, lengthInBytes(${e.bytes.lengthInBytes})');
     log.up;
   }
 
@@ -392,7 +403,8 @@ class DcmWriter extends ByteBuf {
     } else {
       writeUint16List(e.values);
       log.debug(
-          '$wee writeOW: Length(${e.values.length}), LengthInBytes(${e.lengthInBytes})');
+          '$wee writeOW: Length(${e.values.length}), LengthInBytes(${e
+              .bytes.lengthInBytes})');
     }
     log.up;
   }
@@ -413,7 +425,7 @@ class DcmWriter extends ByteBuf {
     } else {
       writeUint8List(e.values);
     }
-    log.debug('$wee writeUN: LengthInBytes(${e.lengthInBytes}))');
+    log.debug('$wee writeUN: LengthInBytes(${e.bytes.lengthInBytes}))');
     log.up;
   }
 
