@@ -6,7 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:common/logger.dart';
+import 'package:common/common.dart';
 import 'package:core/dataset.dart';
 import 'package:core/element.dart';
 import 'package:dictionary/dictionary.dart';
@@ -381,7 +381,7 @@ class DcmReader<E> extends ByteBuf {
   AT _readAT(Tag tag, int vfLength) {
     //Special case because [tag]s have to be read specially
     Uint32List list = new Uint32List(_bytesToLongs(vfLength));
-    for (int i = 0; i < vfLength; i++) list[i] = _readTagCode();
+    for (int i = 0; i < list.length; i++) list[i] = _readTagCode();
     return new AT.fromBytes(tag, list.buffer.asUint8List());
   }
 
@@ -732,7 +732,8 @@ class DcmReader<E> extends ByteBuf {
       // **** read PCreator
       if (isExplicitVR) {
         vr = _readExplicitVR();
-        if (vr != VR.kLO || vr != VR.kUN) throw 'Bad Private Creator VR($vr)';
+        log.debug('$rmm _readPCreator: $vr');
+        if (vr != VR.kLO && vr != VR.kUN) throw 'Bad Private Creator VR($vr)';
         vfLength = (vr.hasShortVF) ? readUint16() : _readLongLength();
       } else {
         log.debug(
