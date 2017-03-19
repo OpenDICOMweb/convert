@@ -750,7 +750,9 @@ class DcmReader<E> extends ByteBuf {
       var pc = new PrivateCreator(tag, e, vr == VR.kUN);
       log.debug('$ree _readElement: ${pc.info}');
       log.up;
-      pg.add(new PrivateSubGroup(pc));
+      var psg = new PrivateSubGroup(pc);
+      log.debug('$rmm _readElement: $psg');
+      pg.add(psg);
       currentDS.add(pc);
       // **** end read PCreator
 
