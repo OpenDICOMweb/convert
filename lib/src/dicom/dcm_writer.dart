@@ -8,9 +8,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:common/logger.dart';
+import 'package:common/number.dart';
 import 'package:core/dataset.dart';
 import 'package:core/element.dart';
-
 import 'package:dictionary/dictionary.dart';
 
 import '../bytebuf/bytebuf.dart';

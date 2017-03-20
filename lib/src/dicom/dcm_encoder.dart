@@ -7,7 +7,6 @@
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
-import 'package:dictionary/dictionary.dart';
 import 'package:path/path.dart' as path;
 
 import 'dcm_writer.dart';
