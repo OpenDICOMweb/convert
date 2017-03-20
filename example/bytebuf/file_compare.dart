@@ -7,7 +7,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:convertX/bytebuf.dart';
+import 'package:convgit rm -ertX/bytebuf.dart';
 
 void main(List<String> args) {
   // var compare = new FileCompare(path1, path2);
