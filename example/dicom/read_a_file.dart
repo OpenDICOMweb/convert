@@ -26,9 +26,14 @@ String path5 =
     'C:/odw/sdk/io/example/input/1.2.840.113696.596650.500.5347264.20120723195848/2.16.840.1.114255.1870665029.949635505.39523.169/2.16.840.1.114255.1870665029.949635505.10220.175.dcm';
 String outPath = 'C:/odw/sdk/io/example/output/out.dcm';
 
+String path08 = 'C:/odw/test_data/TransferUIDs/1.2.840.10008.1.2.4.50.dcm';
+String path09 = 'C:/odw/test_data/TransferUIDs/1.2.840.10008.1.2.4.51.dcm';
+String path10 = 'C:/odw/test_data/TransferUIDs/1.2.840.10008.1.2.4.57.dcm';
+String path11 = 'C:/odw/test_data/TransferUIDs/1.2.840.10008.1.2.4.70.dcm';
+
 void main(List<String> args) {
   final log = new Logger("read_file", watermark: Severity.debug);
-  File file = new File(path4);
+  File file = new File(path11);
   Uint8List bytes = file.readAsBytesSync();
   Instance instance = DcmDecoder.decode(new DSSource(bytes, file.path));
   log.debug('Instance: $instance');
