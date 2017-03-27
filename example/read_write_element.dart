@@ -4,7 +4,10 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'package:common/logger.dart';
 import 'package:core/core.dart';
+import 'package:dictionary/tag.dart';
+
 import '../lib/encoder.dart';
 
 /// Logger

@@ -216,6 +216,7 @@ class DcmWriter extends ByteBuf {
     /// The order of the VRs in this [List] MUST correspond to the [VR.index]
     /// in the definitions of [VR].  Note: the [VR.index]es start at 1, so
     /// in this [List] the 0th function is [_debugWriter].
+    /*
     final List<Function> _writers = <Function>[
       _debugWriter,
       _writeSQ, _writeSS, _writeSL, _writeOB, _writeUN, _writeOW,
@@ -225,6 +226,17 @@ class DcmWriter extends ByteBuf {
       _writeDA, _writeDT, _writeTM, _writePN, _writeUI, _writeUR,
       _writeAS, _debugWriter // VR.kBR is not implemented.
       // preserve formatting
+    ];
+    */
+    final List<Function> _writers = <Function>[
+      _debugWriter,
+      _writeAE, _writeAS, _writeAT, _debugWriter, _writeCS,
+      _writeDA, _writeDS, _writeDT, _writeFD, _writeFL,
+      _writeIS, _writeLO, _writeLT, _writeOB, _writeOD,
+      _writeOF, _writeOL, _writeOW, _writePN, _writeSH,
+      _writeSL, _writeSQ, _writeSS, _writeST, _writeTM,
+      _writeUC, _writeUI, _writeUL, _writeUN, _writeUR,
+      _writeUS, _writeUT // stop reformat
     ];
 
     log.down;
@@ -255,7 +267,7 @@ class DcmWriter extends ByteBuf {
   bool _writeST(ST e) => _writeDcmUtf8String(e);
   bool _writeTM(TM e) => _writeDcmAsciiString(e);
   bool _writeUC(UC e) => _writeDcmUtf8String(e);
-  bool _writeUI(UI e) => _writeDcmAsciiString(e, uidPaddingChar);
+  bool _writeUI(UI e) => _writeDcmAsciiString(e, "\u0000"); // null for UID
   bool _writeUR(UR e) => _writeDcmUtf8String(e);
   bool _writeUT(UT e) => _writeDcmUtf8String(e);
 
