@@ -216,8 +216,8 @@ class DcmReader<E> extends ByteBuf {
         log.warn('$rmm _readElement: *** vr($vr) !=  tag.vr(${tag.vr})');
       if (vr == VR.kUN) vr = tag.vr;
       if (tag == Tag.kPixelData &&
-            (vr != VR.kOB && vr != VR.kOW) && vr != VR.kUN)
-          throw 'Bad VR($vr) != tag.vr(${tag.vr})';
+          (vr != VR.kOB && vr != VR.kOW) &&
+          vr != VR.kUN) throw 'Bad VR($vr) != tag.vr(${tag.vr})';
       vfLength = (vr.hasShortVF) ? readUint16() : _readLongLength();
       log.debug('$rmm _readExplicitVR: ${tag.info} $vr, vfLength($vfLength})');
     } else {
@@ -780,7 +780,6 @@ class DcmReader<E> extends ByteBuf {
       } else {
         // This is a Subgroup without a creator
         sg = new PrivateSubGroup(PrivateCreator.kNonExtantCreator);
-
       }
       nextCode = _readPDSubgroup(nextCode, isExplicitVR, sg);
     }
