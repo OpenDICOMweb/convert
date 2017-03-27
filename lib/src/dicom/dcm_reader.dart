@@ -212,23 +212,20 @@ class DcmReader<E> extends ByteBuf {
     if (isExplicitVR) {
       vr = _readExplicitVR();
       log.debug('$rmm _readElement: vr($vr), tag.vr(${tag.vr})');
-      if (vr != tag.vr) {
-        if (vr == VR.kUN) {
-          vr = tag.vr;
-        } else if (tag != Tag.kPixelData ||
+      if (vr != tag.vr)
+        log.warn('$rmm _readElement: *** vr($vr) !=  tag.vr(${tag.vr})');
+      if (vr == VR.kUN) vr = tag.vr;
+      if (tag == Tag.kPixelData &&
             (vr != VR.kOB && vr != VR.kOW) && vr != VR.kUN)
           throw 'Bad VR($vr) != tag.vr(${tag.vr})';
-      }
       vfLength = (vr.hasShortVF) ? readUint16() : _readLongLength();
       log.debug('$rmm _readExplicitVR: ${tag.info} $vr, vfLength($vfLength})');
     } else {
-      vr = tag.vr;
-      if (vr != tag.vr) {
-        if (tag == Tag.kPixelData) {
-          vr = VR.kUN;
-        } else {
-          throw 'Bad VR($vr) != tag.vr(${tag.vr})';
-        }
+      if (tag == Tag.kPixelData) {
+        vr = VR.kUN;
+      } else {
+        vr = tag.vr;
+        //  throw 'Bad VR($vr) != tag.vr(${tag.vr})';
       }
       vfLength = readUint32();
       log.debug('$rmm _readImplicitVR: $tag $vr, vfLength($vfLength})');
@@ -608,7 +605,8 @@ class DcmReader<E> extends ByteBuf {
     Uint8List bytes = _uLengthGetBytes(vfLength);
     log.debug(
         '$rmm vfLength($vfLength, ${Int32.hex(vfLength)}), bytes.length(${bytes.length})');
-    UN e = new UN(tag, vfLength, bytes);
+    UN e = new UN.fromBytes(tag, vfLength, bytes);
+    log.debug('e= $e');
     log.debug('$ree ${e.info}');
     log.up;
     return e;
@@ -745,9 +743,9 @@ class DcmReader<E> extends ByteBuf {
       List<String> values = _readDcmUtf8VF(vfLength);
       if (values.length != 1) throw 'InvalidCreatorToken($values)';
       String token = values[0];
-      var tag = PrivateCreatorTag.lookup(token, vr);
+      var tag = new PrivateCreatorTag(token, nextCode, vr);
       LO e = new LO(tag, values);
-      var pc = new PrivateCreator(tag, e, vr == VR.kUN);
+      var pc = new PrivateCreator(e.tag, e);
       log.debug('$ree _readElement: ${pc.info}');
       log.up;
       var psg = new PrivateSubGroup(pc);
@@ -777,12 +775,14 @@ class DcmReader<E> extends ByteBuf {
     while (pg.inGroup(nextCode)) {
       PrivateSubGroup sg = pg[i];
       if (sg.inSubgroup(nextCode)) {
+        // This Subgroup has a creator
         i++;
-        nextCode = _readPDSubgroup(code, isExplicitVR, sg);
       } else {
-        sg = new PrivateSubGroup(PrivateCreator.kNotPresent);
-        nextCode = _readPDSubgroup(code, isExplicitVR, sg);
+        // This is a Subgroup without a creator
+        sg = new PrivateSubGroup(PrivateCreator.kNonExtantCreator);
+
       }
+      nextCode = _readPDSubgroup(nextCode, isExplicitVR, sg);
     }
     log.debug('$ree readAllPData-end');
     log.up;
