@@ -804,7 +804,6 @@ class DcmReader<E> extends ByteBuf {
     log.debug('pdInSubgroupt${Tag.toDcm(nextCode)}: ${pc.inSubgroup(nextCode)
     }');
     while (pc.inSubgroup(nextCode)) {
-
       log.down;
       log.debug('$rbb _readPDataSubgroup: base(${Elt.hex(pc.base)}), '
           'limit(${Elt.hex(pc.limit)})');
