@@ -173,15 +173,16 @@ class DcmReader<E> extends ByteBuf {
   //TODO: rewrite doc
   /// Reads a zero or more [Private Groups] and then read an returns
   /// a Public [Element].
-  void readElement({bool isExplicitVR: true}) {
+  Element readElement({bool isExplicitVR: true}) {
     log.down;
     final int code = _readTagCode();
     log.debug('$rbb readElement: _peekTag${Tag.toDcm(code)}');
+    Element e;
     if (Tag.isPublicCode(code)) {
       Tag tag = Tag.lookupPublicCode(code);
       log.down;
       log.debug('$rbb readPublicElement: isExplicitVR($isExplicitVR)');
-      Element e = _readElement(tag, isExplicitVR);
+      e = _readElement(tag, isExplicitVR);
       currentDS[e.tag.code] = e;
       log.debug('$ree readPublicElement: ${e.info}');
       log.up;
@@ -198,6 +199,7 @@ class DcmReader<E> extends ByteBuf {
     }
     log.debug('$ree readElement');
     log.up;
+    return e;
   }
 
   /// Reads an [Element], either Public or Private. Does not inspect
@@ -230,6 +232,44 @@ class DcmReader<E> extends ByteBuf {
       vfLength = readUint32();
       log.debug('$rmm _readImplicitVR: $tag $vr, vfLength($vfLength})');
     }
+    Element e = _readValueField(tag, vfLength, vr.index);
+    log.debug('$ree _readElement: ${e.info}');
+    log.up;
+    return e;
+  }
+
+  // Interface for debugging
+  Element readExplicitVRElement(Tag tag) => _readExplicitVRElement(tag);
+  // Interface for debugging
+  Element readImplicitVRElement(Tag tag) => _readImplicitVRElement(tag);
+
+  /// Reads an [Element], either Public or Private. Does not inspect
+  /// [Tag]; rather, assumes it is correct, but reads [VR], if explicit,
+  /// [vfLength] and Value Field;
+  Element _readExplicitVRElement(Tag tag) {
+    log.down;
+    log.debug('$rbb _readElement: ${tag.info}');
+    VR vr = _readExplicitVR();
+    log.debug('$rmm _readElement: vr($vr), tag.vr(${tag.vr})');
+    if (vr != tag.vr)
+        log.warn('$rmm _readElement: *** vr($vr) !=  tag.vr(${tag.vr})');
+    int vfLength = (vr.hasShortVF) ? readUint16() : _readLongLength();
+    log.debug('$rmm _readExplicitVR: ${tag.info} $vr, vfLength($vfLength})');
+    Element e = _readValueField(tag, vfLength, vr.index);
+    log.debug('$ree _readElement: ${e.info}');
+    log.up;
+    return e;
+  }
+  //TODO: redoc
+  /// Reads an Implicit VR[Element], either Public or Private. Does not inspect
+  /// [Tag]; rather, assumes it is correct, but reads [VR], if explicit,
+  /// [vfLength] and Value Field;
+  Element _readImplicitVRElement(Tag tag) {
+    log.down;
+    log.debug('$rbb _readElement: ${tag.info}');
+    VR vr = VR.kUN;
+    int vfLength = readUint32();
+    log.debug('$rmm _readImplicitVR: $tag $vr, vfLength($vfLength})');
     Element e = _readValueField(tag, vfLength, vr.index);
     log.debug('$ree _readElement: ${e.info}');
     log.up;

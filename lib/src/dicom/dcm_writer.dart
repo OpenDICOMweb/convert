@@ -103,10 +103,18 @@ class DcmWriter extends ByteBuf {
     writePreamble();
     writePrefix();
     log.debug('$rmm isExplicitVR($rootDS.isExplicitVR)');
-
-    for (Element e in rootDS.elements)
-      writeElement(e, isExplicitVR: rootDS.isExplicitVR);
+    writeDataset(rootDS);
     log.debug('$ree writeRootDataset.end');
+    log.up;
+    return;
+  }
+
+  void writeDataset(Dataset ds, {bool isExplicitVR = true}) {
+    log.down;
+    log.debug('$wbb writeDataset: $ds');
+    for (Element e in ds.elements)
+      writeElement(e, isExplicitVR: isExplicitVR);
+    log.debug('$wee writeDataset.end');
     log.up;
     return;
   }
@@ -127,6 +135,10 @@ class DcmWriter extends ByteBuf {
     Uint8List bytes = UTF8.encode(prefix);
     writeUint8List(bytes);
   }
+
+  void writeExplicitVRElement(Element e) => writeElement(e);
+
+  void writeImplicitVRElement(Element e) => writeElement(e, isExplicitVR: false);
 
   /// This is the top-level entry point for writing an [Element].
   void writeElement(Element e, {bool isExplicitVR = true}) {

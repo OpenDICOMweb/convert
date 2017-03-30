@@ -85,4 +85,13 @@ class DcmEncoder extends DcmWriter {
     log.debug('Encoder: $encoder');
     return encoder.encodeEntity(entity);
   }
+
+  static Uint8List encodeDataset(Dataset ds) {
+    log.debug('DcmEncoder.encodeDataset: $ds');
+    int lengthIB = ds.source.lengthInBytes;
+    log.debug('DcmDecoder.endodeDataset: length($lengthIB)');
+    var encoder = new DcmEncoder(lengthIB);
+    log.debug('Encoder: $encoder');
+    return encoder.encodeDataset(ds);
+  }
 }

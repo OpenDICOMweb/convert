@@ -15,18 +15,19 @@ Logger log = new Logger("read_write_element");
 
 /// Simple [Element] test
 void main(List<String> args) {
-  AE ae = new AE(Tag.kReceivingApplicationEntityTitle, ["foo bar"]);
-  elementTest(ae, ["abc", "def"]);
+  SH sh = new SH(Tag.kReceivingApplicationEntityTitle, ["foo bar"]);
+  elementTest(sh, ["abc", "def"]);
 }
 
 /// Test
 bool elementTest(Element e0, List values) {
   DcmWriter wBuf = new DcmWriter(128);
   Element e1 = e0.update(values);
+  log.debug('e0: ${e0.info}, e1: ${e1.info}');
   wBuf.writeElement(e1);
   int wIndex = wBuf.writeIndex;
   DcmReader rBuf = new DcmReader.fromList(wBuf.bytes);
-  //Element e2 = rBuf.readElement();
+  Element e2 = rBuf.readElement();
   int rIndex = rBuf.readIndex;
   if (wIndex != rIndex || e0 != e1) {
     log.warn('Unequal: $e0, $e1');
