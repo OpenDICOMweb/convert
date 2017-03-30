@@ -637,7 +637,7 @@ class DcmReader<E> extends ByteBuf {
         "Non Private Group ${Tag.toHex(code)}");
 
     log.down;
-    log.debug('$rbb readPrivateGroup: code${Tag.toHex(code)}');
+    log.debug('$rbb _readPrivateGroup: code${Tag.toHex(code)}');
     int group = Group.fromTag(code);
     int elt = Elt.fromTag(code);
     PrivateGroup pg = new PrivateGroup(group);
@@ -655,12 +655,13 @@ class DcmReader<E> extends ByteBuf {
 
     if (elt >= 0x10 && elt <= 0xFF)
       nextCode = _readPCreators(group, code, isExplicitVR, pg);
+    log.debug('subgroups: ${pg.subgroups}');
 
     // Read the PrivateData
     if (Group.fromTag(nextCode) == group)
       _readAllPData(group, nextCode, isExplicitVR, pg);
 
-    log.debug('$ree readPrivateGroup-end $pg');
+    log.debug('$ree _readPrivateGroup-end $pg');
     log.up;
     return pg;
   }
@@ -743,14 +744,20 @@ class DcmReader<E> extends ByteBuf {
       List<String> values = _readDcmUtf8VF(vfLength);
       if (values.length != 1) throw 'InvalidCreatorToken($values)';
       String token = values[0];
+      log.debug('nextCode: $nextCode');
       var tag = new PrivateCreatorTag(token, nextCode, vr);
+      log.debug('Tag: $tag');
       LO e = new LO(tag, values);
+      log.debug('LO: ${e.info}');
+      log.debug('LO.code: $nextCode');
+      log.debug('e.tag: ${e.tag.info}');
+      log.debug('e: ${e.info}');
       var pc = new PrivateCreator(e.tag, e);
       log.debug('$ree _readElement: ${pc.info}');
       log.up;
-      var psg = new PrivateSubGroup(pc);
+      var psg = new PrivateSubGroup(pg, pc);
+      log.debug('$rmm _readElement: pc($pc)');
       log.debug('$rmm _readElement: $psg');
-      pg.add(psg);
       currentDS.add(pc);
       // **** end read PCreator
 
@@ -768,22 +775,24 @@ class DcmReader<E> extends ByteBuf {
   void _readAllPData(int group, int code, bool isExplicitVR, PrivateGroup pg) {
     // Now read the [PrivateData] [Element]s for each creator, in order.
     log.down;
-    log.debug('$rbb readAllPData');
+    log.debug('$rbb _readAllPData');
     int nextCode = code;
-    int i = 0;
-
-    while (pg.inGroup(nextCode)) {
-      PrivateSubGroup sg = pg[i];
-      if (sg.inSubgroup(nextCode)) {
-        // This Subgroup has a creator
-        i++;
-      } else {
-        // This is a Subgroup without a creator
-        sg = new PrivateSubGroup(PrivateCreator.kNonExtantCreator);
+    while (group == Group.fromTag(nextCode)) {
+      log.debug('nextCode: ${Tag.toDcm(nextCode)}');
+      var sgIndex = Elt.fromTag(nextCode) >> 8;
+      log.debug('sgIndex: $sgIndex');
+      var sg = pg[sgIndex];
+      log.debug('Subgroup: $sg');
+      if (sg == null) {
+        log.warn('This is a Subgroup without a creator');
+        sg = new PrivateSubGroup(pg, PrivateCreator.kNonExtantCreator);
       }
+      log.debug('Subgroup: $sg');
       nextCode = _readPDSubgroup(nextCode, isExplicitVR, sg);
+      log.debug('Subgroup: $sg');
+      log.debug('nextCode: nextCode');
     }
-    log.debug('$ree readAllPData-end');
+    log.debug('$ree _readAllPData-end');
     log.up;
   }
 
@@ -792,19 +801,26 @@ class DcmReader<E> extends ByteBuf {
     //?? while (pcTag.isValidDataCode(nextCode)) {
     PrivateCreator pc = sg.creator;
     PrivateCreatorTag pcTag = pc.tag;
+    log.debug('pdInSubgroupt${Tag.toDcm(nextCode)}: ${pc.inSubgroup(nextCode)
+    }');
     while (pc.inSubgroup(nextCode)) {
       log.down;
-      log.debug('$rbb readPData: base(${Elt.hex(pc.base)}), '
+      log.debug('$rbb _readPDataSubgroup: base(${Elt.hex(pc.base)}), '
           'limit(${Elt.hex(pc.limit)})');
 
       PrivateDataTag dTag = pcTag.lookupData(code);
+      log.debug('_readPDataSubgroup: pdTag: ${dTag.info}');
       Element e = _readElement(dTag, isExplicitVR);
-      pc.add(e);
+      log.debug('_readPDataSubgroup: e: ${e.info}');
+      PrivateData pd = new PrivateData(dTag, e);
+      log.debug('_readPDataSubgroup: pd: ${pd.info}');
+      pc.add(pd);
+      log.debug('_readPDataSubgroup: pc: ${pc.info}');
       currentDS.add(e);
 
       log.debug('$rmm readPD: ${e.info})');
       log.up;
-      nextCode = _peekTagCode();
+      nextCode = _readTagCode();
     }
     return nextCode;
   }
