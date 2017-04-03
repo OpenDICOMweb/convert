@@ -9,8 +9,6 @@
       <excludeFolder url="file://$MODULE_DIR$/example/dicom/packages" />
       <excludeFolder url="file://$MODULE_DIR$/example/json/packages" />
       <excludeFolder url="file://$MODULE_DIR$/example/packages" />
-      <excludeFolder url="file://$MODULE_DIR$/lib/src/base" />
-      <excludeFolder url="file://$MODULE_DIR$/lib/src/dicom/other" />
       <excludeFolder url="file://$MODULE_DIR$/packages" />
       <excludeFolder url="file://$MODULE_DIR$/temp" />
       <excludeFolder url="file://$MODULE_DIR$/test/bytebuf/packages" />

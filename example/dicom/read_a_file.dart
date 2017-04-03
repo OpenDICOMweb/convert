@@ -27,9 +27,11 @@ String path5 =
     'C:/odw/sdk/io/example/input/1.2.840.113696.596650.500.5347264.20120723195848/2.16.840.1.114255.1870665029.949635505.39523.169/2.16.840.1.114255.1870665029.949635505.10220.175.dcm';
 String outPath = 'C:/odw/sdk/io/example/output/out.dcm';
 
+
+
 void main(List<String> args) {
   final log = new Logger("read_file", watermark: Severity.debug);
-  File file = new File(path4);
+  File file = new File(path0);
   Uint8List bytes = file.readAsBytesSync();
   Instance instance = DcmDecoder.decode(new DSSource(bytes, file.path));
   log.debug('Instance: $instance');
