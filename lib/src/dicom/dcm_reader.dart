@@ -50,7 +50,7 @@ typedef Element<E> VFReader<E>(int tag, VR<E> vr, int vfLength);
 ///   and the Integer, FLoat VFReaders return new [null].
 class DcmReader<E> extends ByteBuf {
   ///TODO: doc
-  static final Logger log = new Logger("DcmReader", watermark: Severity.debug1);
+  static final Logger log = new Logger("DcmReader", watermark: Severity.debug);
 
   /// The root Dataset for the object being read.
   final RootDataset rootDS;
@@ -107,6 +107,27 @@ class DcmReader<E> extends ByteBuf {
     log.debug('$ree readRootDataset: $rootDS');
     //  log.up;
     return rootDS;
+  }
+
+  TransferSyntax readFmi([int count = 100000]) {
+    if (!_hasPrefix()) return null;
+    //  log.down;
+    log.debug('$rbb readRootDataset: $rootDS');
+    TransferSyntax ts = _readFmi();
+    if (ts == null) throw "Unsupported Null TransferSyntax";
+    log.debug('$rmm readRootDataset: transferSyntax(${rootDS.transferSyntax})');
+    log.debug('$rmm readRootDataset: ${rootDS.hasValidTransferSyntax}');
+    if (!rootDS.hasValidTransferSyntax) return ts;
+    final bool isExplicitVR =
+        rootDS.transferSyntax != TransferSyntax.kImplicitVRLittleEndian;
+    log.debug('$rmm readRootDataset: isExplicitVR($isExplicitVR)');
+    /*while (isReadable) {
+      log.debug('$rmm buf: $this');
+      readElement(isExplicitVR: isExplicitVR);
+    }*/
+    log.debug('$ree readRootDataset: $rootDS');
+    //  log.up;
+    return ts;
   }
 
   bool _hasPrefix() {
