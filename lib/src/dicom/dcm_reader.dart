@@ -942,7 +942,7 @@ class DcmReader<E> extends ByteBuf {
 
 
   // External Interface for testing
-  Element<E> xReadPrivateData(Element creator, [bool isExplicitVR = true]) {
+  Element<E> xReadPrivateData(Element pc, [bool isExplicitVR = true]) {
     _TagMaker maker =
         (int nextCode, VR vr, [name]) => new PDTag(nextCode, vr, pc.tag);
     Element<E> pd = _xReadElement(_readTagCode(), maker, isExplicitVR);
@@ -1045,5 +1045,15 @@ debugReader:
     string: "${toAscii(readIndex - 12, readIndex + 12, readIndex)}"
 ''';
     log.error(s);
+  }
+
+/// Test Interface
+///
+
+  Element<E> _xReadPublicElement(int code, [bool isExplicitVR = true]) {
+    _TagMaker maker = (Elt.fromTag(code) == 0x0000 && (code >= 0x00080000))
+        ? PublicGroupLengthTag.maker
+        : PTag.maker;
+    return _xReadElement(code, maker, isExplicitVR);
   }
 }
