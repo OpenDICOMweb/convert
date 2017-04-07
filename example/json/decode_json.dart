@@ -7,8 +7,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dictionary/dictionary.dart';
 import 'package:core/core.dart';
+import 'package:dictionary/dictionary.dart';
 
 void main(List<String> args) {
   // ArgParser parser = getArgParser();
@@ -38,13 +38,11 @@ Map<int, Element> toDataset(Map jsMap) {
   Map<int, Element> eMap = {};
   jsMap.forEach((String s, Map map) {
     int code = int.parse(s, radix: 16);
-    Tag tag = Tag.lookupPublicCode(code);
-    VR vr;
-    var values;
-    if (map.length == 0) {
-      values = [];
-    } else {
+    VR vr = VR.kUN;
+    var values = const [];
+    if (map.length != 0) {
       vr = VR.vrMap[map["vr"]];
+
       values = map["Value"];
       if (values == null) {
         values = map["InlineBinary"];
@@ -53,6 +51,8 @@ Map<int, Element> toDataset(Map jsMap) {
         }
       }
     }
+    //TODO: debug not finished
+    Tag tag = Tag.lookupPublicCode(code, vr);
     print('${tag.dcm}($vr): $values');
     // Function type = vrToElement[vr];
     //print('type: $type');

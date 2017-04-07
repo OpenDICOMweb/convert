@@ -15,7 +15,7 @@ Logger log = new Logger("read_write_element");
 
 /// Simple [Element] test
 void main(List<String> args) {
-  SH sh = new SH(Tag.kReceivingApplicationEntityTitle, ["foo bar"]);
+  SH sh = new SH(PTag.kReceivingApplicationEntityTitle, ["foo bar"]);
   elementTest(sh, ["abc", "def"]);
 }
 

@@ -92,6 +92,7 @@ class DcmEncoder extends DcmWriter {
     log.debug('DcmDecoder.endodeDataset: length($lengthIB)');
     var encoder = new DcmEncoder(lengthIB);
     log.debug('Encoder: $encoder');
-    return encoder.encodeDataset(ds);
+    encoder.writeDataset(ds);
+    return encoder.bytes;
   }
 }
