@@ -9,6 +9,7 @@ import 'dart:typed_data';
 import 'package:common/common.dart';
 import 'package:convertX/src/bytebuf/bytebuf.dart';
 import 'package:convertX/src/dataset_stack.dart';
+import 'package:convertX/src/exception.dart';
 import 'package:core/dataset.dart';
 import 'package:core/element.dart';
 import 'package:dictionary/dictionary.dart';
@@ -39,9 +40,6 @@ class DcmReader<E> extends ByteBuf {
   ///TODO: doc
   static final Logger log = new Logger("DcmReader", watermark: Severity.info);
 
-  /// The source of the bytes to be parsed.
-  final DSSource source;
-
   /// The root Dataset for the object being read.
   final RootDataset rootDS;
 
@@ -59,19 +57,25 @@ class DcmReader<E> extends ByteBuf {
 
   //TODO: finish
   /// Creates a new [DcmReader]  where [readIndex] = [writeIndex] = 0.
-  DcmReader([DSSource source, this.throwOnError = false])
-      : source = (source == null) ? DSSource.kUnknown : source,
-        rootDS = new RootDataset(source),
-        super.reader(source.bytes, 0, source.lengthInBytes) {
+  DcmReader(Uint8List bytes, [this.throwOnError = false])
+      : rootDS = new RootDataset(),
+        super.reader(bytes) {
+    currentDS = rootDS;
+  }
+  //TODO: finish
+  /// Creates a new [DcmReader]  where [readIndex] = [writeIndex] = 0.
+  DcmReader.fromSource(DSSource source,
+      [RootDataset rootDS, this.throwOnError = true])
+      : rootDS = (rootDS == null) ? new RootDataset() : rootDS,
+        super.reader(source.bytes) {
     currentDS = rootDS;
   }
 
   /// Creates a [Uint8List] with the same length as the elements in [list],
   /// and copies over the elements.  Values are truncated to fit in the list
   /// when they are copied, the same way storing values truncates them.
-  DcmReader.fromList(List<int> list, [this.throwOnError = false])
-      : source = DSSource.kUnknown,
-        rootDS = new RootDataset(DSSource.kUnknown),
+  DcmReader.fromList(List<int> list, [this.throwOnError = true])
+      : rootDS = new RootDataset(),
         super.fromList(list) {
     currentDS = rootDS;
   }
@@ -81,23 +85,46 @@ class DcmReader<E> extends ByteBuf {
   bool get isExplicitVR =>
       rootDS.transferSyntax != TransferSyntax.kImplicitVRLittleEndian;
 
+  @override
+  String get info => '$runtimeType: rootDS: ${rootDS.info}, currentDS: '
+      '${currentDS.info}';
+
   /// Reads a [RootDataset] from [this] and returns it. If an error is
   /// encountered [readRootDataset] will throw an Error is or [null].
   RootDataset readRootDataset([bool allowMissingFMI = false]) {
+    int start = readIndex;
     if (!_hasPrefix()) return null;
     log.debug('$rbb readRootDataset: $rootDS');
-    _readFmi();
+    try {
+      _readFmi();
+    } catch (e) {
+      log.error('Could not read FMI: "${rootDS.path}"');
+      rethrow;
+    }
     var ts = rootDS.transferSyntax;
-    log.debug('TS: ${ts.info}');
-    log.debug('isExplicitVR: $isExplicitVR');
-    log.debug('$rmm readRootDataset: TS($ts)}');
+    log.debug('$rmm readRootDataset: TS($ts)}, isExplicitVR: $isExplicitVR');
     if (!rootDS.hasValidTransferSyntax) {
       if (throwOnError) throw new InvalidTransferSyntaxError(ts, log);
       return rootDS;
     }
-    readDataset(rootDS.isExplicitVR);
-    log.debug('$ree readRootDataset: $rootDS');
-    return rootDS;
+    try {
+      readDataset(rootDS.isExplicitVR);
+    } on EndOfDataException catch (e) {
+      log.debug(e);
+    } catch(e) {
+
+    } finally {
+      log.reset;
+      log.debug('start($start), readIndex($readIndex), lengthInBytes'
+          '($lengthInBytes)');
+      if (start != 0 || readIndex != lengthInBytes) {
+        log.error('Did not read to end of file: Start($start), readIndex'
+            '($readIndex) lengthInBytes($lengthInBytes): $this');
+        log.debug('$ree readRootDataset: $rootDS');
+      }
+      if (rootDS == null) return null;
+      return rootDS;
+    }
   }
 
   Dataset readDataset([bool isExplicitVR = true]) {
@@ -114,7 +141,7 @@ class DcmReader<E> extends ByteBuf {
     return rootDS;
   }
 
-  void _readElement() {
+  void _readElement([bool isExplicitVR = true]) {
     final int code = _readTagCode();
     log.debug('$rmm readElement: _readCode${Tag.toDcm(code)}');
     var value;
@@ -176,6 +203,12 @@ class DcmReader<E> extends ByteBuf {
   ///TODO: this is expensive! Is there a better way?
   /// Read the DICOM Element Tag
   int _readTagCode() {
+    if (isNotReadable)
+      if (throwOnError) {
+        throw new EndOfDataException('_readPCreators');
+      } else {
+        _debugReader();
+      }
     int group = readUint16();
     int elt = readUint16();
     int code = (group << 16) + elt;
@@ -251,7 +284,7 @@ class DcmReader<E> extends ByteBuf {
 
     } else {
       Tag tag = tagMaker(code, vr);
-   //   log.info('Tag: ${tag.info}');
+      //   log.info('Tag: ${tag.info}');
       if (vr == VR.kUN) {
         log.debug('vr($vr), tag.vr(${tag.vr}');
         vr = tag.vr;
@@ -474,6 +507,9 @@ class DcmReader<E> extends ByteBuf {
         int limit = readIndex + vfLength;
         while (readIndex < limit) _readElement();
       }
+    } on EndOfDataException {
+      log.debug('_readItem');
+      rethrow;
     } finally {
       // Restore previous parent
       currentDS = dsStack.pop;
@@ -571,9 +607,8 @@ class DcmReader<E> extends ByteBuf {
     log.down;
     log.debug('$rbb tag${tag.dcm}');
     Uint8List bytes = _uLengthGetBytes(vfLength);
-    log.debug(
-        '$rmm vfLength($vfLength, ${Int32.hex(vfLength)}), '
-            'bytes.length(${bytes.length})');
+    log.debug('$rmm vfLength($vfLength, ${Int32.hex(vfLength)}), '
+        'bytes.length(${bytes.length})');
     UN e = new UN.fromBytes(tag, bytes, vfLength);
     log.debug('e= $e');
     log.debug('$ree ${e.info}');
@@ -740,6 +775,7 @@ class DcmReader<E> extends ByteBuf {
       nextCode = _readPDSubgroup(nextCode, isExplicitVR, sg);
       log.debug('Subgroup: $sg');
       log.debug('nextCode: nextCode');
+      if (nextCode == null) return null;
     }
     log.debug('$ree _readAllPData-end');
     log.up;

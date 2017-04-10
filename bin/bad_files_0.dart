@@ -10,7 +10,7 @@
 // Failure: 857 [Info]
 // Total: 15392 [Info]
 
-const    List<String> badFiles2017_04_09 = const <String>[
+const    List<String> badFiles20170409 = const <String>[
 "C:/odw/test_data/mweb\ASPERA\Clean_Pixel_test_data\Sop\1.2.840.10008.5.1.4.1.1.1.2.1.dcm",
 "C:/odw/test_data/mweb\ASPERA\Clean_Pixel_test_data\Sop\1.2.840.10008.5.1.4.1.1.104.2.dcm",
 "C:/odw/test_data/mweb\ASPERA\Clean_Pixel_test_data\Sop\1.2.840.10008.5.1.4.1.1.12.1.dcm",

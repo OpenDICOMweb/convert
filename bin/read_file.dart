@@ -29,15 +29,18 @@ String outPath = 'C:/odw/sdk/io/example/output/out.dcm';
 
 List<String> paths = <String>[path0, path1, path2, path3, path4, path5];
 
-String badFile = "C:/odw/test_data/mweb/100 MB Studies/MRStudy/1.2.840.113619"
+String badFile0 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy/1.2.840.113619"
     ".2.5.1762583153.215519.978957063.101.dcm";
+
+String badFile1 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
+    ".840.10008.5.1.4.1.1.1.2.1.dcm";
 
 String badDir = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
 final Logger log =
     new Logger("io/bin/read_file.dart", watermark: Severity.debug);
 
 void main() {
- //readFile(badFile);
+ readFile(badFile1);
 
  // log.info('Reading ${fileList.length} Files:');
  // readFiles(fileList);
@@ -45,8 +48,18 @@ void main() {
 
 void readFile(String path) {
   File input = new File(path);
-  Instance instance = _readFile(input);
-  log.info('${instance.info}');
+  Instance instance;
+  try {
+    instance = _readFile(input);
+  } catch(e) {
+    log.error('Could not read "$path": $e');
+    return null;
+  }
+  if (instance == null) {
+    log.error('Null Instance $path');
+    return null;
+  }
+  log.info('readFile: ${instance.info}');
   var z = new Formatter(maxDepth: 146);
   log.debug(instance.format(z));
   //TODO: make this work
@@ -74,6 +87,8 @@ void readFiles(List<String> paths) {
 
 Instance _readFile(File input) {
   Uint8List bytes = input.readAsBytesSync();
+  log.debug('Reading file: $input');
+  log.debug('File bytes length: ${bytes.length}');
   Instance instance = DcmDecoder.decode(new DSSource(bytes, input.path));
 
   return instance;

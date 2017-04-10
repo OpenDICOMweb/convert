@@ -94,7 +94,7 @@ bool writeReadElementTest<E>(Element<E> e0, [PrivateCreator pc]) {
 }
 
 Element<E> writeReadDataset<E>(RootDataset ds0, Element<E> e0) {
-  RootDataset ds0 = new RootDataset(DSSource.kUnknown);
+  RootDataset ds0 = new RootDataset();
   ds0.add(e0);
   DcmWriter wBuf0 = new DcmWriter(lengthInBytes: 128);
   wBuf0.writeDataset(ds0);
@@ -140,7 +140,7 @@ bool testPrivateGroupLength() {
   Element e0 = new UL(tag, [1024]);
   //TODO: create Dataset DS0 and write E0
   //      create writer
-  RootDataset rds0 = new RootDataset(DSSource.kUnknown);
+  RootDataset rds0 = new RootDataset();
   rds0.add(e0);
   DcmWriter wBuf0 = new DcmWriter(lengthInBytes: 128);
   wBuf0.xWritePublicElement(e0);

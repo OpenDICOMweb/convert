@@ -6,13 +6,15 @@
 
 import 'dart:io';
 
-import 'package:args/args.dart';
 import 'package:common/logger.dart';
 import 'package:path/path.dart' as p;
+//import 'package:args/args.dart';
 
-ArgParser getParser() {
 
-}
+// Fix or remove
+//ArgParser getParser() {
+
+//}
 
 String inRoot0 = "C:/odw/test_data/sfd/CR";
 String inRoot1 = "C:/odw/test_data/sfd/CR_and_RF";
@@ -31,34 +33,12 @@ String outRoot4 = 'test/output/root4';
 Logger log = new Logger("read_a_directory", watermark: Severity.info);
 
 void main() {
-    int fsEntityCount;
-    int filesCount;
 
     List<Directory> dirs = getDirectories(inRoot5);
     for(Directory dir in dirs) {
       log.info('  $dir');
       int count = getDcmFileCount(dir);
     }
-    /*
-    Directory dir = new Directory(inRoot6);
-    List<FileSystemEntity> fList = dir.listSync(recursive: true);
-    fsEntityCount = fList.length;
-    log.info('FSEntity count: $fsEntityCount');
-
-    List<File> files = <File>[];
-    for (FileSystemEntity fse in fList) {
-        if (fse is File) {
-            var path = fse.path;
-            var ext = p.extension(path);
-            if (ext == '.dcm') {
-                files.add(fse);
-            }
-        }
-    }
-    filesCount = files.length;
-    log.info('FSEntities: $fsEntityCount');
-    log.info('DICOM Files: $filesCount');
-    */
 }
 
 List<FileSystemEntity> getAllFSEntities(String path) {

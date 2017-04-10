@@ -6,10 +6,8 @@
 
 import 'dart:typed_data';
 
-import 'package:common/format.dart';
 import 'package:common/logger.dart';
 import 'package:core/core.dart';
-import 'package:dictionary/uid.dart';
 
 import 'dcm_reader.dart';
 
@@ -20,15 +18,23 @@ import 'dcm_reader.dart';
 class DcmDecoder extends DcmReader {
   static final Logger log = new Logger("DcmDecoder", watermark: Severity.info);
   //TODO: add ability to keep non-zero preamble
-  Uint8List _preamble;
-  String _prefix;
+
+  /// The source of the bytes to be parsed.
+  final DSSource source;
+
+  //Uint8List _preamble;
+  //String _prefix;
   bool allowImplicitLittleEndian = true;
 
   /// Creates a new [DcmDecoder]
-  DcmDecoder(DSSource source)
-      : //rootDS = new RootDataset(source),
-        super(source);
+  DcmDecoder(Uint8List bytes, [bool throwOnError = true])
+      : source = null,
+        super(bytes, throwOnError);
 
+  /// Creates a new [DcmDecoder]
+  DcmDecoder.fromSource([this.source = DSSource.kUnknown])
+      : super.fromSource(source, new RootDataset());
+/*
   // Read the 128-byte preamble to the DICOM File Format.
   Uint8List readPreamble() {
     _preamble = readUint8List(128);
@@ -54,37 +60,48 @@ class DcmDecoder extends DcmReader {
     _prefix = prefix;
     return _prefix;
   }
+*/
+  //TODO: this will need to be modified to handle different types of datasets
+  //TODO for now they are all instances.
+  /// Reads a DICOM SOP [Instance] from a [Uint8List].
+  Entity readInstance([Series series, Study study, Subject subject]) {
+    log.debug('readInstance: $this');
+    log.down;
+    RootDataset ds;
+    try {
+      ds = readRootDataset();
+    } catch (e) {
+      log.error('readInstance: $e');
+      return null;
+    }
+    if (!ds.hasValidTransferSyntax) return null;
+    log.debug('readInstance RootDataset($ds)');
+    return Instance.fromDataset(ds, series, study, subject);
+  }
 
   //TODO: this will need to be modified to handle different types of datasets
   //TODO for now they are all instances.
   /// Reads a DICOM SOP [Instance] from a [Uint8List].
-  Entity readInstance([Study study]) {
-    log.debug('readInstance: $this');
+  RootDataset readRDS() {
+    log.debug('readRDS: $this');
     log.down;
-    RootDataset ds = readRootDataset();
-    if (!ds.hasValidTransferSyntax) return null;
-    ds.format(new Formatter());
-    log.debug('RootDataset($ds)');
-    if (study == null) {
-      String id = ds.patientId;
-      //TODO
-      //Patient patient = new Patient.fromDataset(id, ds);
-      Patient patient = new Patient(null, ds, id, <Uid, Study>{});
-      Uid studyUid = ds.studyUid ?? "Null Instance Uid";
-      study = new Study.fromDataset(patient, studyUid, ds);
+    RootDataset ds;
+    try {
+      ds = readRootDataset();
+    } catch (e) {
+      log.error('readInstance: $e');
+      return null;
+    } finally {
+      if (!ds.hasValidTransferSyntax) return null;
+      log.debug('readRDS: count(${ds.length})');
+      return ds;
     }
-    Uid seriesUid = ds.seriesUid ?? "Null Instance Uid";
-    Series series = new Series.fromDataset(study, seriesUid, ds);
-    Uid instanceUid = ds.instanceUid ?? "Null Instance Uid";
-    Instance instance = new Instance.fromDataset(series, instanceUid, ds);
-    log.up;
-    log.debug(instance);
-    return instance;
   }
 
   ///TODO: doc
-  static Instance decode(DSSource source, [Study study]) {
-    DcmDecoder decoder = new DcmDecoder(source);
-    return decoder.readInstance(study);
+  static Instance decode(DSSource source,
+      [Series series,Study study, Subject subject]) {
+    DcmDecoder decoder = new DcmDecoder.fromSource(source);
+    return decoder.readInstance(series, study, subject);
   }
 }

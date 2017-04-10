@@ -29,7 +29,8 @@ String mweb0 = 'C:/odw/test_data/mweb/10 Patient IDs';
 String mweb1 = 'C:/odw/test_data/mweb/100 MB Studies';
 String hologic = 'C:/odw/test_data/mweb/Hologic';
 
-String badDir = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
+String badDir0 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
+String badDir1 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop";
 
 void main() {
   int printEvery = 25;
@@ -39,7 +40,7 @@ void main() {
   int failureCount;
   Logger log = new Logger("read_a_directory", watermark: Severity.info);
 
-  Directory dir = new Directory(inRoot6);
+  Directory dir = new Directory(badDir1);
 
   List<FileSystemEntity> fList = dir.listSync(recursive: true);
   fsEntityCount = fList.length;
@@ -60,7 +61,7 @@ void main() {
   log.info('Reading $filesCount files from ${dir.path}:');
 
   int count = -1;
-  Instance instance;
+  RootDataset rds;
   List<String> success = [];
   List<String> failure = [];
   for (File file in files) {
@@ -68,11 +69,11 @@ void main() {
         'bad(${failure.length})');
     log.debug('Reading file: $file');
     try {
-      instance = readInstance(file);
-      if (instance == null) {
+      rds = readRDS(file);
+      if (rds == null) {
         failure.add('"${file.path}"');
       } else {
-        log.debug('instance: ${instance.info}');
+        log.debug('Dataset: ${rds.info}');
         success.add('"${file.path}"');
       }
       // print('output:\n${instance.patient.format(new Prefixer())}');
@@ -82,6 +83,7 @@ void main() {
    //   log.info('failures: ${failure.length}');
       continue;
     }
+    log.reset;
   }
   successCount = success.length;
   failureCount = failure.length;
@@ -92,15 +94,15 @@ void main() {
   log.info('Success: $successCount');
   log.info('Failure: $failureCount');
   log.info('Total: ${successCount + failureCount}');
-  var good = success.join(',  \n');
+//  var good = success.join(',  \n');
   var bad = failure.join(',  \n');
-  //log.info('Good Files: [\n$good,\n]\n');
+//  log.info('Good Files: [\n$good,\n]\n');
   log.info('bad Files: [\n$bad,\n]\n');
 }
 
-Instance readInstance(File f) {
+RootDataset readRDS(File f) {
   var bytes = f.readAsBytesSync();
   // print('LengthInBytes: ${bytes.length}');
-  DcmDecoder decoder = new DcmDecoder(new DSSource(bytes, f.path));
-  return decoder.readInstance();
+  DcmDecoder decoder = new DcmDecoder.fromSource(new DSSource(bytes, f.path));
+  return decoder.readRDS();
 }
