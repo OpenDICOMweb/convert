@@ -26,14 +26,14 @@ class DcmEncoder extends DcmWriter {
   final String filePath;
 
   /// Creates a new [DcmEncoder]
-  DcmEncoder([int lengthInBytes = defaultLengthInBytes, this.filePath = ""])
-      : super(lengthInBytes) {
+  DcmEncoder({int lengthInBytes = defaultLengthInBytes, this.filePath = ""})
+      : super(lengthInBytes: lengthInBytes) {
     log.debug('Encoder(${Int.toKB(lengthInBytes)}): $this');
   }
 
   DcmEncoder.toFile(String filePath, [int lengthInBytes = defaultLengthInBytes])
       : filePath = path.normalize(filePath),
-        super(lengthInBytes);
+        super(lengthInBytes: lengthInBytes);
 
   //DcmEncoder.fromList(List<int> list, [this.filePath = ""]) : super.fromList(list);
 
@@ -81,7 +81,7 @@ class DcmEncoder extends DcmWriter {
     log.debug('DcmEncoder.encode: $entity');
     int lengthIB = entity.dataset.source.lengthInBytes;
     log.debug('DcmDecoder.endode: length($lengthIB)');
-    var encoder = new DcmEncoder(lengthIB);
+    var encoder = new DcmEncoder(lengthInBytes: lengthIB);
     log.debug('Encoder: $encoder');
     return encoder.encodeEntity(entity);
   }
@@ -90,7 +90,7 @@ class DcmEncoder extends DcmWriter {
     log.debug('DcmEncoder.encodeDataset: $ds');
     int lengthIB = ds.source.lengthInBytes;
     log.debug('DcmDecoder.endodeDataset: length($lengthIB)');
-    var encoder = new DcmEncoder(lengthIB);
+    var encoder = new DcmEncoder(lengthInBytes: lengthIB);
     log.debug('Encoder: $encoder');
     encoder.writeDataset(ds);
     return encoder.bytes;

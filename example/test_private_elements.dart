@@ -30,8 +30,8 @@ void main(List<String> args) {
 bool writeReadElementTest<E>(Element<E> e0, [PrivateCreator pc]) {
   log.debug('writeReadElement: ${e0.info}');
   // Create Dataset DS0 and write E0
-  DcmWriter wBuf0 = new DcmWriter(512);
-  wBuf0.writeElement(e0);
+  DcmWriter wBuf0 = new DcmWriter(lengthInBytes: 512);
+  wBuf0.xWritePublicElement(e0);
   int wIndex0 = wBuf0.writeIndex;
   log.debug('wIndex0($wIndex0)');
 
@@ -44,19 +44,23 @@ bool writeReadElementTest<E>(Element<E> e0, [PrivateCreator pc]) {
   int rIndex0;
   Element pc0;
   Element e1;
-  if (e0.tag.isPublic) {
-    e1 = rBuf0.readElement();
-    log.debug('e1: ${e1.info}');
-    rIndex0 = rBuf0.readIndex;
-  } else if (e0.tag.isCreator) {
+  if (e0.tag is PTag) {
+    e1 = rBuf0.xReadPublicElement();
+    log.debug('PTag: ${e1.info}');
+  } else if (e0.tag is PCTag) {
     pc0 = rBuf0.xReadPrivateCreator();
-    log.debug('e1: ${pc0.info}');
-    rIndex0 = rBuf0.readIndex;
-  } else if (e0.tag.isPrivateData) {
+    log.debug('PCTag: ${pc0.info}');
+  } else if (e0.tag is PDTag) {
     e1 = rBuf0.xReadPrivateData(pc0);
-    log.debug('e1: ${e1.info}');
-    rIndex0 = rBuf0.readIndex;
+    log.debug('PDTag: ${e1.info}');
+  } else if (e0.tag is PrivateGroupLengthTag) {
+    e1 = rBuf0.xReadPrivateData(pc0);
+    log.debug('PrivateGroupLengthTag: ${e1.info}');
+  } else if (e0.tag is PrivateTag) {
+    e1 = rBuf0.xReadPrivateData(pc0);
+    log.debug('PrivateTag.illegal: ${e1.info}');
   }
+  rIndex0 = rBuf0.readIndex;
 
   // Now Compare the buffer index and the elements
   if (wIndex0 != rIndex0) {
@@ -68,13 +72,13 @@ bool writeReadElementTest<E>(Element<E> e0, [PrivateCreator pc]) {
     return false;
   }
 
-  DcmWriter wBuf1 = new DcmWriter(128);
-  wBuf1.writeElement(e1);
+  DcmWriter wBuf1 = new DcmWriter(lengthInBytes: 128);
+  wBuf1.xWritePublicElement(e1);
   int wIndex1 = wBuf1.writeIndex;
 
   // Now read the Dataset from the bytes.
   DcmReader rBuf1 = new DcmReader.fromList(wBuf1.bytes);
-  Element e2 = rBuf1.readElement();
+  Element e2 = rBuf1.xReadPublicElement();
   int rIndex1 = rBuf1.readIndex;
 
   // Now Compare the buffer index and the elements
@@ -86,18 +90,20 @@ bool writeReadElementTest<E>(Element<E> e0, [PrivateCreator pc]) {
     log.warn('Unequal: $e1, $e2');
     return false;
   }
-
   return true;
 }
 
 Element<E> writeReadDataset<E>(RootDataset ds0, Element<E> e0) {
   RootDataset ds0 = new RootDataset(DSSource.kUnknown);
   ds0.add(e0);
-  DcmWriter wBuf0 = new DcmWriter(128);
+  DcmWriter wBuf0 = new DcmWriter(lengthInBytes: 128);
   wBuf0.writeDataset(ds0);
+  Element<E> e;
   //TODO: create Dataset DS2 and write E1
 
   // Dataset rds1 = rBuf.readRootDataset()
+
+  return e;
 }
 
 /// Test Public Element
@@ -130,41 +136,51 @@ void testPrivateGroupLengthElement() {
 
 bool testPrivateGroupLength() {
   // Create Element
-  Tag glTag = new PrivateGroupLengthTag(0x00090000, VR.kCS);
-  Element e0 = new UL(glTag, [1024]);
+  Tag tag = new PrivateGroupLengthTag(0x00090000, VR.kCS);
+  Element e0 = new UL(tag, [1024]);
   //TODO: create Dataset DS0 and write E0
   //      create writer
   RootDataset rds0 = new RootDataset(DSSource.kUnknown);
   rds0.add(e0);
-  DcmWriter wBuf0 = new DcmWriter(128);
-  wBuf0.writeElement(e0);
+  DcmWriter wBuf0 = new DcmWriter(lengthInBytes: 128);
+  wBuf0.xWritePublicElement(e0);
   // wBuf0.writeDataset(rds0);
-  int wIndex = wBuf0.writeIndex;
+  int wIndex0 = wBuf0.writeIndex;
 
   // Read the Dataset from the bytes.
   //TODO: create Dataset DS1
   DcmReader rBuf = new DcmReader.fromList(wBuf0.bytes);
-  Element e1 = rBuf.readElement();
+  Element e1 = rBuf.xReadPublicElement();
  // Dataset rds1 = rBuf.readRootDataset()
   int rIndex = rBuf.readIndex;
-  if (wIndex != rIndex || e0 != e1) {
-    log.warn('Unequal: wIndex: $wIndex, rIndex: $rIndex');
+  if (wIndex0 != rIndex || e0 != e1) {
+    log.warn('Unequal: wIndex: $wIndex0, rIndex: $rIndex');
     return false;
   }
   if (e0 != e1) {
     log.warn('Unequal: $e0, $e1');
   }
   //TODO: create Dataset DS2 and write E1
-  DcmWriter wBuf1 = new DcmWriter(128);
+  DcmWriter wBuf1 = new DcmWriter(lengthInBytes: 128);
 
-  wBuf1.writeElement(e0);
+  wBuf1.xWritePublicElement(e0);
   int wIndex1 = wBuf1.writeIndex;
-
+  if (wIndex0 != wIndex1) return false;
   return true;
 }
 
 bool testPrivateIllegal(){
+  bool v;
 
+  return v;
 }
-bool testPrivateCreator(){}
-bool testPrivateData(){}
+bool testPrivateCreator(){
+  bool v;
+
+  return v;
+}
+bool testPrivateData(){
+  bool v;
+
+  return v;
+}

@@ -21,17 +21,27 @@ void main(List<String> args) {
 
 /// Test
 bool elementTest(Element e0, List values) {
-  DcmWriter wBuf = new DcmWriter(128);
-  Element e1 = e0.update(values);
+
+  Element e1 = e0.copy;
   log.debug('e0: ${e0.info}, e1: ${e1.info}');
-  wBuf.writeElement(e1);
+  Element e2 = e0.update(values);
+  log.debug('e1: ${e0.info}, e2: ${e1.info}');
+  if (e0 != e1) return false;
+  if (e1 != e2) return false;
+
+  // Write the element
+  DcmWriter wBuf = new DcmWriter(lengthInBytes: 128);
+  wBuf.xWritePublicElement(e1);
   int wIndex = wBuf.writeIndex;
+
+  // Read the element
   DcmReader rBuf = new DcmReader.fromList(wBuf.bytes);
-  Element e2 = rBuf.readElement();
+  Element e3 = rBuf.xReadPublicElement();
   int rIndex = rBuf.readIndex;
-  if (wIndex != rIndex || e0 != e1) {
-    log.warn('Unequal: $e0, $e1');
-    return false;
-  }
+  log.debug('wIndex: $wIndex, rIndex: $rIndex');
+  if (wIndex != rIndex) return false;
+
+  log.debug('e0: $e3, e3: $e3');
+  if (e0 != e3) return false;
   return true;
 }

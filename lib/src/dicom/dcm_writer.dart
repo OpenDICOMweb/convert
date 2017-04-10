@@ -7,13 +7,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:common/logger.dart';
-import 'package:common/number.dart';
-import 'package:core/dataset.dart';
-import 'package:core/element.dart';
+import 'package:common/common.dart';
+import 'package:convertX/src/bytebuf/bytebuf.dart';
+import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
-
-import '../bytebuf/bytebuf.dart';
 
 //TODO:
 //  1. Move all [String] trimming and validation to the Element.  The reader
@@ -46,33 +43,44 @@ typedef dynamic VFWriter<E>(Element<E> e);
 ///   byte as they were read, and a bytewise comparator will find them to be equal.
 ///   2. All String manipulation should be handled in the [Element] itself.
 ///   3. All VFWriters allow the Value Field to be empty.
-class DcmWriter extends ByteBuf {
+class DcmWriter<E> extends ByteBuf {
+  static const int defaultLengthInBytes = 2 * kMB;
   //TODO: make the buffer grow and shrink adaptively.
   /// The log for debug output.
   static final Logger log = new Logger("DcmWriter", watermark: Severity.debug);
 
-  /// If [true] the writer should [throw] when an [Error] occurs.
-  bool breakOnError = true;
+  /// The root Dataset for the object being read.
+  RootDataset _rootDS;
+
+  final bool isExplicitVR;
+
+  /// If [true] errors will throw; otherwise, return [null].
+  final bool throwOnError;
 
   //*** Constructors ***
   //TODO: what should the default length be
 
   /// Creates a new [DcmWriter], where [readIndex] = [writeIndex] = 0.
-  DcmWriter([int lengthInBytes]) : super.writer(lengthInBytes);
+  DcmWriter(
+      {int lengthInBytes = defaultLengthInBytes,
+      this.isExplicitVR = true,
+      this.throwOnError = true})
+      : super.writer(lengthInBytes);
 
   //TODO: explain use case for this.
   /// Creates a new writable [DcmWriter] from the [Uint8List] [bytes].
-  DcmWriter.from(DcmWriter buf, [int offset = 0, int length])
-      : super.from(buf, offset, length);
+  //DcmWriter.from(DcmWriter buf, [int offset = 0, int length])
+  //    : super.from(buf, offset, length);
 
+  // Flush or Fix
   /// Creates a [Uint8List] with the same length as the elements in [list],
   /// and copies over the elements.  Values are truncated to fit in the list
   /// when they are copied, the same way storing values truncates them.
-  DcmWriter.fromList(List<int> list) : super.fromList(list);
+  //DcmWriter.fromList(List<int> list) : super.fromList(list);
 
   /// Create a view of [this].
-  DcmWriter.view(ByteBuf buf, [int offset = 0, int length])
-      : super.view(buf, offset, length);
+  //DcmWriter.view(ByteBuf buf, [int offset = 0, int length])
+  //    : super.view(buf, offset, length);
 
   //**** Methods that Return new [ByteBuf]s.  ****
   //TODO: these next three don't do error checking and they should
@@ -94,125 +102,110 @@ class DcmWriter extends ByteBuf {
   // DcmWriter sublist(int start, int end) =>
   //     new DcmWriter.internal(bytes, start, end - start, end - start);
 
-  //****  Core Dataset methods  ****
-
   /// Write a [RootDataset].
-  void writeRootDataset(RootDataset rootDS) {
+  void writeRootDataset(RootDataset<E> rootDS) {
     log.down;
     log.debug('$wbb writeRootDataset: $rootDS');
-    writePreamble();
-    writePrefix();
-    log.debug('$rmm isExplicitVR($rootDS.isExplicitVR)');
+
+    _writePreambleAndPrefix();
+    log.debug('$rmm isExplicitVR($_rootDS.isExplicitVR)');
     writeDataset(rootDS);
     log.debug('$ree writeRootDataset.end');
     log.up;
     return;
   }
 
-  void writeDataset(Dataset ds, {bool isExplicitVR = true}) {
+  void writeDataset(Dataset<E> ds, [bool isExplicitVR = true]) {
     log.down;
     log.debug('$wbb writeDataset: $ds');
-    for (Element e in ds.elements)
-      writeElement(e, isExplicitVR: isExplicitVR);
+    for (Element<E> e in ds.elements) _writeElement(e, isExplicitVR);
     log.debug('$wee writeDataset.end');
     log.up;
     return;
   }
 
-  //Enhancement: if the file has a non-zero preamble, have the ability to write it out if desired.
-  /// Write the 128-byte preamble to the DICOM File Format.
-  void writePreamble() {
-    Uint8List preamble = new Uint8List(128);
-    log.debug('$wmm preamble length: ${preamble.length}');
-    writeUint8List(preamble);
+  /// This is the top-level entry point for writing an [Element].
+  void _writeElement(Element<E> e, [bool isExplicitVR = true]) {
+    log.down;
+    log.debug('$wbb _writeElement: ${e.info}');
+    (isExplicitVR) ? _writeExplicit(e) : _writeImplicit(e);
+    log.debug('$wee _writeElement: ${e.info}');
+    log.up;
   }
 
-  /// Write the DICOM Prefix "DICM".
-  // The Prefix is equivalent to a magic number that specifies the [Uint8List] is
-  // in DICOM File Format. See PS3.10.
-  void writePrefix() {
+  //Enhancement: if the file has a non-zero prefix,
+  // have the ability to write it out if desired.
+
+  /// Write the 128-byte, all zero, preamble for the DICOM File Format,
+  /// then write the DICOM Prefix "DICM".  The Prefix is equivalent to
+  /// a magic number that specifies the DICOM File Format. See PS3.10.
+  void _writePreambleAndPrefix() {
+    writeUint8List(new Uint8List(128));
     const String prefix = "DICM";
     Uint8List bytes = UTF8.encode(prefix);
     writeUint8List(bytes);
   }
 
-  void writeExplicitVRElement(Element e) => writeElement(e);
-
-  void writeImplicitVRElement(Element e) => writeElement(e, isExplicitVR: false);
-
-  /// This is the top-level entry point for writing an [Element].
-  void writeElement(Element e, {bool isExplicitVR = true}) {
-    log.down;
-    log.debug('$wbb writeElement: ${e.info}');
-    (isExplicitVR) ? _writeExplicit(e) : _writeImplicit(e);
-    log.debug('$wee writeElement: ${e.info}');
-    log.up;
+  void _writeFmi(RootDataset ds) {
+    //TODO
   }
 
-  // TODO: move to ByteBuf or FLush
-  /*
-  void checkWritable() {
-    if (isNotWritable) {
-      var msg = "Write Buffer empty: readIndex($readIndex), _writeIndex($writeIndex)";
-      log.error(msg);
-      throw msg;
-    }
-  }
-  */
-
-  void _writeExplicit(Element meta) {
-    log.down;
-    log.debug('$wbb _writeExplicit: ${meta.info}');
-    Element e = _maybeGetElement(meta);
-    if (e is SQ) {
-      _writeSQ(e);
-    } else {
-      _writeTag(e.tag);
-      // write VR
-      writeUint16(e.vr.code);
-      // Write Value Field length.
-      log.debug('$wmm e.lengthInBytes: ${e.bytes.lengthInBytes}, ${e.info}');
-      int lengthIB = e.bytes.lengthInBytes;
-      log.debug('$wmm  _writeExplicit: lengthInBytes($lengthIB)');
+  void _writeExplicit(Element<E> e) {
+    ByteBuf _writeVR(e) => writeUint16(e.vr.code);
+    void _writeVFLength(e) {
+      int lengthIB = _getVFLength(e);
+      log.debug('$wmm _writeVFLength($lengthIB): ${e.info}');
       (e.vr.hasShortVF) ? writeUint16(lengthIB) : _writeLongLength(lengthIB);
-      _write(e);
+    }
+
+    log.down;
+    log.debug('$wbb _writeExplicit: ${e.info}');
+    Element<E> e0 = _maybeGetElement(e);
+    if (e is SQ) {
+      _writeSQ(e0 as SQ);
+    } else {
+      _writeTag(e0);
+      _writeVR(e0);
+      _writeVFLength(e0);
+      _writeVF(e0);
       log.debug('$wee  _writeExplicit');
       log.up;
     }
   }
 
-  Element _maybeGetElement(Element e) {
+  /// If [e] is a [MetaElement] returns [e.element]; otherwise, returns e.
+  Element<E> _maybeGetElement(Element<E> e) {
     if (isNotWritable) _debugWriter(e, "End of buffer error: $this");
     if (e is MetaElement) {
-      MetaElement meta = e;
+      MetaElement<E> meta = e;
       log.down;
-      log.debug('$wbb writeMetaElement: ${e.info}');
-      Element element = meta.element;
-      log.debug('$wbb writeMetaElement end');
+      Element<E> element = meta.element;
+      log.debug('$wbb _maybeGetElement: ${e.info}');
       log.up;
       return element;
     }
     return e;
   }
 
-  void _writeImplicit(Element e) {
+  int _getVFLength(Element<E> e) =>
+      (e.hadUndefinedLength) ? kUndefinedLength : e.bytes.lengthInBytes;
+
+  void _writeImplicit(Element<E> e) {
     log.down;
     log.debug('$wbb _writeImplicit: ${e.info}');
-    Element e0 = _maybeGetElement(e);
-    _writeTag(e0.tag);
-    int vfLength =
-        (e0.hadUndefinedLength) ? kUndefinedLength : e0.bytes.lengthInBytes;
-    writeUint32(vfLength);
-    _write(e0);
+    Element<E> e0 = _maybeGetElement(e);
+    _writeTag(e0);
+    writeUint32(_getVFLength(e0));
+    _writeVF(e0);
     log.debug('$wee _writeImplicit-end');
     log.up;
   }
 
   ///TODO: this is expensive! Is there a better way?
   /// write the DICOM Element Tag
-  void _writeTag(Tag tag) {
-    writeUint16(tag.group);
-    writeUint16(tag.elt);
+  void _writeTag(Element e) {
+    writeUint16(e.tag.group);
+    writeUint16(e.tag.elt);
   }
 
   /// Skips 2-bytes and then writes and returns a 32-bit length field.
@@ -224,7 +217,7 @@ class DcmWriter extends ByteBuf {
   }
 
   /// Write the Value Field for this [Element].
-  void _write(Element e) {
+  void _writeVF(Element e) {
     /// The order of the VRs in this [List] MUST correspond to the [VR.index]
     /// in the definitions of [VR].  Note: the [VR.index]es start at 1, so
     /// in this [List] the 0th function is [_debugWriter].
@@ -337,7 +330,7 @@ class DcmWriter extends ByteBuf {
       log.debug('$wmm writeSQ-end');
       log.up;
     } else {
-      _writeLongLength(sq.lengthInBytes);
+      _writeLongLength(sq.vfLength);
       _writeItems(sq.items);
     }
     log.debug('$wee writeSequence-end');
@@ -365,15 +358,15 @@ class DcmWriter extends ByteBuf {
   }
 
   /// Writes a [List] of [Item]s to [bytes].
-  void _writeItems(List<Item> items) {
+  void _writeItems(List<Item<E>> items) {
     log.down;
     log.debug('$wbb writeItems:${items.length} Items');
-    for (Item item in items) _writeItem(item);
+    for (Item<E> item in items) _writeItem(item);
     log.debug('$wee writeItems-end');
     log.up;
   }
 
-  void _writeItem(Item item) {
+  void _writeItem(Item<E> item) {
     log.down;
     log.debug('$wbb writeItem ${item.info} for ${item.sq.info} ');
     if (item.hadUndefinedLength) {
@@ -381,7 +374,7 @@ class DcmWriter extends ByteBuf {
       log.debug('$wbb Item hadUndefinedLength');
       // Can't use _writeLongLength here!
       _writeItemHeader(kUndefinedLength);
-      for (Element e in item.elements) writeElement(e);
+      for (Element<E> e in item.elements) _writeElement(e);
       _writeItemDelimiter();
       log.debug('$wbb Item hadUndefinedLength-end');
       log.up;
@@ -390,7 +383,7 @@ class DcmWriter extends ByteBuf {
       _writeItemHeader(item.vfLength);
       log.debug(
           '$wbb writeItem vfLength(${item.vfLength}, ${Int.hex(item.vfLength)}');
-      for (Element e in item.elements) writeElement(e);
+      for (Element<E> e in item.elements) _writeElement(e);
     }
     log.debug('$wee writeItem-end');
     log.up;
@@ -456,4 +449,33 @@ class DcmWriter extends ByteBuf {
   void _debugWriter(Element e, String msg) {
     //TODO:
   }
+
+  // External Interface for Testing
+// **** These methods should not be used in the code above ****
+
+  /// Returns [true] if the File Meta Information was present and
+  /// read successfully.
+  void xWriteFmi(RootDataset rootDS, [bool checkForPrefix = true]) {
+    if (!rootDS.hasValidTransferSyntax) return null;
+    _writeFmi(rootDS);
+  }
+
+  void xWritePublicElement(Element<E> e, [bool isExplicitVR = true]) =>
+      _writeElement(e, isExplicitVR);
+
+  // External Interface for testing
+  void xWritePGLength(Element<E> e, [bool isExplicitVR = true]) =>
+      _writeElement(e, isExplicitVR);
+
+  // External Interface for testing
+  void xWritePrivateIllegal(Element<E> e, [bool isExplicitVR = true]) =>
+      _writeElement(e, isExplicitVR);
+
+  // External Interface for testing
+  void xWritePrivateCreator(Element<E> e, [bool isExplicitVR = true]) =>
+      _writeElement(e, isExplicitVR);
+
+  // External Interface for testing
+  void xWritePrivateData(Element<E> e, [bool isExplicitVR = true]) =>
+      _writeElement(e, isExplicitVR);
 }
