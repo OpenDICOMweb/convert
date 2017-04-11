@@ -4,6 +4,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:common/logger.dart';
@@ -99,5 +100,24 @@ class DcmDecoder extends DcmReader {
       [Series series,Study study, Subject subject]) {
     DcmDecoder decoder = new DcmDecoder.fromSource(source);
     return decoder.readInstance(series, study, subject);
+  }
+
+  static RootDataset readRoot(Uint8List bytes) {
+    DcmDecoder decoder = new DcmDecoder(bytes);
+    RootDataset rds = decoder.readRootDataset();
+    return rds;
+  }
+
+
+
+  static RootDataset readRootNoFMI(Uint8List bytes) {
+    DcmDecoder decoder = new DcmDecoder(bytes);
+    Dataset rds = decoder.readDataset();
+    return rds;
+  }
+
+  static RootDataset readFile(File file) {
+    var bytes = file.readAsBytesSync();
+    return DcmDecoder.readRoot(bytes);
   }
 }

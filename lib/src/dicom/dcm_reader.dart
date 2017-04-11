@@ -60,6 +60,7 @@ class DcmReader<E> extends ByteBuf {
   DcmReader(Uint8List bytes, [this.throwOnError = false])
       : rootDS = new RootDataset(),
         super.reader(bytes) {
+    _warnIfShortFile(bytes.lengthInBytes);
     currentDS = rootDS;
   }
   //TODO: finish
@@ -68,6 +69,7 @@ class DcmReader<E> extends ByteBuf {
       [RootDataset rootDS, this.throwOnError = true])
       : rootDS = (rootDS == null) ? new RootDataset() : rootDS,
         super.reader(source.bytes) {
+    _warnIfShortFile(source.bytes.lengthInBytes);
     currentDS = rootDS;
   }
 
@@ -77,6 +79,7 @@ class DcmReader<E> extends ByteBuf {
   DcmReader.fromList(List<int> list, [this.throwOnError = true])
       : rootDS = new RootDataset(),
         super.fromList(list) {
+    _warnIfShortFile(list.length);
     currentDS = rootDS;
   }
 
@@ -92,21 +95,24 @@ class DcmReader<E> extends ByteBuf {
   /// Reads a [RootDataset] from [this] and returns it. If an error is
   /// encountered [readRootDataset] will throw an Error is or [null].
   RootDataset readRootDataset([bool allowMissingFMI = false]) {
+    bool prefixPresent;
+    bool fmiPresent;
     int start = readIndex;
-    if (!_hasPrefix()) return null;
+    prefixPresent = _hasPrefix();
     log.debug('$rbb readRootDataset: $rootDS');
-    try {
-      _readFmi();
-    } catch (e) {
-      log.error('Could not read FMI: "${rootDS.path}"');
-      rethrow;
-    }
+
+    bool hasFmi = readFMI();
+    if (!hasFmi) return null;
+
     var ts = rootDS.transferSyntax;
     log.debug('$rmm readRootDataset: TS($ts)}, isExplicitVR: $isExplicitVR');
     if (!rootDS.hasValidTransferSyntax) {
       if (throwOnError) throw new InvalidTransferSyntaxError(ts, log);
+      log.up;
       return rootDS;
     }
+    if (ts == TransferSyntax.kExplicitVRBigEndian)
+      throw new InvalidTransferSyntaxError(ts);
     try {
       readDataset(rootDS.isExplicitVR);
     } on EndOfDataException catch (e) {
@@ -118,21 +124,17 @@ class DcmReader<E> extends ByteBuf {
     if (start != 0 || readIndex != lengthInBytes) {
       log.error('Did not read to end of file: Start($start), readIndex'
           '($readIndex) lengthInBytes($lengthInBytes): $this');
-      log.debug('$ree readRootDataset: $rootDS');
+      if (throwOnError) throw 'Terminated before EOF';
     }
-    if (rootDS == null) return null;
+    log.debug('$ree readRootDataset: $rootDS');
+    log.up;
     return rootDS;
   }
 
   Dataset readDataset([bool isExplicitVR = true]) {
     log.down;
     log.debug('$rbb readDataset: isExplicitVR($isExplicitVR)');
-    while (isReadable) {
-      //    log.debug('$rmm buf: $this');
-      while (isReadable) {
-        _readElement(isExplicitVR);
-      }
-    }
+    while (isReadable) _readElement(isExplicitVR);
     log.debug('$ree end readDataset: isExplicitVR($isExplicitVR)');
     log.up;
     return rootDS;
@@ -141,19 +143,24 @@ class DcmReader<E> extends ByteBuf {
   void _readElement([bool isExplicitVR = true]) {
     final int code = _readTagCode();
     log.debug('$rmm readElement: _readCode${Tag.toDcm(code)}');
-    var value;
     if (Tag.isPublicCode(code)) {
-      value = _xReadElement(code, PTag.maker, isExplicitVR);
-      currentDS[value.tag.code] = value;
-      log.debug('$rmm readPublicElement: ${value.info}');
+      Element e = _xReadElement(code, PTag.maker, isExplicitVR);
+      log.debug('$rmm readPublicElement: ${e.info}');
+      currentDS[e.tag.code] = e;
+      return;
     } else if (Tag.isPrivateCode(code)) {
       PrivateGroup e = _readPrivateGroup(code, isExplicitVR);
       currentDS.privateGroups.add(e);
       log.debug('$rmm readPrivateGroup: ${e.info}');
+      return;
     } else {
-      if (throwOnError) tagCodeError(code);
-      _debugReader(code, code);
+      Element e = _xReadElement(code, PTag.unknownMaker, isExplicitVR);
+      log.debug('$rmm readIllegalElement: ${e.info}');
+      currentDS[e.tag.code] = e;
+      return;
     }
+    if (throwOnError) tagCodeError(code);
+    _debugReader(code, code);
     return;
   }
 
@@ -162,29 +169,39 @@ class DcmReader<E> extends ByteBuf {
     skipReadBytes(128);
     final String prefix = readAsciiString(4);
     if (prefix == "DICM") return true;
+    log.warn('No DICOM Prefix present');
     skipReadBytes(-132);
     return false;
   }
 
   /// Reads File Meta Information ([Fmi]). If any [Fmi] [Element]s
   /// were present returns true.
-  TransferSyntax _readFmi() {
+  bool readFMI() {
     log.down;
     log.debug('$rbb readFmi($currentDS)');
-    assert(currentDS is RootDataset);
-    while (isReadable) {
-      int code = _readTagCode();
-      if (code >= 0x00080000) {
-        unreadBytes(4);
-        break;
+    setReadIndexMark;
+    try {
+      while (isReadable) {
+        int code = _readTagCode();
+        if (code >= 0x00080000) {
+          unreadBytes(4);
+          break;
+        }
+        Element value = _xReadElement(code, PTag.maker, true);
+        currentDS[value.tag.code] = value;
+        log.debug('$rmm _readFmi: ${value.info}');
       }
-      Element value = _xReadElement(code, PTag.maker, true);
-      currentDS[value.tag.code] = value;
-      log.debug('$rmm _readFmi: ${value.info}');
+    } catch (e) {
+      log.error('Failed to read FMI: "${rootDS.path}"');
+      log.error('Exception: $e');
+      log.error('File length: ${bytes.lengthInBytes}');
+      resetReadIndexMark;
+      log.up;
+      return false;
     }
     log.debug('$ree readFmi: ${rootDS.transferSyntax}');
     log.up;
-    return rootDS.transferSyntax;
+    return true;
   }
 
   /// Peek at next tag - doesn't move the [readIndex].
@@ -200,13 +217,14 @@ class DcmReader<E> extends ByteBuf {
   ///TODO: this is expensive! Is there a better way?
   /// Read the DICOM Element Tag
   int _readTagCode() {
-    if (isNotReadable)
-      if (throwOnError) {
-        throw new EndOfDataException('_readPCreators');
-      } else {
-        _debugReader(new Tag(0, VR.kUN), "Is not readable: readIndex "
-            "$readIndex");
-      }
+    if (isNotReadable) if (throwOnError) {
+      throw new EndOfDataException('_readPCreators');
+    } else {
+      _debugReader(
+          new Tag(0, VR.kUN),
+          "Is not readable: readIndex "
+          "$readIndex");
+    }
     int group = readUint16();
     int elt = readUint16();
     int code = (group << 16) + elt;
@@ -517,7 +535,7 @@ class DcmReader<E> extends ByteBuf {
     int end = readIndex;
     item.actualLengthInBytes = end - start;
     log.up;
-    log.debug('$ree ${item.info}');
+    log.debug1('$ree _readItem ${item.info}');
     log.up;
     return item;
   }
@@ -735,9 +753,9 @@ class DcmReader<E> extends ByteBuf {
       Element e = _xReadElement(nextCode, PCTag.maker, isExplicitVR);
       log.debug('$rmm _readPCreator tag: ${e.tag.info}');
       log.debug('$rmm _readPCreator e:${e.info}');
-  // TODO: test this in verifier
-  //    if (e.vr != VR.kLO && e.vr != VR.kUN)
-  //      throw 'Bad Private Creator VR(${e.vr})';
+      // TODO: test this in verifier
+      //    if (e.vr != VR.kLO && e.vr != VR.kUN)
+      //      throw 'Bad Private Creator VR(${e.vr})';
       if (e.values.length != 1) throw 'InvalidCreatorToken(${e.values})';
       var pc = new PrivateCreator(e);
       log.debug('$ree _readElement: ${e.info}');
@@ -824,44 +842,13 @@ class DcmReader<E> extends ByteBuf {
     log.up;
     return nextCode;
   }
-/* TODO: if above works flush this and PrivateCreator.kNonExtant
-  int _readPDSubgroupNoCreator(int code, bool isExplicitVR, PrivateGroup pg,
-      int sgIndex) {
-    var sg = new PrivateSubGroup(pg, PrivateCreator.kNonExtantCreator);
-    int nextCode = code;
-    PrivateCreator pc = sg.creator;
-    log.down;
-    log.debug('$rbb readPDSubgroupNoCreator${Tag.toDcm(nextCode)}: '
-        '${pc.inSubgroup(nextCode)}');
-    while (Tag.isPDataCodeInSubgroup(nextCode, pg.group, Tag.p))) {
-      log.down;
-      log.debug('$rmm _readPDSubgroup: base(${Elt.hex(pc.base)}), '
-          'limit(${Elt.hex(pc.limit)})');
 
-      _TagMaker maker =
-          (int nextCode, VR vr, [name]) => new PDTag(nextCode, vr, pc.tag);
-      Element<E> pd = _xReadElement(nextCode, maker, isExplicitVR);
-      log.debug('$rmm _readPDataSubgroup: pd: ${pd.info}');
-      //TODO remove next line
-      pc.add(pd);
-      //Flush sg.add(pd);
-      currentDS.add(pd);
-      log.up;
-      nextCode = _readTagCode();
-    }
-    log.debug('$ree end _readPDInSubgroupt${Tag.toDcm(nextCode)}: $sg');
-    log.up;
-    return nextCode;
+  static const int kMinFileLength = 4096;
+
+  static void _warnIfShortFile(int length) {
+    if (length < kMinFileLength) log.warn('**** Trying to read $length bytes');
   }
-  int _readPData(int code, bool isExplicitVR, int group, int subgroup) {
-    while(Tag.isPDataCodeInSubgroup(code, group, subgroup)) {
-      _TagMaker maker =
-          (int code, VR vr, [name]) => new PDTag(code, vr, pc.tag);
-      Element<E> pd = _xReadElement(code, maker, isExplicitVR);
-      log.debug('$rmm _readPDataSubgroup: pd: ${pd.info}');
-    }
-  }
-*/
+
   //TODO: improve
   void _debugReader(tag, obj, [int vfLength, String msg]) {
     // [readIndex] should be at start + 6
@@ -892,8 +879,8 @@ debugReader:
   /// read successfully.
   TransferSyntax xReadFmi([bool checkForPrefix = true]) {
     if (checkForPrefix && !_hasPrefix()) return null;
-    _readFmi();
-    if (!rootDS.hasValidTransferSyntax) return null;
+    bool hasFMI = readFMI();
+    if (!hasFMI || !rootDS.hasValidTransferSyntax) return null;
     return rootDS.transferSyntax;
   }
 

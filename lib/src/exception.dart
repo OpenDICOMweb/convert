@@ -4,7 +4,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-class EndOfDataException {
+class EndOfDataException implements Exception {
   String method;
   String msg;
 
@@ -13,3 +13,5 @@ class EndOfDataException {
   @override
   String toString() => 'EndOfDataException in $method: $msg';
 }
+
+

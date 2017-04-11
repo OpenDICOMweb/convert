@@ -35,10 +35,12 @@ Logger log = new Logger("read_a_directory", watermark: Severity.info);
 void main() {
 
     List<Directory> dirs = getDirectories(inRoot5);
+    int count = 0;
     for(Directory dir in dirs) {
       log.info('  $dir');
-      int count = getDcmFileCount(dir);
+      count += getDcmFileCount(dir);
     }
+    print('count: $count');
 }
 
 List<FileSystemEntity> getAllFSEntities(String path) {

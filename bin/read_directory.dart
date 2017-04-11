@@ -23,7 +23,7 @@ String outRoot0 = 'test/output/root0';
 String outRoot1 = 'test/output/root1';
 String outRoot2 = 'test/output/root2';
 String outRoot3 = 'test/output/root3';
-String outRoot4 = 'test/output/root4';
+String outRoot4 =  'test/output/root4';
 
 String mweb0 = 'C:/odw/test_data/mweb/10 Patient IDs';
 String mweb1 = 'C:/odw/test_data/mweb/100 MB Studies';
@@ -32,15 +32,12 @@ String hologic = 'C:/odw/test_data/mweb/Hologic';
 String badDir0 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
 String badDir1 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop";
 
-void main() {
-  int printEvery = 25;
-  int fsEntityCount;
-  int filesCount;
-  int successCount;
-  int failureCount;
-  Logger log = new Logger("read_a_directory", watermark: Severity.info);
+Logger log = new Logger("read_a_directory", watermark: Severity.info);
 
-  Directory dir = new Directory(badDir1);
+void main() {
+  int fsEntityCount;
+
+  Directory dir = new Directory(inRoot6);
 
   List<FileSystemEntity> fList = dir.listSync(recursive: true);
   fsEntityCount = fList.length;
@@ -57,8 +54,18 @@ void main() {
       }
     }
   }
-  filesCount = files.length;
-  log.info('Reading $filesCount files from ${dir.path}:');
+  log.info('Reading ${files.length} files from ${dir.path}:');
+  readFileList(files);
+}
+
+void readFileList(List<File> files) {
+  int printEvery = 25;
+  int fsEntityCount;
+  int successCount;
+  int failureCount;
+
+  int filesCount = files.length;
+
 
   int count = -1;
   RootDataset rds;
