@@ -68,12 +68,12 @@ class DcmDecoder extends DcmReader {
     log.debug('readInstance: $this');
     log.down;
     RootDataset ds;
-    try {
+ //   try {
       ds = readRootDataset();
-    } catch (e) {
-      log.error('readInstance: $e');
-      return null;
-    }
+ //   } catch (e) {
+ //     log.error('readInstance: $e');
+ //     return null;
+ //   }
     if (!ds.hasValidTransferSyntax) return null;
     log.debug('readInstance RootDataset($ds)');
     return Instance.fromDataset(ds, series, study, subject);
@@ -86,16 +86,12 @@ class DcmDecoder extends DcmReader {
     log.debug('readRDS: $this');
     log.down;
     RootDataset ds;
-    try {
-      ds = readRootDataset();
-    } catch (e) {
-      log.error('readInstance: $e');
-      return null;
-    } finally {
-      if (!ds.hasValidTransferSyntax) return null;
-      log.debug('readRDS: count(${ds.length})');
-      return ds;
-    }
+
+    ds = readRootDataset();
+    if (!ds.hasValidTransferSyntax) return null;
+
+    log.debug('readRDS: count(${ds.length})');
+    return ds;
   }
 
   ///TODO: doc

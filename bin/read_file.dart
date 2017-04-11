@@ -35,26 +35,28 @@ String badFile0 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy/1.2.840.113619"
 String badFile1 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
     ".840.10008.5.1.4.1.1.1.2.1.dcm";
 
+String badFile2 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
+    ".840.10008.5.1.4.1.1.104.2.dcm ";
+
+String badFile3 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
+    ".840.10008.5.1.4.1.1.128.1.dcm";
+
+String test = 'C:/odw/sdk/test_tools/test_data/TransferUIDs'
+    '/1.2.840.10008.1.2.5.dcm';
 String badDir = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
 final Logger log =
     new Logger("io/bin/read_file.dart", watermark: Severity.debug);
 
 void main() {
- readFile(badFile1);
+  //readFile(badFile3);
 
- // log.info('Reading ${fileList.length} Files:');
- // readFiles(fileList);
+   log.info('Reading ${fileList0.length} Files:');
+   readFiles(fileList0);
 }
 
 void readFile(String path) {
   File input = new File(path);
-  Instance instance;
-  try {
-    instance = _readFile(input);
-  } catch(e) {
-    log.error('Could not read "$path": $e');
-    return null;
-  }
+  Instance instance = _readFile(input);
   if (instance == null) {
     log.error('Null Instance $path');
     return null;
@@ -63,7 +65,7 @@ void readFile(String path) {
   var z = new Formatter(maxDepth: 146);
   log.debug(instance.format(z));
   //TODO: make this work
-  for(PrivateGroup pg in instance.dataset.privateGroups) log.debug(pg.info);
+  for (PrivateGroup pg in instance.dataset.privateGroups) log.debug(pg.info);
   // for (PrivateGroup pg in instance.dataset.privateGroups)
   //  log.debug(pg.format(z));
 }
@@ -72,16 +74,9 @@ void readFiles(List<String> paths) {
   bool throwOnError = true;
   File input;
   for (String path in paths) {
-    try {
-      input = new File(path);
-      Instance instance = _readFile(input);
-      log.info('${instance.info}');
-    } catch (e) {
-      log.info('File: $input');
-      log.info('e: $e');
-      if (throwOnError) rethrow;
-      return;
-    }
+    input = new File(path);
+    Instance instance = _readFile(input);
+    log.info('${instance.info}');
   }
 }
 
@@ -94,7 +89,17 @@ Instance _readFile(File input) {
   return instance;
 }
 
-List<String> fileList = const <String>[
+const List<String> fileList0 = const <String>[
+"C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.128.1.dcm",
+"C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.2.dcm",
+"C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.4.dcm",
+"C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.481.2.dcm",
+"C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.481.3.dcm",
+"C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.481.5.dcm",
+"C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.7.dcm",
+"C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.88.33.dcm",
+];
+const List<String> fileList = const <String>[
   "C:/odw/test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original/IM000001.dcm",
   "C:/odw/test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original/IM000002.dcm",
   "C:/odw/test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original/IM000003.dcm",
