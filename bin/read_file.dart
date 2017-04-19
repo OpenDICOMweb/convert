@@ -42,16 +42,18 @@ String badFile2 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
 String badFile3 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
     ".840.10008.5.1.4.1.1.128.1.dcm";
 
+String badFile4 = "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm";
+
 String test = 'C:/odw/sdk/test_tools/test_data/TransferUIDs'
     '/1.2.840.10008.1.2.5.dcm';
 String badDir = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
 final Logger log =
-    new Logger("io/bin/read_file.dart", watermark: Severity.info);
+    new Logger("io/bin/read_file.dart", watermark: Severity.debug);
 
 void main() {
- // readFile(badFileList2[3]);
+  readFile(path2);
 
-  readFiles(badFileList4);
+  //readFiles(badFileList4);
 }
 
 void readFile(String path) {
@@ -90,6 +92,7 @@ RootDataset _readFile(File input) {
     log.debug(e);
     return null;
   } catch(e) {
+    log.info('calling readRootNoFMI');
     rds = DcmDecoder.readRootNoFMI(bytes);
   }
   return rds;

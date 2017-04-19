@@ -7,9 +7,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:common/logger.dart';
-import 'package:core/core.dart';
+import 'package:core/entity.dart';
 
+import 'dataset.dart';
 import 'dcm_reader.dart';
 
 /// Decoder for DICOM File Format octet streams (Uint8List)
@@ -17,27 +17,24 @@ import 'dcm_reader.dart';
 /// [DcmDecoder] reads DICOM SOP Instances and returns a [RootDataset].
 /// TODO: finish doc
 class DcmDecoder extends DcmReader {
-  static final Logger log = new Logger("DcmDecoder", watermark: Severity.info);
   //TODO: add ability to keep non-zero preamble
 
-  /// The source of the bytes to be parsed.
-  final DSSource source;
+  /// Creates a new [DcmDecoder]
+  DcmDecoder(ByteData bd,
+      {bool throwOnError = true,
+      String path = "",
+      bool allowImplicitLittleEndian = true})
+      : super(bd,
+            throwOnError: throwOnError,
+            path: path,
+            allowImplicitLittleEndian: allowImplicitLittleEndian);
 
   /// Creates a new [DcmDecoder]
-  DcmDecoder(Uint8List bytes,
-      {String path = "", bool throwOnError = false, bool allowILEVR = true})
-      : source = null,
-        super(bytes,
-            path: path, throwOnError: throwOnError, allowILEVR: allowILEVR);
-
-  /// Creates a new [DcmDecoder]
-  DcmDecoder.fromSource(this.source,
-      {String path = "", bool throwOnError = false, bool allowILEVR = true})
-      : super(source.bytes,
-            path: path, throwOnError: throwOnError, allowILEVR: allowILEVR);
+  //  Fix: DcmDecoder.fromSource([this.source = DSSource.kUnknown])
+  //    : super.fromSource(source, new RootDataset());
 /*
   // Read the 128-byte preamble to the DICOM File Format.
-  Uint8List readPreamble() {
+  Uint8List _readPreamble() {
     _preamble = readUint8List(128);
     return _preamble;
   }
@@ -53,7 +50,8 @@ class DcmDecoder extends DcmReader {
   // The Prefix is equivalent to a magic number that specifies the [Uint8List] is
   // in DICOM File Format. See PS3.10.
   //TODO: is this really needed?
-  String readPrefix() {
+  String _readPrefix() {
+    skip(128);
     String prefix = readString(4);
     if (prefix != "DICM") {
       throw 'Bad Prefix: $prefix';
@@ -62,55 +60,53 @@ class DcmDecoder extends DcmReader {
     return _prefix;
   }
 */
+/* fix or flush
   //TODO: this will need to be modified to handle different types of datasets
   //TODO for now they are all instances.
   /// Reads a DICOM SOP [Instance] from a [Uint8List].
   Entity readInstance([Series series, Study study, Subject subject]) {
-    log.debug('readInstance: $this');
-    log.down;
+    DcmReader.log.debug('readInstance: $this');
+    DcmReader.log.down;
     RootDataset ds;
-    //   try {
-    ds = readRootDataset();
-    //   } catch (e) {
-    //     log.error('readInstance: $e');
-    //     return null;
-    //   }
+ //   try {
+      ds = readRootDataset();
+ //   } catch (e) {
+ //     DcmReader.log.error('readInstance: $e');
+ //     return null;
+ //   }
     if (!ds.hasValidTransferSyntax) return null;
-    log.debug('readInstance RootDataset($ds)');
+    DcmReader.log.debug('readInstance RootDataset($ds)');
     return Instance.fromDataset(ds, series, study, subject);
   }
-
+*/
   //TODO: this will need to be modified to handle different types of datasets
   //TODO for now they are all instances.
   /// Reads a DICOM SOP [Instance] from a [Uint8List].
   RootDataset readRDS() {
-    log.debug('readRDS: $this');
-    log.down;
+    DcmReader.log.debug('readRDS: $this');
+    DcmReader.log.down;
     RootDataset ds;
 
     ds = readRootDataset();
     if (!ds.hasValidTransferSyntax) return null;
 
-    log.debug('readRDS: count(${ds.length})');
+    DcmReader.log.debug('readRDS: count(${ds.length})');
     return ds;
   }
 
-  ///TODO: doc
-  static Instance decode(DSSource source,
-      [Series series, Study study, Subject subject]) {
-    DcmDecoder decoder = new DcmDecoder.fromSource(source);
-    return decoder.readInstance(series, study, subject);
-  }
-
   static RootDataset readRoot(Uint8List bytes) {
-    DcmDecoder decoder = new DcmDecoder(bytes);
+    ByteData bd =
+        bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
+    DcmDecoder decoder = new DcmDecoder(bd);
     RootDataset rds = decoder.readRootDataset();
     return rds;
   }
 
   static RootDataset readRootNoFMI(Uint8List bytes) {
-    DcmDecoder decoder = new DcmDecoder(bytes);
-    Dataset rds = decoder.readDataset();
+    ByteData bd =
+        bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
+    DcmDecoder decoder = new DcmDecoder(bd);
+    Dataset rds = decoder.xReadDataset();
     return rds;
   }
 

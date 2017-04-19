@@ -5,6 +5,7 @@
 // See the AUTHORS file for other contributors.
 
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:common/logger.dart';
 import 'package:convertX/convert.dart';
@@ -76,3 +77,32 @@ class FileListReader {
     return failures;
   }
 }
+
+RootDataset readFMI(Uint8List bytes, [String path = ""]) =>
+  DcmDecoder.readRoot(bytes);
+
+
+RootDataset readRoot(Uint8List bytes, [String path = ""]) {
+DcmReader reader = new DcmReader(bytes);
+RootDataset rds = reader.readRootDataset();
+return rds;
+}
+
+RootDataset readRootNoFMI(Uint8List bytes, [String path = ""]) {
+  DcmReader decoder = new DcmReader(bytes);
+Dataset rds = decoder.readDataset();
+return rds;
+}
+
+RootDataset readBytes(Uint8List bytes,
+    [String path = "", bool fmiOnly = false]) =>
+    (fmiOnly) ? DcmReader.rootDataset(bytes, path) : DcmReader.fmi(bytes, path);
+
+
+
+RootDataset readFile(File file, [String path = "", bool fmiOnly = false]) =>
+    readBytes(file.readAsBytesSync(), path);
+
+RootDataset readPath(String path, [bool fmiOnly = false]) =>
+    readFile(new File
+  (path), path);

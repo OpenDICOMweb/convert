@@ -161,8 +161,8 @@ class DcmWriter<E> extends ByteBuf {
     log.down;
     log.debug('$wbb _writeExplicit: ${e.info}');
     Element<E> e0 = _maybeGetElement(e);
-    if (e is SQ) {
-      _writeSQ(e0 as SQ);
+    if (e0 is SQ) {
+      _writeSQ(e0);
     } else {
       _writeTag(e0);
       _writeVR(e0);
@@ -318,7 +318,8 @@ class DcmWriter<E> extends ByteBuf {
 
   //**** Sequences and Items
 
-  void _writeSQ(SQ sq) {
+  void _writeSQ(Element<E> e) {
+    SQ sq = e as SQ;
     log.down;
     log.debug('$wbb writeSequence:${sq.info}');
     if (sq.hadUndefinedLength) {

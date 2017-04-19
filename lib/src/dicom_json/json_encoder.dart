@@ -7,7 +7,9 @@
 import 'dart:typed_data';
 
 import 'package:common/format.dart';
-import 'package:core/core.dart';
+import 'package:core/dataset.dart';
+import 'package:core/element.dart';
+import 'package:core/entity.dart';
 
 import '../bytebuf/bytebuf.dart';
 
@@ -101,8 +103,8 @@ class JsonEncoder extends ByteBuf {
   ByteBuf writeValues(Element e, Formatter fmt) {
     String s;
     //  if ((e is OB) || (e is OD) || (e is OF) || (e is OL) || (e is OW) || (e is UN)) {
-    if ((e is IntBase) || (e is FloatBase)) {
-      s = e.base64FromBytes(e.bytes);
+    if ((e is IntBase) || (e is Float32Base) || (e is Float64Base)) {
+  //fix    s = e.base64;
     } else {
       s = e.asString;
     }

@@ -38,26 +38,36 @@ typedef Tag _TagMaker(int code, VR vr, [extra]);
 ///   return the empty [List] [].
 class DcmReader<E> extends ByteBuf {
   ///TODO: doc
-  static final Logger log = new Logger("DcmReader", watermark: Severity.debug);
+  static final Logger log = new Logger("DcmReader", watermark: Severity.info);
 
   /// The root Dataset for the object being read.
   final RootDataset rootDS;
 
+  final String path;
+
+  //TODO: remove this it's not necessary
   /// A stack of [Dataset]s.  Used to save parent [Dataset].
   final DatasetStack dsStack = new DatasetStack();
 
   /// If [true] errors will throw; otherwise, return [null].
   final bool throwOnError;
 
+  final bool allowILEVR;
+
   /// The current dataset.  This changes as Sequences are read and
   /// [Items]s are pushed on and off the [dsStack].
   Dataset currentDS;
+  bool prefixPresent;
+  bool fmiPresent;
 
   //*** Constructors ***
 
   //TODO: finish
   /// Creates a new [DcmReader]  where [readIndex] = [writeIndex] = 0.
-  DcmReader(Uint8List bytes, [this.throwOnError = false])
+  DcmReader(Uint8List bytes,
+      {this.path = "",
+      this.throwOnError = false,
+      this.allowILEVR = true})
       : rootDS = new RootDataset(),
         super.reader(bytes) {
     _warnIfShortFile(bytes.lengthInBytes);
@@ -66,7 +76,10 @@ class DcmReader<E> extends ByteBuf {
   //TODO: finish
   /// Creates a new [DcmReader]  where [readIndex] = [writeIndex] = 0.
   DcmReader.fromSource(DSSource source,
-      [RootDataset rootDS, this.throwOnError = true])
+      {RootDataset rootDS,
+      this.path = "",
+      this.throwOnError = false,
+      this.allowILEVR = true})
       : rootDS = (rootDS == null) ? new RootDataset() : rootDS,
         super.reader(source.bytes) {
     _warnIfShortFile(source.bytes.lengthInBytes);
@@ -76,7 +89,10 @@ class DcmReader<E> extends ByteBuf {
   /// Creates a [Uint8List] with the same length as the elements in [list],
   /// and copies over the elements.  Values are truncated to fit in the list
   /// when they are copied, the same way storing values truncates them.
-  DcmReader.fromList(List<int> list, [this.throwOnError = true])
+  DcmReader.fromList(List<int> list,
+      {this.path = "",
+      this.throwOnError = false,
+      this.allowILEVR = true})
       : rootDS = new RootDataset(),
         super.fromList(list) {
     _warnIfShortFile(list.length);
@@ -95,8 +111,6 @@ class DcmReader<E> extends ByteBuf {
   /// Reads a [RootDataset] from [this] and returns it. If an error is
   /// encountered [readRootDataset] will throw an Error is or [null].
   RootDataset readRootDataset([bool allowMissingFMI = false]) {
-    bool prefixPresent;
-    bool fmiPresent;
     int start = readIndex;
     prefixPresent = _hasPrefix();
     log.debug('$rbb readRootDataset: $rootDS');
@@ -113,11 +127,9 @@ class DcmReader<E> extends ByteBuf {
     }
     if (ts == TransferSyntax.kExplicitVRBigEndian)
       throw new InvalidTransferSyntaxError(ts);
-    try {
-      readDataset(rootDS.isExplicitVR);
-    } on EndOfDataException catch (e) {
-      log.debug(e);
-    }
+
+    readDataset(rootDS.isExplicitVR);
+
     log.reset;
     log.debug('start($start), readIndex($readIndex), lengthInBytes'
         '($lengthInBytes)');
@@ -134,7 +146,11 @@ class DcmReader<E> extends ByteBuf {
   Dataset readDataset([bool isExplicitVR = true]) {
     log.down;
     log.debug('$rbb readDataset: isExplicitVR($isExplicitVR)');
-    while (isReadable) _readElement(isExplicitVR);
+    try {
+      while (isReadable) _readElement(isExplicitVR);
+    } on EndOfDataException catch (e) {
+      log.debug(e);
+    }
     log.debug('$ree end readDataset: isExplicitVR($isExplicitVR)');
     log.up;
     return rootDS;
@@ -159,9 +175,9 @@ class DcmReader<E> extends ByteBuf {
       currentDS[e.tag.code] = e;
       return;
     }
-    if (throwOnError) tagCodeError(code);
-    _debugReader(code, code);
-    return;
+    //   if (throwOnError) tagCodeError(code);
+    //   _debugReader(code, code);
+    //   return;
   }
 
   // **** Internal Method from here to Test Interface ****
@@ -904,5 +920,20 @@ debugReader:
     _TagMaker maker =
         (int nextCode, VR vr, [name]) => new PDTag(nextCode, vr, pc.tag);
     return _xReadElement(_readTagCode(), maker, isExplicitVR);
+  }
+
+  static RootDataset fmi(Uint8List bytes, [String path = ""]) {
+    DcmReader reader = new DcmReader(bytes, path: path);
+    return (reader.readFMI()) ? reader.rootDS : null;
+  }
+
+  static RootDataset rootDataset(Uint8List bytes, [String path = ""]) {
+    DcmReader reader = new DcmReader(bytes, path: path);
+    return reader.readRootDataset();
+  }
+
+  static RootDataset dataset(Uint8List bytes, [String path = ""]) {
+    DcmReader reader = new DcmReader(bytes, path: path);
+    return reader.readDataset();
   }
 }
