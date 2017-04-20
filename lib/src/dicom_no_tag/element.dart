@@ -15,22 +15,63 @@ import 'utils.dart';
 
 abstract class Element {
   // The [Element].
-  final ByteData e;
+  final ByteData bd;
   Uint8List _vf;
   var _values;
 
-  Element(this.e);
+  Element(this.bd);
+
+  @override
+  bool operator ==(Object o) {
+    if (o is EVRElement && bd.lengthInBytes == o.bd.lengthInBytes) {
+      for (int i = 0; i < bd.lengthInBytes; i++)
+        if (bd.getUint8(i) != o.bd.getUint8(i)) return false;
+      return true;
+    }
+    return false;
+  }
+
+  // **** abstract Getters
+
+  /// The [VR] of this [Element].
+  int get vrCode;
+
+  /// The number of bytes from the beginning of the [Element] to the
+  /// beginning of the Value Field.
+  int get vfOffset;
+
+  /// Returns the [int] contained in the Value Field of the [Element] [bd].
+  int get vfLength;
+
+  List get values;
+
+  bool get isExplicitVR;
+
+  // **** Concrete Getters, and Methods
+  @override
+  int get hashCode => bd.hashCode;
 
   // Tag Code Getters
-  int get group => e.getUint16(0, Endianness.HOST_ENDIAN);
+  int get group => bd.getUint16(0, Endianness.HOST_ENDIAN);
 
-  int get elt => e.getUint16(2, Endianness.HOST_ENDIAN);
+  int get elt => bd.getUint16(2, Endianness.HOST_ENDIAN);
 
   int get code {
-    int group = e.getUint16(0, Endianness.HOST_ENDIAN);
-    int elt = e.getUint16(2, Endianness.HOST_ENDIAN);
+    int group = bd.getUint16(0, Endianness.HOST_ENDIAN);
+    int elt = bd.getUint16(2, Endianness.HOST_ENDIAN);
     return (group << 16) + elt;
   }
+
+  int get lengthInBytes {
+    if (vf.length.isOdd) throw "odd length VF error.";
+    if (vfLength != kUndefinedLength && vfLength != vf.length)
+      throw 'Invalid Length Field error: '
+          'vfLength($vfLength) vf.length(${vf.length})';
+    // vfOffset is the length of the Element header.
+    return vfOffset + vf.length;
+  }
+
+  bool get isFMI => code >= 0x00020000 && code <= 0x00020102;
 
   String get groupHex => toHex16(group);
 
@@ -40,38 +81,26 @@ abstract class Element {
 
   String get hex => '0x$code';
 
-  // VR Getter
+  VR get vr => VR.vrMap[vrCode];
 
-  /// The [VR] of this [Element].
-  VR get vr;
+  String get vrName => vr.asString;
 
-  /// The number of bytes from the beginning of the [Element] to the
-  /// beginning of the Value Field.
-  int get vfOffset;
+  String get vrHex => '0x${toHex16(vr.code)}';
 
   // The [Element] as a [Uint8List].
   Uint8List get asList =>
-      e.buffer.asUint8List(e.offsetInBytes, e.lengthInBytes);
-
-  // flush
-  // Uint8List getVF() =>
-  //     e.buffer.asUint8List(e.offsetInBytes + vfOffset, vf.length);
-
-  /// Returns the [int] contained in the Value Field of the [Element] [e].
-  int get vfLength;
+      bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes);
 
   bool get wasUndefined => vfLength == 0xFFFFFFFF;
 
   // The [Element]s Value Field as a [Uint8List].
-  Uint8List get vf => _vf ??= e.buffer
-      .asUint8List(e.offsetInBytes + vfOffset, e.lengthInBytes - vfOffset);
+  Uint8List get vf => _vf ??= bd.buffer
+      .asUint8List(bd.offsetInBytes + vfOffset, bd.lengthInBytes - vfOffset);
 
   // **** Values Getters
 
   /// The length of the [values] [List].
   int get length => (isBinary) ? vf.length ~/ vr.elementSize : vf.length;
-
-  List get values;
 
   dynamic get value => (values.length == 1) ? values[0] : null;
 
@@ -103,30 +132,36 @@ abstract class Element {
 class EVRElement extends Element {
   EVRElement(ByteData e) : super(e);
 
-  // VR Getters
-  int get vrCode => e.getUint16(4, Endianness.HOST_ENDIAN);
+  @override
+  bool get isExplicitVR => true;
 
   @override
-  VR get vr => vrMap[vrCode];
-
-  String get vrName => vr.asString;
-
-  String get vrHex => '0x${toHex16(vrCode)}';
-
-//  bool get _hasShortVF => vr.hasShortVF;
-  @override
-  int get vfLength => (vr.hasShortVF)
-      ? e.getUint16(6, Endianness.HOST_ENDIAN)
-      : e.getUint32(8, Endianness.HOST_ENDIAN);
+  int get vrCode => bd.getUint16(4, Endianness.HOST_ENDIAN);
 
   @override
   int get vfOffset => (vr.hasShortVF) ? 8 : 12;
 
-  // **** Values
+  int get vfLengthOffset => (vr.hasShortVF) ? 6 : 8;
+
+  @override
+  int get vfLength => bd.getUint16(vfLengthOffset, Endianness.HOST_ENDIAN);
+
+  @override
+  List get values => _values ??= _getValues();
 
   /// The length of the [values] [List].
   @override
   int get length => (isBinary) ? vf.length ~/ vr.elementSize : vf.length;
+
+  dynamic _getValues([int vLength = -1]) {
+    List v = (isBinary) ? asNumList : asStringList;
+    if (vLength < 0) return v;
+    int len = (v.length <= vLength) ? v.length : vLength;
+    v = v.sublist(0, len);
+    return '$v...';
+  }
+
+  String get type => (isBinary) ? "Binary" : "String";
 
   List<num> get asNumList {
     log.debug('vr: $vr');
@@ -140,19 +175,6 @@ class EVRElement extends Element {
     if (vr == VR.kFD || vr == VR.kOD) return Float64.fromBytes(vf, 0, length);
     throw 'Unknown Binary VR';
   }
-
-  @override
-  List get values => _values ??= _getValues();
-
-  dynamic _getValues([int vLength = -1]) {
-    List v = (isBinary) ? asNumList : asStringList;
-    if (vLength < 0) return v;
-    int len = (v.length <= vLength) ? v.length : vLength;
-    v = v.sublist(0, len);
-    return '$v...';
-  }
-
-  String get type => (isBinary) ? "Binary" : "String";
 
   String get info => '$this ($length)${_getValues(10)}';
 
@@ -173,40 +195,20 @@ class EVRElement extends Element {
   };
 }
 
-class EVRSequence extends EVRElement {
-  final bool isExplicitVR = true;
-  final Dataset parent;
-  final List<Item> items;
-  final bool hadUndefinedLength;
-
-  EVRSequence(ByteData e, this.parent, this.items, this.hadUndefinedLength)
-      : super(e);
-
-  Item operator [](int index) => items[index];
-
-  @override
-  List<Item> get values => items;
-
-  //TODO: make sure its not already present
-  void add(Item item) => items.add(item);
-
-  @override
-  String toString() => '$runtimeType$dcm ${items.length} Items';
-}
-
 class IVRElement extends Element {
   IVRElement(ByteData e) : super(e);
 
+  @override
+  bool get isExplicitVR => false;
+
+  @override
   int get vrCode => VR.kUN.code;
 
   @override
-  VR get vr => VR.kUN;
-
-  @override
-  int get vfLength => e.getUint32(4, Endianness.LITTLE_ENDIAN);
-
-  @override
   int get vfOffset => 8;
+
+  @override
+  int get vfLength => bd.getUint32(4, Endianness.LITTLE_ENDIAN);
 
   @override
   List get values => _values ??= vf;
@@ -225,25 +227,92 @@ class IVRElement extends Element {
       '($vfLength, ${vf.length})'; //${_getValues(10)}';
 }
 
-class IVRSequence extends IVRElement {
-  final bool isExplicitVR = false;
+abstract class Sequence extends Element {
   final Dataset parent;
   final List<Item> items;
   final bool hadUndefinedLength;
 
-  IVRSequence(ByteData e, this.parent, this.items, this.hadUndefinedLength)
-      : super(e);
+  Sequence(ByteData bd, this.parent, this.items, this.hadUndefinedLength)
+      : super(bd);
 
   Item operator [](int index) => items[index];
 
   @override
+  bool operator ==(Object o) {
+    if (o is Sequence &&
+        code == o.code &&
+        wasUndefined == o.wasUndefined &&
+        items.length == o.items.length) {
+      for (int i = 0; i < items.length; i++)
+        if (items[i] != o.items[i]) return false;
+      return true;
+    }
+    return false;
+  }
+
+  //Urgent fix - this is a stop gap
+  @override
+  int get hashCode => super.hashCode;
+
+  // VR Getters
+  @override
+  int get vrCode => VR.kSQ.code;
+
+  @override
   List<Item> get values => items;
+
+  int get total {
+    int count = 0;
+    for (Item item in items) count += item.total;
+    return count;
+  }
 
   //TODO: make sure its not already present
   void add(Item item) => items.add(item);
 
   @override
-  String toString() => '$runtimeType$dcm ${items.length} Items';
+  String toString() => '$runtimeType$dcm ${items.length} Items $total Elements';
+}
+
+class EVRSequence extends Sequence {
+  @override
+  final bool isExplicitVR = true;
+
+  EVRSequence(ByteData e, Dataset parent, List<Item> items,
+      [bool hadUndefinedLength = false])
+      : super(e, parent, items, hadUndefinedLength);
+
+  int get kSQCode => VR.kSQ.code;
+
+  // VR Getters
+  @override
+  int get vrCode => bd.getUint16(4, Endianness.HOST_ENDIAN);
+
+//  bool get _hasShortVF => vr.hasShortVF;
+  @override
+  int get vfLength => bd.getUint32(8, Endianness.HOST_ENDIAN);
+
+  @override
+  int get vfOffset => 12;
+}
+
+class IVRSequence extends Sequence {
+  @override
+  final bool isExplicitVR = false;
+
+  IVRSequence(ByteData e, Dataset parent, List<Item> items,
+      [bool hadUndefinedLength = false])
+      : super(e, parent, items, hadUndefinedLength);
+
+  @override
+  int get vrCode => VR.kSQ.code;
+
+  @override
+  int get vfOffset => 8;
+
+  @override
+  int get vfLength => bd.getUint32(4, Endianness.HOST_ENDIAN);
+
 }
 
 bool _isAligned(int offsetInBytes, int sizeInBytes) =>

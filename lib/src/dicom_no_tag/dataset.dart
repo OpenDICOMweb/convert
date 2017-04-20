@@ -6,8 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:common/format.dart';
-import 'package:common/logger.dart';
+import 'package:common/common.dart';
 import 'package:dictionary/dictionary.dart';
 
 import 'element.dart';
@@ -17,24 +16,47 @@ abstract class Dataset {
   static final Logger log = new Logger('Dataset', watermark: Severity.info);
   final ByteData bd;
   final Dataset parent;
-  final Map<int, Element> elements;
+  final  Map<int, Element> eLUTable;
   final bool hadUndefinedLength;
-  final Map<int, Element> duplicates = <int, Element>{};
+  final Map<int, Element> dupLUTable= <int, Element>{};
 
-  Dataset(this.bd, this.parent, this.elements,
+  Dataset(this.bd, this.parent, this.eLUTable,
       [this.hadUndefinedLength = false]);
 
   Element operator [](int code) {
     log.debug('[] hex ${toHex32(code)} dec $code');
-    var e = elements[code];
+    var e = eLUTable[code];
     if (e != null) {
       log.debug('[] code ${toHex32(code)} e.dcm(${e.dcm}) [${e.code}] $e');
-      log.debug('elements: $elements');
+      log.debug('elements: $eLUTable');
     }
     return e;
   }
 
-  int get length => elements.length;
+  //TODO: what to do about duplicate elements.
+  @override
+  bool operator ==(Object o) {
+    if (o is Dataset &&
+        parent == o.parent &&
+        hadUndefinedLength == o.hadUndefinedLength &&
+        eLUTable.length == o.eLUTable.length) {
+      for (int code in eLUTable.keys) {
+        if (eLUTable[code] != o.eLUTable[code]) return false;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  //Urgent: make sure this works.
+  @override
+  int get hashCode => Hash.k3(parent, hadUndefinedLength, eLUTable);
+
+  Iterable get elements => eLUTable.values;
+
+  Iterable get duplicates => dupLUTable.values;
+
+  int get length => eLUTable.length;
 
   bool get isRoot => false;
 
@@ -44,17 +66,31 @@ abstract class Dataset {
       (isRoot) ? transferSyntax : root.transferSyntax;
 
   bool get isExplicitVR =>
-      (transferSyntax != null) && !(transferSyntax == TransferSyntax
-      .kImplicitVRLittleEndian);
+      (transferSyntax != null) &&
+      !(transferSyntax == TransferSyntax.kImplicitVRLittleEndian);
 
   bool get hasValidTransferSyntax => transferSyntax != null;
 
-  bool get hasDuplicates => duplicates.length > 0;
+  bool get hasDuplicates => dupLUTable.length > 0;
+
+  int get total {
+    int count = 0;
+    for (Element e in elements) {
+      if (e is EVRSequence) {
+        count += e.total;
+      } else if (e is IVRSequence) {
+        count += e.total;
+      } else {
+        count += 1;
+      }
+    }
+    return count;
+  }
 
   String get info {
     var out = '$this\n';
-    elements.forEach((code, e) {
-      out += '    ${toDcm(code)}: $e\n';
+    eLUTable.forEach((code, e) {
+   out += '    ${toDcm(code)}: $e\n';
     });
     return out;
   }
@@ -66,18 +102,18 @@ abstract class Dataset {
     // log.debug('e1CodeA: ${e1.code}');
     // log.debug('add: code(${toHex32(code)}=$code): e1.code(${e1.code})');
     log.debug('add0 e1.code(${toHex32(e1.code)}[${e1.code}]');
-    var e0 = elements[code];
+    var e0 = eLUTable[code];
     if (e0 != null) {
       log.debug('[] e.dcm(${e0.dcm}) [${e0.code}] $e0');
       log.debug('Error: Duplicate Element - 1st: $e1, 2nd: $e0');
-      duplicates[e1.code] = e1;
+      dupLUTable[e1.code] = e1;
     } else {
       //  log.debug('e1: $e1');
       //  log.debug('add:code(${toHex32(code)}[$code]');
       log.debug('add1 e1.code(${toHex32(e1.code)}[${e1.code}]');
-      elements[code] = e1;
+      eLUTable[code] = e1;
       //  var e2 = elements[e1.code];
-      var e3 = elements[code];
+      var e3 = eLUTable[code];
       //  log.debug('e1CodeB: ${e1.code}');
       // log.debug('e1.AsList: ${e1.asList}');
       //  if (e3.code != code)
@@ -91,14 +127,14 @@ abstract class Dataset {
   String format(Formatter z) {
     String out = '${z(this)}\n';
     //  z.down;
-    out = z.fmt('Elements(${elements.length})', elements.values);
+    out = z.fmt('Elements(${eLUTable.length})', eLUTable.values);
     //  z.up;
     return out;
   }
 
   @override
   String toString() => '$runtimeType: elements($length), '
-      'duplicates(${duplicates.length})';
+      'duplicates(${dupLUTable.length})';
 }
 
 class RootDataset extends Dataset {
@@ -111,13 +147,13 @@ class RootDataset extends Dataset {
   bool get isRoot => parent == null;
 
   bool get isFMIPresent =>
-      (elements[kFileMetaInformationGroupLength] != null) ? true : false;
+      (eLUTable[kFileMetaInformationGroupLength] != null) ? true : false;
 
   @override
   TransferSyntax get transferSyntax => _transferSyntax ??= _getTS();
 
   TransferSyntax _getTS() {
-    var e = elements[kTransferSyntaxUID];
+    var e = eLUTable[kTransferSyntaxUID];
     if (e == null) return null;
     return TransferSyntax.lookup(e.asString);
   }
@@ -131,7 +167,7 @@ class RootDataset extends Dataset {
   @override
   String toString() => '$runtimeType: FMI($isFMIPresent) TS'
       '($transferSyntax), '
-      'elements($length), duplicates(${duplicates.length})';
+      'elements($length), duplicates(${dupLUTable.length})';
 }
 
 class Item extends Dataset {

@@ -202,39 +202,6 @@ List<String> readDirectory(String path,
   return files;
 }
 
-RootDataset readBytes(Uint8List bytes, String path,
-    {bool fmiOnly = false, TransferSyntax targetTS}) {
-  log.debug('fmiOnly: $fmiOnly');
-  File file = new File(path);
-
-  Uint8List bytes = file.readAsBytesSync();
-  log.info('Reading ${bytes.lengthInBytes} bytes fromfile $path...');
-  if (bytes.length < 1024)
-    log.warn('***** Short file length: ${bytes.length} - ${file.path}');
-  RootDataset rds;
-
-  var timer = new Stopwatch();
-  var timestamp = new Timestamp();
-  timer.start();
-  log.info('   at: $timestamp');
-  if (fmiOnly) {
-    rds = DcmReader.fmi(bytes, path);
-  } else {
-    rds = DcmReader.rootDataset(bytes, path);
-  }
-  timer.stop();
-  log.info('Elapsed time: ${timer.elapsed}');
-
-  log.info('TS: ${rds.transferSyntax}');
-  log.info('hasValidTS: ${rds.hasValidTransferSyntax}');
-  if (rds == null) {
-    log.error('Null Instance $path');
-    return null;
-  }
-  log.info('readFile: ${rds.info}');
-  if (log.watermark == Severity.info) formatDataset(rds);
-  return rds;
-}
 
 void formatDataset(RootDataset rds, [bool includePrivate = true]) {
   var z = new Formatter(maxDepth: 146);
@@ -257,9 +224,3 @@ RootDataset readRootNoFMI(Uint8List bytes, [String path = ""]) {
   Dataset rds = decoder.xReadDataset();
   return rds;
 }
-
-RootDataset readFile(File file, [String path = "", bool fmiOnly = false]) =>
-    readBytes(file.readAsBytesSync(), path, fmiOnly: fmiOnly);
-
-RootDataset readPath(String path, {bool fmiOnly = false}) =>
-    readFile(new File(path), path, fmiOnly);

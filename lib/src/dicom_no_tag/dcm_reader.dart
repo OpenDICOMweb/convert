@@ -148,11 +148,11 @@ class DcmReader {
     return v;
   }
 
-  bool _inRange(int index) => index < 0 || index >= endOfBD;
+  bool _inRange(int index) => index >= 0 || index < endOfBD;
 
   int _skip(int n) {
     int index = _rIndex + n;
-    if (!_inRange(index)) _rIndex = index;
+    if (_inRange(index)) _rIndex = index;
     return _rIndex;
   }
 
