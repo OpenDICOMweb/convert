@@ -14,7 +14,7 @@ void main(List<String> args) {
 }
 
 /// helper
-String fileCompare(String path1, String path2) {
+bool fileCompare(String path1, String path2) {
   final File f1 = new File(path1);
   final File f2 = new File(path2);
 

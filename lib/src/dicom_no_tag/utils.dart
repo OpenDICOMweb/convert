@@ -22,6 +22,13 @@ String toDcm(int code) {
   return '(${toHex16(code >> 16)},${toHex16(code & 0xFFFF)})';
 }
 
+String toDec(int v, int width, [String prefix = ""]) {
+  return v.toRadixString(10).padLeft(width, '0');
+}
+
+String toDec32(int v) => toDec(v, 10);
+String toDec16(int v) => toDec(v, 5);
+
 String toHex(int v, int width, [String prefix = ""]) {
   if (width > 8) print('******* toHex width: $width');
   return v.toRadixString(16).padLeft(width, '0');

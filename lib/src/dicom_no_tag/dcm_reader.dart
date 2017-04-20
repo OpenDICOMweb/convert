@@ -50,7 +50,7 @@ const List<int> _undefinedLengthElements = const <int>[
 ///   return the empty [List] [].
 class DcmReader {
   ///TODO: doc
-  static final Logger log = new Logger("DcmReader", watermark: Severity.info);
+  static final Logger log = new Logger("DcmReader", watermark: Severity.warn);
 
   /// The source of the [Uint8List] being read.
   final String path;
@@ -219,7 +219,8 @@ class DcmReader {
           zeroEncountered(code);
           return _rootDS;
         } else {
-          var e = _readElement(true);
+          Element e = _readElement(true);
+          _rootDS.add(e.code, e);
           log.debug1('$ree readFMI loop: $e');
           log.up;
         }
@@ -281,10 +282,14 @@ class DcmReader {
     log.down;
     assert(_currentDS != null);
     log.debug('$rbb readDataset: isExplicitVR($isExplicitVR)');
-    while (_isReadable) _readElement(isExplicitVR);
+    while (_isReadable) {
+      Element e = _readElement(isExplicitVR);
+      _currentDS.add(e.code, e);
+    }
     log.debug('$ree end readDataset: isExplicitVR($isExplicitVR)');
     log.up;
   }
+
 
   bool _hasPrefix() {
     _skip(128);
@@ -297,14 +302,11 @@ class DcmReader {
 
   Element _readElement([bool isExplicitVR = true]) {
     log.down;
+    log.debug('$rbb readElement...');
     int code = _readTagCode();
-    if (code == 0) {
-      // Sometimes there are zeros at the end of the file
-      zeroEncountered(code);
-    }
-    log.debug('$rbb readElement: _readCode${toDcm(code)}');
+    // Sometimes there are zeros at the end of the file
+    if (code == 0) zeroEncountered(code);
     Element e = (isExplicitVR) ? _readEVR(code) : _readIVR(code);
-    _rootDS.add(code, e);
     log.debug('$ree readElement: $e');
     log.up;
     return e;
@@ -315,7 +317,7 @@ class DcmReader {
     int vrCode = _readUint16();
     if (vrCode == kSQCode) {
       _skip(2);
-      return _readSequence(code, true);
+      return _readSequence(code, 12, true);
     }
     VR vr = VR.lookup(vrCode);
     assert(vr != null, 'Invalid null VR: vrCode(${toHex16(vrCode)})');
@@ -368,7 +370,7 @@ class DcmReader {
 
   Element _readIVR(int code) {
     int start = _rIndex - 4; // for code
-    if (_isSequence()) return _readSequence(code, false);
+    if (_isSequence()) return _readSequence(code, 8, false);
 
     int vfLength = _readUint32();
     log.down;
@@ -411,12 +413,10 @@ class DcmReader {
   // reading the value field of these [Element]s. Returns an [SQ] [Element].
 
   /// Reads an EVR or IVR Sequence. The _readElementMethod detects Sequences.
-  Element _readSequence(int code, bool isEVR) {
+  Element _readSequence(int code, int headerLength, bool isEVR) {
     int vfLength = _readUint32();
-    log.down;
-    // code, vr (if present) and vfLength have already been read;
-    int headerLength = (isEVR) ? 12 : 8;
     int start = _rIndex - headerLength;
+    log.down;
     var hadUndefinedLength = (vfLength == kUndefinedLength);
     log.debug('$rbb SQ${toDcm(code)} start($start) undefinedLength'
         '($hadUndefinedLength), vfLength(${toHex32(vfLength)}, $vfLength)');

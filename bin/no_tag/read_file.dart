@@ -23,8 +23,8 @@ const List<String> defaultList = fileList0;
 void main() {
  // readPath(badIvrle, fmiOnly: false);
   // readFMI(paths, fmiOnly: true);
- //  readFiles(badFiles1, fmiOnly: false);
-   readDirectory(test6688, fmiOnly: false);
+   readFiles(fileList1, fmiOnly: false);
+ //  readDirectory(test6688, fmiOnly: false);
   //targetTS: TransferSyntax.kImplicitVRLittleEndian);
 }
 

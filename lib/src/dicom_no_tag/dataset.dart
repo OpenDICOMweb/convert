@@ -167,7 +167,7 @@ class RootDataset extends Dataset {
   @override
   String toString() => '$runtimeType: FMI($isFMIPresent) TS'
       '($transferSyntax), '
-      'elements($length), duplicates(${dupLUTable.length})';
+      'elements(${eLUTable.length}), duplicates(${dupLUTable.length})';
 }
 
 class Item extends Dataset {

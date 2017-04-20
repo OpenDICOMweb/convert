@@ -48,6 +48,10 @@ abstract class Element {
   bool get isExplicitVR;
 
   // **** Concrete Getters, and Methods
+
+  Uint8List get bytes =>
+      bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes);
+
   @override
   int get hashCode => bd.hashCode;
 
@@ -125,8 +129,8 @@ abstract class Element {
   String format(Formatter z) => '${z(this)}\n';
 
   @override
-  String toString() => '$runtimeType$dcm $vr, vf($vfLength, ${vf.length}) '
-      '($length) $vf';
+  String toString() => '[${bd.offsetInBytes}]$runtimeType$dcm $vr, '
+      '(ox${toHex32(vfLength)}, $vfLength, ${vf.length})  ($length) $vf';
 }
 
 class EVRElement extends Element {
@@ -141,10 +145,10 @@ class EVRElement extends Element {
   @override
   int get vfOffset => (vr.hasShortVF) ? 8 : 12;
 
-  int get vfLengthOffset => (vr.hasShortVF) ? 6 : 8;
-
   @override
-  int get vfLength => bd.getUint16(vfLengthOffset, Endianness.HOST_ENDIAN);
+  int get vfLength => (vr.hasShortVF)
+      ? bd.getUint16(6, Endianness.HOST_ENDIAN)
+      : bd.getUint32(8, Endianness.HOST_ENDIAN);
 
   @override
   List get values => _values ??= _getValues();
@@ -152,14 +156,6 @@ class EVRElement extends Element {
   /// The length of the [values] [List].
   @override
   int get length => (isBinary) ? vf.length ~/ vr.elementSize : vf.length;
-
-  dynamic _getValues([int vLength = -1]) {
-    List v = (isBinary) ? asNumList : asStringList;
-    if (vLength < 0) return v;
-    int len = (v.length <= vLength) ? v.length : vLength;
-    v = v.sublist(0, len);
-    return '$v...';
-  }
 
   String get type => (isBinary) ? "Binary" : "String";
 
@@ -178,9 +174,17 @@ class EVRElement extends Element {
 
   String get info => '$this ($length)${_getValues(10)}';
 
+  dynamic _getValues([int vLength = -1]) {
+    List v = (isBinary) ? asNumList : asStringList;
+    if (vLength < 0) return v;
+    int len = (v.length <= vLength) ? v.length : vLength;
+    v = v.sublist(0, len);
+    return '$v...';
+  }
+
   @override
-  String toString() => '$runtimeType$dcm $vr, '
-      '(ox${toHex32(vfLength)}, ${vf.length}) ${_getValues(10)}';
+  String toString() => '[${bd.offsetInBytes}]$runtimeType$dcm $vr, '
+      '(ox${toHex32(vfLength)}, $vfLength, ${vf.length}) ${_getValues(10)}';
 
   static const Map<int, VR> vrMap = const <int, VR>{
     0x0000: VR.kInvalid, //no reformat
@@ -224,7 +228,7 @@ class IVRElement extends Element {
 
   @override
   String toString() => '$runtimeType$dcm $vr, '
-      '($vfLength, ${vf.length})'; //${_getValues(10)}';
+      '(ox${toHex32(vfLength)}, $vfLength, ${vf.length}) '; //${_getValues(10)}';
 }
 
 abstract class Sequence extends Element {
@@ -267,11 +271,22 @@ abstract class Sequence extends Element {
     return count;
   }
 
+  String get info => '$this ($length)${_getValues()}';
+
+  dynamic _getValues() {
+    var out = "";
+    for (Item item in items)
+      out += '  ${item.info}\n';
+    return out;
+  }
+
   //TODO: make sure its not already present
   void add(Item item) => items.add(item);
 
   @override
-  String toString() => '$runtimeType$dcm ${items.length} Items $total Elements';
+  String toString() => '[${bd.offsetInBytes}]$runtimeType$dcm '
+      'v(ox${toHex32(vfLength)}, $vfLength, ${vf.length}) '
+      ' ${items.length} Items $total Elements';
 }
 
 class EVRSequence extends Sequence {
@@ -312,7 +327,6 @@ class IVRSequence extends Sequence {
 
   @override
   int get vfLength => bd.getUint32(4, Endianness.HOST_ENDIAN);
-
 }
 
 bool _isAligned(int offsetInBytes, int sizeInBytes) =>

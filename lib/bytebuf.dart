@@ -4,7 +4,8 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See the AUTHORS file for other contributors.
 
+export 'package:convertX/src/dicom_no_tag/compare_bytes.dart';
+
 export 'src/bytebuf/bytebuf.dart';
 export 'src/bytebuf/bytebuf_reader.dart';
 export 'src/bytebuf/bytebuf_writer.dart';
-export 'src/bytebuf/compare_bytes.dart';

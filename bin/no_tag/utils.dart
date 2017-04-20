@@ -16,23 +16,23 @@ import 'package:convertX/src/dicom_no_tag/dcm_writer.dart';
 import 'package:dictionary/dictionary.dart';
 
 final Logger _log =
-new Logger("io/bin/read_file.dart", watermark: Severity.info);
+new Logger("io/bin/read_file.dart", watermark: Severity.warn);
 
 final Formatter format = new Formatter();
 
 RootDataset readFile(String path,
     {bool fmiOnly = false,
       TransferSyntax targetTS,
-      Severity logLevel: Severity.info,
+      Severity logLevel: Severity.warn,
       bool printDS: false}) {
 
   _log.watermark = logLevel;
   var timer = new Stopwatch();
   var timestamp = new Timestamp();
 
-  _log.info('Reading $path ...');
-  _log.info('   at: $timestamp');
-  _log.info('   fmiOnly: $fmiOnly');
+  _log.info('Reading $path ...\n'
+      '   fmiOnly: $fmiOnly\n'
+      '   at: $timestamp');
 
   timer.start();
   var file = new File(path);
@@ -64,7 +64,7 @@ RootDataset readFile(String path,
 
     _log.info('  Has valid TS(${rds.hasValidTransferSyntax}) '
         '${rds.transferSyntax}');
-    _log.info('RDS: ${rds.info}');
+   // _log.info('RDS: ${rds.info}');
     if (printDS) formatDataset(rds);
     return rds;
   }
@@ -99,10 +99,10 @@ Uint8List writeDataset(RootDataset rds, String path,
   var timestamp = new Timestamp();
   var total = rds.total;
   _log.debug('current dir: ${Directory.current}');
-  _log.info('writing ${rds.runtimeType} to "$path"\n'
+  _log.info('Writing ${rds.runtimeType} to "$path"\n'
       '    with $total Elements\n'
+      '    fmiOnly: $fmiOnly\n'
       '    at: $timestamp ...');
-  if (fmiOnly) _log.debug('    fmiOnly: $fmiOnly');
 
   timer.start();
   var writer = new DcmWriter(rds, path: path);

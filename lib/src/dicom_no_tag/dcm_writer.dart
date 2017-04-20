@@ -56,7 +56,7 @@ const List<int> _undefinedLengthElements = const <int>[
 ///   return the empty [List] [].
 class DcmWriter {
   ///TODO: doc
-  static final Logger log = new Logger("DcmReader", watermark: Severity.debug2);
+  static final Logger log = new Logger("DcmReader", watermark: Severity.warn);
 
   /// The source of the [Uint8List] being read.
   final String path;
@@ -91,7 +91,7 @@ class DcmWriter {
     this.allowImplicitLittleEndian = true,
     this.allowMissingFMI = false,
   })
-      : bd = new ByteData(2 * kMB);
+      : bd = new ByteData(20 * kMB);
 
   Uint8List get bytes => bd.buffer.asUint8List(0, _wIndex);
 
@@ -225,14 +225,14 @@ class DcmWriter {
   /// writes a [RootDataset] from [this] and returns it. If an error is
   /// encountered [writeRootDataset] will throw an Error is or [null].
   RootDataset writeRootDataset({bool allowMissingFMI = false}) {
-    log.debug('$wbb writeRootDataset: ${rootDS.info}');
+    log.debug('$wbb writeRootDataset: $rootDS');
     _currentDS = rootDS;
     if (!allowMissingFMI && !rootDS.isFMIPresent) {
       log.error('Dataset $rootDS is missing FMI elements');
       return null;
     }
-
-    writeFMI();
+    _writePrefix();
+ //   writeFMI();
     _writeDataset(rootDS);
     log.debug('$wee writeRootDataset: ${rootDS.info}');
     return rootDS;
@@ -281,23 +281,32 @@ class DcmWriter {
   }
 
   void _writeEVR(Element e) {
-    if (e is EVRSequence) return _writeSequence(e);
-    int start = _wIndex;
-    _writeTagCode(e.code);
-    _writeUint16(e.vrCode);
-    _writeEVRVFLength(e);
-    _writeBytes(e.vf);
+    log.down;
+    if (e is EVRSequence) {
+      log.debug('$wbb writing sequence: $e');
+      _writeSequence(e);
+      log.debug('$wee writing sequence');
+    } else {
+      int start = _wIndex;
+      log.debug1('$wbb _writeEVR ${toDcm(e.code)} end(${start + e.bytes.length}');
+      _writeTagCode(e.code);
+      _writeUint16(e.vrCode);
+      _writeEVRVFLength(e);
+      _writeBytes(e.vf);
 
-    if (e.lengthInBytes != e.bd.lengthInBytes)
-      log.error('e.LIB(${e.lengthInBytes}) != e.e.LIB(${e.bd.lengthInBytes})');
-    var bdx = bd.buffer.asByteData(start, e.lengthInBytes);
-    var e1 = new EVRElement(bdx);
-    if (e != e1)
-      log.error('e: $e != e1: $e1');
-    log.debug('  e: $e');
-    log.debug('bdx: $bdx');
-    if (e.wasUndefined) _writeSequenceDelimiter();
-    log.debug1('$wee _writeEVR end');
+      if (e.lengthInBytes != e.bd.lengthInBytes)
+        log.error('$wmm e.LIB(${e.lengthInBytes}) != '
+            'e.e.LIB(${e.bd.lengthInBytes})');
+      var bdx = bd.buffer.asByteData(start, e.lengthInBytes);
+      var e1 = new EVRElement(bdx);
+      if (e != e1)
+        log.error('e: $e != e1: $e1');
+      log.debug2('$wmm   e: $e');
+      log.debug2('$wmm   e(${bdx.offsetInBytes}, ${bdx.lengthInBytes})');
+      log.debug2('$wmm bdx(${bdx.offsetInBytes}, ${bdx.lengthInBytes})');
+      if (e.wasUndefined) _writeSequenceDelimiter();
+      log.debug1('$wee _writeEVR end');
+    }
     log.up;
   }
 
@@ -324,18 +333,31 @@ class DcmWriter {
   /// writes an EVR or IVR Sequence. The _writeElementMethod detects Sequences.
   void _writeSequence(Element e) {
     //TODO: move the for loop out of if when Sequence is a subtype of Element
+    int start = _wIndex;
     if (e is EVRSequence) {
       _writeEVRSQHeader(e);
-      for (Item item in e.items) _writeItem(item);
+      for (Item item in e.items)
+        _writeItem(item);
     } else if (e is IVRSequence) {
       _writeIVRSQHeader(e);
-      for (Item item in e.items) _writeItem(item);
+      for (Item item in e.items)
+        _writeItem(item);
     }
     if (e.vfLength == kUndefinedLength) _writeSequenceDelimiter();
+    int end = _wIndex;
+
+ //    var b = bd.buffer.asUint8List(start, end - start);
+ //   log.debug('(${e.bytes.lengthInBytes})${e.bytes}');
+ //   log.debug('(${b.lengthInBytes})$b');
+    if ((end - start) != e.lengthInBytes) {
+      throw 'Invalid SQ:';
+    }
   }
 
   void _writeEVRSQHeader(Element e) {
-    _writeUint32(e.code);
+    int start = _wIndex;
+    log.debug('$wbb writeEVRSQHeader');
+    _writeTagCode(e.code);
     _writeUint16(kSQCode);
     _writeUint16(0);
     if (e.vfLength == kUndefinedLength) {
@@ -344,10 +366,15 @@ class DcmWriter {
       _writeUint32(e.vf.length);
       //TODO:  if (e.vf.length.isOdd)
     }
+    int end = _wIndex;
+    var bdx = bd.buffer.asUint8List(start, end - start);
+    log.debug('$wmm writeEVRSQHeader: start($start), end($end), '
+        'length(${end - start}');
+    log.debug('$wee writeEVRSQHeader: $bdx');
   }
 
   void _writeIVRSQHeader(Element e) {
-    _writeUint32(e.code);
+    _writeTagCode(e.code);
     if (e.vfLength == kUndefinedLength) {
       _writeUint32(kUndefinedLength);
     } else {
@@ -397,7 +424,7 @@ class DcmWriter {
 
   /// writes the Value Field until the [kSequenceDelimiter] is found.
   int _getItemLengthInBytes(Item item) {
-    int vfLength = 8; // Item header
+    int vfLength = 0;
     for (Element e in item.elements) vfLength += e.lengthInBytes;
     return vfLength;
   }
