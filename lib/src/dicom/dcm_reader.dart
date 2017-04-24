@@ -65,9 +65,7 @@ class DcmReader<E> extends ByteBuf {
   //TODO: finish
   /// Creates a new [DcmReader]  where [readIndex] = [writeIndex] = 0.
   DcmReader(Uint8List bytes,
-      {this.path = "",
-      this.throwOnError = false,
-      this.allowILEVR = true})
+      {this.path = "", this.throwOnError = false, this.allowILEVR = true})
       : rootDS = new RootDataset(),
         super.reader(bytes) {
     _warnIfShortFile(bytes.lengthInBytes);
@@ -90,9 +88,7 @@ class DcmReader<E> extends ByteBuf {
   /// and copies over the elements.  Values are truncated to fit in the list
   /// when they are copied, the same way storing values truncates them.
   DcmReader.fromList(List<int> list,
-      {this.path = "",
-      this.throwOnError = false,
-      this.allowILEVR = true})
+      {this.path = "", this.throwOnError = false, this.allowILEVR = true})
       : rootDS = new RootDataset(),
         super.fromList(list) {
     _warnIfShortFile(list.length);
@@ -450,7 +446,7 @@ class DcmReader<E> extends ByteBuf {
   SQ _readSequence(Tag tag, int vfLength) {
     log.down;
     List<Item> items = <Item>[];
-    SQ sq = new SQ(tag, vfLength, items);
+    SQ sq = new SQ(tag, items,  vfLength);
     log.debug('$rbb ${sq.info}');
     if (vfLength == kUndefinedLength) {
       log.debug('$rmm SQ: ${tag.dcm} Undefined Length');
@@ -478,22 +474,20 @@ class DcmReader<E> extends ByteBuf {
   bool _foundDelimiter(int target) {
     int delimiter = _peekTagCode();
     bool v = delimiter == target;
-    log.debug(
-        '$rmm _delimiterFound($v) target${Int.hex(target)}, value${Int.hex(delimiter)}');
+    log.debug('$rmm _delimiterFound($v) target${Int.hex(target)}, '
+        'value${Int.hex(delimiter)}');
     if (delimiter == target) {
       int length = getUint32(4);
       log.debug(
-          '$rmm target(${Int.hex(target)}), delimiter(${Int.hex(delimiter)}), length(${Int.hex
-                (length, 8)
-            }');
+          '$rmm target(${Int.hex(target)}), delimiter(${Int.hex(delimiter)}), '
+          'length(${Int.hex(length, 8)}');
       if (length != 0) {
         var msg = '$rmm: Encountered non zero length($length)'
             ' following Undefined Length delimeter';
-        log.error(null, msg);
+        log.error(msg);
       }
-      log.debug(
-          '$rmm Found return false target(${Int.hex(target)}), delimiter(${Int.hex(delimiter)}),'
-          ' length(${Int.hex(length, 8)}');
+      log.debug('$rmm Found return false target(${Int.hex(target)}), '
+          'delimiter(${Int.hex(delimiter)}), length(${Int.hex(length, 8)}');
       skipReadBytes(8);
       return true;
     }

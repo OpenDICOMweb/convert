@@ -10,8 +10,6 @@ import 'package:common/logger.dart';
 import 'package:common/timestamp.dart';
 import 'package:path/path.dart' as p;
 
-import 'read_file_list.dart';
-
 String inRoot0 = "C:/odw/test_data/sfd/CR";
 String inRoot1 = "C:/odw/test_data/sfd/CR_and_RF";
 String inRoot2 = "C:/odw/test_data/sfd/CT";
@@ -62,8 +60,8 @@ void main() {
   var timestamp = new Timestamp('Starting Read ...');
   timer.start();
   log.info('   at: $timestamp');
-  var reader = new FileListReader(files, fmiOnly: true, printEvery: 100);
-  reader.read;
+ // var reader = new FileListReader(files, fmiOnly: true, printEvery: 100);
+ // reader.read;
   timer.stop();
   log.info('Elapsed time: ${timer.elapsed}');
 }

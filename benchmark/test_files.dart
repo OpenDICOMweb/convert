@@ -4,6 +4,9 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
+List<String> benchmark0 = <String>[
+
+];
 String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
 String path1 =
     'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255'

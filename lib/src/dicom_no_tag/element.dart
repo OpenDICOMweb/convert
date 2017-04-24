@@ -227,9 +227,8 @@ class IVRElement extends Element {
   }
 
   @override
-  String toString() => '$runtimeType$dcm $vr, '
-      '(ox${toHex32(vfLength)}, $vfLength, ${vf.length}) '; //${_getValues(10)}';
-}
+  String toString() => '[${bd.offsetInBytes}]$runtimeType$dcm $vr, '
+      '(ox${toHex32(vfLength)}, $vfLength, ${vf.length}) ${_getValues(10)}';}
 
 abstract class Sequence extends Element {
   final Dataset parent;

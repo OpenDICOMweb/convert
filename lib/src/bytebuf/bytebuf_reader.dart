@@ -9,6 +9,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:common/common.dart';
+
 // TODO:
 //  * Finish documentation
 //  * Make buffers Unmodifiable
@@ -77,6 +78,9 @@ class ByteBufReader {
   factory ByteBufReader.fromList(List<int> list) => new ByteBufReader.internal(
       new Uint8List.fromList(list), 0, list.length, list.length);
 
+  factory ByteBufReader.fromString(String s) {
+    return new ByteBufReader(UTF8.encode(s));
+  }
   /// Internal Constructor: Returns a [ByteBufReader] view from [bytes].
   ByteBufReader.internal(
       Uint8List bytes, int readIndex, int writeIndex, int lengthInBytes)

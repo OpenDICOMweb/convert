@@ -12,6 +12,7 @@ import 'package:convertX/src/bytebuf/bytebuf.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
+
 //TODO:
 //  1. Move all [String] trimming and validation to the Element.  The reader
 //     and writer should write the values as given.
@@ -162,7 +163,8 @@ class DcmWriter<E> extends ByteBuf {
     log.debug('$wbb _writeExplicit: ${e.info}');
     Element<E> e0 = _maybeGetElement(e);
     if (e0 is SQ) {
-      _writeSQ(e0);
+      SQ sq = e0 as SQ;
+      _writeSQ(sq);
     } else {
       _writeTag(e0);
       _writeVR(e0);
@@ -318,24 +320,27 @@ class DcmWriter<E> extends ByteBuf {
 
   //**** Sequences and Items
 
-  void _writeSQ(Element<E> e) {
-    SQ sq = e as SQ;
-    log.down;
-    log.debug('$wbb writeSequence:${sq.info}');
-    if (sq.hadUndefinedLength) {
+  void _writeSQ(SQ sq) {
+    if (sq is SQ) {
       log.down;
-      log.debug('$wmm writeSQ undefined)');
-      _writeLongLength(0xFFFFFFFF);
-      _writeItems(sq.items);
-      _writeSequenceDelimiter();
-      log.debug('$wmm writeSQ-end');
+      log.debug('$wbb writeSequence:${sq.info}');
+      if (sq.hadUndefinedLength) {
+        log.down;
+        log.debug('$wmm writeSQ undefined)');
+        _writeLongLength(0xFFFFFFFF);
+        _writeItems(sq.items);
+        _writeSequenceDelimiter();
+        log.debug('$wmm writeSQ-end');
+        log.up;
+      } else {
+        _writeLongLength(sq.vfLength);
+        _writeItems(sq.items);
+      }
+      log.debug('$wee writeSequence-end');
       log.up;
     } else {
-      _writeLongLength(sq.vfLength);
-      _writeItems(sq.items);
+      throw 'Element $sq is not an SQ (Sequence)';
     }
-    log.debug('$wee writeSequence-end');
-    log.up;
   }
 
   /// writes a 32-bit length field that has an Undefined Length value (0xFFFFFFFF).

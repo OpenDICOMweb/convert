@@ -14,12 +14,16 @@ import 'element.dart';
 import 'utils.dart';
 
 /// TODO
-bool compareBytes(Uint8List b0, Uint8List b1) {
+bool bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError = true]) {
+  if (b0.lengthInBytes != b1.lengthInBytes) return false;
   for (int i = 0; i < b0.length; i++) {
     if (b0[i] != b1[i]) {
-      showBytes(b0, b1, i);
-      throw "non-matching bytes at indexL $i";
-      return false;
+      if (throwOnError) {
+        showBytes(b0, b1, i);
+        throw "non-matching bytes at indexL $i";
+      } else {
+        return false;
+      }
     }
   }
   return true;
@@ -70,7 +74,7 @@ String toStr(Uint8List bytes, int index) {
   return new String.fromCharCodes(line);
 }
 
-bool compareDatasets(Dataset ds0, Dataset ds1) {
+bool compareDatasets(Dataset ds0, Dataset ds1, [bool throwOnError = false]) {
   for (Element e0 in ds0.elements) {
     Element e1 = ds1[e0.code];
     if (e0.vrCode == VR.kSQ.code) {
@@ -80,19 +84,27 @@ bool compareDatasets(Dataset ds0, Dataset ds1) {
       if (e0.code != e1.code ||
           e0.vrCode != e1.vrCode ||
           e0.vfLength != e1.vfLength ||
-          e0.vf.length != e1.vfLength
-      ) return false;
-
-      for (int i = 0; i < e0.vf.length; i++)
-        if (e0.vf[i] != e1.vf[i]) {
-          throw 'e0.vf[$i] != e1.vf[$i]';
+          e0.vf.length != e1.vfLength) {
+        if (throwOnError) {
+          throw 'ds0 != ds1';
+        } else {
           return false;
         }
-      return true;
+      }
+      for (int i = 0; i < e0.vf.length; i++) {
+        if (e0.vf[i] != e1.vf[i]) {
+          if (throwOnError) {
+            throw 'e0.vf[$i] != e1.vf[$i]';
+          } else {
+            return false;
+          }
+        }
+      }
     }
-    return false;
   }
+  return true;
 }
+
 
 bool compareSequences(Sequence s0, Sequence s1) {
   if (s0.code != s1.code ||

@@ -12,26 +12,28 @@ import 'package:dictionary/dictionary.dart';
 import 'element.dart';
 import 'utils.dart';
 
+// Issue: If study is modified
+//  1. Replace FMI
+//  2. Replace all SOPInstanceUids with UuidUids
+//
+//
+// Issue: flags
+//  1. add flag doReplaceUndefinedLength
+//  2. add flag doReplaceNonZeroDelimiterLengths
+//  3. add flag doFixWrongPadding
+//  4. add flag doRemoveFragments
 abstract class Dataset {
-  static final Logger log = new Logger('Dataset', watermark: Severity.info);
-  final ByteData bd;
+  static final Logger log = new Logger('Dataset', watermark: Severity.debug);
+  ByteData _bd;
   final Dataset parent;
-  final  Map<int, Element> eLUTable;
+  final Map<int, Element> eLUTable;
   final bool hadUndefinedLength;
-  final Map<int, Element> dupLUTable= <int, Element>{};
+  final Map<int, Element> dupLUTable = <int, Element>{};
 
-  Dataset(this.bd, this.parent, this.eLUTable,
-      [this.hadUndefinedLength = false]);
+  Dataset(this._bd, this.parent, this.eLUTable,
+      {this.hadUndefinedLength = false});
 
-  Element operator [](int code) {
-    log.debug('[] hex ${toHex32(code)} dec $code');
-    var e = eLUTable[code];
-    if (e != null) {
-      log.debug('[] code ${toHex32(code)} e.dcm(${e.dcm}) [${e.code}] $e');
-      log.debug('elements: $eLUTable');
-    }
-    return e;
-  }
+  Element operator [](int code) => eLUTable[code];
 
   //TODO: what to do about duplicate elements.
   @override
@@ -58,7 +60,7 @@ abstract class Dataset {
 
   int get length => eLUTable.length;
 
-  bool get isRoot => false;
+  bool get isRoot => parent == null;
 
   RootDataset get root => (isRoot) ? this : parent.root;
 
@@ -90,37 +92,19 @@ abstract class Dataset {
   String get info {
     var out = '$this\n';
     eLUTable.forEach((code, e) {
-   out += '    ${toDcm(code)}: $e\n';
+      out += '    ${toDcm(code)}: $e\n';
     });
     return out;
   }
 
   void add(int code, Element e1) {
-    if (code == null) throw 'add';
-    //  log.debug('e1.AsList: ${e1.asList}');
-    //  int e1CodeA = e1.code;
-    // log.debug('e1CodeA: ${e1.code}');
-    // log.debug('add: code(${toHex32(code)}=$code): e1.code(${e1.code})');
-    log.debug('add0 e1.code(${toHex32(e1.code)}[${e1.code}]');
     var e0 = eLUTable[code];
     if (e0 != null) {
-      log.debug('[] e.dcm(${e0.dcm}) [${e0.code}] $e0');
-      log.debug('Error: Duplicate Element - 1st: $e1, 2nd: $e0');
+      log.error('Error: Duplicate Element - 1st: $e1, 2nd: $e0');
       dupLUTable[e1.code] = e1;
     } else {
-      //  log.debug('e1: $e1');
-      //  log.debug('add:code(${toHex32(code)}[$code]');
-      log.debug('add1 e1.code(${toHex32(e1.code)}[${e1.code}]');
       eLUTable[code] = e1;
-      //  var e2 = elements[e1.code];
-      var e3 = eLUTable[code];
-      //  log.debug('e1CodeB: ${e1.code}');
-      // log.debug('e1.AsList: ${e1.asList}');
-      //  if (e3.code != code)
-      //   throw 'elements problem: code($code) e1(${e1.code}) e3(${e3.code})';
-      if (e1.code != e3.code) throw 'elements problem: e1($e1) e3($e3)';
     }
-    log.debug('elements: ${this.info}');
   }
 
   /// Returns a formatted [String]. See [Formatter].
@@ -138,25 +122,69 @@ abstract class Dataset {
 }
 
 class RootDataset extends Dataset {
-  TransferSyntax _transferSyntax;
+  TransferSyntax _ts;
 
   RootDataset(ByteData bd, [bool hadUndefinedLength = true])
-      : super(bd, null, <int, Element>{}, hadUndefinedLength);
+      : super(bd, null, <int, Element>{},
+      hadUndefinedLength: hadUndefinedLength);
 
-  @override
-  bool get isRoot => parent == null;
+  int get smallFileThreshold => 1024;
 
-  bool get isFMIPresent =>
+  /// [true] if the source of this [RootDataset] had length < 1024.
+  /// the last [Element] of the [Dataset].
+  bool get wasShortFile => (_wasShortFile == null) ? false : _wasShortFile;
+  bool _wasShortFile;
+  set wasShortFile(bool v) => _wasShortFile ??= v;
+
+  bool get hasFMI =>
       (eLUTable[kFileMetaInformationGroupLength] != null) ? true : false;
 
+  /// [true] if the source of this [RootDataset] had a
+  /// DICOM preamble and prefix.
+  bool get hadPrefix => (_hadPrefix == null) ? false : _hadPrefix;
+  bool _hadPrefix;
+  set hadPrefix(bool v) => _hadPrefix ??= v;
+
+  /// [true] if the source of this [RootDataset] had trailing zeros following
+  /// the last [Element] of the [Dataset].
+  bool get hadTrailingZeros =>
+      (_hadTrailingZeros == null) ? false : _hadTrailingZeros;
+  bool _hadTrailingZeros;
+  set hadTrailingZeros(bool v) => _hadTrailingZeros ??= v;
+
+  /// [true] if the source of this [RootDataset] had data that
+  /// was not successfully parsed.
+  bool get hadParsingErrors =>
+      (_hadParsingErrors == null) ? false : _hadParsingErrors;
+  bool _hadParsingErrors;
+  set hadParsingErrors(bool v) => _hadParsingErrors ??= v;
+
+  /// [true] if the source of this [RootDataset] had one or more
+  /// [Element]s with undefined length that had delimiters followed
+  /// by a non-zero length field.
+  bool get hadNonZeroDelimiterLength =>
+      (_hadNonZeroDelimiterLength == null) ? false : _hadNonZeroDelimiterLength;
+  bool _hadNonZeroDelimiterLength;
+  set hadNonZeroDelimiterLength(bool v) => _hadNonZeroDelimiterLength ??= v;
+
+  String get transferSyntaxString {
+    var e = eLUTable[kTransferSyntaxUID];
+    return (e == null) ? null : e.asString;
+  }
+
   @override
-  TransferSyntax get transferSyntax => _transferSyntax ??= _getTS();
+  TransferSyntax get transferSyntax => _ts ??= _getTS();
 
   TransferSyntax _getTS() {
-    var e = eLUTable[kTransferSyntaxUID];
-    if (e == null) return null;
-    return TransferSyntax.lookup(e.asString);
+    String s = transferSyntaxString;
+    if (s != null) _ts = TransferSyntax.lookup(s);
+ //   print('*** s: $s, ts: $_ts');
+    if (_ts == null) _ts = TransferSyntax.kImplicitVRLittleEndian;
+    return _ts;
   }
+
+  bool get hadTransferSyntax => (transferSyntaxString != null &&
+      (TransferSyntax.lookup(transferSyntaxString) != null));
 
   /// Returns [true] if the [Dataset] being read has an
   /// Explicit VR Transfer Syntax.
@@ -164,10 +192,25 @@ class RootDataset extends Dataset {
   bool get isExplicitVR =>
       transferSyntax != TransferSyntax.kImplicitVRLittleEndian;
 
+  // **** Getters and Methods related to the source [ByteData].
+  ByteData get bd => _bd;
+
+  final ByteData _emptySourceByteData = new ByteData(0);
+  ByteData removeByteData() => _bd = _emptySourceByteData;
+
+  //TODO:
+  //DatasetTagged convertToTaggedDataset() {}
+
+  bool _tsIsReady = false;
+  bool tsIsNowReady() => _tsIsReady = true;
+
+  // Can't use the full form until the Transfer Syntax has been established.
   @override
-  String toString() => '$runtimeType: FMI($isFMIPresent) TS'
-      '($transferSyntax), '
-      'elements(${eLUTable.length}), duplicates(${dupLUTable.length})';
+  String toString() =>
+    (_tsIsReady)
+   ? '$runtimeType: FMI($hasFMI) TS($transferSyntax), '
+        'elements(${eLUTable.length}), duplicates(${dupLUTable.length})'
+  : '$runtimeType: FMI($hasFMI) elements(${eLUTable.length})';
 }
 
 class Item extends Dataset {
@@ -175,10 +218,10 @@ class Item extends Dataset {
 
   Item(ByteData e, Dataset parent, Map<int, Element> elements,
       [bool hadUndefinedLength = false])
-      : super(e, parent, elements, hadUndefinedLength);
+      : super(e, parent, elements, hadUndefinedLength: hadUndefinedLength);
 
   void addSQ(Element sq) {
-    assert(sq is EVRSequence || sq is IVRSequence, 'Invalid Type');
+    assert(sq is EVRSequence || sq is IVRSequence);
     assert(_sq == null);
     _sq = sq;
   }

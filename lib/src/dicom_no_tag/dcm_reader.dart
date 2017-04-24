@@ -5,6 +5,7 @@
 // See the AUTHORS file for other contributors.
 
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:common/common.dart';
@@ -50,7 +51,7 @@ const List<int> _undefinedLengthElements = const <int>[
 ///   return the empty [List] [].
 class DcmReader {
   ///TODO: doc
-  static final Logger log = new Logger("DcmReader", watermark: Severity.warn);
+  static final Logger log = new Logger("DcmReader", watermark: Severity.config);
 
   /// The source of the [Uint8List] being read.
   final String path;
@@ -62,15 +63,13 @@ class DcmReader {
   final bool allowMissingFMI;
   final TransferSyntax targetTS;
 
-  bool _hadPrefix;
-  bool _fmiPresent;
-
   /// The root Dataset for the object being read.
-  final RootDataset _rootDS;
+  final RootDataset rootDS;
 
   /// The current dataset.  This changes as Sequences are read and
   /// [Items]s are pushed on and off the [dsStack].
   Dataset _currentDS;
+  bool _hadPrefix;
 
   // **** Reader fields ****
 
@@ -84,13 +83,13 @@ class DcmReader {
   /// Creates a new [DcmReader]  where [_rIndex] = [writeIndex] = 0.
   DcmReader(this.bd,
       {this.path = "",
-        this.throwOnError = true,
-        this.allowImplicitLittleEndian = true,
-        this.allowMissingFMI = false,
-        this.targetTS})
+      this.throwOnError = true,
+      this.allowImplicitLittleEndian = true,
+      this.allowMissingFMI = false,
+      this.targetTS})
       : endOfBD = bd.lengthInBytes,
-        _rootDS = new RootDataset(bd, true) {
-    _warnIfShortFile(bd, path);
+        rootDS = new RootDataset(bd, true) {
+    _warnIfShortFile();
   }
 
   /// Creates a [Uint8List] with the same length as the elements in [list],
@@ -98,13 +97,12 @@ class DcmReader {
   /// when they are copied, the same way storing values truncates them.
   factory DcmReader.fromList(List<int> list,
       {bool throwOnError = false,
-        String path = "",
-        bool allowImplicitLittleEndian = true,
-        bool allowMissingFMI = false,
-        TransferSyntax targetTS}) {
+      String path = "",
+      bool allowImplicitLittleEndian = true,
+      bool allowMissingFMI = false,
+      TransferSyntax targetTS}) {
     Uint8List bytes = new Uint8List.fromList(list);
     ByteData bd = bytes.buffer.asByteData();
-    _warnIfShortFile(bd, path);
     RootDataset rootDS = new RootDataset(bd, true);
     return new DcmReader._(bd, path, throwOnError, allowImplicitLittleEndian,
         allowMissingFMI, targetTS, rootDS);
@@ -117,12 +115,33 @@ class DcmReader {
       this.allowImplicitLittleEndian,
       this.allowMissingFMI,
       this.targetTS,
-      this._rootDS)
-      : endOfBD = bd.lengthInBytes;
+      this.rootDS)
+      : endOfBD = bd.lengthInBytes {
+    _warnIfShortFile();
+  }
 
   bool get _isReadable => _rIndex < endOfBD;
 
-  bool get isFMIPresent => _fmiPresent;
+  /// [true] if the source [ByteData] have been read.
+  bool get wasRead => (_wasRead == null) ? false : _wasRead;
+  bool _wasRead;
+
+  set wasRead(bool v) => _wasRead ??= v;
+
+  /// [true] if the source [ByteData] have been read.
+  bool get hasParsingErrors =>
+      (_hasParsingErrors == null) ? false : _hasParsingErrors;
+  bool _hasParsingErrors;
+
+  /// [true] if the source contained a DICOM Preamble and Prefix.
+  bool get hadPrefix => rootDS.hadPrefix;
+
+  /// [true] if the source contained DICOM File Meta Information (FMI).
+  bool get hasFMI => rootDS.hasFMI;
+
+  /// [true] if the source of this [RootDataset] had trailing zeros following
+  /// the last [Element] of the [Dataset].
+  bool get hadTrailingZeros => rootDS.hadTrailingZeros;
 
   /// The current readIndex as a string.
   String get rrr => 'R@$_rIndex';
@@ -173,142 +192,143 @@ class DcmReader {
 
   /// Peek at next tag - doesn't move the [_rIndex].
   int _peekTagCode() {
-    final int group = bd.getUint16(_rIndex, Endianness.HOST_ENDIAN);
-    final int elt = bd.getUint16(_rIndex + 2, Endianness.HOST_ENDIAN);
+    int group = bd.getUint16(_rIndex, Endianness.HOST_ENDIAN);
+    int elt = bd.getUint16(_rIndex + 2, Endianness.HOST_ENDIAN);
     return (group << 16) + elt;
   }
 
+  /// Reads
   int _readTagCode() {
-    int group = _readUint16();
-    int elt = _readUint16();
+  //  int group = _readUint16();
+  //  int elt = _readUint16();
+    int group = bd.getUint16(_rIndex, Endianness.HOST_ENDIAN);
+    int elt = bd.getUint16(_rIndex + 2, Endianness.HOST_ENDIAN);
+    _rIndex += 4;
     return (group << 16) + elt;
   }
 
   /// Returns [true] if the [Dataset] being read has an
   /// Explicit VR Transfer Syntax.
-  bool get _isExplicitVR => _rootDS.isExplicitVR;
+  bool get _isExplicitVR => rootDS.isExplicitVR;
 
-  String get info => '$runtimeType: rootDS: ${_rootDS.info}, currentDS: '
+  String get info => '$runtimeType: rootDS: ${rootDS.info}, currentDS: '
       '${_currentDS.info}';
 
   /// Reads File Meta Information ([Fmi]) and returns a Map<int, Element>
   /// if any [Fmi] [Element]s were present; otherwise, returns null.
   RootDataset readFMI() {
-    _currentDS = _rootDS;
-    log.down;
-    log.debug('$rbb readFmi($_currentDS)');
-    _hadPrefix = _hasPrefix();
-    log.debug2('$rmm readMFI: prefix($_hadPrefix) $_rootDS');
-    if (!_hadPrefix) return null;
+    _currentDS = rootDS;
+    log.debugDown('$rbb readFmi($_currentDS)');
+    if (_hadPrefix == null) _readPrefix();
+    log.debug2('$rmm readFMI: prefix($hadPrefix) $rootDS');
+    if (!hadPrefix) return null;
     int start = _rIndex; //TODO: test this
     int code;
     try {
       while (_isReadable) {
-        log.down;
-        log.debug1('$rbb readFMI loop:');
-        var bytes = bd.buffer.asUint8List(_rIndex, 12);
-        log.debug2('$rmm readFMI loop: $bytes');
+        log.debugDown('$rbb readFMI loop:');
+  //      var bytes = bd.buffer.asUint8List(_rIndex, 12);
         code = _peekTagCode();
-        log.debug2('$rmm readFMI loop: code(${toDcm(code)})');
         if (code >= 0x00080000) {
-          log.debug1('$ree End readFMI loop: skip ${toDcm(code)}');
-          log.up;
           break;
         } else if (code == 0) {
-          // Sometimes there are zeros at the end of the file
           zeroEncountered(code);
-          return _rootDS;
+          return rootDS;
         } else {
           Element e = _readElement(true);
-          _rootDS.add(e.code, e);
-          log.debug1('$ree readFMI loop: $e');
-          log.up;
+          rootDS.add(e.code, e);
+          log.debugUp('$ree readFMI loop: $e');
         }
       }
     } on InvalidTransferSyntaxError catch (x) {
-      log.debug('$ree readFMI TS catch: $x');
-      log.up;
+      _hasParsingErrors = true;
+      log.debugUp('$ree readFMI TS catch: $x');
       rethrow;
     } catch (x) {
-      if (code == 0) {
-        zeroEncountered(code);
-      }
-      log.error('Failed to read FMI: "$path"');
-      log.error('Exception: $x');
-      log.error('File length: ${bd.lengthInBytes}');
-      log.debug('$ree readFMI catch: $x');
+      if (code == 0) zeroEncountered(code);
+      _hasParsingErrors = true;
+      log.error('Failed to read FMI: "$path"\nException: $x\n'
+          'File length: ${bd.lengthInBytes}\n$ree readFMI catch: $x');
       _rIndex = start;
-      log.up;
       rethrow;
     }
-    log.debug('$ree readFmi: ${_rootDS.transferSyntax}\n   ${_rootDS.info}');
-    //   var ts = _rootDS.transferSyntax;
-    //   if (targetTS != null && ts != targetTS) return null;
-    log.up;
-    _fmiPresent = true;
-    return _rootDS;
+    rootDS.tsIsNowReady();
+    log.debugUp('$ree readFmi: ${rootDS.transferSyntax}\n   ${rootDS.info}');
+    return rootDS;
   }
 
   /// Reads a [RootDataset] from [this] and returns it. If an error is
   /// encountered [readRootDataset] will throw an Error is or [null].
   RootDataset readRootDataset({bool allowMissingFMI = false}) {
-    _currentDS = _rootDS;
+    _currentDS = rootDS;
     var ds = readFMI();
     if (ds == null) return null;
-    assert(ds == _rootDS);
-    if (!allowMissingFMI && !_rootDS.isFMIPresent) return null;
+    assert(ds == rootDS);
+
+    //TODO: move TS processing to separate loop - maybe in dataset
+    log.debug('$rmm tsString: "${rootDS.transferSyntaxString}"');
+    log.debug('$rmm ${rootDS.transferSyntax}');
+    if (!allowMissingFMI && !rootDS.hasFMI) return null;
 
     log.debug('$rbb targetTS: $targetTS');
-    TransferSyntax ts = _rootDS.transferSyntax;
-    if (targetTS != null && ts != targetTS) return _rootDS;
+    TransferSyntax ts = rootDS.transferSyntax;
+    if (targetTS != null && ts != targetTS) return rootDS;
 
     log.debug('$rmm readRootDataset: TS($ts)}, isExplicitVR: $_isExplicitVR');
-    if (!_rootDS.hasValidTransferSyntax) {
+    if (!rootDS.hasValidTransferSyntax) {
+      _hasParsingErrors = true;
       if (throwOnError) throw new InvalidTransferSyntaxError(ts, log);
-      return _rootDS;
+      return rootDS;
     }
     if (ts == TransferSyntax.kExplicitVRBigEndian) {
-      if (throwOnError)
-        throw new InvalidTransferSyntaxError(ts);
-      return _rootDS;
+      _hasParsingErrors = true;
+      if (throwOnError) throw new InvalidTransferSyntaxError(ts);
+      return rootDS;
     }
 
-    _readDataset(_rootDS, _rootDS.isExplicitVR);
-    log.debug('$ree readRootDataset: ${_rootDS.info}');
-    return _rootDS;
+    _readDataset(rootDS);
+    log.debug('$ree readRootDataset: ${rootDS.info}');
+    return rootDS;
   }
 
-  void _readDataset(Dataset ds, bool isExplicitVR) {
-    log.down;
+  void _readDataset(Dataset ds) {
     assert(_currentDS != null);
-    log.debug('$rbb readDataset: isExplicitVR($isExplicitVR)');
+    log.debug('$rbb readDataset: isExplicitVR(${ds.isExplicitVR})');
     while (_isReadable) {
-      Element e = _readElement(isExplicitVR);
+      Element e = _readElement(ds.isExplicitVR);
       _currentDS.add(e.code, e);
     }
-    log.debug('$ree end readDataset: isExplicitVR($isExplicitVR)');
-    log.up;
+    log.debug('$ree end readDataset: isExplicitVR(${ds.isExplicitVR})');
   }
 
-
-  bool _hasPrefix() {
+  bool _readPrefix() {
+    if (_rIndex != 0) {
+      log.error('Attempt to read DICOM Prefix at ByteData[$_rIndex]');
+      return false;
+    }
+    if (_hadPrefix != null) {
+      log.error('Attempt to re-read DICOM Preamble and Prefix.');
+      return false;
+    }
     _skip(128);
     final String prefix = _readAsciiString(4);
-    if (prefix == "DICM") return true;
-    log.warn('_hasPrefix: No DICOM Prefix present');
-    _skip(-132);
-    return false;
+    bool v = (prefix == "DICM") ? true : false;
+    _hadPrefix = v;
+    rootDS.hadPrefix = v;
+    if (v == false) {
+      log.warn('_hasPrefix: No DICOM Prefix present');
+      _skip(-132);
+    }
+    return v;
   }
 
   Element _readElement([bool isExplicitVR = true]) {
-    log.down;
-    log.debug('$rbb readElement...');
+  //  log.debug('$rbb readElement...');
     int code = _readTagCode();
     // Sometimes there are zeros at the end of the file
     if (code == 0) zeroEncountered(code);
     Element e = (isExplicitVR) ? _readEVR(code) : _readIVR(code);
-    log.debug('$ree readElement: $e');
-    log.up;
+  //  log.debug('$ree readElement: $e');
     return e;
   }
 
@@ -321,8 +341,7 @@ class DcmReader {
     }
     VR vr = VR.lookup(vrCode);
     assert(vr != null, 'Invalid null VR: vrCode(${toHex16(vrCode)})');
-    log.down;
-    log.debug1('$rbb _readEVR: start($start), $vr');
+   // log.debug1('$rbb _readEVR: start($start), $vr');
     int eLength;
     if (vr.hasShortVF) {
       eLength = 8 + _readUint16();
@@ -339,18 +358,17 @@ class DcmReader {
         _rIndex = start + eLength;
       }
     }
-
     ByteData bdx = _getElementBD(start, eLength);
     var e = new EVRElement(bdx);
-    log.debug1('$ree _readEVR: $e');
-    log.up;
+ //   log.debug1('$ree _readEVR: $e');
+
     return e;
   }
 
-  void zeroEncountered(int code) {
+  bool zeroEncountered(int code) {
     int mark = _rIndex - 4;
     log.warn('$rmm Zero code($code) encountered @$mark');
-    log.debug('_rIndex: $_rIndex');
+  //  log.debug('_rIndex: $_rIndex');
     while (_isReadable) {
       int v = _readUint32();
       if (v != 0) {
@@ -361,21 +379,30 @@ class DcmReader {
           var s = val.toString().padLeft(8, "0");
           log.debug('$rmm ${toDcm(tag)} $s');
         }
+        _hasParsingErrors = true;
         throw "bad code ${toDcm(code)}";
       }
+      rootDS.hadTrailingZeros = true;
     }
-    log.warn('returning from reading zeros at end of file @$_rIndex');
-    return null;
+    log.warn('returning from reading zeros at bytes @$_rIndex in "$path"');
+    return true;
+  }
+
+  bool _isSequence() {
+    int code = _peekTagCode();
+    if (code == kItem || code == kSequenceDelimitationItem) {
+      _skip(-4);
+      return true;
+    }
+    return false;
   }
 
   Element _readIVR(int code) {
     int start = _rIndex - 4; // for code
-    if (_isSequence()) return _readSequence(code, 8, false);
-
     int vfLength = _readUint32();
-    log.down;
-    log.debug1('$rbb _readIVR: ${toDcm(code)} start($start), '
-        'vfL($vfLength), endOfVF(${start + vfLength}');
+    if (_isSequence()) return _readSequence(code, 8, false);
+  //  log.debug1('$rbb _readIVR: ${toDcm(code)} start($start), '
+  //      'vfL($vfLength), endOfVF(${start + vfLength}');
     int eLength;
     if (vfLength == kUndefinedLength) {
       int endOfVF = _findEndOfVF(vfLength);
@@ -387,8 +414,7 @@ class DcmReader {
     }
     ByteData bdx = _getElementBD(start, eLength);
     var e = new IVRElement(bdx);
-    log.debug1('$ree _readIVR: $e');
-    log.up;
+  //  log.debug1('$ree _readIVR: $e');
     return e;
   }
 
@@ -398,12 +424,6 @@ class DcmReader {
       log.error('$rmm endOfVR($endOfVF) is beyond the end of File: $path\n'
           '    start($start) + eLength($eLength) = $endOfVF > $endOfBD');
     return bd.buffer.asByteData(start, eLength);
-  }
-
-
-  bool _isSequence() {
-    int code = _peekTagCode();
-    return (code == kItem || code == kSequenceDelimitationItem) ? true : false;
   }
 
   // There are four [Element]s that might have an Undefined Length value
@@ -416,35 +436,32 @@ class DcmReader {
   Element _readSequence(int code, int headerLength, bool isEVR) {
     int vfLength = _readUint32();
     int start = _rIndex - headerLength;
-    log.down;
     var hadUndefinedLength = (vfLength == kUndefinedLength);
-    log.debug('$rbb SQ${toDcm(code)} start($start) undefinedLength'
-        '($hadUndefinedLength), vfLength(${toHex32(vfLength)}, $vfLength)');
-
+  //  log.debugDown('$rbb SQ${toDcm(code)} start($start) undefinedLength'
+  //      '($hadUndefinedLength), vfLength(${toHex32(vfLength)}, $vfLength)');
     int endOfVF;
     List<Item> items = <Item>[];
     if (hadUndefinedLength) {
-      log.debug1('$rmm SQ${toDcm(code)} Undefined Length');
+  //    log.debug1('$rmm SQ${toDcm(code)} Undefined Length');
       while (!_checkForSequenceDelimiter()) items.add(_readItem(isEVR));
       endOfVF = _rIndex;
-      log.debug1('$rmm SQ Undefined Length: start($start) endOfVF($endOfVF)');
+  //    log.debug1('$rmm SQ Undefined Length: start($start) endOfVF($endOfVF)');
     } else {
-      log.debug1('$rmm SQ: ${toDcm(code)} vfLength($vfLength)');
+  //    log.debug1('$rmm SQ: ${toDcm(code)} vfLength($vfLength)');
       endOfVF = start + headerLength + vfLength;
       while (_rIndex < endOfVF) items.add(_readItem(isEVR));
-      log.debug1('$rmm SQ Length($vfLength) start($start) endOfVF($endOfVF)');
+ //     log.debug1('$rmm SQ Length($vfLength) start($start) endOfVF($endOfVF)');
     }
-
     var e = bd.buffer.asByteData(start, endOfVF - start);
     var sq;
+    //TODO: should be able to fix the type issue
     if (isEVR) {
       sq = new EVRSequence(e, _currentDS, items, hadUndefinedLength);
     } else {
       sq = new IVRSequence(e, _currentDS, items, hadUndefinedLength);
     }
     for (Item item in items) item.addSQ(sq);
-    log.debug('$ree $sq');
-    log.up;
+  //  log.debugUp('$ree $sq');
     return sq;
   }
 
@@ -452,23 +469,21 @@ class DcmReader {
   // & readElementExplicit
   /// Returns an [Item] or Fragment.
   Item _readItem(isExplicitVR) {
-    log.down;
     int start = _rIndex;
     int code = _readTagCode();
-    log.debug('$rbb item kItem(${toHex32(kItem)}, code ${toHex32(code)}');
+ //   log.debug('$rbb item kItem(${toHex32(kItem)}, code ${toHex32(code)}');
     assert(code == kItem, 'Invalid Item code: ${toDcm(code)}');
     int vfLength = _readUint32();
-    log.debug('$rmm item vfLength(${toHex32(vfLength)}, $vfLength)');
+  //  log.debug('$rmm item vfLength(${toHex32(vfLength)}, $vfLength)');
 
     // Save parent [Dataset], and make [item] is new parent [Dataset].
     Dataset parentDS = _currentDS;
     Map<int, Element> elements = <int, Element>{};
     bool hadUndefinedLength = vfLength == kUndefinedLength;
-    log.debug1('$rmm readItem hadUndefinedLength=$hadUndefinedLength');
+  //  log.debug1('$rmm readItem hadUndefinedLength=$hadUndefinedLength');
     int endOfVF;
     try {
-      if (vfLength == kUndefinedLength) {
-        hadUndefinedLength = true;
+      if (hadUndefinedLength) {
         while (!_checkForItemDelimiter()) {
           Element e = _readElement(isExplicitVR);
           elements[e.code] = e;
@@ -482,11 +497,11 @@ class DcmReader {
         }
       }
     } on EndOfDataException {
-      log.debug1('_readItem');
-      log.up;
+  //    log.debug1('_readItem end of data exception: @$_rIndex');
       rethrow;
     } catch (e) {
-      log.debug1(e);
+      _hasParsingErrors = true;
+      log.error(e);
       rethrow;
     } finally {
       // Restore previous parent
@@ -495,20 +510,19 @@ class DcmReader {
 
     var e = bd.buffer.asByteData(start, endOfVF - start);
     var item = new Item(e, parentDS, elements, hadUndefinedLength);
-    log.debug('$ree readItemElements: ${item.length} Items');
-    log.up;
+  //  log.debug('$ree readItemElements: ${item.length} Items');
     return item;
   }
 
   /// Returns [true] if the [kSequenceDelimitationItem] delimiter is found.
   bool _checkForSequenceDelimiter() {
-    log.debug('$rmm check SQ Delimiter');
+  //  log.debug('$rmm check SQ Delimiter');
     return _checkForDelimiter(kSequenceDelimitationItem);
   }
 
   /// Returns [true] if the [kItemDelimitationItem] delimiter is found.
   bool _checkForItemDelimiter() {
-    log.debug('$rmm check Item Delimiter');
+  //  log.debug('$rmm check Item Delimiter');
     return _checkForDelimiter(kItemDelimitationItem);
   }
 
@@ -517,95 +531,67 @@ class DcmReader {
   /// otherwise, readIndex does not change
   bool _checkForDelimiter(int target) {
     int delimiter = _peekTagCode();
-    log.debug('$rmm delimiter(${toHex32(delimiter)}), '
-        'target(${toHex32(target)})');
+  //  log.debug('$rmm delimiter(${toHex32(delimiter)}), '
+  //      'target(${toHex32(target)})');
     if (delimiter == target) {
       _skip(4);
-      int dLength = _readUint32();
-      if (dLength != 0) _non0DelimiterLengthWarn(dLength);
+      int delimiterLength = _readUint32();
+      if (delimiterLength != 0) _delimiterLengthFieldWarning(delimiterLength);
       return true;
     }
     return false;
   }
 
-  LogRecord _non0DelimiterLengthWarn(int dLength) =>
-      log.warn('$rmm: Encountered non zero length($dLength)'
-          ' following Undefined Length delimeter');
-
-  static const int kReverseSQDelimiter = 0xe0ddfffe;
+  void _delimiterLengthFieldWarning(int dLength) {
+    rootDS.hadNonZeroDelimiterLength = true;
+    log.warn('$rmm: Encountered a delimiter with a non zero length($dLength)'
+        ' field');
+  }
 
   /// Reads the Value Field until the [kSequenceDelimiter] is found.
   int _findEndOfVF(int vfLength) {
-    log.down;
-    log.debug1('$rbb _findLength: vfLength(0x${toHex32(vfLength)}})');
+   // log.debug1('$rbb _findLength: vfLength(0x${toHex32(vfLength)}})');
     if (vfLength == kUndefinedLength) {
-      int mark = _rIndex;
       while (_isReadable) {
-        //TODO: make one call by reversing kSequenceDelimiter
-        //   if (_readUint32() != kReverseSQDelimiter) continue;
         if (_readUint16() != kDelimiterFirst16Bits) continue;
         if (_readUint16() != kSequenceDelimiterLast16Bits) continue;
         break;
       }
       // int delimiterLengthField = readUint32();
-      int lengthField = _readUint32();
-      if (lengthField != 0)
-        log.warn('Sequence Delimiter with non-zero value: $lengthField');
+      int delimiterLength = _readUint32();
+      if (delimiterLength != 0) _delimiterLengthFieldWarning(delimiterLength);
       int endOfVF = _rIndex - 8;
       //   _rIndex = mark;
-      log.debug1('$ree start($mark), end($endOfVF), '
-          'vfLength(${endOfVF - mark}');
-      log.up;
+  //    log.debug1('$ree start($mark), end($endOfVF), '
+  //        'vfLength(${endOfVF - mark}');
       return endOfVF;
     }
+    _hasParsingErrors = true;
     throw "vfLength($vfLength) not kUndefinedLength";
   }
 
-  static const int _kSmallFileThreshold = 1024;
-
-  static void _warnIfShortFile(ByteData bd, String path) {
+  void _warnIfShortFile() {
     int length = bd.lengthInBytes;
-    if (length < 200) {
+    if (length < rootDS.smallFileThreshold) {
       var s = 'Short file error: length(${bd.lengthInBytes}) $path';
+      _hasParsingErrors = true;
       throw s;
     }
-    if (length < _kSmallFileThreshold)
-      log.debug('**** Trying to read $length bytes');
+    if (length < rootDS.smallFileThreshold)
+      log.warn('**** Trying to read $length bytes');
   }
 
-/*
-  //TODO: improve
-  void _debugReader(int code, obj, [int vfLength, String msg]) {
-    // [readIndex] should be at start + 6
-    String label;
-    if (code is int) {
-      label = toHex32(code);
-    } else {
-      label = code.toString();
-    }
-    var s = '''
 
-debugReader:
-  $rrr: $label $msg
-  // Urgent: fix next two lines
-    short Length: ${Int.hex(_readUint16(), 4)}
-    long Length: ${Int.hex(_readUint16(), 8)}
-     bytes: [${bdToHex(bd, _rIndex - 12, _rIndex + 12, _rIndex)}]
-    string: "${toAscii(bd, _rIndex - 12, _rIndex + 12, _rIndex)}"
-''';
-    log.error(s);
-  }
-*/
 // External Interface for Testing
 // **** These methods should not be used in the code above ****
 
   /// Returns [true] if the File Meta Information was present and
   /// read successfully.
   TransferSyntax xReadFmi([bool checkForPrefix = true]) {
-    if (checkForPrefix && !_hasPrefix()) return null;
+    if (checkForPrefix && !_readPrefix()) return null;
     readFMI();
-    if (!_rootDS.isFMIPresent || !_rootDS.hasValidTransferSyntax) return null;
-    return _rootDS.transferSyntax;
+    if (!rootDS.hasFMI || !rootDS.hasValidTransferSyntax) return null;
+    return rootDS.transferSyntax;
   }
 
   Element xReadPublicElement([bool isExplicitVR = true]) =>
@@ -632,41 +618,52 @@ debugReader:
 
   // Reads
   Dataset xReadDataset([bool isExplicitVR = true]) {
-    log.down;
     log.debug('$rbb readDataset: isExplicitVR($isExplicitVR)');
     while (_isReadable) {
       var e = _readElement(isExplicitVR);
-      _rootDS.add(e.code, e);
-      e = _rootDS[e.code];
+      rootDS.add(e.code, e);
+      e = rootDS[e.code];
       assert(e == e);
     }
     log.debug('$ree end readDataset: isExplicitVR($isExplicitVR)');
-    log.up;
     return _currentDS;
   }
 
   static RootDataset fmi(Uint8List bytes,
-      [String path = "", TransferSyntax targetTS]) {
+      {String path = "", TransferSyntax targetTS}) {
     ByteData bd =
-    bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
+        bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     DcmReader reader = new DcmReader(bd, path: path, targetTS: targetTS);
     return reader.readFMI();
   }
 
   static RootDataset rootDataset(Uint8List bytes,
-      [String path = "", TransferSyntax targetTS]) {
+      {String path = "", TransferSyntax targetTS}) {
     ByteData bd =
-    bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
+        bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     DcmReader reader = new DcmReader(bd, path: path, targetTS: targetTS);
     return reader.readRootDataset();
   }
 
   static RootDataset dataset(Uint8List bytes,
-      [String path = "", TransferSyntax targetTS]) {
+      {String path = "", TransferSyntax targetTS}) {
     ByteData bd =
-    bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
+        bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     DcmReader reader = new DcmReader(bd, path: path, targetTS: targetTS);
     return reader.xReadDataset();
+  }
+
+  static RootDataset readBytes(Uint8List bytes,
+      {String path: "", bool fmiOnly = false, TransferSyntax targetTS}) {
+    if (fmiOnly) return DcmReader.fmi(bytes, path: path);
+    return DcmReader.rootDataset(bytes, path: path);
+  }
+
+  static RootDataset readFile(File file,
+      {bool fmiOnly = false, TransferSyntax targetTS}) {
+    Uint8List bytes = file.readAsBytesSync();
+    return readBytes(bytes,
+        path: file.path, fmiOnly: fmiOnly, targetTS: targetTS);
   }
 }
 

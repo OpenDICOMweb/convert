@@ -20,13 +20,14 @@ new Logger("io/bin/read_file.dart", watermark: Severity.warn);
 
 final Formatter format = new Formatter();
 
-RootDataset readFile(String path,
+RootDataset readFile(File file,
     {bool fmiOnly = false,
       TransferSyntax targetTS,
       Severity logLevel: Severity.warn,
       bool printDS: false}) {
 
   _log.watermark = logLevel;
+  var path = file.path;
   var timer = new Stopwatch();
   var timestamp = new Timestamp();
 
@@ -35,20 +36,20 @@ RootDataset readFile(String path,
       '   at: $timestamp');
 
   timer.start();
-  var file = new File(path);
+//  var file = new File(path);
   Uint8List bytes = file.readAsBytesSync();
   timer.stop();
   _log.info('   read ${bytes.length} bytes in ${timer.elapsedMicroseconds}us');
 
   if (bytes.length < 1024)
-    _log.warn('***** Short file length: ${bytes.length} - ${file.path}');
+    _log.warn('***** Short file length(${bytes.length}): $path');
 
   RootDataset rds;
   timer.start();
   if (fmiOnly) {
-    rds = DcmReader.fmi(bytes, path);
+    rds = DcmReader.fmi(bytes, path: path);
   } else {
-    rds = DcmReader.rootDataset(bytes, path);
+    rds = DcmReader.rootDataset(bytes, path: path);
   }
   timer.stop();
   if (rds == null) {
@@ -92,9 +93,9 @@ RootDataset readRootNoFMI(Uint8List bytes, [String path = ""]) {
   return rds;
 }
 
-Uint8List writeDataset(RootDataset rds, String path,
-    {bool fmiOnly = false, TransferSyntax targetTS}) {
-  var file = new File(path);
+Uint8List writeDataset(RootDataset rds,
+    {String path = "", bool fast = true, bool fmiOnly = false, TransferSyntax
+    targetTS}) {
   var timer = new Stopwatch();
   var timestamp = new Timestamp();
   var total = rds.total;
@@ -111,7 +112,6 @@ Uint8List writeDataset(RootDataset rds, String path,
   } else {
     writer.writeRootDataset();
   }
-  file.writeAsBytesSync(writer.bytes);
   timer.stop();
 
   _log.info('  Elapsed time: ${timer.elapsed}');
@@ -123,9 +123,9 @@ Uint8List writeDataset(RootDataset rds, String path,
 Uint8List writeFMI(RootDataset rds, [String path]) =>
     DcmWriter.fmi(rds, path: path);
 
-Uint8List writeRoot(RootDataset rds, {String path, bool fmiOnly = false}) =>
-    DcmWriter.rootDataset(rds, path: path, fmiOnly: fmiOnly);
+Uint8List writeRoot(RootDataset rds, {String path}) =>
+    DcmWriter.rootDataset(rds, path: path);
 
 Uint8List writeRootNoFMI(RootDataset rds, {String path = ""}) =>
-    DcmWriter.rootDataset(rds, path: path, fmiOnly: true);
+    DcmWriter.fmi(rds, path: path);
 

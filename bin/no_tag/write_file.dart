@@ -49,9 +49,7 @@ Uint8List writeDataset(RootDataset rds, String path,
 Uint8List writeFMI(RootDataset rds, [String path]) =>
     DcmWriter.fmi(rds, path: path);
 
-Uint8List writeRoot(RootDataset rds, {String path, bool fmiOnly = false}) =>
-    DcmWriter.rootDataset(rds, path: path, fmiOnly: fmiOnly);
+Uint8List writeRoot(RootDataset rds, {String path}) =>
+    DcmWriter.rootDataset(rds, path: path);
 
-Uint8List writeRootNoFMI(RootDataset rds, {String path = ""}) =>
-  DcmWriter.rootDataset(rds, path: path, fmiOnly: true);
 

@@ -21,10 +21,10 @@ void main() {
     test("instance ", () {
   //    Uid uid = new Uid();
       File script = new File(path0);
-      DSSource source = new DSSource(script.readAsBytesSync(), script.path);
-      DcmReader reader = new DcmReader.fromSource(source);
-      Dataset rds = reader.readDataset();
-      log.debug('${reader.info}');
+      var bytes = script.readAsBytesSync();
+
+      Dataset rds = DcmReader.rootDataset(bytes, path0);
+      log.debug('${rds.info}');
       //    Subject subject = new Subject(rds);
       //    Study stu = new Study(subject, uid, rds);
       //    Series ser = new Series(stu, uid, rds);

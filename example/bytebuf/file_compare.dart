@@ -21,5 +21,5 @@ bool fileCompare(String path1, String path2) {
   final Uint8List bytes1 = f1.readAsBytesSync();
   final Uint8List bytes2 = f2.readAsBytesSync();
 
-  return compareBytes(bytes1, bytes2);
+  return bytesEqual(bytes1, bytes2);
 }

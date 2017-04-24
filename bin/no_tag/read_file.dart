@@ -4,15 +4,18 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the   AUTHORS file for other contributors.
 
+import 'dart:io';
+
 import 'package:common/logger.dart';
 
 import 'bad_files0.dart';
-import 'read_file_list.dart';
-
+import 'read_utils.dart';
+import '../../benchmark/test_files.dart';
 
 String testData = "C:/odw/test_data";
 String test6688 = "C:/odw/test_data/6688";
 String mWeb = "C:/odw/test_data/mweb";
+String mrStudy = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
 
 
 final Logger log =
@@ -21,25 +24,11 @@ final Logger log =
 const List<String> defaultList = fileList0;
 
 void main() {
- // readPath(badIvrle, fmiOnly: false);
-  // readFMI(paths, fmiOnly: true);
-   readFiles(fileList1, fmiOnly: false);
- //  readDirectory(test6688, fmiOnly: false);
+  File f = new File(path0);
+  FileResult r = readFileWithResult(f, fmiOnly: false);
+  print(r.info);
+ //  readFiles(fileList1, fmiOnly: false);
+   //readDirectory(mrStudy, fmiOnly: false);
   //targetTS: TransferSyntax.kImplicitVRLittleEndian);
 }
 
-void readFiles(List<String> paths, {bool fmiOnly = true}) {
-  /*
-  log.info('Started Reading ${paths.length} files...');
-  var timer = new Stopwatch();
-  var timestamp = new Timestamp();
-  timer.start();
-  log.info('   at: $timestamp');
-  */
-  var reader = new FileListReader(paths, fmiOnly: fmiOnly, printEvery: 100);
-  reader.read;
-  /*
-  timer.stop();
-  log.info('Elapsed time: ${timer.elapsed}');
-  */
-}
