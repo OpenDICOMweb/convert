@@ -33,7 +33,7 @@ void main() {
   test("Read String", () {
     List<String> list = ["foo", "bar", "baz"];
     String strings = list.join("\\");
-    ByteBufReader reader = readerFromString(strings);
+    ByteBufReader reader = new ByteBufReader.fromString(strings);
     String s = reader.readString(strings.length);
     expect(s, equals(strings));
   });
@@ -41,7 +41,7 @@ void main() {
   test("Read String List", () {
     List<String> list = ["foo", "bar", "baz"];
     String strings = list.join("\\");
-    ByteBufReader reader = readerFromString(strings);
+    ByteBufReader reader =  new ByteBufReader.fromString(strings);
     List l1 = reader.readStringList(strings.length);
     expect(l1, equals(list));
   });

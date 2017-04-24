@@ -1634,6 +1634,7 @@ class ByteBuf {
 
   /// Checks that the [readIndex] is valid;
   void _checkReadIndex(int index, int elementSize) {
+    log.debug('index($index), elementSize($elementSize)');
     if ((index + elementSize) > writeIndex)
       _readIndexOutOfBounds(index, elementSize);
   }
@@ -1678,7 +1679,8 @@ class ByteBuf {
   //TODO: make this two different methods
   void _readIndexOutOfBounds(int index, lengthInBytes) {
     String s =
-        "Read Index Out Of Bounds: read($_readIndex) <= index($index) < write($_writeIndex)";
+        "Read Index Out Of Bounds: read($_readIndex) <= index($index) "
+        "< write($_writeIndex) lengthInBytes($lengthInBytes";
     log.error(s);
     throw new RangeError(s);
   }

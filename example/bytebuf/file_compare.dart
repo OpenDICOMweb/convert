@@ -14,12 +14,12 @@ void main(List<String> args) {
 }
 
 /// helper
-String fileCompare(String path1, String path2) {
+bool fileCompare(String path1, String path2) {
   final File f1 = new File(path1);
   final File f2 = new File(path2);
 
   final Uint8List bytes1 = f1.readAsBytesSync();
   final Uint8List bytes2 = f2.readAsBytesSync();
 
-  return compareBytes(bytes1, bytes2);
+  return bytesEqual(bytes1, bytes2);
 }
