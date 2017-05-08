@@ -453,7 +453,7 @@ class DcmReader {
  //     log.debug1('$rmm SQ Length($vfLength) start($start) endOfVF($endOfVF)');
     }
     var e = bd.buffer.asByteData(start, endOfVF - start);
-    var sq;
+    SQ sq;
     //TODO: should be able to fix the type issue
     if (isEVR) {
       sq = new EVRSequence(e, _currentDS, items, hadUndefinedLength);
@@ -468,7 +468,7 @@ class DcmReader {
   //TODO this can be moved to Dataset_base if we abstract DatasetExplicit
   // & readElementExplicit
   /// Returns an [Item] or Fragment.
-  Item _readItem(isExplicitVR) {
+  Item _readItem(bool isExplicitVR) {
     int start = _rIndex;
     int code = _readTagCode();
  //   log.debug('$rbb item kItem(${toHex32(kItem)}, code ${toHex32(code)}');

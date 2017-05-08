@@ -8,4 +8,6 @@ export 'package:core/core.dart';
 
 /// Encoder and Decoder for DICOM File Format octet streams (Uint8List)
 export 'src/dicom/dcm_decoder.dart';
+export 'src/dicom/dcm_reader.dart';
 export 'src/dicom/dcm_encoder.dart';
+export 'src/dicom/dcm_writer.dart';

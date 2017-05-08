@@ -106,7 +106,7 @@ bool compareDatasets(Dataset ds0, Dataset ds1, [bool throwOnError = false]) {
 }
 
 
-bool compareSequences(Sequence s0, Sequence s1) {
+bool compareSequences(SQ s0, SQ s1) {
   if (s0.code != s1.code ||
       s0.vrCode != s1.vrCode ||
       s0.items.length != s1.items.length) return false;

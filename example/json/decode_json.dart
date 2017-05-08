@@ -15,7 +15,7 @@ void main(List<String> args) {
 
   File inFile = new File('C:/odw/sdk/encode/example/json/example.json');
   String s = inFile.readAsStringSync();
-  var code = JSON.decode(s);
+  Map code = JSON.decode(s);
   print('json array(${code.length}');
   Map ds0 = code[0];
   Map ds1 = code[1];
@@ -39,7 +39,7 @@ Map<int, Element> toDataset(Map jsMap) {
   jsMap.forEach((String s, Map map) {
     int code = int.parse(s, radix: 16);
     VR vr = VR.kUN;
-    var values = const [];
+    var values = const <Element>[];
     if (map.length != 0) {
       vr = VR.vrMap[map["vr"]];
 

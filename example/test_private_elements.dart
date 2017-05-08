@@ -8,8 +8,9 @@ import 'dart:typed_data';
 
 import 'package:common/logger.dart';
 import 'package:convertX/convert.dart';
-import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
+
+import 'package:convertX/src/dicom_no_tag/dataset.dart';
 
 /// Logger
 Logger log = new Logger("read_write_element", watermark: Severity.debug);

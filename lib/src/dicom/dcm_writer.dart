@@ -44,7 +44,7 @@ typedef dynamic VFWriter<E>(Element<E> e);
 ///   byte as they were read, and a bytewise comparator will find them to be equal.
 ///   2. All String manipulation should be handled in the [Element] itself.
 ///   3. All VFWriters allow the Value Field to be empty.
-class DcmWriter<E> extends ByteBuf {
+class DcmWriter extends ByteBuf {
   static const int defaultLengthInBytes = 2 * kMB;
   //TODO: make the buffer grow and shrink adaptively.
   /// The log for debug output.
@@ -74,7 +74,7 @@ class DcmWriter<E> extends ByteBuf {
   //    : super.from(buf, offset, length);
 
   // Flush or Fix
-  /// Creates a [Uint8List] with the same length as the elements in [list],
+  /// Creates a [Uint8List] with the same length as the elements in [List],
   /// and copies over the elements.  Values are truncated to fit in the list
   /// when they are copied, the same way storing values truncates them.
   //DcmWriter.fromList(List<int> list) : super.fromList(list);
@@ -104,7 +104,7 @@ class DcmWriter<E> extends ByteBuf {
   //     new DcmWriter.internal(bytes, start, end - start, end - start);
 
   /// Write a [RootDataset].
-  void writeRootDataset(RootDataset<E> rootDS) {
+  void writeRootDataset(RootDataset rootDS) {
     log.down;
     log.debug('$wbb writeRootDataset: $rootDS');
 
@@ -116,17 +116,17 @@ class DcmWriter<E> extends ByteBuf {
     return;
   }
 
-  void writeDataset(Dataset<E> ds, [bool isExplicitVR = true]) {
+  void writeDataset(Dataset ds, [bool isExplicitVR = true]) {
     log.down;
     log.debug('$wbb writeDataset: $ds');
-    for (Element<E> e in ds.elements) _writeElement(e, isExplicitVR);
+    for (Element e in ds.elements) _writeElement(e, isExplicitVR);
     log.debug('$wee writeDataset.end');
     log.up;
     return;
   }
 
   /// This is the top-level entry point for writing an [Element].
-  void _writeElement(Element<E> e, [bool isExplicitVR = true]) {
+  void _writeElement(Element e, [bool isExplicitVR = true]) {
     log.down;
     log.debug('$wbb _writeElement: ${e.info}');
     (isExplicitVR) ? _writeExplicit(e) : _writeImplicit(e);
@@ -151,37 +151,34 @@ class DcmWriter<E> extends ByteBuf {
     //TODO
   }
 
-  void _writeExplicit(Element<E> e) {
-    ByteBuf _writeVR(e) => writeUint16(e.vr.code);
-    void _writeVFLength(e) {
+  void _writeExplicit(Element e) {
+    ByteBuf _writeVR(Element e) => writeUint16(e.vr.code);
+    void _writeVFLength(Element e) {
       int lengthIB = _getVFLength(e);
       log.debug('$wmm _writeVFLength($lengthIB): ${e.info}');
       (e.vr.hasShortVF) ? writeUint16(lengthIB) : _writeLongLength(lengthIB);
     }
-
-    log.down;
-    log.debug('$wbb _writeExplicit: ${e.info}');
-    Element<E> e0 = _maybeGetElement(e);
+    log.debugDown('$wbb _writeExplicit: ${e.info}');
+    Element e0 = _maybeGetElement(e);
     if (e0 is SQ) {
-      SQ sq = e0 as SQ;
-      _writeSQ(sq);
+     // SQ sq = e0;
+      _writeSQ(e0);
     } else {
       _writeTag(e0);
       _writeVR(e0);
       _writeVFLength(e0);
       _writeVF(e0);
-      log.debug('$wee  _writeExplicit');
-      log.up;
+      log.debugUp('$wee  _writeExplicit');
     }
   }
 
-  /// If [e] is a [MetaElement] returns [e.element]; otherwise, returns e.
-  Element<E> _maybeGetElement(Element<E> e) {
+  /// If [e] is a [MetaElement] returns e.element; otherwise, returns e.
+  Element _maybeGetElement(Element e) {
     if (isNotWritable) _debugWriter(e, "End of buffer error: $this");
     if (e is MetaElement) {
-      MetaElement<E> meta = e;
+      MetaElement meta = e;
       log.down;
-      Element<E> element = meta.element;
+      Element element = meta.element;
       log.debug('$wbb _maybeGetElement: ${e.info}');
       log.up;
       return element;
@@ -189,13 +186,13 @@ class DcmWriter<E> extends ByteBuf {
     return e;
   }
 
-  int _getVFLength(Element<E> e) =>
+  int _getVFLength(Element e) =>
       (e.hadUndefinedLength) ? kUndefinedLength : e.bytes.lengthInBytes;
 
-  void _writeImplicit(Element<E> e) {
+  void _writeImplicit(Element e) {
     log.down;
     log.debug('$wbb _writeImplicit: ${e.info}');
-    Element<E> e0 = _maybeGetElement(e);
+    Element e0 = _maybeGetElement(e);
     _writeTag(e0);
     writeUint32(_getVFLength(e0));
     _writeVF(e0);
@@ -293,7 +290,7 @@ class DcmWriter<E> extends ByteBuf {
 
   /// Convert a [List] of [String]s into [Uint8List] with trailing pad character if
   /// necessary, then writes the Value Length Field followed by the Value Field.
-  String _toDcmString(StringBase e, padChar) {
+  String _toDcmString(StringBase e, String padChar) {
     String s = e.values.join('\\');
     if (s.length.isOdd) s += padChar;
     return s;
@@ -320,26 +317,26 @@ class DcmWriter<E> extends ByteBuf {
 
   //**** Sequences and Items
 
-  void _writeSQ(SQ sq) {
-    if (sq is SQ) {
+  void _writeSQ(Element e) {
+    if (e is SQ) {
       log.down;
-      log.debug('$wbb writeSequence:${sq.info}');
-      if (sq.hadUndefinedLength) {
+      log.debug('$wbb writeSequence:${e.info}');
+      if (e.hadUndefinedLength) {
         log.down;
         log.debug('$wmm writeSQ undefined)');
         _writeLongLength(0xFFFFFFFF);
-        _writeItems(sq.items);
+        _writeItems(e.items);
         _writeSequenceDelimiter();
         log.debug('$wmm writeSQ-end');
         log.up;
       } else {
-        _writeLongLength(sq.vfLength);
-        _writeItems(sq.items);
+        _writeLongLength(e.vfLength);
+        _writeItems(e.items);
       }
       log.debug('$wee writeSequence-end');
       log.up;
     } else {
-      throw 'Element $sq is not an SQ (Sequence)';
+      throw 'Element $e is not an SQ (Sequence)';
     }
   }
 
@@ -364,15 +361,15 @@ class DcmWriter<E> extends ByteBuf {
   }
 
   /// Writes a [List] of [Item]s to [bytes].
-  void _writeItems(List<Item<E>> items) {
+  void _writeItems(List<Item> items) {
     log.down;
     log.debug('$wbb writeItems:${items.length} Items');
-    for (Item<E> item in items) _writeItem(item);
+    for (Item item in items) _writeItem(item);
     log.debug('$wee writeItems-end');
     log.up;
   }
 
-  void _writeItem(Item<E> item) {
+  void _writeItem(Item item) {
     log.down;
     log.debug('$wbb writeItem ${item.info} for ${item.sq.info} ');
     if (item.hadUndefinedLength) {
@@ -380,7 +377,7 @@ class DcmWriter<E> extends ByteBuf {
       log.debug('$wbb Item hadUndefinedLength');
       // Can't use _writeLongLength here!
       _writeItemHeader(kUndefinedLength);
-      for (Element<E> e in item.elements) _writeElement(e);
+      for (Element e in item.elements) _writeElement(e);
       _writeItemDelimiter();
       log.debug('$wbb Item hadUndefinedLength-end');
       log.up;
@@ -389,7 +386,7 @@ class DcmWriter<E> extends ByteBuf {
       _writeItemHeader(item.vfLength);
       log.debug(
           '$wbb writeItem vfLength(${item.vfLength}, ${Int.hex(item.vfLength)}');
-      for (Element<E> e in item.elements) _writeElement(e);
+      for (Element e in item.elements) _writeElement(e);
     }
     log.debug('$wee writeItem-end');
     log.up;
@@ -466,22 +463,22 @@ class DcmWriter<E> extends ByteBuf {
     _writeFmi(rootDS);
   }
 
-  void xWritePublicElement(Element<E> e, [bool isExplicitVR = true]) =>
+  void xWritePublicElement(Element e, [bool isExplicitVR = true]) =>
       _writeElement(e, isExplicitVR);
 
   // External Interface for testing
-  void xWritePGLength(Element<E> e, [bool isExplicitVR = true]) =>
+  void xWritePGLength(Element e, [bool isExplicitVR = true]) =>
       _writeElement(e, isExplicitVR);
 
   // External Interface for testing
-  void xWritePrivateIllegal(Element<E> e, [bool isExplicitVR = true]) =>
+  void xWritePrivateIllegal(Element e, [bool isExplicitVR = true]) =>
       _writeElement(e, isExplicitVR);
 
   // External Interface for testing
-  void xWritePrivateCreator(Element<E> e, [bool isExplicitVR = true]) =>
+  void xWritePrivateCreator(Element e, [bool isExplicitVR = true]) =>
       _writeElement(e, isExplicitVR);
 
   // External Interface for testing
-  void xWritePrivateData(Element<E> e, [bool isExplicitVR = true]) =>
+  void xWritePrivateData(Element e, [bool isExplicitVR = true]) =>
       _writeElement(e, isExplicitVR);
 }

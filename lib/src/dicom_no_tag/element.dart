@@ -17,7 +17,7 @@ abstract class Element {
   // The [Element].
   final ByteData bd;
   Uint8List _vf;
-  var _values;
+  List _values;
 
   Element(this.bd);
 
@@ -230,19 +230,19 @@ class IVRElement extends Element {
   String toString() => '[${bd.offsetInBytes}]$runtimeType$dcm $vr, '
       '(ox${toHex32(vfLength)}, $vfLength, ${vf.length}) ${_getValues(10)}';}
 
-abstract class Sequence extends Element {
+abstract class SQ extends Element {
   final Dataset parent;
   final List<Item> items;
   final bool hadUndefinedLength;
 
-  Sequence(ByteData bd, this.parent, this.items, this.hadUndefinedLength)
+  SQ(ByteData bd, this.parent, this.items, this.hadUndefinedLength)
       : super(bd);
 
   Item operator [](int index) => items[index];
 
   @override
   bool operator ==(Object o) {
-    if (o is Sequence &&
+    if (o is SQ &&
         code == o.code &&
         wasUndefined == o.wasUndefined &&
         items.length == o.items.length) {
@@ -288,7 +288,7 @@ abstract class Sequence extends Element {
       ' ${items.length} Items $total Elements';
 }
 
-class EVRSequence extends Sequence {
+class EVRSequence extends SQ {
   @override
   final bool isExplicitVR = true;
 
@@ -310,7 +310,7 @@ class EVRSequence extends Sequence {
   int get vfOffset => 12;
 }
 
-class IVRSequence extends Sequence {
+class IVRSequence extends SQ {
   @override
   final bool isExplicitVR = false;
 

@@ -36,19 +36,20 @@ String path6 = "C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/CT.2.16"
 List<String> paths = <String>[path0, path1, path2, path3, path4, path5];
 
 final Logger log =
-    new Logger("convert/bin/read_write_files.dart", watermark: Severity.debug);
+    new Logger("convert/bin/read_write_files.dart", watermark: Severity.config);
 
 String testData = "C:/odw/test_data";
+String sfd = "C:/odw/test_data/sfd";
 String test6688 = "C:/odw/test_data/6688";
 String mWeb = "C:/odw/test_data/mweb";
 String mrStudy = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
 
 void main() {
-   File file = new File(path0);
-   readWriteFileFast(file, reps: 10, fmiOnly: false);
+  // File file = new File(path0);
+  // readWriteFileFast(file, reps: 10, fmiOnly: false);
   // readFMI(paths, fmiOnly: true);
   //  readWriteFiles(paths, fmiOnly: false);
-  readWriteDirectory(mrStudy, fmiOnly: false);
+  readWriteDirectory(sfd, fmiOnly: false);
   //targetTS: TransferSyntax.kImplicitVRLittleEndian);
 }
 
@@ -108,7 +109,7 @@ void readWriteDirectory(String path,
       continue;
     } else {
       log.debug('Reading $path');
-      var v;
+      bool v;
       try {
         v = readWriteFileFast(f);
         if (!v) {
