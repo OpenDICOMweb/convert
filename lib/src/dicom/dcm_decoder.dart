@@ -77,7 +77,7 @@ class DcmDecoder extends DcmReader {
     //   }
     if (!ds.hasValidTransferSyntax) return null;
     log.debug('readInstance RootDataset($ds)');
-    return Instance.fromDataset(ds, series, study, subject);
+    return new Instance.fromDataset(ds, series, study, subject);
   }
 
   //TODO: this will need to be modified to handle different types of datasets
