@@ -4,12 +4,13 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:collection';
 import 'dart:typed_data';
 
 import 'package:common/common.dart';
 import 'package:dictionary/dictionary.dart';
 
-import 'element.dart';
+import 'byte_element.dart';
 import 'utils.dart';
 
 // Issue: If study is modified
@@ -22,23 +23,33 @@ import 'utils.dart';
 //  2. add flag doReplaceNonZeroDelimiterLengths
 //  3. add flag doFixWrongPadding
 //  4. add flag doRemoveFragments
-abstract class Dataset {
+abstract class ByteDataset extends MapBase {
   static final Logger log = new Logger('Dataset', watermark: Severity.debug);
-  ByteData _bd;
-  final Dataset parent;
-  final Map<int, Element> eLUTable;
+  final ByteDataset parent;
+  final Map<int, ByteElement> eLUTable;
+  final Map<int, ByteElement> dupLUTable;
   final bool hadUndefinedLength;
-  final Map<int, Element> dupLUTable = <int, Element>{};
+  ByteData _bd;
 
-  Dataset(this._bd, this.parent, this.eLUTable,
-      {this.hadUndefinedLength = false});
+  ByteDataset.empty(this.parent)
+      : this.eLUTable = <int, ByteElement>{},
+        this.dupLUTable = <int, ByteElement>{},
+        this.hadUndefinedLength = true;
 
-  Element operator [](int code) => eLUTable[code];
+  ByteDataset.fromByteData(this._bd, this.parent, this.eLUTable,
+      {this.hadUndefinedLength = false})
+      : dupLUTable = <int, ByteElement>{};
 
-  //TODO: what to do about duplicate elements.
+  ByteDataset._(
+      this.parent, this.eLUTable, this.dupLUTable, this.hadUndefinedLength);
+
+  ByteElement operator [](int code) => eLUTable[code];
+
+  /// Two [ByteDataset]s are [==] if they have the same [parent], [eLUTable], and
+  /// [hadUndefinedLength]. Note: Duplicate [ByteElement]s are currently ignored.
   @override
   bool operator ==(Object o) {
-    if (o is Dataset &&
+    if (o is ByteDataset &&
         parent == o.parent &&
         hadUndefinedLength == o.hadUndefinedLength &&
         eLUTable.length == o.eLUTable.length) {
@@ -50,11 +61,18 @@ abstract class Dataset {
     return false;
   }
 
+  operator []=(int code, ByteElement e) => eLUTable[code] = e;
+
   //Urgent: make sure this works.
   @override
   int get hashCode => Hash.k3(parent, hadUndefinedLength, eLUTable);
 
+  Iterable get keys => eLUTable.keys;
   Iterable get elements => eLUTable.values;
+  Iterable get values => elements;
+
+  void clear() => eLUTable.clear();
+  ByteElement remove(int code) => eLUTable.remove(code);
 
   Iterable get duplicates => dupLUTable.values;
 
@@ -62,7 +80,7 @@ abstract class Dataset {
 
   bool get isRoot => parent == null;
 
-  RootDataset get root => (isRoot) ? this : parent.root;
+  RootByteDataset get root => (isRoot) ? this : parent.root;
 
   TransferSyntax get transferSyntax =>
       (isRoot) ? transferSyntax : root.transferSyntax;
@@ -77,7 +95,7 @@ abstract class Dataset {
 
   int get total {
     int count = 0;
-    for (Element e in elements) {
+    for (ByteElement e in elements) {
       if (e is EVRSequence) {
         count += e.total;
       } else if (e is IVRSequence) {
@@ -97,7 +115,7 @@ abstract class Dataset {
     return out;
   }
 
-  void add(int code, Element e1) {
+  void add(int code, ByteElement e1) {
     var e0 = eLUTable[code];
     if (e0 != null) {
       log.error('Error: Duplicate Element - 1st: $e1, 2nd: $e0');
@@ -119,19 +137,36 @@ abstract class Dataset {
   @override
   String toString() => '$runtimeType: elements($length), '
       'duplicates(${dupLUTable.length})';
+
+  static Map<int, ByteElement> copyLut(Map<int, ByteElement> old) {
+    var newLUT = <int, ByteElement>{};
+    for (ByteElement e in old.values) newLUT[e.code] = e;
+    return newLUT;
+  }
+
 }
 
-class RootDataset extends Dataset {
+class RootByteDataset extends ByteDataset {
   TransferSyntax _ts;
 
-  RootDataset(ByteData bd, [bool hadUndefinedLength = true])
-      : super(bd, null, <int, Element>{},
-      hadUndefinedLength: hadUndefinedLength);
+  RootByteDataset.fromByteData(ByteData bd, {bool hadUndefinedLength = true})
+      : super.fromByteData(bd, null, <int, ByteElement>{},
+            hadUndefinedLength: hadUndefinedLength);
+
+  RootByteDataset.empty() : super.empty(null);
+
+  RootByteDataset._(Map<int, ByteElement> eLUT, Map<int, ByteElement> dupLUT,
+      bool hadUndefinedLength)
+      : super._(null, eLUT, dupLUT, true);
+
+  RootByteDataset.fromDataset(RootByteDataset rds)
+      : super._(null, ByteDataset.copyLut(rds.eLUTable),
+            ByteDataset.copyLut(rds.dupLUTable), rds.hadUndefinedLength);
 
   int get smallFileThreshold => 1024;
 
-  /// [true] if the source of this [RootDataset] had length < 1024.
-  /// the last [Element] of the [Dataset].
+  /// [true] if the source of this [RootByteDataset] had length < 1024.
+  /// the last [ByteElement] of the [ByteDataset].
   bool get wasShortFile => (_wasShortFile == null) ? false : _wasShortFile;
   bool _wasShortFile;
   set wasShortFile(bool v) => _wasShortFile ??= v;
@@ -139,28 +174,28 @@ class RootDataset extends Dataset {
   bool get hasFMI =>
       (eLUTable[kFileMetaInformationGroupLength] != null) ? true : false;
 
-  /// [true] if the source of this [RootDataset] had a
+  /// [true] if the source of this [RootByteDataset] had a
   /// DICOM preamble and prefix.
   bool get hadPrefix => (_hadPrefix == null) ? false : _hadPrefix;
   bool _hadPrefix;
   set hadPrefix(bool v) => _hadPrefix ??= v;
 
-  /// [true] if the source of this [RootDataset] had trailing zeros following
-  /// the last [Element] of the [Dataset].
+  /// [true] if the source of this [RootByteDataset] had trailing zeros following
+  /// the last [ByteElement] of the [ByteDataset].
   bool get hadTrailingZeros =>
       (_hadTrailingZeros == null) ? false : _hadTrailingZeros;
   bool _hadTrailingZeros;
   set hadTrailingZeros(bool v) => _hadTrailingZeros ??= v;
 
-  /// [true] if the source of this [RootDataset] had data that
+  /// [true] if the source of this [RootByteDataset] had data that
   /// was not successfully parsed.
   bool get hadParsingErrors =>
       (_hadParsingErrors == null) ? false : _hadParsingErrors;
   bool _hadParsingErrors;
   set hadParsingErrors(bool v) => _hadParsingErrors ??= v;
 
-  /// [true] if the source of this [RootDataset] had one or more
-  /// [Element]s with undefined length that had delimiters followed
+  /// [true] if the source of this [RootByteDataset] had one or more
+  /// [ByteElement]s with undefined length that had delimiters followed
   /// by a non-zero length field.
   bool get hadNonZeroDelimiterLength =>
       (_hadNonZeroDelimiterLength == null) ? false : _hadNonZeroDelimiterLength;
@@ -178,7 +213,7 @@ class RootDataset extends Dataset {
   TransferSyntax _getTS() {
     String s = transferSyntaxString;
     if (s != null) _ts = TransferSyntax.lookup(s);
- //   print('*** s: $s, ts: $_ts');
+    //   print('*** s: $s, ts: $_ts');
     if (_ts == null) _ts = TransferSyntax.kImplicitVRLittleEndian;
     return _ts;
   }
@@ -186,7 +221,7 @@ class RootDataset extends Dataset {
   bool get hadTransferSyntax => (transferSyntaxString != null &&
       (TransferSyntax.lookup(transferSyntaxString) != null));
 
-  /// Returns [true] if the [Dataset] being read has an
+  /// Returns [true] if the [ByteDataset] being read has an
   /// Explicit VR Transfer Syntax.
   @override
   bool get isExplicitVR =>
@@ -198,29 +233,27 @@ class RootDataset extends Dataset {
   final ByteData _emptySourceByteData = new ByteData(0);
   ByteData removeByteData() => _bd = _emptySourceByteData;
 
-  //TODO:
-  //DatasetTagged convertToTaggedDataset() {}
-
   bool _tsIsReady = false;
   bool tsIsNowReady() => _tsIsReady = true;
 
   // Can't use the full form until the Transfer Syntax has been established.
   @override
-  String toString() =>
-    (_tsIsReady)
-   ? '$runtimeType: FMI($hasFMI) TS($transferSyntax), '
-        'elements(${eLUTable.length}), duplicates(${dupLUTable.length})'
-  : '$runtimeType: FMI($hasFMI) elements(${eLUTable.length})';
+  String toString() => (_tsIsReady)
+      ? '$runtimeType: FMI($hasFMI) TS($transferSyntax), '
+          'elements(${eLUTable.length}), duplicates(${dupLUTable.length})'
+      : '$runtimeType: FMI($hasFMI) elements(${eLUTable.length})';
 }
 
-class Item extends Dataset {
-  Element _sq;
+class ByteItem extends ByteDataset {
+  ByteElement _sq;
 
-  Item(ByteData e, Dataset parent, Map<int, Element> elements,
+  ByteItem.fromByteData(
+      ByteData bd, ByteDataset parent, Map<int, ByteElement> elements,
       [bool hadUndefinedLength = false])
-      : super(e, parent, elements, hadUndefinedLength: hadUndefinedLength);
+      : super.fromByteData(bd, parent, elements,
+            hadUndefinedLength: hadUndefinedLength);
 
-  void addSQ(Element sq) {
+  void addSQ(ByteElement sq) {
     assert(sq is EVRSequence || sq is IVRSequence);
     assert(_sq == null);
     _sq = sq;

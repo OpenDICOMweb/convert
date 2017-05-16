@@ -10,16 +10,16 @@ import 'dart:typed_data';
 import 'package:common/common.dart';
 import 'package:dictionary/dictionary.dart';
 
-import 'dataset.dart';
+import 'byte_dataset.dart';
 import 'utils.dart';
 
-abstract class Element {
+abstract class ByteElement {
   // The [Element].
   final ByteData bd;
   Uint8List _vf;
   List _values;
 
-  Element(this.bd);
+  ByteElement.fromByteData(this.bd);
 
   @override
   bool operator ==(Object o) {
@@ -33,10 +33,10 @@ abstract class Element {
 
   // **** abstract Getters
 
-  /// The [VR] of this [Element].
+  /// The [VR] of this [ByteElement].
   int get vrCode;
 
-  /// The number of bytes from the beginning of the [Element] to the
+  /// The number of bytes from the beginning of the [ByteElement] to the
   /// beginning of the Value Field.
   int get vfOffset;
 
@@ -133,8 +133,8 @@ abstract class Element {
       '(ox${toHex32(vfLength)}, $vfLength, ${vf.length})  ($length) $vf';
 }
 
-class EVRElement extends Element {
-  EVRElement(ByteData e) : super(e);
+class EVRElement extends ByteElement {
+  EVRElement(ByteData e) : super.fromByteData(e);
 
   @override
   bool get isExplicitVR => true;
@@ -199,8 +199,8 @@ class EVRElement extends Element {
   };
 }
 
-class IVRElement extends Element {
-  IVRElement(ByteData e) : super(e);
+class IVRElement extends ByteElement {
+  IVRElement(ByteData e) : super.fromByteData(e);
 
   @override
   bool get isExplicitVR => false;
@@ -230,15 +230,15 @@ class IVRElement extends Element {
   String toString() => '[${bd.offsetInBytes}]$runtimeType$dcm $vr, '
       '(ox${toHex32(vfLength)}, $vfLength, ${vf.length}) ${_getValues(10)}';}
 
-abstract class SQ extends Element {
-  final Dataset parent;
-  final List<Item> items;
+abstract class SQ extends ByteElement {
+  final ByteDataset parent;
+  final List<ByteItem> items;
   final bool hadUndefinedLength;
 
   SQ(ByteData bd, this.parent, this.items, this.hadUndefinedLength)
-      : super(bd);
+      : super.fromByteData(bd);
 
-  Item operator [](int index) => items[index];
+  ByteItem operator [](int index) => items[index];
 
   @override
   bool operator ==(Object o) {
@@ -262,11 +262,11 @@ abstract class SQ extends Element {
   int get vrCode => VR.kSQ.code;
 
   @override
-  List<Item> get values => items;
+  List<ByteItem> get values => items;
 
   int get total {
     int count = 0;
-    for (Item item in items) count += item.total;
+    for (ByteItem item in items) count += item.total;
     return count;
   }
 
@@ -274,13 +274,13 @@ abstract class SQ extends Element {
 
   dynamic _getValues() {
     var out = "";
-    for (Item item in items)
+    for (ByteItem item in items)
       out += '  ${item.info}\n';
     return out;
   }
 
   //TODO: make sure its not already present
-  void add(Item item) => items.add(item);
+  void add(ByteItem item) => items.add(item);
 
   @override
   String toString() => '[${bd.offsetInBytes}]$runtimeType$dcm '
@@ -292,7 +292,7 @@ class EVRSequence extends SQ {
   @override
   final bool isExplicitVR = true;
 
-  EVRSequence(ByteData e, Dataset parent, List<Item> items,
+  EVRSequence(ByteData e, ByteDataset parent, List<ByteItem> items,
       [bool hadUndefinedLength = false])
       : super(e, parent, items, hadUndefinedLength);
 
@@ -314,7 +314,7 @@ class IVRSequence extends SQ {
   @override
   final bool isExplicitVR = false;
 
-  IVRSequence(ByteData e, Dataset parent, List<Item> items,
+  IVRSequence(ByteData e, ByteDataset parent, List<ByteItem> items,
       [bool hadUndefinedLength = false])
       : super(e, parent, items, hadUndefinedLength);
 

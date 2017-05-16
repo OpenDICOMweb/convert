@@ -10,7 +10,7 @@ import 'dart:typed_data';
 import 'package:common/format.dart';
 import 'package:common/logger.dart';
 import 'package:common/timestamp.dart';
-import 'package:convertX/src/dicom_no_tag/dataset.dart';
+import 'package:convertX/src/dicom_no_tag/byte_dataset.dart';
 import 'package:convertX/src/dicom_no_tag/dcm_reader.dart';
 import 'package:convertX/src/dicom_no_tag/dcm_writer.dart';
 import 'package:dictionary/dictionary.dart';
@@ -20,7 +20,7 @@ new Logger("io/bin/read_file.dart", watermark: Severity.warn);
 
 final Formatter format = new Formatter();
 
-RootDataset readFile(File file,
+RootByteDataset readFile(File file,
     {bool fmiOnly = false,
       TransferSyntax targetTS,
       Severity logLevel: Severity.warn,
@@ -44,7 +44,7 @@ RootDataset readFile(File file,
   if (bytes.length < 1024)
     _log.warn('***** Short file length(${bytes.length}): $path');
 
-  RootDataset rds;
+  RootByteDataset rds;
   timer.start();
   if (fmiOnly) {
     rds = DcmReader.fmi(bytes, path: path);
@@ -71,29 +71,29 @@ RootDataset readFile(File file,
   }
 }
 
-void formatDataset(RootDataset rds, [bool includePrivate = true]) {
+void formatDataset(RootByteDataset rds, [bool includePrivate = true]) {
   var z = new Formatter(maxDepth: 146);
   _log.debug(rds.format(z));
 }
 
-RootDataset readFMI(Uint8List bytes, [String path = ""]) =>
+RootByteDataset readFMI(Uint8List bytes, [String path = ""]) =>
     DcmReader.fmi(bytes);
 
-RootDataset readRoot(Uint8List bytes, [String path = ""]) {
+RootByteDataset readRoot(Uint8List bytes, [String path = ""]) {
   ByteData bd = bytes.buffer.asByteData();
   DcmReader reader = new DcmReader(bd);
-  RootDataset rds = reader.readRootDataset();
+  RootByteDataset rds = reader.readRootDataset();
   return rds;
 }
 
-RootDataset readRootNoFMI(Uint8List bytes, [String path = ""]) {
+RootByteDataset readRootNoFMI(Uint8List bytes, [String path = ""]) {
   ByteData bd = bytes.buffer.asByteData();
   DcmReader decoder = new DcmReader(bd);
-  Dataset rds = decoder.xReadDataset();
+  ByteDataset rds = decoder.xReadDataset();
   return rds;
 }
 
-Uint8List writeDataset(RootDataset rds,
+Uint8List writeDataset(RootByteDataset rds,
     {String path = "", bool fast = true, bool fmiOnly = false, TransferSyntax
     targetTS}) {
   var timer = new Stopwatch();
@@ -120,12 +120,12 @@ Uint8List writeDataset(RootDataset rds,
   return writer.bytes;
 }
 
-Uint8List writeFMI(RootDataset rds, [String path]) =>
+Uint8List writeFMI(RootByteDataset rds, [String path]) =>
     DcmWriter.fmi(rds, path: path);
 
-Uint8List writeRoot(RootDataset rds, {String path}) =>
+Uint8List writeRoot(RootByteDataset rds, {String path}) =>
     DcmWriter.rootDataset(rds, path: path);
 
-Uint8List writeRootNoFMI(RootDataset rds, {String path = ""}) =>
+Uint8List writeRootNoFMI(RootByteDataset rds, {String path = ""}) =>
     DcmWriter.fmi(rds, path: path);
 

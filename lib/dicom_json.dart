@@ -4,9 +4,6 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-/// ODW SDK core SOP Dataset library
-export 'package:dictionary/dictionary.dart';
-
 /// Encoder and Decoder for DICOM File Format octet streams (Uint8List)
 export 'src/dicom_json/json_decoder.dart';
 export 'src/dicom_json/json_encoder.dart';

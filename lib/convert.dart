@@ -5,5 +5,6 @@
 // See the AUTHORS file for other contributors.
 
 export 'dicom.dart';
-export 'src/dicom_json/json_decoder.dart';
-export 'src/dicom_json/json_encoder.dart';
+export 'dicom_json.dart';
+
+

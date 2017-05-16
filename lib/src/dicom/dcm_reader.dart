@@ -6,12 +6,13 @@
 
 import 'dart:typed_data';
 
+import 'package:convertX/bytebuf.dart';
 import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
-import '../../src/dataset_stack.dart';
-import '../bytebuf/bytebuf.dart';
+import 'package:convertX/src/dataset_stack.dart';
+
 
 //TODO:
 //  1. Move all [String] trimming and validation to the Element.  The reader
@@ -51,32 +52,60 @@ class DcmReader extends ByteBuf {
   ///TODO: doc
   static final Logger log = new Logger("DcmReader", watermark: Severity.debug1);
 
+  /// The source of the [Uint8List] being read.
+  final String path;
+
+  /// If [true] errors will throw; otherwise, return [null].
+  final bool throwOnError;
+
+  final bool allowImplicitLittleEndian;
+  final bool allowMissingFMI;
+  final TransferSyntax targetTS;
+
   /// The root Dataset for the object being read.
   final RootDataset<Element> rootDS;
 
   /// A stack of [Dataset]s.  Used to save parent [Dataset].
-  DatasetStack dsStack = new DatasetStack();
+  //DatasetStack dsStack = new DatasetStack();
 
-  /// The current dataset.  This changes as Sequences are read and [Dataset]s are
-  /// pushed on and off the [dsStack].
-  Dataset<Element> currentDS;
+  /// The current dataset.  This changes as Sequences are read and
+  /// [Items]s are pushed on and off the [dsStack].
+  Dataset _currentDS;
+  bool _hadPrefix;
+
+  final ByteData bd;
+  final int endOfBD;
+  int _rIndex = 0;
 
   //*** Constructors ***
 
-  /// Creates a new [DcmReader]  where [readIndex] = [writeIndex] = 0.
-  DcmReader(DSSource source)
-      : rootDS = new RootDataset<Element>(),
-        super.reader(source.bytes, 0, source.lengthInBytes) {
-    currentDS = rootDS;
+  //TODO: Doc
+  /// Creates a new [DcmReader]  where [_rIndex] = [writeIndex] = 0.
+  DcmReader(this.bd,
+      {this.path = "",
+        this.throwOnError = true,
+        this.allowImplicitLittleEndian = true,
+        this.allowMissingFMI = false,
+        this.targetTS})
+      : endOfBD = bd.lengthInBytes,
+        rootDS = new RootDataset(bd, hadUndefinedLength: true) {
+    _warnIfShortFile();
   }
 
   /// Creates a [Uint8List] with the same length as the elements in [list],
   /// and copies over the elements.  Values are truncated to fit in the list
   /// when they are copied, the same way storing values truncates them.
-  DcmReader.fromList(List<int> list)
-      : rootDS = new RootDataset<Element>(),
-        super.fromList(list) {
-    currentDS = rootDS;
+  factory DcmReader.fromList(List<int> list,
+      {bool throwOnError = false,
+        String path = "",
+        bool allowImplicitLittleEndian = true,
+        bool allowMissingFMI = false,
+        TransferSyntax targetTS}) {
+    Uint8List bytes = new Uint8List.fromList(list);
+    ByteData bd = bytes.buffer.asByteData();
+    RootDataset rootDS = new RootDataset(bd, hadUndefinedLength: true);
+    return new DcmReader._(bd, path, throwOnError, allowImplicitLittleEndian,
+        allowMissingFMI, targetTS, rootDS);
   }
 
   //****  Core Dataset methods  ****
@@ -173,9 +202,8 @@ class DcmReader extends ByteBuf {
   /// Reads a zero or more [Private Groups] and then read an returns
   /// a Public [Element].
   void readElement({bool isExplicitVR: true}) {
-    log.down;
     final int code = _readTagCode();
-    log.debug('$rbb readElement: _peekTag${Tag.toDcm(code)}');
+    log.debugDown('$rbb readElement: _peekTag${Tag.toDcm(code)}');
     if (Tag.isPublicCode(code)) {
       log.debugDown('$rbb readPublicElement: isExplicitVR($isExplicitVR)');
       Element e = _readElement(code, isExplicitVR);
@@ -190,9 +218,14 @@ class DcmReader extends ByteBuf {
       _debugReader(code, code);
       tagCodeError(code);
     }
-    log.debug('$ree readElement');
-    log.up;
+    log.debugUp('$ree readElement');
   }
+
+  Element xReadElement({bool isExplicitVR = true}) {
+    final int code = _readTagCode();
+    return  _readElement(code, isExplicitVR);
+  }
+
 
   /// Reads an [Element], either Public or Private. Does not inspect
   /// [Tag]; rather, assumes it is correct, but reads [VR], if explicit,
@@ -672,7 +705,7 @@ class DcmReader extends ByteBuf {
 
     Element e = _readElement(code, isExplicitVR);
     log.debug('$rmm _readPGroupLength e: $e');
-    UL pe = new PrivateGroupLength<UL>(e.tag, e);
+    UL pe = new PrivateGroupLength(e.tag, e);
     currentDS.add(pe);
     pg.gLength = pe;
     log.debugUp('$ree _readPGroupLength pe: ${pe.info}');

@@ -24,10 +24,10 @@ class DcmDecoder extends DcmReader {
   final DSSource source;
 
   /// Creates a new [DcmDecoder]
-  DcmDecoder(Uint8List bytes,
+  DcmDecoder(ByteData bd,
       {String path = "", bool throwOnError = false, bool allowILEVR = true})
       : source = null,
-        super(bytes,
+        super(bd,
             path: path, throwOnError: throwOnError, allowILEVR: allowILEVR);
 
   /// Creates a new [DcmDecoder]

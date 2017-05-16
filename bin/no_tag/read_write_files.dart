@@ -12,7 +12,7 @@ import 'package:dictionary/dictionary.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:convertX/src/dicom_no_tag/compare_bytes.dart';
-import 'package:convertX/src/dicom_no_tag/dataset.dart';
+import 'package:convertX/src/dicom_no_tag/byte_dataset.dart';
 import 'package:convertX/src/dicom_no_tag/dcm_reader.dart';
 
 import 'package:convertX/timer.dart';
@@ -51,7 +51,7 @@ const int kMB = 1024 * 1024;
 
 bool readWriteFileFast(File inFile, {int reps = 1, bool fmiOnly = false}) {
   Uint8List bytes0 = inFile.readAsBytesSync();
-  RootDataset rds0 = DcmReader.readBytes(bytes0);
+  RootByteDataset rds0 = DcmReader.readBytes(bytes0);
   Uint8List bytes1 = writeDataset(rds0);
  // RootDataset rds1 =
   DcmReader.readBytes(bytes1);
@@ -76,7 +76,7 @@ bool readWriteFileTimed(File inFile, {int reps = 1, bool fmiOnly = false}) {
 
   for (int i = 0; i < reps; i++) {
 
-    RootDataset rds0 = DcmReader.readBytes(bytes0);
+    RootByteDataset rds0 = DcmReader.readBytes(bytes0);
     Duration readDS0 = timer.split;
 
     Uint8List bytes1 = writeDataset(rds0);
@@ -134,13 +134,13 @@ FileResult readWriteFileTiming(File file,
       return null;
     }
 
-    RootDataset rds0 = DcmReader.readBytes(bytes0);
+    RootByteDataset rds0 = DcmReader.readBytes(bytes0);
     Duration readDS0 = timer.elapsed;
 
     Uint8List bytes1 = writeDataset(rds0, path: path);
     Duration writeDS0 = timer.elapsed;
 
-    RootDataset rds1 = DcmReader.readBytes(bytes1);
+    RootByteDataset rds1 = DcmReader.readBytes(bytes1);
     Duration readDS1 = timer.elapsed;
 
     //TODO: make this work?
@@ -203,7 +203,7 @@ FileResult readWriteFileTiming(File file,
   return result;
 }
 
-bool _compareDatasets(RootDataset rds0, RootDataset rds1, [bool throwOnError]) {
+bool _compareDatasets(RootByteDataset rds0, RootByteDataset rds1, [bool throwOnError]) {
   bool v = compareDatasets(rds0, rds1, throwOnError);
   if (!v) {
     log.error('Unequal datasets:/n'

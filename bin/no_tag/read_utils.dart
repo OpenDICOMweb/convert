@@ -10,7 +10,7 @@ import 'dart:io';
 
 import 'package:common/format.dart';
 import 'package:common/logger.dart';
-import 'package:convertX/src/dicom_no_tag/dataset.dart';
+import 'package:convertX/src/dicom_no_tag/byte_dataset.dart';
 import 'package:convertX/src/dicom_no_tag/dcm_reader.dart';
 import 'package:convertX/timer.dart';
 import 'package:dictionary/dictionary.dart';
@@ -70,7 +70,7 @@ Timings for ${file.path}
 
 class FileResult {
   File file;
-  RootDataset rds;
+  RootByteDataset rds;
   bool fmiOnly;
   TransferSyntax targetTS;
   FileTiming times;
@@ -312,7 +312,7 @@ ResultSet readFileList(List<File> files,
   return results;
 }
 
-void formatDataset(RootDataset rds, [bool includePrivate = true]) {
+void formatDataset(RootByteDataset rds, [bool includePrivate = true]) {
   var z = new Formatter(maxDepth: 146);
   log.debug(rds.format(z));
 }

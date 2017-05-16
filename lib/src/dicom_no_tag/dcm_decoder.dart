@@ -9,12 +9,12 @@ import 'dart:typed_data';
 
 import 'package:core/entity.dart';
 
-import 'dataset.dart';
+import 'byte_dataset.dart';
 import 'dcm_reader.dart';
 
 /// Decoder for DICOM File Format octet streams (Uint8List)
 
-/// [DcmDecoder] reads DICOM SOP Instances and returns a [RootDataset].
+/// [DcmDecoder] reads DICOM SOP Instances and returns a [RootByteDataset].
 /// TODO: finish doc
 class DcmDecoder extends DcmReader {
   //TODO: add ability to keep non-zero preamble
@@ -82,10 +82,10 @@ class DcmDecoder extends DcmReader {
   //TODO: this will need to be modified to handle different types of datasets
   //TODO for now they are all instances.
   /// Reads a DICOM SOP [Instance] from a [Uint8List].
-  RootDataset readRDS() {
+  RootByteDataset readRDS() {
     DcmReader.log.debug('readRDS: $this');
     DcmReader.log.down;
-    RootDataset ds;
+    RootByteDataset ds;
 
     ds = readRootDataset();
     if (!ds.hasValidTransferSyntax) return null;
@@ -94,23 +94,23 @@ class DcmDecoder extends DcmReader {
     return ds;
   }
 
-  static RootDataset readRoot(Uint8List bytes) {
+  static RootByteDataset readRoot(Uint8List bytes) {
     ByteData bd =
         bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     DcmDecoder decoder = new DcmDecoder(bd);
-    RootDataset rds = decoder.readRootDataset();
+    RootByteDataset rds = decoder.readRootDataset();
     return rds;
   }
 
-  static RootDataset readRootNoFMI(Uint8List bytes) {
+  static RootByteDataset readRootNoFMI(Uint8List bytes) {
     ByteData bd =
         bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     DcmDecoder decoder = new DcmDecoder(bd);
-    Dataset rds = decoder.xReadDataset();
+    ByteDataset rds = decoder.xReadDataset();
     return rds;
   }
 
-  static RootDataset readFile(File file) {
+  static RootByteDataset readFile(File file) {
     var bytes = file.readAsBytesSync();
     return DcmDecoder.readRoot(bytes);
   }

@@ -8,6 +8,12 @@ import 'dart:typed_data';
 
 import 'package:common/ascii.dart';
 import 'package:common/logger.dart';
+import 'package:dictionary/dictionary.dart';
+
+const int kSQCode = 0x5153;
+const int kOBCode = 0x424f;
+const int kOWCode = 0x574f;
+const int kUNCode = 0x4e55;
 
 int toGroup(int code) => code >> 16;
 int toElt(int code) => code & 0xFFFF;
@@ -87,4 +93,15 @@ String toAscii(ByteData bd, int start, int end, [int pos]) {
   if (end >= end) end = end;
   for (int i = pos + 1; i < end; i++) s += ' ' + vChar(bytes[i]);
   return '$s';
+}
+
+class InvalidTransferSyntaxError extends Error {
+  final TransferSyntax ts;
+
+  InvalidTransferSyntaxError(this.ts, [Logger log]) {
+    if (log != null) log.error(toString());
+  }
+
+  @override
+  String toString() => '$runtimeType:\n  Element(${ts.info})';
 }

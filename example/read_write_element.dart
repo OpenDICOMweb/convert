@@ -8,7 +8,7 @@ import 'package:common/logger.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/tag.dart';
 
-import '../lib/encoder.dart';
+import 'package:convertX/dicom.dart';
 
 /// Logger
 Logger log = new Logger("read_write_element");
@@ -36,7 +36,7 @@ bool elementTest(Element e0, List values) {
 
   // Read the element
   DcmReader rBuf = new DcmReader.fromList(wBuf.bytes);
-  Element e3 = rBuf.xReadPublicElement();
+  Element e3 = rBuf.xReadElement(isExplicitVR: true);
   int rIndex = rBuf.readIndex;
   log.debug('wIndex: $wIndex, rIndex: $rIndex');
   if (wIndex != rIndex) return false;

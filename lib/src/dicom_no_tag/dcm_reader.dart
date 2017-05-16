@@ -12,14 +12,9 @@ import 'package:common/common.dart';
 import 'package:convertX/src/exception.dart';
 import 'package:dictionary/dictionary.dart';
 
-import 'dataset.dart';
-import 'element.dart';
+import 'byte_dataset.dart';
+import 'byte_element.dart';
 import 'utils.dart';
-
-const int kSQCode = 0x5153;
-const int kOBCode = 0x424f;
-const int kOWCode = 0x574f;
-const int kUNCode = 0x4e55;
 
 const List<int> _undefinedLengthElements = const <int>[
   kOBCode,
@@ -38,7 +33,7 @@ const List<int> _undefinedLengthElements = const <int>[
 /// reads the Value Field for a particular Value Representation.
 //typedef Element<E> VFReader<E>(int tag, VR<E> vr, int vfLength);
 
-/// A library for parsing [Uint8List] containing DICOM File Format [Dataset]s.
+/// A library for parsing [Uint8List] containing DICOM File Format [ByteDataset]s.
 ///
 /// Supports parsing LITTLE ENDIAN format in the super class [ByteBuf].
 /// _Notes_:
@@ -64,11 +59,11 @@ class DcmReader {
   final TransferSyntax targetTS;
 
   /// The root Dataset for the object being read.
-  final RootDataset rootDS;
+  final RootByteDataset rootDS;
 
   /// The current dataset.  This changes as Sequences are read and
   /// [Items]s are pushed on and off the [dsStack].
-  Dataset _currentDS;
+  ByteDataset _currentDS;
   bool _hadPrefix;
 
   // **** Reader fields ****
@@ -88,7 +83,7 @@ class DcmReader {
       this.allowMissingFMI = false,
       this.targetTS})
       : endOfBD = bd.lengthInBytes,
-        rootDS = new RootDataset(bd, true) {
+        rootDS = new RootByteDataset.fromByteData(bd, hadUndefinedLength: true) {
     _warnIfShortFile();
   }
 
@@ -103,7 +98,8 @@ class DcmReader {
       TransferSyntax targetTS}) {
     Uint8List bytes = new Uint8List.fromList(list);
     ByteData bd = bytes.buffer.asByteData();
-    RootDataset rootDS = new RootDataset(bd, true);
+    RootByteDataset rootDS = new RootByteDataset.fromByteData(bd, hadUndefinedLength:
+    true);
     return new DcmReader._(bd, path, throwOnError, allowImplicitLittleEndian,
         allowMissingFMI, targetTS, rootDS);
   }
@@ -139,20 +135,20 @@ class DcmReader {
   /// [true] if the source contained DICOM File Meta Information (FMI).
   bool get hasFMI => rootDS.hasFMI;
 
-  /// [true] if the source of this [RootDataset] had trailing zeros following
-  /// the last [Element] of the [Dataset].
+  /// [true] if the source of this [RootByteDataset] had trailing zeros following
+  /// the last [ByteElement] of the [ByteDataset].
   bool get hadTrailingZeros => rootDS.hadTrailingZeros;
 
   /// The current readIndex as a string.
   String get rrr => 'R@$_rIndex';
 
-  /// The beginning of reading an [Element] or [Item].
+  /// The beginning of reading an [ByteElement] or [ByteItem].
   String get rbb => '> $rrr';
 
-  /// In the middle of reading an [Element] or [Item]
+  /// In the middle of reading an [ByteElement] or [ByteItem]
   String get rmm => '| $rrr';
 
-  /// The end of reading an [Element] or [Item]
+  /// The end of reading an [ByteElement] or [ByteItem]
   String get ree => '< $rrr';
 
   int _readUint16() {
@@ -207,7 +203,7 @@ class DcmReader {
     return (group << 16) + elt;
   }
 
-  /// Returns [true] if the [Dataset] being read has an
+  /// Returns [true] if the [ByteDataset] being read has an
   /// Explicit VR Transfer Syntax.
   bool get _isExplicitVR => rootDS.isExplicitVR;
 
@@ -215,8 +211,8 @@ class DcmReader {
       '${_currentDS.info}';
 
   /// Reads File Meta Information ([Fmi]) and returns a Map<int, Element>
-  /// if any [Fmi] [Element]s were present; otherwise, returns null.
-  RootDataset readFMI() {
+  /// if any [Fmi] [ByteElement]s were present; otherwise, returns null.
+  RootByteDataset readFMI() {
     _currentDS = rootDS;
     log.debugDown('$rbb readFmi($_currentDS)');
     if (_hadPrefix == null) _readPrefix();
@@ -235,7 +231,7 @@ class DcmReader {
           zeroEncountered(code);
           return rootDS;
         } else {
-          Element e = _readElement(true);
+          ByteElement e = _readElement(true);
           rootDS.add(e.code, e);
           log.debugUp('$ree readFMI loop: $e');
         }
@@ -257,9 +253,9 @@ class DcmReader {
     return rootDS;
   }
 
-  /// Reads a [RootDataset] from [this] and returns it. If an error is
+  /// Reads a [RootByteDataset] from [this] and returns it. If an error is
   /// encountered [readRootDataset] will throw an Error is or [null].
-  RootDataset readRootDataset({bool allowMissingFMI = false}) {
+  RootByteDataset readRootDataset({bool allowMissingFMI = false}) {
     _currentDS = rootDS;
     var ds = readFMI();
     if (ds == null) return null;
@@ -291,11 +287,11 @@ class DcmReader {
     return rootDS;
   }
 
-  void _readDataset(Dataset ds) {
+  void _readDataset(ByteDataset ds) {
     assert(_currentDS != null);
     log.debug('$rbb readDataset: isExplicitVR(${ds.isExplicitVR})');
     while (_isReadable) {
-      Element e = _readElement(ds.isExplicitVR);
+      ByteElement e = _readElement(ds.isExplicitVR);
       _currentDS.add(e.code, e);
     }
     log.debug('$ree end readDataset: isExplicitVR(${ds.isExplicitVR})');
@@ -322,17 +318,17 @@ class DcmReader {
     return v;
   }
 
-  Element _readElement([bool isExplicitVR = true]) {
+  ByteElement _readElement([bool isExplicitVR = true]) {
   //  log.debug('$rbb readElement...');
     int code = _readTagCode();
     // Sometimes there are zeros at the end of the file
     if (code == 0) zeroEncountered(code);
-    Element e = (isExplicitVR) ? _readEVR(code) : _readIVR(code);
+    ByteElement e = (isExplicitVR) ? _readEVR(code) : _readIVR(code);
   //  log.debug('$ree readElement: $e');
     return e;
   }
 
-  Element _readEVR(int code) {
+  ByteElement _readEVR(int code) {
     int start = _rIndex - 4; // for code
     int vrCode = _readUint16();
     if (vrCode == kSQCode) {
@@ -397,7 +393,7 @@ class DcmReader {
     return false;
   }
 
-  Element _readIVR(int code) {
+  ByteElement _readIVR(int code) {
     int start = _rIndex - 4; // for code
     int vfLength = _readUint32();
     if (_isSequence()) return _readSequence(code, 8, false);
@@ -433,14 +429,14 @@ class DcmReader {
   // reading the value field of these [Element]s. Returns an [SQ] [Element].
 
   /// Reads an EVR or IVR Sequence. The _readElementMethod detects Sequences.
-  Element _readSequence(int code, int headerLength, bool isEVR) {
+  ByteElement _readSequence(int code, int headerLength, bool isEVR) {
     int vfLength = _readUint32();
     int start = _rIndex - headerLength;
     var hadUndefinedLength = (vfLength == kUndefinedLength);
   //  log.debugDown('$rbb SQ${toDcm(code)} start($start) undefinedLength'
   //      '($hadUndefinedLength), vfLength(${toHex32(vfLength)}, $vfLength)');
     int endOfVF;
-    List<Item> items = <Item>[];
+    List<ByteItem> items = <ByteItem>[];
     if (hadUndefinedLength) {
   //    log.debug1('$rmm SQ${toDcm(code)} Undefined Length');
       while (!_checkForSequenceDelimiter()) items.add(_readItem(isEVR));
@@ -460,15 +456,15 @@ class DcmReader {
     } else {
       sq = new IVRSequence(e, _currentDS, items, hadUndefinedLength);
     }
-    for (Item item in items) item.addSQ(sq);
+    for (ByteItem item in items) item.addSQ(sq);
   //  log.debugUp('$ree $sq');
     return sq;
   }
 
   //TODO this can be moved to Dataset_base if we abstract DatasetExplicit
   // & readElementExplicit
-  /// Returns an [Item] or Fragment.
-  Item _readItem(bool isExplicitVR) {
+  /// Returns an [ByteItem] or Fragment.
+  ByteItem _readItem(bool isExplicitVR) {
     int start = _rIndex;
     int code = _readTagCode();
  //   log.debug('$rbb item kItem(${toHex32(kItem)}, code ${toHex32(code)}');
@@ -477,22 +473,22 @@ class DcmReader {
   //  log.debug('$rmm item vfLength(${toHex32(vfLength)}, $vfLength)');
 
     // Save parent [Dataset], and make [item] is new parent [Dataset].
-    Dataset parentDS = _currentDS;
-    Map<int, Element> elements = <int, Element>{};
+    ByteDataset parentDS = _currentDS;
+    Map<int, ByteElement> elements = <int, ByteElement>{};
     bool hadUndefinedLength = vfLength == kUndefinedLength;
   //  log.debug1('$rmm readItem hadUndefinedLength=$hadUndefinedLength');
     int endOfVF;
     try {
       if (hadUndefinedLength) {
         while (!_checkForItemDelimiter()) {
-          Element e = _readElement(isExplicitVR);
+          ByteElement e = _readElement(isExplicitVR);
           elements[e.code] = e;
         }
         endOfVF = _rIndex;
       } else {
         endOfVF = start + vfLength;
         while (_rIndex < endOfVF) {
-          Element e = _readElement(isExplicitVR);
+          ByteElement e = _readElement(isExplicitVR);
           elements[e.code] = e;
         }
       }
@@ -508,8 +504,9 @@ class DcmReader {
       _currentDS = parentDS;
     }
 
-    var e = bd.buffer.asByteData(start, endOfVF - start);
-    var item = new Item(e, parentDS, elements, hadUndefinedLength);
+    var bytes = bd.buffer.asByteData(start, endOfVF - start);
+    var item = new ByteItem.fromByteData(bytes, parentDS, elements,
+        hadUndefinedLength);
   //  log.debug('$ree readItemElements: ${item.length} Items');
     return item;
   }
@@ -594,30 +591,30 @@ class DcmReader {
     return rootDS.transferSyntax;
   }
 
-  Element xReadPublicElement([bool isExplicitVR = true]) =>
+  ByteElement xReadPublicElement([bool isExplicitVR = true]) =>
       _readElement(isExplicitVR);
 
   // External Interface for testing
-  Element xReadPGLength([bool isExplicitVR = true]) =>
+  ByteElement xReadPGLength([bool isExplicitVR = true]) =>
       _readElement(isExplicitVR);
 
   // External Interface for testing
-  Element xReadPrivateIllegal(int code, [bool isExplicitVR = true]) =>
+  ByteElement xReadPrivateIllegal(int code, [bool isExplicitVR = true]) =>
       _readElement(isExplicitVR);
 
   // External Interface for testing
-  Element xReadPrivateCreator([bool isExplicitVR = true]) =>
+  ByteElement xReadPrivateCreator([bool isExplicitVR = true]) =>
       _readElement(isExplicitVR);
 
   // External Interface for testing
-  Element xReadPrivateData(Element pc, [bool isExplicitVR = true]) {
+  ByteElement xReadPrivateData(ByteElement pc, [bool isExplicitVR = true]) {
     //  _TagMaker maker =
     //      (int nextCode, VR vr, [name]) => new PDTag(nextCode, vr, pc.tag);
     return _readElement(isExplicitVR);
   }
 
   // Reads
-  Dataset xReadDataset([bool isExplicitVR = true]) {
+  ByteDataset xReadDataset([bool isExplicitVR = true]) {
     log.debug('$rbb readDataset: isExplicitVR($isExplicitVR)');
     while (_isReadable) {
       var e = _readElement(isExplicitVR);
@@ -629,7 +626,7 @@ class DcmReader {
     return _currentDS;
   }
 
-  static RootDataset fmi(Uint8List bytes,
+  static RootByteDataset fmi(Uint8List bytes,
       {String path = "", TransferSyntax targetTS}) {
     ByteData bd =
         bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
@@ -637,7 +634,7 @@ class DcmReader {
     return reader.readFMI();
   }
 
-  static RootDataset rootDataset(Uint8List bytes,
+  static RootByteDataset rootDataset(Uint8List bytes,
       {String path = "", TransferSyntax targetTS}) {
     ByteData bd =
         bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
@@ -645,7 +642,7 @@ class DcmReader {
     return reader.readRootDataset();
   }
 
-  static RootDataset dataset(Uint8List bytes,
+  static RootByteDataset dataset(Uint8List bytes,
       {String path = "", TransferSyntax targetTS}) {
     ByteData bd =
         bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
@@ -653,13 +650,13 @@ class DcmReader {
     return reader.xReadDataset();
   }
 
-  static RootDataset readBytes(Uint8List bytes,
+  static RootByteDataset readBytes(Uint8List bytes,
       {String path: "", bool fmiOnly = false, TransferSyntax targetTS}) {
     if (fmiOnly) return DcmReader.fmi(bytes, path: path);
     return DcmReader.rootDataset(bytes, path: path);
   }
 
-  static RootDataset readFile(File file,
+  static RootByteDataset readFile(File file,
       {bool fmiOnly = false, TransferSyntax targetTS}) {
     Uint8List bytes = file.readAsBytesSync();
     return readBytes(bytes,
@@ -667,13 +664,3 @@ class DcmReader {
   }
 }
 
-class InvalidTransferSyntaxError extends Error {
-  final TransferSyntax ts;
-
-  InvalidTransferSyntaxError(this.ts, [Logger log]) {
-    if (log != null) log.error(toString());
-  }
-
-  @override
-  String toString() => '$runtimeType:\n  Element(${ts.info})';
-}

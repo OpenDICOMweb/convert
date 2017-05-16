@@ -10,7 +10,7 @@ import 'dart:typed_data';
 import 'package:common/format.dart';
 import 'package:common/logger.dart';
 import 'package:common/timestamp.dart';
-import 'package:convertX/src/dicom_no_tag/dataset.dart';
+import 'package:convertX/src/dicom_no_tag/byte_dataset.dart';
 import 'package:convertX/src/dicom_no_tag/dcm_writer.dart';
 import 'package:dictionary/dictionary.dart';
 
@@ -19,7 +19,7 @@ final Logger log = new Logger("convert/bin/no_tag/write_file_list.dart",
 
 final Formatter format = new Formatter();
 
-Uint8List writeDataset(RootDataset rds, String path,
+Uint8List writeDataset(RootByteDataset rds, String path,
     {bool fmiOnly = false, TransferSyntax targetTS}) {
     var file = new File(path);
     var timer = new Stopwatch();
@@ -46,10 +46,10 @@ Uint8List writeDataset(RootDataset rds, String path,
     return writer.bytes;
 }
 
-Uint8List writeFMI(RootDataset rds, [String path]) =>
+Uint8List writeFMI(RootByteDataset rds, [String path]) =>
     DcmWriter.fmi(rds, path: path);
 
-Uint8List writeRoot(RootDataset rds, {String path}) =>
+Uint8List writeRoot(RootByteDataset rds, {String path}) =>
     DcmWriter.rootDataset(rds, path: path);
 
 

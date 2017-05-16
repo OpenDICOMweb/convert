@@ -17,14 +17,9 @@ import 'dart:typed_data';
 import 'package:common/common.dart';
 import 'package:dictionary/dictionary.dart';
 
-import 'dataset.dart';
-import 'element.dart';
+import 'byte_dataset.dart';
+import 'byte_element.dart';
 import 'utils.dart';
-
-const int kSQCode = 0x5153;
-const int kOBCode = 0x424f;
-const int kOWCode = 0x574f;
-const int kUNCode = 0x4e55;
 
 const List<int> _undefinedLengthElements = const <int>[
   kOBCode,
@@ -43,7 +38,7 @@ const List<int> _undefinedLengthElements = const <int>[
 /// reads the Value Field for a particular Value Representation.
 //typedef Element<E> VFReader<E>(int tag, VR<E> vr, int vfLength);
 
-/// A library for parsing [Uint8List] containing DICOM File Format [Dataset]s.
+/// A library for parsing [Uint8List] containing DICOM File Format [ByteDataset]s.
 ///
 /// Supports parsing LITTLE ENDIAN format in the super class [ByteBuf].
 /// _Notes_:
@@ -69,11 +64,11 @@ class DcmWriter {
   //   final TransferSyntax targetTS;
 
   /// The root Dataset for the object being read.
-  final RootDataset rootDS;
+  final RootByteDataset rootDS;
 
   /// The current dataset.  This changes as Sequences are read and
   /// [Items]s are pushed on and off the [dsStack].
-  Dataset _currentDS;
+  ByteDataset _currentDS;
 
   // **** Reader fields ****
 
@@ -127,13 +122,13 @@ class DcmWriter {
   /// The current readIndex as a string.
   String get www => 'W@$_wIndex';
 
-  /// The beginning of reading an [Element] or [Item].
+  /// The beginning of reading an [ByteElement] or [ByteItem].
   String get wbb => '> $www';
 
-  /// In the middle of reading an [Element] or [Item]
+  /// In the middle of reading an [ByteElement] or [ByteItem]
   String get wmm => '| $www';
 
-  /// The end of reading an [Element] or [Item]
+  /// The end of reading an [ByteElement] or [ByteItem]
   String get wee => '< $www';
 
   void _writeUint8(int value) {
@@ -189,7 +184,7 @@ class DcmWriter {
 
   bool get isFMIPresent => rootDS.hasFMI;
 
-  /// Returns [true] if the [Dataset] being write has an
+  /// Returns [true] if the [ByteDataset] being write has an
   /// Explicit VR Transfer Syntax.
   bool get isExplicitVR => rootDS.isExplicitVR;
 
@@ -205,7 +200,7 @@ class DcmWriter {
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
   /// writes File Meta Information ([Fmi]) and returns a Map<int, Element>
-  /// if any [Fmi] [Element]s were present; otherwise, returns null.
+  /// if any [Fmi] [ByteElement]s were present; otherwise, returns null.
   void writeFMI({bool hasPrefix = true}) {
     if (_currentDS != rootDS) log.error('Not rootDS');
     log.down;
@@ -214,7 +209,7 @@ class DcmWriter {
     log.debug2('$wmm writeMFI: prefix($hasPrefix) $_currentDS');
     log.down;
     log.debug1('$wbb writeFMI loop:');
-    for (Element e in rootDS.elements) {
+    for (ByteElement e in rootDS.elements) {
       if (e.isFMI) {
         _writeElement(e);
         log.debug1('$wmm writeFMI loop: $e');
@@ -226,9 +221,9 @@ class DcmWriter {
     log.up;
   }
 
-  /// writes a [RootDataset] from [this] and returns it. If an error is
+  /// writes a [RootByteDataset] from [this] and returns it. If an error is
   /// encountered [writeRootDataset] will throw an Error is or [null].
-  RootDataset writeRootDataset({bool allowMissingFMI = false}) {
+  RootByteDataset writeRootDataset({bool allowMissingFMI = false}) {
     log.debug('$wbb writeRootDataset: $rootDS');
     _currentDS = rootDS;
     if (!allowMissingFMI && !rootDS.hasFMI) {
@@ -248,17 +243,17 @@ class DcmWriter {
     _writeAsciiString('DICM');
   }
 
-  void _writeDataset(Dataset ds) {
+  void _writeDataset(ByteDataset ds) {
     _currentDS = ds;
     log.down;
     assert(_currentDS != null);
     log.debug('$wbb writeDataset: $ds isExplicitVR(${ds.isExplicitVR})');
-    for (Element e in ds.elements) _writeElement(e);
+    for (ByteElement e in ds.elements) _writeElement(e);
     log.debug('$wee end writeDataset');
     log.up;
   }
 
-  void _writeElement(Element e) {
+  void _writeElement(ByteElement e) {
     hasRemaining(e.lengthInBytes);
     if (e.isExplicitVR)
       _writeEVR(e);
@@ -278,7 +273,7 @@ class DcmWriter {
     }
   }
 
-  void _writeEVR(Element e) {
+  void _writeEVR(ByteElement e) {
     log.down;
     if (e is EVRSequence) {
       log.debug('$wbb writing sequence: $e');
@@ -302,7 +297,7 @@ class DcmWriter {
     log.up;
   }
 
-  void _writeIVR(Element e) {
+  void _writeIVR(ByteElement e) {
     if (e is IVRSequence) {
       log.debug('$wbb writing sequence: $e');
       _writeSequence(e);
@@ -328,15 +323,15 @@ class DcmWriter {
   // writeing the value field of these [Element]s. Returns an [SQ] [Element].
 
   /// writes an EVR or IVR Sequence. The _writeElementMethod detects Sequences.
-  void _writeSequence(Element e) {
+  void _writeSequence(ByteElement e) {
     //TODO: move the for loop out of if when Sequence is a subtype of Element
     int start = _wIndex;
     if (e is EVRSequence) {
       _writeEVRSQHeader(e);
-      for (Item item in e.items) _writeItem(item);
+      for (ByteItem item in e.items) _writeItem(item);
     } else if (e is IVRSequence) {
       _writeIVRSQHeader(e);
-      for (Item item in e.items) _writeItem(item);
+      for (ByteItem item in e.items) _writeItem(item);
     }
     if (e.vfLength == kUndefinedLength) _writeSequenceDelimiter();
     int end = _wIndex;
@@ -349,7 +344,7 @@ class DcmWriter {
     }
   }
 
-  void _writeEVRSQHeader(Element e) {
+  void _writeEVRSQHeader(ByteElement e) {
     int start = _wIndex;
     log.debug('$wbb writeEVRSQHeader');
     _writeTagCode(e.code);
@@ -367,7 +362,7 @@ class DcmWriter {
         'length(${end - start}\n    writeEVRSQHeader: $bdx');
   }
 
-  void _writeIVRSQHeader(Element e) {
+  void _writeIVRSQHeader(ByteElement e) {
     _writeTagCode(e.code);
     if (e.vfLength == kUndefinedLength) {
       _writeUint32(kUndefinedLength);
@@ -379,8 +374,8 @@ class DcmWriter {
 
   //TODO this can be moved to Dataset_base if we abstract DatasetExplicit
   // & writeElementExplicit
-  /// Returns an [Item] or Fragment.
-  void _writeItem(Item item) {
+  /// Returns an [ByteItem] or Fragment.
+  void _writeItem(ByteItem item) {
     log.down;
     _writeTagCode(kItem);
     if (item.hadUndefinedLength) {
@@ -389,7 +384,7 @@ class DcmWriter {
       int vfLength = _getItemLengthInBytes(item);
       _writeUint32(vfLength);
     }
-    for (Element e in item.elements) _writeElement(e);
+    for (ByteElement e in item.elements) _writeElement(e);
     if (item.hadUndefinedLength) _writeItemDelimiter();
     log.debug('$wee writeItemElements: ${item.length} Items');
     log.up;
@@ -417,9 +412,9 @@ class DcmWriter {
   }
 
   /// writes the Value Field until the [kSequenceDelimiter] is found.
-  int _getItemLengthInBytes(Item item) {
+  int _getItemLengthInBytes(ByteItem item) {
     int vfLength = 0;
-    for (Element e in item.elements) vfLength += e.lengthInBytes;
+    for (ByteElement e in item.elements) vfLength += e.lengthInBytes;
     return vfLength;
   }
 
@@ -428,27 +423,27 @@ class DcmWriter {
 
   /// Returns [true] if the File Meta Information was present and
   /// write successfully.
-  void xWriteFmi(RootDataset rds) {
+  void xWriteFmi(RootByteDataset rds) {
     if (!rds.hasFMI || !rds.hasValidTransferSyntax) return null;
     writeFMI();
   }
 
-  void xWritePublicElement(Element e) => _writeElement(e);
+  void xWritePublicElement(ByteElement e) => _writeElement(e);
 
   // External Interface for testing
-  void xWritePGLength(Element e) => _writeElement(e);
+  void xWritePGLength(ByteElement e) => _writeElement(e);
 
   // External Interface for testing
-  void xWritePrivateIllegal(int code, Element e) => _writeElement(e);
+  void xWritePrivateIllegal(int code, ByteElement e) => _writeElement(e);
 
   // External Interface for testing
-  void xWritePrivateCreator(Element e) => _writeElement(e);
+  void xWritePrivateCreator(ByteElement e) => _writeElement(e);
 
   // External Interface for testing
-  void xWritePrivateData(Element pc, Element e) => _writeElement(e);
+  void xWritePrivateData(ByteElement pc, ByteElement e) => _writeElement(e);
 
   // writes
-  Uint8List xWriteDataset(Dataset ds) {
+  Uint8List xWriteDataset(ByteDataset ds) {
     log.debugDown('$wbb writeDataset: isExplicitVR(${ds.isExplicitVR})');
     var writer = new DcmWriter(ds);
     writer._writeDataset(ds);
@@ -470,7 +465,7 @@ class DcmWriter {
     }
   }
 
-  static Uint8List fmi(RootDataset rds, {String path = "", bool fast = false}) {
+  static Uint8List fmi(RootByteDataset rds, {String path = "", bool fast = false}) {
     var writer = new DcmWriter(rds, path: path);
     writer.writeFMI();
     var bytes = writer.bytes;
@@ -479,7 +474,7 @@ class DcmWriter {
     return bytes;
   }
 
-  static Uint8List rootDataset(RootDataset rds,
+  static Uint8List rootDataset(RootByteDataset rds,
       {String path = "", bool fast = false}) {
     var writer = (fast)
         ? new DcmWriter.fast(rds, path: path)
@@ -491,7 +486,7 @@ class DcmWriter {
     return bytes;
   }
 
-  static Uint8List dataset(Dataset ds, {String path = "", bool fast = false}) {
+  static Uint8List dataset(ByteDataset ds, {String path = "", bool fast = false}) {
     var writer = (fast) ? new DcmWriter.fast(ds) : new DcmWriter(ds);
     writer.xWriteDataset(ds);
     var bytes = writer.bytes;
@@ -501,13 +496,4 @@ class DcmWriter {
   }
 }
 
-class InvalidTransferSyntaxError extends Error {
-  final TransferSyntax ts;
 
-  InvalidTransferSyntaxError(this.ts, [Logger log]) {
-    if (log != null) log.error(toString());
-  }
-
-  @override
-  String toString() => '$runtimeType:\n  Element(${ts.info})';
-}

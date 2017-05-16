@@ -66,8 +66,8 @@ class JsonEncoder extends ByteBuf {
 
   void encode(Study study) {
     Formatter fmt = new Formatter();
-    for (Series series in study.series.values)
-      for (Instance instance in series.instances.values)
+    for (Series series in study.series)
+      for (Instance instance in series.instances)
         writeInstance(instance, fmt);
   }
 

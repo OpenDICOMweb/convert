@@ -2,12 +2,14 @@
 name: convertX
 version: 0.5.4
 description: A package for encoding/decoding DICOM binary, json, ...
-author: Jim Philbin <jfphilbin@gmail.com>
-
+authors:
+    # original creator
+    - Jim Philbin <jfphilbin@gmail.com>
+    # See sdk/AUTHORS file for subsequent contributors
 homepage: https://github.com/OpenDICOMweb/convert.git
 
 environment:
-  sdk: ^1.22.0
+  sdk: ^1.23.0
 
 dependencies:
   common:
@@ -32,7 +34,13 @@ dependencies:
 
 dev_dependencies:
   benchmark_harness: ^1.0.4
+  coverage: "^0.7.3"
+  dart_dev: "^1.0.0"
+  dart_style: ">=0.1.8 <0.3.0"
+  dartdoc: "^0.4.0"
   grinder: ^0.8.0
   test:  ^0.12.0
-
+  test_tools:
+    path: C:/odw/sdk/test_tools
+    version: ^0.5.4
 

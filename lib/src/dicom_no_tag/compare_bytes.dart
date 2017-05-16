@@ -9,8 +9,8 @@ import 'dart:typed_data';
 import 'package:common/ascii.dart';
 import 'package:dictionary/dictionary.dart';
 
-import 'dataset.dart';
-import 'element.dart';
+import 'byte_dataset.dart';
+import 'byte_element.dart';
 import 'utils.dart';
 
 /// TODO
@@ -74,9 +74,9 @@ String toStr(Uint8List bytes, int index) {
   return new String.fromCharCodes(line);
 }
 
-bool compareDatasets(Dataset ds0, Dataset ds1, [bool throwOnError = false]) {
-  for (Element e0 in ds0.elements) {
-    Element e1 = ds1[e0.code];
+bool compareDatasets(ByteDataset ds0, ByteDataset ds1, [bool throwOnError = false]) {
+  for (ByteElement e0 in ds0.elements) {
+    ByteElement e1 = ds1[e0.code];
     if (e0.vrCode == VR.kSQ.code) {
       if (e1.vrCode != VR.kSQ.code) return false;
       if (!compareSequences(e0, e1)) return false;
