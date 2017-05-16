@@ -30,7 +30,7 @@ void main() {
       //    Series ser = new Series(stu, uid, rds);
       //    Instance inst = new Instance(ser, uid, rds);
       //    Instance inst1 = new Instance(ser, uid, rds);
-      Instance instance = Instance.fromDataset(rds);
+      Instance instance = new Instance.fromDataset(rds);
       log.debug('${instance.info}');
  //     expect(inst == inst1, true);
  //     expect(inst.hashCode == inst1.hashCode, true);

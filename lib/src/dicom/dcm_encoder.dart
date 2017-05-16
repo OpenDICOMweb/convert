@@ -53,7 +53,7 @@ class DcmEncoder extends DcmWriter {
 
   //TODO: only handles SOP Instances for now
   void writeSeries(Series series) {
-    List<Instance> instances = series.instances.values;
+    List<Instance> instances = series.instances;
     for (int i = 0; i < instances.length; i++) writeInstance(instances[i]);
   }
 

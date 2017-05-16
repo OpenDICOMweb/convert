@@ -601,7 +601,7 @@ class DcmReader<E> extends ByteBuf {
       IS e0 = currentDS[kNumberOfFrames];
       int nFrames = (e == null) ? 1 : e0.value;
       log.debug('$rmm nFrames: $nFrames, ts: $ts');
-      e = new OBPixelData.fromBytes(tag, vfLength, ts, vf, nFrames);
+      e = new OBPixelData.fromBytes(tag, vf, vfLength, ts, nFrames);
     } else {
       e = new OB.fromBytes(tag, vf, vfLength);
     }

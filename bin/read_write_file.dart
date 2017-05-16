@@ -47,8 +47,8 @@ void main(List<String> args) {
   log.info('Decoded: $instance0');
   if (instance0 == null) return null;
   log.debug(instance0.format(new Formatter(maxDepth: -1)));
-  log.info('${instance0[PTag.kFileMetaInformationGroupLength].info}');
-  log.info('${instance0[PTag.kFileMetaInformationVersion].info}');
+  log.info('${instance0.dataset[PTag.kFileMetaInformationGroupLength].info}');
+  log.info('${instance0.dataset[PTag.kFileMetaInformationVersion].info}');
   // Write a File
   File output = new File(outPath);
   var bytes = DcmEncoder.encode(instance0);

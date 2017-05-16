@@ -152,26 +152,22 @@ class DcmWriter<E> extends ByteBuf {
   }
 
   void _writeExplicit(Element<E> e) {
+    e = _maybeGetElement(e);
     ByteBuf _writeVR(e) => writeUint16(e.vr.code);
     void _writeVFLength(e) {
       int lengthIB = _getVFLength(e);
       log.debug('$wmm _writeVFLength($lengthIB): ${e.info}');
       (e.vr.hasShortVF) ? writeUint16(lengthIB) : _writeLongLength(lengthIB);
     }
-
-    log.down;
-    log.debug('$wbb _writeExplicit: ${e.info}');
-    Element<E> e0 = _maybeGetElement(e);
-    if (e0 is SQ) {
-      SQ sq = e0 as SQ;
-      _writeSQ(sq);
+    log.debugDown('$wbb _writeExplicit: ${e.info}');
+    if (e is SQ) {
+      _writeSQ(e);
     } else {
-      _writeTag(e0);
-      _writeVR(e0);
-      _writeVFLength(e0);
-      _writeVF(e0);
-      log.debug('$wee  _writeExplicit');
-      log.up;
+      _writeTag(e);
+      _writeVR(e);
+      _writeVFLength(e);
+      _writeVF(e);
+      log.debugUp('$wee  _writeExplicit');
     }
   }
 
@@ -180,10 +176,8 @@ class DcmWriter<E> extends ByteBuf {
     if (isNotWritable) _debugWriter(e, "End of buffer error: $this");
     if (e is MetaElement) {
       MetaElement<E> meta = e;
-      log.down;
       Element<E> element = meta.element;
-      log.debug('$wbb _maybeGetElement: ${e.info}');
-      log.up;
+      log.debug('$wmm _maybeGetElement: ${e.info}');
       return element;
     }
     return e;
@@ -193,14 +187,12 @@ class DcmWriter<E> extends ByteBuf {
       (e.hadUndefinedLength) ? kUndefinedLength : e.bytes.lengthInBytes;
 
   void _writeImplicit(Element<E> e) {
-    log.down;
-    log.debug('$wbb _writeImplicit: ${e.info}');
+    log.debugDown('$wbb _writeImplicit: ${e.info}');
     Element<E> e0 = _maybeGetElement(e);
     _writeTag(e0);
     writeUint32(_getVFLength(e0));
     _writeVF(e0);
-    log.debug('$wee _writeImplicit-end');
-    log.up;
+    log.debugUp('$wee _writeImplicit-end');
   }
 
   ///TODO: this is expensive! Is there a better way?
@@ -320,7 +312,7 @@ class DcmWriter<E> extends ByteBuf {
 
   //**** Sequences and Items
 
-  void _writeSQ(SQ sq) {
+  void _writeSQ(Element sq) {
     if (sq is SQ) {
       log.down;
       log.debug('$wbb writeSequence:${sq.info}');
