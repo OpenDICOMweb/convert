@@ -12,8 +12,8 @@ import 'package:dictionary/dictionary.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:convertX/src/dicom_no_tag/compare_bytes.dart';
-import 'package:convertX/src/dicom_no_tag/byte_dataset.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_reader.dart';
+import 'package:core/src/dataset/byte_dataset/byte_dataset.dart';
+import 'package:convertX/src/dicom_no_tag/dcm_byte_reader.dart';
 
 import 'package:convertX/timer.dart';
 import 'read_utils.dart';
@@ -31,14 +31,13 @@ String badFile1 = "C:/odw/test_data/mweb/100 MB Studies/Site 3/Case 1 Ped"
     "/1.2.840.113704.1.111.8916.1202763720.15"
     "/1.2.840.113704.1.111.1608.1202763888.37524.dcm ";
 void main() {
- // File file = new File(ivrle);
- // readWriteFileTimed(file, reps: 10, fmiOnly: false);
+  // File file = new File(ivrle);
+  // readWriteFileTimed(file, reps: 10, fmiOnly: false);
   // readFMI(paths, fmiOnly: true);
   //  readWriteFiles(paths, fmiOnly: false);
   readWriteDirectory(mrStudy, fmiOnly: false);
   //targetTS: TransferSyntax.kImplicitVRLittleEndian);
 }
-
 
 void readWriteFiles(List<String> paths, {bool fmiOnly = false}) {
   for (String path in paths) readWriteFileTiming(new File(path));
@@ -51,10 +50,10 @@ const int kMB = 1024 * 1024;
 
 bool readWriteFileFast(File inFile, {int reps = 1, bool fmiOnly = false}) {
   Uint8List bytes0 = inFile.readAsBytesSync();
-  RootByteDataset rds0 = DcmReader.readBytes(bytes0);
+  RootByteDataset rds0 = DcmByteReader.readBytes(bytes0);
   Uint8List bytes1 = writeDataset(rds0);
- // RootDataset rds1 =
-  DcmReader.readBytes(bytes1);
+  // RootDataset rds1 =
+  DcmByteReader.readBytes(bytes1);
   return _bytesEqual(bytes0, bytes1);
 }
 
@@ -75,22 +74,19 @@ bool readWriteFileTimed(File inFile, {int reps = 1, bool fmiOnly = false}) {
   log.info('     read: ${inMS(rbTime)} ms');
 
   for (int i = 0; i < reps; i++) {
-
-    RootByteDataset rds0 = DcmReader.readBytes(bytes0);
+    RootByteDataset rds0 = DcmByteReader.readBytes(bytes0);
     Duration readDS0 = timer.split;
 
     Uint8List bytes1 = writeDataset(rds0);
     Duration writeDS0 = timer.split;
 
-  //  RootDataset rds1 =
-    DcmReader.readBytes(bytes1);
+    //  RootDataset rds1 =
+    DcmByteReader.readBytes(bytes1);
     Duration readDS1 = timer.split;
 
     bool hasProblem = _bytesEqual(bytes0, bytes1);
     Duration compare = timer.split;
     Duration total = timer.elapsed;
-
-
 
     log.info('      Loop: $i');
     log.info('    parse0: ${inMS(readDS0)} ms');
@@ -134,13 +130,13 @@ FileResult readWriteFileTiming(File file,
       return null;
     }
 
-    RootByteDataset rds0 = DcmReader.readBytes(bytes0);
+    RootByteDataset rds0 = DcmByteReader.readBytes(bytes0);
     Duration readDS0 = timer.elapsed;
 
     Uint8List bytes1 = writeDataset(rds0, path: path);
     Duration writeDS0 = timer.elapsed;
 
-    RootByteDataset rds1 = DcmReader.readBytes(bytes1);
+    RootByteDataset rds1 = DcmByteReader.readBytes(bytes1);
     Duration readDS1 = timer.elapsed;
 
     //TODO: make this work?
@@ -203,7 +199,8 @@ FileResult readWriteFileTiming(File file,
   return result;
 }
 
-bool _compareDatasets(RootByteDataset rds0, RootByteDataset rds1, [bool throwOnError]) {
+bool _compareDatasets(RootByteDataset rds0, RootByteDataset rds1,
+    [bool throwOnError]) {
   bool v = compareDatasets(rds0, rds1, throwOnError);
   if (!v) {
     log.error('Unequal datasets:/n'
@@ -231,7 +228,6 @@ ResultSet readWriteDirectory(String path,
     bool throwOnError = true,
     String fileExt = '.dcm',
     int shortFileThreshold = 1024}) {
-
   Directory dir = new Directory(path);
   List<FileSystemEntity> fList = dir.listSync(recursive: true);
   fList.retainWhere((fse) => fse is File);
@@ -247,9 +243,8 @@ ResultSet readWriteDirectory(String path,
       '    with $fileCount files\n'
       '    at $startTime');
 
-  var rSet =
-  new ResultSet(dir, fList.length, fmiOnly: fmiOnly,
-      shortFileThreshold: shortFileThreshold);
+  var rSet = new ResultSet(dir, fList.length,
+      fmiOnly: fmiOnly, shortFileThreshold: shortFileThreshold);
   Timer timer = new Timer();
   int count = -1;
   for (File f in fList) {
@@ -260,12 +255,14 @@ ResultSet readWriteDirectory(String path,
     if (fileExt == "" || fileExt == fileExt) {
       log.debug('Reading $path');
       var r = readWriteFileTiming(f);
-      log.info('${r.info}');
-      rSet.add(r);
-      if (count % 100 == 0) {
-        log.info(rSet);
-        var n = '${count.toString().padLeft(6, " ")}';
-        print('$n: $rSet ${timer.elapsed}: +$timer.split ');
+      if (r != null) {
+        log.info('${r.info}');
+        rSet.add(r);
+        if (count % 100 == 0) {
+          log.info(rSet);
+          var n = '${count.toString().padLeft(6, " ")}';
+          print('$n: $rSet ${timer.elapsed}: +$timer.split ');
+        }
       }
     }
   }

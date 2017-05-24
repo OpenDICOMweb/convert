@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:common/logger.dart';
+import 'package:core/core.dart';
+import 'package:convertX/dicom.dart';
 
-import 'package:convertX/dicom_no_tag.dart';
-import 'package:convertX/src/dicom_no_tag/byte_dataset.dart';
 
 void main() {
     String path0 = 'C:/odw/sdk/test_tools/test_data/TransferUIDs'
@@ -13,7 +13,7 @@ void main() {
 
     //    Uid uid = new Uid();
     File file = new File(path0);
-    RootByteDataset rds = DcmReader.readFile(file);
+    RootTDataset rds = DcmReader.readFile(file);
     log.debug('${rds.info}');
     //    Subject subject = new Subject(rds);
     //    Study stu = new Study(subject, uid, rds);

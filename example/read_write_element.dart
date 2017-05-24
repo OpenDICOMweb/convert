@@ -20,11 +20,11 @@ void main(List<String> args) {
 }
 
 /// Test
-bool elementTest(Element e0, List values) {
+bool elementTest(TElement e0, List values) {
 
-  Element e1 = e0.copy;
+  TElement e1 = e0.copy;
   log.debug('e0: ${e0.info}, e1: ${e1.info}');
-  Element e2 = e0.update(values);
+  TElement e2 = e0.update(values);
   log.debug('e1: ${e0.info}, e2: ${e1.info}');
   if (e0 != e1) return false;
   if (e1 != e2) return false;
@@ -35,9 +35,9 @@ bool elementTest(Element e0, List values) {
   int wIndex = wBuf.writeIndex;
 
   // Read the element
-  DcmReader rBuf = new DcmReader.fromList(wBuf.bytes);
-  Element e3 = rBuf.xReadElement(isExplicitVR: true);
-  int rIndex = rBuf.readIndex;
+  DcmReader reader = new DcmReader.fromBytes(wBuf.bytes);
+  TElement e3 = reader.xReadElement(isExplicitVR: true);
+  int rIndex = reader.readIndex;
   log.debug('wIndex: $wIndex, rIndex: $rIndex');
   if (wIndex != rIndex) return false;
 

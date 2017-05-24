@@ -148,6 +148,7 @@ class ByteBuf {
   /// Returns the length of the underlying [Uint8List].
   int get lengthInBytes => _bytes.lengthInBytes;
 
+
   /// Sets the [readIndex] to [index].  If [index] is not valid a [RangeError] is thrown.
   ByteBuf _setReadIndex(int index) {
     if (index < 0 || index > _writeIndex)
@@ -1629,7 +1630,7 @@ class ByteBuf {
   """;
 
   @override
-  String toString() => 'ByteBuf (rdIdx: $_readIndex, wrIdx: '
+  String toString() => '$runtimeType: (rdIdx: $_readIndex, wrIdx: '
       '$_writeIndex, cap: $lengthInBytes, maxCap: $lengthInBytes)';
 
   /// Checks that the [readIndex] is valid;

@@ -9,13 +9,11 @@ import 'dart:typed_data';
 
 import 'package:common/logger.dart';
 import 'package:path/path.dart' as p;
+import 'package:core/core.dart';
 
 import 'package:convertX/src/dicom_no_tag/compare_bytes.dart';
-import 'package:convertX/src/dicom_no_tag/byte_dataset.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_reader.dart';
-
+import 'package:convertX/src/dicom_no_tag/dcm_byte_reader.dart';
 import 'package:convertX/timer.dart';
-import 'package:convertX/src/dicom_no_tag/utils.dart';
 import 'utils.dart';
 
 String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
@@ -36,6 +34,8 @@ String path6 = "C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/CT.2.16"
 
 List<String> paths = <String>[path0, path1, path2, path3, path4, path5];
 
+String path7 = 'C:/odw/test_data/6688/12/0B009D38/0B009D3D/4D4E9A56';
+
 final Logger log =
     new Logger("convert/bin/read_write_files.dart", watermark: Severity.config);
 
@@ -46,11 +46,10 @@ String mWeb = "C:/odw/test_data/mweb";
 String mrStudy = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
 
 void main() {
-  // File file = new File(path0);
-  // readWriteFileFast(file, reps: 10, fmiOnly: false);
+  // readWriteFileFast(new File(path7), reps: 1, fmiOnly: false);
   // readFMI(paths, fmiOnly: true);
   //  readWriteFiles(paths, fmiOnly: false);
-  readWriteDirectory(sfd, fmiOnly: false);
+   readWriteDirectory(testData, fmiOnly: true);
   //targetTS: TransferSyntax.kImplicitVRLittleEndian);
 }
 
@@ -61,91 +60,135 @@ const int kMB = 1024 * 1024;
 
 String mbps(int lib, int us) => (lib / us).toStringAsFixed(1);
 String fmt(double v) => v.toStringAsFixed(1).padLeft(7, ' ');
-String inMS(Duration v) =>
-    (v.inMicroseconds / 1000).toStringAsFixed(1).padLeft(7, ' ');
 
 void readWriteDirectory(String path,
     {bool fmiOnly = false,
     int printEvery = 100,
     bool throwOnError = false,
     String fileExt = '.dcm',
-    int shortFileThreshold = 1024}) {
+    int shortFileThreshold = 1024,
+    bool isTimed = false}) {
   Directory dir = new Directory(path);
   List<FileSystemEntity> fList = dir.listSync(recursive: true);
   fList.retainWhere((fse) => fse is File);
   int fileCount = fList.length;
-  log.info('$fileCount files');
+  log.config('$fileCount files');
 
   //TODO: make this work
   File errFile = new File('bin/no_tag/errors.log');
   errFile.openWrite(mode: FileMode.WRITE_ONLY_APPEND);
   var startTime = new DateTime.now();
 
-  log.info('Reading $path ...\n'
+  log.config('Reading $path ...\n'
       '    with $fileCount files\n'
-      '    at $startTime');
+      '    at $startTime\n'
+      ' Count   Good    Bad Seconds        Elapsed');
 
-  Timer timer = new Timer();
+  Timer timer = new Timer(start: true);
   int count = -1;
-  int success = 0;
-  int failure = 0;
+  int good = 0;
+  int bad = 0;
   List<String> badTS = <String>[];
   List<String> badExt = <String>[];
   List<String> errors = <String>[];
   for (File f in fList) {
     count++;
-    if (count % printEvery == 0) {
-      var split = timer.split;
-      var now = timer.elapsed;
-      var n = '${count.toString().padLeft(6, " ")}';
-      log.info('$n good($success), bad($failure) +${inMS(split)} $now');
-    }
+    if (count % printEvery == 0) currentStats(count, good, bad, timer);
     log.debug('$count length(${f.lengthSync() ~/ 1000}KB): $f');
     var path = f.path;
     var fileExt = p.extension(path);
     if (fileExt != "" && fileExt != ".dcm") {
-      print('fileExt: "$fileExt"');
-      log.error('Non DICOM file??? $path');
+      log.debug('fileExt: "$fileExt"');
+      log.info('Non DICOM file??? $path');
       badExt.add('"$path"');
       continue;
     } else {
       log.debug('Reading $path');
       bool v;
       try {
-        v = readWriteFileFast(f);
+        v = (isTimed) ? readWriteFileTimed(f) : readWriteFileFast(f);
         if (!v) {
           log.error('Error:$f');
-          failure++;
+          bad++;
         } else {
-          success++;
+          good++;
         }
-      } on InvalidTransferSyntaxError catch(e) {
-        badTS.add('$e: "$path"');
+      } on InvalidTransferSyntaxError catch (e) {
+        badTS.add('"${e.ts.asString}": "$path"');
         continue;
-      }
-      catch(e) {
+      } catch (e) {
         errors.add('"$path"');
         log.error(e);
         log.error('  $f');
         v = false;
-        failure++;
+        bad++;
+        if (throwOnError) rethrow;
       }
     }
-
   }
   timer.stop();
-  log.info('Elapsed Time: ${timer.elapsed}');
-  print('$badTS');
-  print('$badExt');
-  print('$errors');
+  currentStats(count, good, bad, timer);
+
+  log.config('Elapsed Time: ${timer.elapsed}');
+  log.config('Bad TS: $badTS');
+  log.config('Bad File Extension: $badExt');
+  log.config('Errors: $errors');
 }
 
-bool readWriteFileFast(File inFile, {int reps = 1, bool fmiOnly = false}) {
-  Uint8List bytes0 = inFile.readAsBytesSync();
+String padNumber(int n, [int width = 6, String padChar = " "]) =>
+ '${n.toString().padLeft(width, padChar)}';
+
+void currentStats(int count, int good, int bad, Timer timer) {
+  var seconds = timer.split.inMicroseconds / 1000;
+  var now = timer.elapsed;
+  var us = seconds.toStringAsFixed(3).padLeft(6, ' ');
+  log.config('${padNumber(count)} ${padNumber(count)} '
+  '${padNumber(count)} $us $now');
+}
+
+bool readWriteFileFast(File file, {int reps = 1, bool fmiOnly = false}) {
+  log.info('Reading: $file');
+  Uint8List bytes0 = file.readAsBytesSync();
   if (bytes0 == null) return false;
-  RootByteDataset rds0 = DcmReader.readBytes(bytes0);
+  RootByteDataset rds0 = DcmByteReader.readBytes(bytes0, path: file.path);
   if (rds0 == null) return false;
+  log.info(rds0);
   Uint8List bytes1 = writeDataset(rds0);
   if (bytes1 == null) return false;
   return bytesEqual(bytes0, bytes1);
+}
+
+bool readWriteFileTimed(File file, {int reps = 1, bool fmiOnly = false}) {
+  log.info('Reading: $file');
+  var timer = new Timer(start: true);
+
+  var start = timer.split;
+  Uint8List bytes0 = file.readAsBytesSync();
+  var readBytes = timer.split;
+  if (bytes0 == null) return false;
+
+  RootByteDataset rds0 = DcmByteReader.readBytes(bytes0, path: file.path);
+  var parse = timer.split;
+  if (rds0 == null) return false;
+
+  timer.start();
+  var bytes1 = writeDataset(rds0);
+  var writeDS = timer.split;
+  var total = timer.elapsed;
+
+  if (bytes1 == null) return false;
+
+  bool areEqual = bytesEqual(bytes0, bytes1);
+  Duration end = timer.elapsed;
+
+  var out = '''
+  ${rds0.info}
+    Read bytes: $readBytes
+         Parse: $parse
+  Read & Parse: ${readBytes + parse}
+         Write: $writeDS
+         Total: $total
+  ''';
+  log.config(out);
+  return true;
 }

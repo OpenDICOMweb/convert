@@ -30,10 +30,10 @@ String outPath = 'C:/odw/sdk/io/example/output/out.dcm';
 
 
 void main(List<String> args) {
-  final log = new Logger("read_file", watermark: Severity.debug);
+  final log = new Logger("read_file", watermark: Severity.warn);
   File file = new File(path0);
   Uint8List bytes = file.readAsBytesSync();
-  Instance instance = DcmDecoder.decode(new DSSource(bytes, file.path));
+  Instance instance = DcmReader.readInstance(bytes, path: file.path);
   log.debug('Instance: $instance');
   log.debug('Dataset length: ${instance.dataset.length} elements');
   log.debug(instance.format(new Formatter(maxDepth: 146)));

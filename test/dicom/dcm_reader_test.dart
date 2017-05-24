@@ -23,7 +23,7 @@ void main() {
       File script = new File(path0);
       var bytes = script.readAsBytesSync();
 
-      Dataset rds = DcmReader.rootDataset(bytes, path0);
+      TDataset rds = DcmReader.readDataset(bytes, path: path0);
       log.debug('${rds.info}');
       //    Subject subject = new Subject(rds);
       //    Study stu = new Study(subject, uid, rds);

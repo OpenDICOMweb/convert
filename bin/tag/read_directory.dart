@@ -9,7 +9,7 @@ import 'dart:io';
 import 'package:common/logger.dart';
 import 'package:common/timestamp.dart';
 import 'package:convertX/convert.dart';
-import 'package:core/core.dart';
+//import 'package:core/core.dart';
 import 'package:path/path.dart' as p;
 
 String inRoot0 = "C:/odw/test_data/sfd/CR";
@@ -34,12 +34,12 @@ String hologic = 'C:/odw/test_data/mweb/Hologic';
 String badDir0 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
 String badDir1 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop";
 
-Logger log = new Logger("read_a_directory", watermark: Severity.info);
+Logger log = new Logger("read_a_directory", watermark: Severity.warn);
 
 void main() {
   int fsEntityCount;
 
-  Directory dir = new Directory(testData);
+  Directory dir = new Directory(mweb0);
 
   List<FileSystemEntity> fList = dir.listSync(recursive: true);
   fsEntityCount = fList.length;
@@ -77,7 +77,7 @@ void readFileList(List<File> files, {bool fmiOnly = false}) {
 
 
   int count = -1;
-  RootDataset rds;
+  RootTDataset rds;
   List<String> success = [];
   List<String> failure = [];
   for (File file in files) {
@@ -116,9 +116,8 @@ void readFileList(List<File> files, {bool fmiOnly = false}) {
   log.info('bad Files: [\n$bad,\n]\n');
 }
 
-RootDataset readRDS(File f) {
+RootTDataset readRDS(File f) {
   var bytes = f.readAsBytesSync();
   // print('LengthInBytes: ${bytes.length}');
-  DcmDecoder decoder = new DcmDecoder.fromSource(new DSSource(bytes, f.path));
-  return decoder.readRDS();
+  return  DcmReader.readDataset(bytes, path: f.path);
 }

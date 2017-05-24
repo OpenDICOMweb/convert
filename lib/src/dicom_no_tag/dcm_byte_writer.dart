@@ -16,10 +16,7 @@ import 'dart:typed_data';
 
 import 'package:common/common.dart';
 import 'package:dictionary/dictionary.dart';
-
-import 'byte_dataset.dart';
-import 'byte_element.dart';
-import 'utils.dart';
+import 'package:core/core.dart';
 
 const List<int> _undefinedLengthElements = const <int>[
   kOBCode,
@@ -49,9 +46,20 @@ const List<int> _undefinedLengthElements = const <int>[
 ///   2. All String manipulation should be handled in the attribute itself.
 ///   3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
-class DcmWriter {
+class DcmByteWriter {
   ///TODO: doc
-  static final Logger log = new Logger("DcmReader", watermark: Severity.config);
+  static final Logger log = new Logger("DcmReader", watermark: Severity.warn);
+  static ByteData _reuse;
+
+  static ByteData _reuseBD([int size = defaultBDSize]) {
+    if (_reuse == null) return _reuse = new ByteData(size);
+    if (size > _reuse.lengthInBytes) {
+      _reuse = new ByteData(size + 1024);
+      log.warn('**** DcmWriter creating new Reuse BD of Size: ${_reuse
+          .lengthInBytes}');
+    }
+    return _reuse;
+  }
 
   /// The source of the [Uint8List] being read.
   final String path;
@@ -60,6 +68,7 @@ class DcmWriter {
   final bool throwOnError;
 
   final bool allowImplicitLittleEndian;
+  final bool addMissingPrefix;
   final bool allowMissingFMI;
   //   final TransferSyntax targetTS;
 
@@ -73,32 +82,38 @@ class DcmWriter {
   // **** Reader fields ****
 
   final ByteData _bd;
-  int _wIndex = 0;
+  int _wIndex;
 
   //Urgent: this should grow and shrink automatically
-  static const int defaultBDSize = 30 * kMB;
+  static const int defaultBDSize = 200 * kMB;
 
   //*** Constructors ***
 
   //TODO: Doc
-  /// Creates a new [DcmWriter]  where [_wIndex] = [writeIndex] = 0.
-  DcmWriter(
+  /// Creates a new [DcmByteWriter]  where [_wIndex] = [writeIndex] = 0.
+  DcmByteWriter(
     this.rootDS, {
     this.path = "",
     this.throwOnError = true,
     this.allowImplicitLittleEndian = true,
+        this.addMissingPrefix = false,
     this.allowMissingFMI = false,
   })
-      : _bd = new ByteData(30 * kMB);
+      : _wIndex = 0,
+        _bd = new ByteData(200 * kMB);
 
-  DcmWriter.fast(
+  DcmByteWriter.fast(
     this.rootDS, {
     this.path = "",
     this.throwOnError = true,
     this.allowImplicitLittleEndian = true,
+        this.addMissingPrefix = false,
     this.allowMissingFMI = false,
   })
-      : _bd = _reuseBD();
+      : _wIndex = 0,
+        _bd = _reuseBD(rootDS.lengthInBytes + 1024) {
+    log.debug('Fast Writer creating BD buffer of size: ${_reuse.lengthInBytes}');
+  }
 
   Uint8List get bytes => _bd.buffer.asUint8List(0, _wIndex);
 
@@ -110,7 +125,7 @@ class DcmWriter {
   }
 
   bool hasRemaining(int n) {
-    if ((_wIndex + n) >= _bd.lengthInBytes) endOfBDError(n);
+    if ((_wIndex + n) >= _bd.lengthInBytes) endOfBDError(_wIndex + n);
     return true;
   }
 
@@ -177,7 +192,7 @@ class DcmWriter {
           [int offset = 0, int limit, int padChar = kSpace]) =>
       _writeStringBytes(ASCII.encode(s), padChar);
 
-  void _writeUtf8String(String s, [int offset = 0, int limit]) =>
+  void writeUtf8String(String s, [int offset = 0, int limit]) =>
       _writeStringBytes(UTF8.encode(s), kSpace);
 
   // **** DICOM encoding stuff ****
@@ -193,9 +208,9 @@ class DcmWriter {
     _writeUint16(tag & 0xFFFF);
   }
 
-  bool isFMICode(int code) => code >= 0x00020000 && code < 0x00020016;
+  bool _isFMICode(int code) => code >= 0x00020000 && code < 0x00020016;
 
-  bool isNotFMICode(int code) => !isFMICode(code);
+  bool isNotFMICode(int code) => !_isFMICode(code);
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
@@ -206,7 +221,7 @@ class DcmWriter {
     log.down;
     log.debug('$wbb writeFmi($_currentDS)');
     if (hasPrefix) _writePrefix();
-    log.debug2('$wmm writeMFI: prefix($hasPrefix) $_currentDS');
+    log.debug2('$wmm writeMFI: Prefix($hasPrefix) $_currentDS');
     log.down;
     log.debug1('$wbb writeFMI loop:');
     for (ByteElement e in rootDS.elements) {
@@ -223,9 +238,10 @@ class DcmWriter {
 
   /// writes a [RootByteDataset] from [this] and returns it. If an error is
   /// encountered [writeRootDataset] will throw an Error is or [null].
-  RootByteDataset writeRootDataset({bool allowMissingFMI = false}) {
+  Uint8List writeRootDataset({bool allowMissingFMI = false}) {
     log.debug('$wbb writeRootDataset: $rootDS');
     _currentDS = rootDS;
+
     if (!allowMissingFMI && !rootDS.hasFMI) {
       log.error('Dataset $rootDS is missing FMI elements');
       return null;
@@ -234,13 +250,23 @@ class DcmWriter {
     //   writeFMI();
     _writeDataset(rootDS);
     log.debug('$wee writeRootDataset: ${rootDS.info}');
-    return rootDS;
+    log.info('Returning ${rootDS.length} elements in ${_wIndex} bytes');
+    return bytes;
   }
 
   void _writePrefix() {
-    hasRemaining(132);
-    for (int i = 0; i < 128; i++) _writeUint8(0);
-    _writeAsciiString('DICM');
+    log.debug1('Writing Prefix');
+    if (rootDS.hadPrefix) {
+      log.debug2('DS Prefix: ${rootDS.prefix}');
+      for (int i = 0; i < 128; i++) _writeUint8(rootDS.prefix[i]);
+      log.debug2('DS Prefix: ${_bd.buffer.asUint8List(0, 132)}');
+      _writeAsciiString('DICM');
+    } else if (addMissingPrefix) {
+      for (int i = 0; i < 128; i++) _writeUint8(0);
+      _writeAsciiString('DICM');
+    } else {
+      log.error('Dataset $rootDS is missing DICOM Prefix');
+    }
   }
 
   void _writeDataset(ByteDataset ds) {
@@ -255,7 +281,7 @@ class DcmWriter {
 
   void _writeElement(ByteElement e) {
     hasRemaining(e.lengthInBytes);
-    if (e.isExplicitVR)
+    if (e is EVRElement || e is EVRSequence)
       _writeEVR(e);
     else
       _writeIVR(e);
@@ -269,7 +295,7 @@ class DcmWriter {
       if (e.vfLength == kUndefinedLength)
         _writeUint32(kUndefinedLength);
       else
-        _writeUint32(e.vf.lengthInBytes);
+        _writeUint32(e.vfBytes.lengthInBytes);
     }
   }
 
@@ -282,15 +308,15 @@ class DcmWriter {
     } else {
       int start = _wIndex;
       log.debug1(
-          '$wbb _writeEVR ${toDcm(e.code)} end(${start + e.bytes.length}');
+          '$wbb _writeEVR ${toDcm(e.code)} end(${start + e.vfBytes.length}');
       _writeTagCode(e.code);
       _writeUint16(e.vrCode);
       _writeEVRVFLength(e);
-      _writeBytes(e.vf);
+      _writeBytes(e.vfBytes);
       assert(e.lengthInBytes == e.bd.lengthInBytes,
           '$wmm e.LIB(${e.lengthInBytes}) != e.e.LIB(${e.bd.lengthInBytes})');
-  //    var bdx = _bd.buffer.asByteData(start, e.lengthInBytes);
-  //    var e1 = new EVRElement(bdx);
+      //    var bdx = _bd.buffer.asByteData(start, e.lengthInBytes);
+      //    var e1 = new EVRElement(bdx);
       if (e.wasUndefined) _writeSequenceDelimiter();
       log.debug1('$wee _writeEVR end');
     }
@@ -307,9 +333,9 @@ class DcmWriter {
       if (e.vfLength == kUndefinedLength) {
         _writeUint32(kUndefinedLength);
       } else {
-        _writeUint32(e.vf.lengthInBytes);
+        _writeUint32(e.vfBytes.lengthInBytes);
       }
-      _writeBytes(e.vf);
+      _writeBytes(e.vfBytes);
       if (e.wasUndefined) _writeSequenceDelimiter();
       log.debug1('$wee _writeIVR: $e');
       log.up;
@@ -326,6 +352,9 @@ class DcmWriter {
   void _writeSequence(ByteElement e) {
     //TODO: move the for loop out of if when Sequence is a subtype of Element
     int start = _wIndex;
+    log.debug2('$wbb _writeSequence: $e');
+    log.debug2('$wbb _writeSequence: _wIndex($_wIndex) '
+        'e.lengthInBytes(${e.lengthInBytes}) bd.offset(${e.bd.offsetInBytes})');
     if (e is EVRSequence) {
       _writeEVRSQHeader(e);
       for (ByteItem item in e.items) _writeItem(item);
@@ -333,6 +362,7 @@ class DcmWriter {
       _writeIVRSQHeader(e);
       for (ByteItem item in e.items) _writeItem(item);
     }
+    log.debug2('$wmm _writeSequence: e.vfLength(${e.vfLength}');
     if (e.vfLength == kUndefinedLength) _writeSequenceDelimiter();
     int end = _wIndex;
 
@@ -340,26 +370,30 @@ class DcmWriter {
     //   log.debug('(${e.bytes.lengthInBytes})${e.bytes}');
     //   log.debug('(${b.lengthInBytes})$b');
     if ((end - start) != e.lengthInBytes) {
+      log.debug('Invalid SQ: length(${e.lengthInBytes}) end($end) - start'
+          '($start) = ${end - start}');
       throw 'Invalid SQ:';
     }
+    log.debug2('$wee _writeSequence: _wIndex($_wIndex) bd.offset(${e.bd
+        .offsetInBytes + e.bd.lengthInBytes})');
   }
 
   void _writeEVRSQHeader(ByteElement e) {
     int start = _wIndex;
-    log.debug('$wbb writeEVRSQHeader');
+    log.debug('$wbb _writeEVRSQHeader');
     _writeTagCode(e.code);
     _writeUint16(kSQCode);
     _writeUint16(0);
     if (e.vfLength == kUndefinedLength) {
       _writeUint32(kUndefinedLength);
     } else {
-      _writeUint32(e.vf.length);
-      //TODO:  if (e.vf.length.isOdd)
+      _writeUint32(e.vfBytes.lengthInBytes);
+      //TODO:  if (e.vf.lengthInBytes.isOdd)
     }
     int end = _wIndex;
     var bdx = _bd.buffer.asUint8List(start, end - start);
-    log.debug('$wee writeEVRSQHeader: start($start), end($end), '
-        'length(${end - start}\n    writeEVRSQHeader: $bdx');
+    log.debug('$wee _writeEVRSQHeader: start($start), end($end), '
+        'length(${end - start})\n    writeEVRSQHeader: $bdx');
   }
 
   void _writeIVRSQHeader(ByteElement e) {
@@ -367,8 +401,8 @@ class DcmWriter {
     if (e.vfLength == kUndefinedLength) {
       _writeUint32(kUndefinedLength);
     } else {
-      _writeUint32(e.vf.length);
-      //TODO:  if (e.vf.length.isOdd)
+      _writeUint32(e.vfBytes.lengthInBytes);
+      //TODO:  if (e.vf.lengthInBytes.isOdd)
     }
   }
 
@@ -381,7 +415,8 @@ class DcmWriter {
     if (item.hadUndefinedLength) {
       _writeUint32(kUndefinedLength);
     } else {
-      int vfLength = _getItemLengthInBytes(item);
+      //   int vfLength = _getItemLengthInBytes(item);
+      int vfLength = item.bd.lengthInBytes;
       _writeUint32(vfLength);
     }
     for (ByteElement e in item.elements) _writeElement(e);
@@ -411,12 +446,13 @@ class DcmWriter {
     _writeUint32(0);
   }
 
+/* Flush if not needed.
   /// writes the Value Field until the [kSequenceDelimiter] is found.
   int _getItemLengthInBytes(ByteItem item) {
     int vfLength = 0;
     for (ByteElement e in item.elements) vfLength += e.lengthInBytes;
     return vfLength;
-  }
+  }*/
 
 // External Interface for Testing
 // **** These methods should not be used in the code above ****
@@ -426,6 +462,14 @@ class DcmWriter {
   void xWriteFmi(RootByteDataset rds) {
     if (!rds.hasFMI || !rds.hasValidTransferSyntax) return null;
     writeFMI();
+  }
+
+  Uint8List xWriteDataset(ByteDataset ds) {
+    log.debugDown('$wbb writeDataset: isExplicitVR(${ds.isExplicitVR})');
+    var writer = new DcmByteWriter(ds);
+    writer._writeDataset(ds);
+    log.debugUp('$wee end writeDataset: isExplicitVR(${ds.isExplicitVR})');
+    return writer.bytes;
   }
 
   void xWritePublicElement(ByteElement e) => _writeElement(e);
@@ -442,58 +486,68 @@ class DcmWriter {
   // External Interface for testing
   void xWritePrivateData(ByteElement pc, ByteElement e) => _writeElement(e);
 
-  // writes
-  Uint8List xWriteDataset(ByteDataset ds) {
-    log.debugDown('$wbb writeDataset: isExplicitVR(${ds.isExplicitVR})');
-    var writer = new DcmWriter(ds);
-    writer._writeDataset(ds);
-    log.debugUp('$wee end writeDataset: isExplicitVR(${ds.isExplicitVR})');
-    return writer.bytes;
+  static Uint8List writeBytes(ByteDataset ds,
+      {String path = "",
+      bool fmiOnly = false,
+      fast = false,
+      TransferSyntax targetTS}) {
+    if (ds == null || ds.length == 0)
+      throw new ArgumentError('Empty ' 'Empty ByteDataset: $ds');
+    var writer = (fast) ? new DcmByteWriter.fast(ds) : new DcmByteWriter(ds);
+    Uint8List bytes = writer.writeRootDataset();
+    if (bytes == null || bytes.length == 0) throw 'Invalid bytes error: $bytes';
+    log.info('wrote ${bytes.length} bytes to "$path"');
+    return bytes;
   }
 
-  static ByteData _reuse;
-  static ByteData _reuseBD([int size = defaultBDSize]) {
-    if (_reuse == null) _reuse = new ByteData(defaultBDSize);
-    return _reuse;
-  }
-
-  static void _writeFile(Uint8List bytes, String path) {
-    if (path != null || path != "") {
-      var file = new File(path);
+  static Uint8List writeFile(ByteDataset ds, File file,
+      {bool fmiOnly = false, fast = false, TransferSyntax targetTS}) {
+    if (file == null) throw new ArgumentError('');
+    Uint8List bytes;
+    try {
+      bytes = writeBytes(ds,
+          path: file.path, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
       file.writeAsBytesSync(bytes);
-      log.info('wrote ${bytes.length} bytes to "$path"');
+      log.info('wrote ${bytes.length} bytes to "${file.path}"');
+    } on IOException catch (e) {
+      print('IOException: $e');
+      rethrow;
     }
-  }
-
-  static Uint8List fmi(RootByteDataset rds, {String path = "", bool fast = false}) {
-    var writer = new DcmWriter(rds, path: path);
-    writer.writeFMI();
-    var bytes = writer.bytes;
-    //TODO: should this be writing?
-    if (path != "") _writeFile(bytes, path);
     return bytes;
   }
 
-  static Uint8List rootDataset(RootByteDataset rds,
-      {String path = "", bool fast = false}) {
-    var writer = (fast)
-        ? new DcmWriter.fast(rds, path: path)
-        : new DcmWriter(rds, path: path);
-    writer.writeRootDataset();
-    var bytes = writer.bytes;
-    //TODO: should this be writing?
-    if (path != "") _writeFile(bytes, path);
-    return bytes;
+  static Uint8List writePath(ByteDataset ds, String path,
+      {bool fmiOnly = false, fast = false, TransferSyntax targetTS}) {
+    if (path == "") throw new ArgumentError('Empty path: $path');
+    return writeFile(ds, new File(path),
+        fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
   }
 
-  static Uint8List dataset(ByteDataset ds, {String path = "", bool fast = false}) {
-    var writer = (fast) ? new DcmWriter.fast(ds) : new DcmWriter(ds);
-    writer.xWriteDataset(ds);
-    var bytes = writer.bytes;
-    //TODO: should this be writing?
-    if (path != "") _writeFile(bytes, path);
-    return bytes;
+/* Enhancement
+  static Uint8List writeInstance(Instance instance,
+      {String path = "",
+      bool fmiOnly = false,
+      fast = false,
+      TransferSyntax targetTS}) {
+    ByteDataset ds = instance.dataset;
+    return (path == "")
+        ? writeBytes(ds, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS)
+        : writePath(ds, path, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
+  }
+*/
+
+  static Uint8List write(ByteDataset ds,
+      {String path = "",
+      File file,
+      bool fmiOnly = false,
+      fast = false,
+      TransferSyntax targetTS}) {
+    if (file != null)
+      return writeFile(ds, file,
+          fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
+    if (path != "")
+      return writePath(ds, path,
+          fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
+    return writeBytes(ds, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
   }
 }
-
-

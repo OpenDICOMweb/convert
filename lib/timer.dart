@@ -13,8 +13,8 @@ class Timer {
     Duration _last = new Duration(microseconds: 0);
 
     /// The constructor automatically starts the timer.
-    Timer() {
-        watch.start();
+    Timer({bool start = false}) {
+        if (start) watch.start();
     }
 
     /// The total elapsed time since the [Timer] as started.

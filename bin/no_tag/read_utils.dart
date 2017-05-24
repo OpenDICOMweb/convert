@@ -10,14 +10,14 @@ import 'dart:io';
 
 import 'package:common/format.dart';
 import 'package:common/logger.dart';
-import 'package:convertX/src/dicom_no_tag/byte_dataset.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_reader.dart';
+import 'package:core/src/dataset/byte_dataset/byte_dataset.dart';
+import 'package:convertX/src/dicom_no_tag/dcm_byte_reader.dart';
 import 'package:convertX/timer.dart';
 import 'package:dictionary/dictionary.dart';
 import 'package:path/path.dart' as p;
 
 final Logger log =
-    new Logger("convert/bin/no_tag/read_utils.dart", watermark: Severity.debug);
+    new Logger("convert/bin/no_tag/read_utils.dart", watermark: Severity.warn);
 
 final Formatter format = new Formatter();
 
@@ -86,7 +86,10 @@ class FileResult {
   TransferSyntax ts;
 
   FileResult(this.file, this.rds,
-      {this.fmiOnly = false, this.targetTS, this.times, this.hasProblem}) {
+      {this.fmiOnly = false,
+      this.targetTS,
+      this.times,
+      this.hasProblem = false}) {
     path = file.path;
     length = rds.bd.lengthInBytes;
     isOkay = rds.hadParsingErrors;
@@ -98,22 +101,19 @@ class FileResult {
   }
 
   String get duplicates =>
-      (rds.duplicates.length == 0) ? "" :  "      Duplicates: $duplicateCount"
-          "\n";
+      (rds.duplicates.length == 0) ? "" : "      Duplicates: $duplicateCount\n";
   String get parseErrirs =>
-      (rds.hadParsingErrors) ? "" :  "    Parse errors: $isOkay\n";
+      (rds.hadParsingErrors) ? "" : "    Parse errors: $isOkay\n";
   String get isShortFile =>
-      (rds.wasShortFile) ? "" :  "      Short file: $isShort";
-  String get problems =>
-      (hasProblem) ? "" :  "  Has Problem(s): $hasProblem\n";
+      (rds.wasShortFile) ? "" : "      Short file: $isShort\n";
+  String get problems => (hasProblem) ? "" : "  Has Problem(s): $hasProblem\n";
 
   String get timing => (times == null) ? "" : '$times';
 
   String get info => '''File Result for "${file.path}":
         FMI only: $fmiOnly
           Length: $length
-              TS String: ${rds.transferSyntaxString}
-              TS: $ts
+              TS: ${rds.transferSyntaxString}
         Elements: ${rds.total}
 $duplicates$parseErrirs$isShortFile$problems''';
 
@@ -227,7 +227,8 @@ FileResult readFileWithResult(File file,
   var start = timer.split;
   var bytes = file.readAsBytesSync();
   var readBD = timer.split;
-  var rds = DcmReader.readBytes(bytes, fmiOnly: fmiOnly, targetTS: targetTS);
+  var rds = DcmByteReader.readBytes(bytes,
+      path: file.path, fmiOnly: fmiOnly, targetTS: targetTS, fast: true);
   timer.stop();
   if (rds == null) return null;
   var stop = timer.elapsed;
@@ -289,7 +290,7 @@ ResultSet readFileList(List<File> files,
     bool throwOnError = false,
     String fileExt = ""}) {
   int fseCount = files.length;
-  ResultSet results = new ResultSet(null,files.length,
+  ResultSet results = new ResultSet(null, files.length,
       fmiOnly: fmiOnly, shortFileThreshold: shortFileThreshold);
 
   DateTime startTime = new DateTime.now();

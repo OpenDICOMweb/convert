@@ -5,22 +5,24 @@
 // See the AUTHORS file for other contributors.
 
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:common/logger.dart';
 import 'package:convertX/dicom_no_tag.dart';
 
 class FileListReader {
   static final Logger log =
-      new Logger("read_a_directory", watermark: Severity.info);
+      new Logger("read_a_directory", watermark: Severity.warn);
   List<String> paths;
-  int printEvery;
+  bool fmiOnly;
   bool throwOnError;
+  int printEvery;
+
   List<String> successful = [];
   List<String> failures = [];
   List<String> badTransferSyntax = [];
 
-  FileListReader(this.paths, [this.printEvery = 25, this.throwOnError = false]);
+  FileListReader(this.paths,
+      {this.fmiOnly: false, this.throwOnError = false, this.printEvery = 100});
 
   int get length => paths.length;
   int get successCount => successful.length;
@@ -38,7 +40,7 @@ class FileListReader {
       File file = new File(fPath);
       try {
         var bytes = file.readAsBytesSync();
-        rds = DcmDecoder.readRoot(bytes);
+        rds = DcmByteReader.readBytes(bytes, path: fPath, fmiOnly: fmiOnly);
         log.info('${rds.info}');
         if (rds == null) {
           failures.add('"$fPath"');
@@ -46,7 +48,6 @@ class FileListReader {
           log.debug('Dataset: ${rds.info}');
           successful.add('"$fPath"');
         }
-        // print('output:\n${instance.patient.format(new Prefixer())}');
       } on InvalidTransferSyntaxError catch (e) {
         log.info(e);
         badTransferSyntax.add(fPath);
@@ -76,26 +77,31 @@ class FileListReader {
   }
 }
 
+/*
 RootByteDataset readFMI(Uint8List bytes, [String path = ""]) =>
-    DcmDecoder.readRoot(bytes);
+    DcmByteReader.readBytes(bytes, path: path, fmiOnly: true);
 
 RootByteDataset readRoot(ByteData bd, [String path = ""]) {
-  DcmReader reader = new DcmReader(bd);
+  DcmByteReader reader = new DcmByteReader(bd);
   RootByteDataset rds = reader.readRootDataset();
   return rds;
 }
 
+
+*/
+/* Enhancement
 RootByteDataset readRootNoFMI(Uint8List bytes, [String path = ""]) =>
-    DcmReader.rootDataset(bytes, path: path);
+    DcmByteReader.readBytes(bytes, path: path);
+*//*
+
 
 RootByteDataset readBytes(Uint8List bytes,
         [String path = "", bool fmiOnly = false]) =>
-    (fmiOnly)
-        ? DcmReader.rootDataset(bytes, path: path)
-        : DcmReader.fmi(bytes, path: path);
+    DcmByteReader.readBytes(bytes, path: path, fmiOnly: fmiOnly);
 
 RootByteDataset readFile(File file, [String path = "", bool fmiOnly = false]) =>
     readBytes(file.readAsBytesSync(), path);
 
 RootByteDataset readPath(String path, [bool fmiOnly = false]) =>
     readFile(new File(path), path);
+*/

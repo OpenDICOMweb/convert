@@ -34,12 +34,12 @@ void main(List<String> args) {
 }
 
 /// Convert a JSON [Map] to a [Dataset] [Map]
-Map<int, Element> toDataset(Map jsMap) {
-  Map<int, Element> eMap = {};
+Map<int, TElement> toDataset(Map jsMap) {
+  Map<int, TElement> eMap = {};
   jsMap.forEach((String s, Map map) {
     int code = int.parse(s, radix: 16);
     VR vr = VR.kUN;
-    var values = const <Element>[];
+    var values = const <TElement>[];
     if (map.length != 0) {
       vr = VR.vrMap[map["vr"]];
 

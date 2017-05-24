@@ -79,16 +79,16 @@ class DcmEncoder extends DcmWriter {
 
   static Uint8List encode(Entity entity) {
     log.debug('DcmEncoder.encode: $entity');
-    int lengthIB = entity.dataset.source.lengthInBytes;
+    int lengthIB = entity.dataset.lengthInBytes;
     log.debug('DcmDecoder.endode: length($lengthIB)');
     var encoder = new DcmEncoder(lengthInBytes: lengthIB);
     log.debug('Encoder: $encoder');
     return encoder.encodeEntity(entity);
   }
 
-  static Uint8List encodeDataset(RootDataset rds) {
+  static Uint8List encodeDataset(RootTDataset rds) {
     log.debug('DcmEncoder.encodeDataset: $rds');
-    int lengthIB = rds.source.lengthInBytes;
+    int lengthIB = rds.lengthInBytes;
     log.debug('DcmDecoder.endodeDataset: length($lengthIB)');
     var encoder = new DcmEncoder(lengthInBytes: lengthIB);
     log.debug('Encoder: $encoder');

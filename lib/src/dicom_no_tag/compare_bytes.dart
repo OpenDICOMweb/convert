@@ -9,9 +9,9 @@ import 'dart:typed_data';
 import 'package:common/ascii.dart';
 import 'package:dictionary/dictionary.dart';
 
-import 'byte_dataset.dart';
-import 'byte_element.dart';
-import 'utils.dart';
+import 'package:core/src/dataset/byte_dataset/byte_dataset.dart';
+import 'package:core/src/element/byte_element/byte_element.dart';
+import 'package:core/src/dicom_utils.dart';
 
 /// TODO
 bool bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError = true]) {
@@ -20,7 +20,7 @@ bool bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError = true]) {
     if (b0[i] != b1[i]) {
       if (throwOnError) {
         showBytes(b0, b1, i);
-        throw "non-matching bytes at indexL $i";
+        throw "Non-matching bytes at index: $i";
       } else {
         return false;
       }
@@ -30,10 +30,16 @@ bool bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError = true]) {
 }
 
 void showBytes(Uint8List b0, Uint8List b1, int offset) {
+  print('offset: $offset');
+  var b0x = b0.buffer.asUint8List(offset, offset + 16);
+  var b1x = b1.buffer.asUint8List(offset, offset + 16);
+  print(b0x);
+  print(b1x);
   int pos = offset % 4;
   int line = (offset ~/ 4) * 4;
-  int startLine = line - 12;
+  int startLine = line;
   int endLine = line + 96;
+
   print('Non-matching bytes at offset: $offset');
   print('O     B0           B1        B0   B1       B0          B1');
 //print('(gggg,eeee)  (gggg,eeee)  abcf abcd  0123456789  0123456789');
@@ -84,15 +90,15 @@ bool compareDatasets(ByteDataset ds0, ByteDataset ds1, [bool throwOnError = fals
       if (e0.code != e1.code ||
           e0.vrCode != e1.vrCode ||
           e0.vfLength != e1.vfLength ||
-          e0.vf.length != e1.vfLength) {
+          e0.vfBytes.length != e1.vfLength) {
         if (throwOnError) {
           throw 'ds0 != ds1';
         } else {
           return false;
         }
       }
-      for (int i = 0; i < e0.vf.length; i++) {
-        if (e0.vf[i] != e1.vf[i]) {
+      for (int i = 0; i < e0.vfBytes.length; i++) {
+        if (e0.vfBytes[i] != e1.vfBytes[i]) {
           if (throwOnError) {
             throw 'e0.vf[$i] != e1.vf[$i]';
           } else {
@@ -106,7 +112,7 @@ bool compareDatasets(ByteDataset ds0, ByteDataset ds1, [bool throwOnError = fals
 }
 
 
-bool compareSequences(SQ s0, SQ s1) {
+bool compareSequences(ByteSQ s0, ByteSQ s1) {
   if (s0.code != s1.code ||
       s0.vrCode != s1.vrCode ||
       s0.items.length != s1.items.length) return false;

@@ -9,23 +9,33 @@ import 'dart:typed_data';
 
 import 'package:common/format.dart';
 import 'package:common/logger.dart';
-import 'package:convertX/convert.dart';
-import 'package:convertX/src/utilities/read_file_list.dart';
 import 'package:core/core.dart';
+
+import 'package:convertX/src/utilities/read_file_list.dart';
+import 'package:convertX/src/dicom_no_tag/dcm_byte_reader.dart';
+
 
 String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
 String path1 =
     'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255'
     '.393386351.1568457295.17895.5.dcm';
 String path2 =
-    'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255.393386351.1568457295.48879.7.dcm';
+    'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original/'
+    'CR.2.16.840.1.114255.393386351.1568457295.48879.7.dcm';
 String path3 =
-    'C:/odw/test_data/sfd/CT/Patient_4_3_phase_abd/1_DICOM_Original/IM000002.dcm';
+    'C:/odw/test_data/sfd/CT/Patient_4_3_phase_abd/'
+    '1_DICOM_Original/IM000002.dcm';
 String path4 =
-    'C:/odw/sdk/io/example/input/1.2.840.113696.596650.500.5347264.20120723195848/1.2'
-    '.392.200036.9125.3.3315591109239.64688154694.35921044/1.2.392.200036.9125.9.0.252688780.254812416.1536946029.dcm';
+    'C:/odw/sdk/io/example/input/'
+    '1.2.840.113696.596650.500.5347264.20120723195848/1.2'
+    '.392.200036.9125.3.3315591109239.64688154694.35921044/'
+    '1.2.392.200036.9125.9.0.252688780.254812416.1536946029.dcm';
 String path5 =
-    'C:/odw/sdk/io/example/input/1.2.840.113696.596650.500.5347264.20120723195848/2.16.840.1.114255.1870665029.949635505.39523.169/2.16.840.1.114255.1870665029.949635505.10220.175.dcm';
+    'C:/odw/sdk/io/example/input/'
+    '1.2.840.113696.596650.500.5347264.20120723195848/'
+    '2.16.840.1.114255.1870665029.949635505.39523.169/'
+    '2.16.840.1.114255.1870665029.949635505.10220.175.dcm';
+
 String outPath = 'C:/odw/sdk/io/example/output/out.dcm';
 
 List<String> paths = <String>[path0, path1, path2, path3, path4, path5];
@@ -42,13 +52,15 @@ String badFile2 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
 String badFile3 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
     ".840.10008.5.1.4.1.1.128.1.dcm";
 
-String badFile4 = "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm";
+String badFile4 = "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/"
+    "Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/"
+    "A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm";
 
 String test = 'C:/odw/sdk/test_tools/test_data/TransferUIDs'
     '/1.2.840.10008.1.2.5.dcm';
 String badDir = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
 final Logger log =
-    new Logger("io/bin/read_file.dart", watermark: Severity.debug);
+    new Logger("io/bin/read_file.dart", watermark: Severity.warn);
 
 void main() {
   readFile(path2);
@@ -58,20 +70,20 @@ void main() {
 
 void readFile(String path) {
   File input = new File(path);
-  RootDataset rds = _readFile(input);
+  RootByteDataset rds = DcmByteReader.readFile(input);
   if (rds == null) {
     log.error('Null Instance $path');
     return null;
   }
   log.info('readFile: ${rds.info}');
-  if (log.watermark == Severity.debug) formatDataset(rds);
+  // if (log.watermark == Severity.debug) formatDataset(rds);
 }
 
-void formatDataset(RootDataset rds, [bool includePrivate = true]) {
+void formatDataset(RootByteDataset rds, [bool includePrivate = true]) {
   var z = new Formatter(maxDepth: 146);
   log.debug(rds.format(z));
-  for (PrivateGroup pg in rds.privateGroups)
-    log.debug(pg.info);
+//  for (PrivateGroup pg in rds.privateGroups)
+//    log.debug(pg.info);
 }
 
 void readFiles(List<String> paths) {
@@ -80,20 +92,20 @@ void readFiles(List<String> paths) {
   reader.read;
 }
 
-RootDataset _readFile(File input) {
-  Uint8List bytes = input.readAsBytesSync();
+RootByteDataset _readFile(File file) {
+  Uint8List bytes = file.readAsBytesSync();
   if (bytes.length < 8 * 1024)
-    log.warn('***** Short file length: ${bytes.length} - ${input.path}');
-  log.debug('Reading file: $input, length: ${bytes.length}');
-  RootDataset rds;
+    log.warn('***** Short file length: ${bytes.length} - ${file.path}');
+  log.debug('Reading file: $file, length: ${bytes.length}');
+  RootByteDataset rds;
   try {
-    rds = DcmDecoder.readRoot(bytes);
+    rds = DcmByteReader.readBytes(bytes, path: file.path);
   } on InvalidTransferSyntaxError catch(e) {
     log.debug(e);
     return null;
   } catch(e) {
-    log.info('calling readRootNoFMI');
-    rds = DcmDecoder.readRootNoFMI(bytes);
+    log.info('Failed read Dataset, now trying FMI');
+    rds = DcmByteReader.readBytes(bytes, path: file.path, fmiOnly: true);
   }
   return rds;
 }

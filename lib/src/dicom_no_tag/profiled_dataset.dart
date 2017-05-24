@@ -5,53 +5,76 @@
 // See the AUTHORS file for other contributors.
 
 import 'package:dictionary/dictionary.dart';
+
+import 'package:core/byte_dataset.dart';
 import 'package:core/core.dart';
 
-import 'byte_dataset.dart';
-import 'byte_element.dart';
 
-class TaggedDataset extends RootByteDataset {
-  RootByteDataset original;
+RootTDataset convert(RootByteDataset byteDS) {
+  RootByteDataset byteDS;
+  RootTDataset tagDS;
 
-  TaggedDataset.fromByteDataset(this.original, {bool replaceAllUids = true})
-      : super.fromDataset(original);
-
-  static TaggedDataset convertToTaggedDataset(RootByteDataset rds) {
-    RootDataset rds1 = new RootDataset();
-
-    for (ByteElement e in rds.elements) {
-      if (e.group.isEven) {
-        Tag tag = PTag.lookupCode(e.code, e.vr, true);
-        rds1[e.code] = new Element(tag);
-      } else {
-        _convertPrivateGroup(rds, e);
+  TElement convertElement(ByteElement e) {
+    int code = e.code;
+    if (Tag.isPublicCode(code)) {
+      Tag tag = PTag.lookupCode(e.code, e.vr, true);
+      if (e is ByteSQ) {
+        return convertSequence(tag, e));
+      } else  {
+        return TElement.make(tag, e.vfBytes));
       }
+    } else if (Tag.isPrivateCreatorCode(code)) {
+
+    } else if (Tag.isPrivateCode(code)) {
+      if (Tag.isPrivateCreatorCode(code)) {
+        var tag = new PrivateCreator(e);
+    }
+      convertPrivateGroup(group, e);
+    } else {
+      throw new InvalidTagError(code);
     }
   }
 
-  static void _convertPrivateGroup(RootByteDataset rds, ByteElement e) {
+TElement convertSequence(Tag tag, ByteSQ bSQ) {
+
+    for (ByteItem bItem in bSQ.items) {
+       Map<int, TElement> map = <int, TElement>{};
+      for(ByteElement e in bItem.elements) {
+        if (e is ByteSQ) {
+          map.(convertSequence(tag, bSQ));
+        } else {
+          tagDS.add(convertElement(e));
+        }
+      }
+    }
 
   }
+
+   PrivateGroup convertPrivateGroup(int group, ByteElement e) {
+    int group = e.group;
+    PrivateGroup pg = new PrivateGroup(group);
+
+    return pg;
+  }
+
+  for (ByteElement e in byteDS.elements)
+    tagDS.add(convertElement(e));
 }
 
 class ProfiledDataset extends RootByteDataset {
   RootByteDataset original;
 
   ProfiledDataset(this.original, {bool replaceAllUids = true})
-      : super.fromDataset(original);
+      : super.from(original);
 
   static toProfiledDataset(RootByteDataset rds) {
 
   }
 
-
-  static UI replaceUid(int code, Uid uid) {
+  UI replaceUid(int code, Uid uid) {
     ByteElement ui = original[code];
-    if (vr != VR.kUI) throw 'Not a UI Element';
+    if (ui.vr != VR.kUI) throw 'Not a UI Element';
   }
 }
 
 
-Element convertElement(ByteElement be) {
-  VR vr = be.vr.make();
-}

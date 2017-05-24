@@ -27,7 +27,7 @@ void main(List<String> args) {
 */
 }
 
-bool writeReadElementTest<E>(Element<E> e0, [PrivateCreator pc]) {
+bool writeReadElementTest<E>(TElement<E> e0, [PrivateCreator pc]) {
   log.debug('writeReadElement: ${e0.info}');
   // Create Dataset DS0 and write E0
   DcmWriter wBuf0 = new DcmWriter(lengthInBytes: 512);
@@ -38,12 +38,12 @@ bool writeReadElementTest<E>(Element<E> e0, [PrivateCreator pc]) {
   // Now read the Dataset from the bytes.
   Uint8List bytes = wBuf0.bytes;
   log.debug('bytes: (${bytes.length})$bytes');
-  DcmReader rBuf0 = new DcmReader.fromList(wBuf0.bytes);
+  DcmReader rBuf0 = new DcmReader.fromBytes(wBuf0.bytes);
   log.debug('rBuf0: $rBuf0');
 
   int rIndex0;
-  Element pc0;
-  Element e1;
+  TElement pc0;
+  TElement e1;
   if (e0.tag is PTag) {
     e1 = rBuf0.xReadPublicElement();
     log.debug('PTag: ${e1.info}');
@@ -77,8 +77,8 @@ bool writeReadElementTest<E>(Element<E> e0, [PrivateCreator pc]) {
   int wIndex1 = wBuf1.writeIndex;
 
   // Now read the Dataset from the bytes.
-  DcmReader rBuf1 = new DcmReader.fromList(wBuf1.bytes);
-  Element e2 = rBuf1.xReadPublicElement();
+  DcmReader rBuf1 = new DcmReader.fromBytes(wBuf1.bytes);
+  TElement e2 = rBuf1.xReadPublicElement();
   int rIndex1 = rBuf1.readIndex;
 
   // Now Compare the buffer index and the elements
@@ -93,12 +93,12 @@ bool writeReadElementTest<E>(Element<E> e0, [PrivateCreator pc]) {
   return true;
 }
 
-Element<E> writeReadDataset<E>(RootDataset ds0, Element<E> e0) {
-  RootDataset ds0 = new RootDataset();
+TElement<E> writeReadDataset<E>(RootTDataset ds0, TElement<E> e0) {
+  RootTDataset ds0 = new RootTDataset();
   ds0.add(e0);
   DcmWriter wBuf0 = new DcmWriter(lengthInBytes: 128);
   wBuf0.writeDataset(ds0);
-  Element<E> e;
+  TElement<E> e;
   //TODO: create Dataset DS2 and write E1
 
   // Dataset rds1 = rBuf.readRootDataset()
@@ -137,10 +137,10 @@ void testPrivateGroupLengthElement() {
 bool testPrivateGroupLength() {
   // Create Element
   Tag tag = new PrivateGroupLengthTag(0x00090000, VR.kCS);
-  Element e0 = new UL(tag, [1024]);
+  TElement e0 = new UL(tag, [1024]);
   //TODO: create Dataset DS0 and write E0
   //      create writer
-  RootDataset rds0 = new RootDataset();
+  RootTDataset rds0 = new RootTDataset();
   rds0.add(e0);
   DcmWriter wBuf0 = new DcmWriter(lengthInBytes: 128);
   wBuf0.xWritePublicElement(e0);
@@ -149,8 +149,8 @@ bool testPrivateGroupLength() {
 
   // Read the Dataset from the bytes.
   //TODO: create Dataset DS1
-  DcmReader rBuf = new DcmReader.fromList(wBuf0.bytes);
-  Element e1 = rBuf.xReadPublicElement();
+  DcmReader rBuf = new DcmReader.fromBytes(wBuf0.bytes);
+  TElement e1 = rBuf.xReadPublicElement();
  // Dataset rds1 = rBuf.readRootDataset()
   int rIndex = rBuf.readIndex;
   if (wIndex0 != rIndex || e0 != e1) {

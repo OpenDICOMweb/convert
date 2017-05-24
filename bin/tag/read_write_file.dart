@@ -36,14 +36,14 @@ String path5 =
     '/2.16.840.1.114255.1870665029.949635505.10220.175.dcm';
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
-final Logger log = new Logger("read_write_file", watermark: Severity.debug);
+final Logger log = new Logger("read_write_file", watermark: Severity.warn);
 
 void main(List<String> args) {
-  File input = new File(path0);
-  log.info('Reading: $input');
-  Uint8List bytes0 = input.readAsBytesSync();
+  File file = new File(path0);
+  log.info('Reading: $file');
+  Uint8List bytes0 = file.readAsBytesSync();
   log.info('  ${bytes0.length} bytes');
-  Instance instance0 = DcmDecoder.decode(new DSSource(bytes0, input.path));
+  Instance instance0 = DcmReader.readInstance(bytes0, path: file.path);
   log.info('Decoded: $instance0');
   if (instance0 == null) return null;
   log.debug(instance0.format(new Formatter(maxDepth: -1)));
@@ -57,7 +57,7 @@ void main(List<String> args) {
   log.info('Re-reading: $output');
   Uint8List bytes1 = output.readAsBytesSync();
   log.info('read ${bytes1.length} bytes');
-  Instance instance1 = DcmDecoder.decode(new DSSource(bytes1, input.path));
+  Instance instance1 = DcmReader.readInstance(bytes1, path: file.path);
   log.info(instance1);
   log.debug(instance1.format(new Formatter(maxDepth: -1)));
 

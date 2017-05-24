@@ -10,6 +10,8 @@ import 'package:common/logger.dart';
 import 'package:common/timestamp.dart';
 import 'package:path/path.dart' as p;
 
+import 'package:convertX/src/utilities/read_file_list.dart';
+
 String inRoot0 = "C:/odw/test_data/sfd/CR";
 String inRoot1 = "C:/odw/test_data/sfd/CR_and_RF";
 String inRoot2 = "C:/odw/test_data/sfd/CT";
@@ -32,7 +34,7 @@ String hologic = 'C:/odw/test_data/mweb/Hologic';
 String badDir0 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
 String badDir1 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop";
 
-Logger log = new Logger("read_a_directory", watermark: Severity.info);
+Logger log = new Logger("read_a_directory", watermark: Severity.warn);
 
 void main() {
   int fsEntityCount;
@@ -45,14 +47,13 @@ void main() {
 
   List<String> files = <String>[];
   for (FileSystemEntity fse in fList) {
-    if (fse is File) {
+    if (fse is! File) continue;
       var path = fse.path;
       var ext = p.extension(path);
       if (ext == '.dcm') {
         log.debug('File: $fse');
         files.add(fse.path);
       }
-    }
   }
 
   var timer = new Stopwatch();
@@ -60,7 +61,7 @@ void main() {
   var timestamp = new Timestamp('Starting Read ...');
   timer.start();
   log.info('   at: $timestamp');
- // var reader = new FileListReader(files, fmiOnly: true, printEvery: 100);
+  var reader = new FileListReader(files, fmiOnly: true, printEvery: 100);
  // reader.read;
   timer.stop();
   log.info('Elapsed time: ${timer.elapsed}');
