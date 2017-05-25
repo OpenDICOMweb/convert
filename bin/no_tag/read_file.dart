@@ -66,10 +66,32 @@ List<String> error2 = [
   'C:/odw/test_data/mweb/Radiologic/2/I00221'
 ];
 
-List<String> error3 = [ 'C:/odw/test_data/mweb\1000+\TRAGICOMIX\TRAGICOMIX'
-    '\Thorax 1CTA_THORACIC_AORTA_GATED (Adult)'
-    '\A Aorta w-c  3.0  B20f  0-95%\IM-0001-0020.dcm'
+List<String> error3 = [ 'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX'
+    '/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)'
+    '/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm'
 ];
+
+List<String> error4 = ["C:/odw/test_data/sfd/CT"
+    "/Patient_16_CT_Maxillofacial_-_Wegners/1_DICOM_Original/IM000006.dcm"];
+
+List<String> error5 = ["C:/odw/test_data\sfd\CT\Patient_6_Lung_CA\1_DICOM_Original\IM000003.dcm"];
+
+List<String> error6 = ["C:/odw/test_data\sfd\CT\Patient_7_Dural_Ectasia\1_DICOM_Original\IM000001.dcm"];
+List<String> error7 = ["C:/odw/test_data\sfd\CT"
+    "\Patient_8_Non_ossifying_fibroma\1_DICOM_Original\IM000004.dcm"];
+List<String> error8 = ["C:/odw/test_data\sfd\CT\PID_MINT9\1_DICOM_Original\CT"
+    ".2.16.840.1.114255.390617858.1794098916.10199.38535.dcm"];
+List<String> error9 = ["C:/odw/test_data\sfd\MG\DICOMDIR"];
+List<String> error10 = ['C:/odw/test_data\sfd\MG\Patient_38\1_DICOM_Original'
+    '\IM000001.dcm'];
+List<String> error11 = ['C:/odw/test_data\sfd\MG\Patient_41\1_DICOM_Original'
+    '\IM000001.dcm'];
+List<String> error12 = ['C:/odw/test_data\sfd\MG\Patient_46\1_DICOM_Original'
+    '\IM000003.dcm' ];
+List<String> error13 = ['C:/odw/test_data\sfd\MG\Patient_48\1_DICOM_Original'
+    '\IM000010.dcm'];
+List<String> error6 = [];
+List<String> error6 = [];
 
 final Logger log =
     new Logger("io/bin/read_file.dart", watermark: Severity.warn);
@@ -77,7 +99,7 @@ final Logger log =
 const List<String> defaultList = fileList0;
 
 void main() {
-  for (String path in errors) {
+  for (String path in [error4]) {
     try {
       File f = new File(path);
 /*      FileResult r = readFileWithResult(f, fmiOnly: false);

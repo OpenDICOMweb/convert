@@ -117,7 +117,7 @@ class DcmByteReader extends DcmReaderBase {
       return false;
     } catch (x) {
       rootDS.hadParsingErrors = true;
-      _log.warn('Failed to read FMI: "$path"\nException: $x\n'
+      _log.warn('$rmm Failed to read FMI: "$path"\nException: $x\n'
           'File length: ${bd.lengthInBytes}\n$ree readFMI catch: $x');
       rIndex = 0;
       rethrow;
