@@ -20,20 +20,23 @@ const int kDataSetTrailingPadding = 0xFFFCFFFC;
 //  1. Move all [String] trimming and validation to the Element.  The reader
 //     and writer should write the values as given.
 //  2. Add a mode that will read with/without [String]s padded to an even length
-//  3. Add a mode that will write with/without [String]s padded to an even
-//    length
-//  4. Need a mode where read followed by write will produce two byte for byte
-//     identical byte streams.
+//  3. Add a mode that will write with/without [String]s padded to an even length
+//  4. Need a mode where read followed by write will produce two byte for byte identical
+//     byte streams.
 //  5. optimize by turning all internal method to private '_'.
-//  6. when fully debugged and performance improvements done.
-//     Cleanup and  document.
+//  6. when fully debugged and performance improvements done. cleanup and document.
 
 /// The type of the different Value Field readers.  Each [VFReader]
 /// reads the Value Field for a particular Value Representation.
 //typedef Element<E> VFReader<E>(int tag, VR<E> vr, int vfLength);
 
-/// A library for parsing [Uint8List] containing DICOM File Format
-/// [ByteDataset]s.
+/*
+                    kItem: 0xfffee000 4294893568
+kSequenceDelimitationItem: 0xfffee0dd 4294893789
+    kItemDelimitationItem: 0xfffee00d 4294893581
+         kUndefinedLength: 0xffffffff 4294967295
+ */
+/// A library for parsing [Uint8List] containing DICOM File Format [ByteDataset]s.
 ///
 /// Supports parsing LITTLE ENDIAN format in the super class [ByteBuf].
 /// _Notes_:
@@ -45,7 +48,8 @@ const int kDataSetTrailingPadding = 0xFFFCFFFC;
 ///   3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
 class DcmByteReader extends DcmReaderBase {
-  static final Logger _log = new Logger("DcmReader", watermark: Severity.warn);
+  static final Logger _log = new Logger("DcmReader", watermark: Severity
+      .debug2);
   final RootByteDataset rootDS;
 
   bool _prefixRead = false;
@@ -117,7 +121,7 @@ class DcmByteReader extends DcmReaderBase {
       return false;
     } catch (x) {
       rootDS.hadParsingErrors = true;
-      _log.warn('$rmm Failed to read FMI: "$path"\nException: $x\n'
+      _log.warn('Failed to read FMI: "$path"\nException: $x\n'
           'File length: ${bd.lengthInBytes}\n$ree readFMI catch: $x');
       rIndex = 0;
       rethrow;
@@ -222,6 +226,8 @@ class DcmByteReader extends DcmReaderBase {
     } else {
       skip(2);
       int vfLength = readUint32();
+      if (code == kPixelData) return _readPixelData(true, vfLength);
+
       if (vfLength == kUndefinedLength) {
         endOfVF = _findEndOfVF(vfLength);
         rIndex = endOfVF + 8;
@@ -236,11 +242,12 @@ class DcmByteReader extends DcmReaderBase {
     //Urgent: this will become the external interface
     var e = new EVRElement(_getElementBD(start, endOfVF));
     if (_afterPixelData == true) log.warn('After PixelData: ${e.info}');
-    _log.debug1('$ree _readEVR: $e');
+    _log.debug1('$ree _readEVR: ${e.info}');
     return e;
   }
 
   bool _afterPixelData = false;
+
   /// Checks if data ends at the end of the PixelData Value Field.
   _checkPixelData(int endOfVF) {
     _afterPixelData = true;
@@ -266,6 +273,7 @@ class DcmByteReader extends DcmReaderBase {
     _log.debug1('$rbb _readIVR: start($start), ${toDcm(code)} '
         'vfLength($vfLength, ${toHex32(vfLength)}');
     if (isSequence()) return _readSequence(code, start, false);
+    if (code == kPixelData) return _readPixelData(true, vfLength);
     int endOfVF;
     if (vfLength == kUndefinedLength) {
       endOfVF = _findEndOfVF(vfLength);
@@ -353,14 +361,14 @@ class DcmByteReader extends DcmReaderBase {
     try {
       if (hadUndefinedLength) {
         while (!_checkForItemDelimiter()) {
-          ByteElement e = xReadElement(isExplicitVR);
+          ByteElement e = _readElement(isExplicitVR);
           elements[e.code] = e;
         }
         endOfVF = rIndex;
       } else {
         endOfVF = start + vfLength;
         while (rIndex < endOfVF) {
-          ByteElement e = xReadElement(isExplicitVR);
+          ByteElement e = _readElement(isExplicitVR);
           elements[e.code] = e;
         }
       }
@@ -380,6 +388,60 @@ class DcmByteReader extends DcmReaderBase {
     var item = new ByteItem.fromByteData(bdx, parentDS, elements, vfLength);
     _log.debug('$ree readItemElements: ${item.length} Items');
     return item;
+  }
+
+  ByteElement _readPixelData(isEVR, int vfLength) {
+    log.debug('$rbb _readPixelData: isEVR($isEVR), vfLength($vfLength)');
+    int startOfVF = rIndex;
+    int endOfVF;
+    List<Uint8List> fragments;
+    if (vfLength == kUndefinedLength) {
+      fragments = _readFragments();
+      endOfVF = rIndex;
+    } else {
+      int endOfVF = startOfVF + vfLength;
+      rIndex = endOfVF;
+    }
+    int startOfElement = startOfVF - ((isEVR) ? 12 : 8);
+    var bdx = _getElementBD(startOfElement, endOfVF);
+    ByteElement r = rootDS[PTag.kRows.code];
+    int rows = r.uint16;
+    int columns = rootDS[PTag.kColumns.code].uint16;
+/*    return (isEVR)
+        ? new EVRPixelData(bdx, rows, columns, fragments)
+
+        : new IVRPixelData(bdx, rows, columns, fragments);
+*/
+    ByteElement e = (isEVR)
+        ? new EVRPixelData(bdx, rows, columns, fragments)
+        : new IVRPixelData(bdx, rows, columns, fragments);
+    log.debug('$ree _readPixelData: ${e.info}');
+    return e;
+  }
+
+// TODO: move into Pixel Data
+// & readElementExplicit
+  /// Returns an [ByteItem] or Fragment.
+  List<Uint8List> _readFragments() {
+    var fragments = <Uint8List>[];
+    int code = readTagCode();
+    do {
+      assert(code == kItem, 'Invalid Item code: ${toDcm(code)}');
+      int vfLength = readUint32();
+      assert(
+          vfLength != kUndefinedLength,
+          'Invalid length: ${toDcm(
+          vfLength)}');
+      int start = rIndex;
+      rIndex += vfLength;
+      fragments.add(bd.buffer.asUint8List(start, rIndex - start));
+      code = readTagCode();
+    } while (code != kSequenceDelimitationItem);
+    code = readTagCode();
+    if (code != 0)
+      log.warn('Pixel Data Sequence delimiter has non-zero '
+          'value: $code/0x${toHex32(code)}');
+    return fragments;
   }
 
   /// Returns [true] if the [kSequenceDelimitationItem] delimiter is found.
@@ -447,36 +509,36 @@ class DcmByteReader extends DcmReaderBase {
     return rootDS.transferSyntax;
   }
 
-  ByteElement xReadElement(bool isExplicitVR) =>
+  ByteElement _readElement(bool isExplicitVR) =>
       (isExplicitVR) ? _readEVR() : _readIVR();
 
   ByteElement xReadPublicElement([bool isExplicitVR = true]) =>
-      xReadElement(isExplicitVR);
+      _readElement(isExplicitVR);
 
   // External Interface for testing
   ByteElement xReadPGLength([bool isExplicitVR = true]) =>
-      xReadElement(isExplicitVR);
+      _readElement(isExplicitVR);
 
   // External Interface for testing
   ByteElement xReadPrivateIllegal(int code, [bool isExplicitVR = true]) =>
-      xReadElement(isExplicitVR);
+      _readElement(isExplicitVR);
 
   // External Interface for testing
   ByteElement xReadPrivateCreator([bool isExplicitVR = true]) =>
-      xReadElement(isExplicitVR);
+      _readElement(isExplicitVR);
 
   // External Interface for testing
   ByteElement xReadPrivateData(ByteElement pc, [bool isExplicitVR = true]) {
     //  _TagMaker maker =
     //      (int nextCode, VR vr, [name]) => new PDTag(nextCode, vr, pc.tag);
-    return xReadElement(isExplicitVR);
+    return _readElement(isExplicitVR);
   }
 
   // Reads
   ByteDataset xReadDataset([bool isExplicitVR = true]) {
     _log.debug('$rbb readDataset: isExplicitVR($isExplicitVR)');
     while (isReadable) {
-      var e = xReadElement(isExplicitVR);
+      var e = _readElement(isExplicitVR);
       rootDS.add(e);
       e = rootDS[e.code];
       assert(e == e);

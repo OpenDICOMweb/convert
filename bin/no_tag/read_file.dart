@@ -90,16 +90,16 @@ List<String> error12 = ['C:/odw/test_data\sfd\MG\Patient_46\1_DICOM_Original'
     '\IM000003.dcm' ];
 List<String> error13 = ['C:/odw/test_data\sfd\MG\Patient_48\1_DICOM_Original'
     '\IM000010.dcm'];
-List<String> error6 = [];
-List<String> error6 = [];
+//List<String> error6 = [];
+//List<String> error6 = [];
 
 final Logger log =
-    new Logger("io/bin/read_file.dart", watermark: Severity.warn);
+    new Logger("io/bin/read_file.dart", watermark: Severity.debug2);
 
 const List<String> defaultList = fileList0;
 
 void main() {
-  for (String path in [error4]) {
+  for (String path in [path0]) {
     try {
       File f = new File(path);
 /*      FileResult r = readFileWithResult(f, fmiOnly: false);
@@ -134,6 +134,7 @@ bool readWriteCheck(File file, {int reps = 1, bool fmiOnly = false}) {
   bytesEqual(bytes0, bytes1);
   RootByteDataset rds1 = DcmByteReader.readBytes(bytes1, path: file.path,
       fast: true);
+  return rds0 == rds1;
 }
 
 List<String> errors = [
