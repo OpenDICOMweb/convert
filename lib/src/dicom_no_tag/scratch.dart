@@ -9,8 +9,9 @@ import 'dart:typed_data';
 import 'package:dictionary/dictionary.dart';
 import 'package:core/core.dart';
 
+/*
 
-bool _checkForDelimiter(int delimiter) {
+bool checkForDelimiter(int delimiter) {
   int code = peekTagCode();
   if (code != delimiter) return false;
   int vfLength = readUint32();
@@ -25,3 +26,4 @@ void _delimiterLengthFieldWarning(int dLength) {
   _log.warn('$rmm: Encountered a delimiter with a non zero length($dLength)'
       ' field');
 }
+*/

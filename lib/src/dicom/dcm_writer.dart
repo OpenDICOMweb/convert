@@ -51,7 +51,7 @@ class DcmWriter extends ByteBuf {
   static final Logger log = new Logger("DcmWriter", watermark: Severity.debug);
 
   /// The root Dataset for the object being read.
-  RootTagDataset _rootDS;
+  RootTDataset _rootDS;
 
   final bool isExplicitVR;
 
@@ -104,7 +104,7 @@ class DcmWriter extends ByteBuf {
   //     new DcmWriter.internal(bytes, start, end - start, end - start);
 
   /// Write a [RootDataset].
-  void writeRootDataset(RootTagDataset rootDS) {
+  void writeRootDataset(RootTDataset rootDS) {
     log.down;
     log.debug('$wbb writeRootDataset: $rootDS');
 
@@ -116,7 +116,7 @@ class DcmWriter extends ByteBuf {
     return;
   }
 
-  void writeDataset(TagDataset ds, [bool isExplicitVR = true]) {
+  void writeDataset(TDataset ds, [bool isExplicitVR = true]) {
     log.down;
     log.debug('$wbb writeDataset: $ds');
     for (TElement e in ds.elements) _writeElement(e, isExplicitVR);
@@ -147,7 +147,7 @@ class DcmWriter extends ByteBuf {
     writeUint8List(bytes);
   }
 
-  void _writeFmi(RootTagDataset ds) {
+  void _writeFmi(RootTDataset ds) {
     //TODO
   }
 
@@ -187,7 +187,7 @@ class DcmWriter extends ByteBuf {
   }
 
   int _getVFLength(TElement e) =>
-      (e.hadUndefinedLength) ? kUndefinedLength : e.bytes.lengthInBytes;
+      (e.hadUndefinedLength) ? kUndefinedLength : e.vfBytes.lengthInBytes;
 
   void _writeImplicit(TElement e) {
     log.down;
@@ -361,15 +361,15 @@ class DcmWriter extends ByteBuf {
   }
 
   /// Writes a [List] of [Item]s to [bytes].
-  void _writeItems(List<Item> items) {
+  void _writeItems(List<TItem> items) {
     log.down;
     log.debug('$wbb writeItems:${items.length} Items');
-    for (Item item in items) _writeItem(item);
+    for (TItem item in items) _writeItem(item);
     log.debug('$wee writeItems-end');
     log.up;
   }
 
-  void _writeItem(Item item) {
+  void _writeItem(TItem item) {
     log.down;
     log.debug('$wbb writeItem ${item.info} for ${item.sq.info} ');
     if (item.hadUndefinedLength) {
@@ -404,7 +404,7 @@ class DcmWriter extends ByteBuf {
       log.debug('$wmm WriteOB: ${e.info}');
       writeUint8List(e.values);
     }
-    log.debug('$wee writeOB, lengthInBytes(${e.bytes.lengthInBytes})');
+    log.debug('$wee writeOB, lengthInBytes(${e.vfBytes.lengthInBytes})');
     log.up;
   }
 
@@ -424,7 +424,7 @@ class DcmWriter extends ByteBuf {
     } else {
       writeUint16List(e.values);
       log.debug('$wee writeOW: Length(${e.values.length}), LengthInBytes(${e
-              .bytes.lengthInBytes})');
+              .vfBytes.lengthInBytes})');
     }
     log.up;
   }
@@ -445,7 +445,7 @@ class DcmWriter extends ByteBuf {
     } else {
       writeUint8List(e.values);
     }
-    log.debug('$wee writeUN: LengthInBytes(${e.bytes.lengthInBytes}))');
+    log.debug('$wee writeUN: LengthInBytes(${e.vfBytes.lengthInBytes}))');
     log.up;
   }
 
@@ -458,7 +458,7 @@ class DcmWriter extends ByteBuf {
 
   /// Returns [true] if the File Meta Information was present and
   /// read successfully.
-  void xWriteFmi(RootTagDataset rootDS, [bool checkForPrefix = true]) {
+  void xWriteFmi(RootTDataset rootDS, [bool checkForPrefix = true]) {
     if (!rootDS.hasValidTransferSyntax) return null;
     _writeFmi(rootDS);
   }

@@ -15,7 +15,9 @@ import 'package:core/src/dicom_utils.dart';
 
 /// TODO
 bool bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError = true]) {
-  if (b0.lengthInBytes != b1.lengthInBytes) return false;
+  if (b0.lengthInBytes != b1.lengthInBytes)
+    return compareUnequalLengths(b0, b1);
+
   for (int i = 0; i < b0.length; i++) {
     if (b0[i] != b1[i]) {
       if (throwOnError) {
@@ -27,6 +29,21 @@ bool bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError = true]) {
     }
   }
   return true;
+}
+
+bool compareUnequalLengths(Uint8List b0, Uint8List b1,
+    [bool throwOnError = true]) {
+  int length = (b0.lengthInBytes < b1.lengthInBytes)
+  ? b0.lengthInBytes
+  : b1.lengthInBytes;
+  for (int i = 0; i < length; i++) {
+    if (b0[i] != b1[i]) {
+      print('b0: ${b0.sublist(i, i + 20)}');
+      print('b0: ${b0.sublist(i, i + 20)}');
+      break;
+    }
+  }
+  return false;
 }
 
 void showBytes(Uint8List b0, Uint8List b1, int offset) {
@@ -80,7 +97,8 @@ String toStr(Uint8List bytes, int index) {
   return new String.fromCharCodes(line);
 }
 
-bool compareDatasets(ByteDataset ds0, ByteDataset ds1, [bool throwOnError = false]) {
+bool compareDatasets(ByteDataset ds0, ByteDataset ds1,
+    [bool throwOnError = false]) {
   for (ByteElement e0 in ds0.elements) {
     ByteElement e1 = ds1[e0.code];
     if (e0.vrCode == VR.kSQ.code) {
@@ -110,7 +128,6 @@ bool compareDatasets(ByteDataset ds0, ByteDataset ds1, [bool throwOnError = fals
   }
   return true;
 }
-
 
 bool compareSequences(ByteSQ s0, ByteSQ s1) {
   if (s0.code != s1.code ||

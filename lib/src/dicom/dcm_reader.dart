@@ -7,11 +7,11 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:convertX/bytebuf.dart';
 import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
+import 'package:convertX/bytebuf.dart';
 import 'package:convertX/src/dcm_reader_base.dart';
 import 'package:core/src/dicom_utils.dart';
 
@@ -54,7 +54,6 @@ class DcmReader extends DcmReaderBase {
   final RootTDataset rootDS;
   TDataset currentDS;
 
-
   //TODO: Doc
   /// Creates a new [DcmReader]  where [_rIndex] = [writeIndex] = 0.
 /*  DcmReader(this.bd,
@@ -86,10 +85,10 @@ class DcmReader extends DcmReaderBase {
   /// Creates a new [DcmReader]  where [_rIndex] = [writeIndex] = 0.
   factory DcmReader.fromBytes(Uint8List bytes,
       {String path = "",
-        bool throwOnError = true,
-        bool allowILEVR = true,
-        bool allowMissingFMI = false,
-        TransferSyntax targetTS}) {
+      bool throwOnError = true,
+      bool allowILEVR = true,
+      bool allowMissingFMI = false,
+      TransferSyntax targetTS}) {
     var bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     return new DcmReader(bd, path: path, targetTS: targetTS);
   }
@@ -136,8 +135,8 @@ class DcmReader extends DcmReaderBase {
     if (!_hasPrefix()) return null;
     //  log.down;
     log.debug('$rbb readRootDataset: $rootDS');
-    TransferSyntax ts = readFmi();
-    if (ts == null) throw "Unsupported Null TransferSyntax";
+    if (!readFMI()) return null;
+    if (rootDS.transferSyntax == null) throw "Unsupported Null TransferSyntax";
     log.debug('$rmm readRootDataset: transferSyntax(${rootDS.transferSyntax})');
     log.debug('$rmm readRootDataset: ${rootDS.hasValidTransferSyntax}');
     if (!rootDS.hasValidTransferSyntax) return rootDS;
@@ -160,10 +159,12 @@ class DcmReader extends DcmReaderBase {
     return (prefix == "DICM");
   }
 
-  /// Reads File Meta Information ([Fmi]). If any [Fmi] [Element]s were present returns true.
-  TransferSyntax readFmi() {
+  // ToDo: replace with dcm_byte_data reader
+  /// Reads File Meta Information ([Fmi]). If any [Fmi] [Element]s
+  /// were present returns true.
+  bool readFMI() {
     log.down;
-    log.debug('$rbb readFmi($currentDS)');
+    log.debug2('$rbb readFmi($currentDS)');
     if (isReadable && currentDS is RootTDataset) {
       for (int i = 0; i < 20; i++) {
         readElement(isExplicitVR: true);
@@ -177,20 +178,21 @@ class DcmReader extends DcmReaderBase {
     }
     log.debug('$ree readFmi: ${rootDS.transferSyntax}');
     log.up;
-    return rootDS.transferSyntax;
+ //   return rootDS.transferSyntax;
+    return true;
   }
 
   /// Peek at next tag - doesn't move the [readIndex].
   int _peekTagCode() {
-    //TODO: do we really want to make all local variables final? Doesn't it make it
-    //      harder to read the code?
+    //Issue: do we really want to make all local variables final?
+    //Issue: Doesn't it make it harder to read the code?
     final int group = getUint16(readIndex);
     final int element = getUint16(readIndex + 2);
     final int code = (group << 16) + element;
     return code;
   }
 
-  ///TODO: this is expensive! Is there a better way?
+  // Performance: this is expensive! Is there a better way?
   /// Read the DICOM Element Tag
   int _readTagCode() {
     int group = readUint16();
@@ -464,12 +466,13 @@ class DcmReader extends DcmReaderBase {
     log.debug('$rbb ${sq.info}');
     if (vfLength == kUndefinedLength) {
       log.debug('$rmm SQ: ${tag.dcm} Undefined Length');
-      int start = readIndex;
+     // int start = readIndex;
       while (!_sequenceDelimiterFound()) {
         TItem item = _readItem(sq);
         items.add(item);
       }
-      sq.lengthInBytes = (readIndex - 8) - start;
+      // Fix
+      //     sq.lengthInBytes = (readIndex - 8) - start;
       log.debug('$rmm end of uLength SQ');
     } else {
       log.debug('$rmm SQ: ${tag.dcm} length($vfLength)');
@@ -611,10 +614,11 @@ class DcmReader extends DcmReaderBase {
     if (tag == PTag.kPixelData) {
       TransferSyntax ts = currentDS.transferSyntax;
       log.debug('$rmm PixelData: $ts');
-      IS e0 = currentDS[kNumberOfFrames];
-      int nFrames = (e == null) ? 1 : e0.value;
+      int rows = currentDS[kPixelData].value;
+      int columns = currentDS[kPixelData].value;
+      int nFrames = currentDS[kNumberOfFrames].value;
       log.debug('$rmm nFrames: $nFrames, ts: $ts');
-      e = new OBPixelData.fromBytes(tag, vf, vfLength, nFrames, ts);
+      e = new OBPixelData.fromBytes(tag, vf, vfLength, rows, columns, ts);
     } else {
       e = new OB.fromBytes(tag, vf, vfLength);
     }
@@ -631,13 +635,15 @@ class DcmReader extends DcmReaderBase {
     if (tag == PTag.kPixelData) {
       TransferSyntax ts = currentDS.transferSyntax;
       log.debug('$rmm PixelData: $ts');
-      IS e0 = currentDS[kNumberOfFrames];
-      int nFrames = (e == null) ? 1 : e0.value;
+      int rows = currentDS[kPixelData].value;
+      int columns = currentDS[kPixelData].value;
+      int nFrames = currentDS[kNumberOfFrames].value;
       log.debug('$rmm nFrames: $nFrames, ts: $ts');
       assert(vf.lengthInBytes % nFrames == 0);
       //TODO: frameLength or offsets which is better
-      int frameLength = vf.length ~/ nFrames;
-      e = new OWPixelData.fromBytes(tag, vf, vfLength, frameLength, ts);
+     // Fix: int frameLength = vf.length ~/ nFrames;
+      e = new OWPixelData.fromBytes(tag, vf, vfLength, rows,
+          columns, ts);
     } else {
       e = new OW.fromBytes(tag, vf, vfLength);
     }
@@ -872,7 +878,7 @@ class DcmReader extends DcmReaderBase {
     return nextCode;
   }
 
-  void _warnIfShortFile() {
+/*  void _warnIfShortFile() {
     int length = bd.lengthInBytes;
     if (length < smallFileThreshold) {
       var s = 'Short file error: length(${bd.lengthInBytes}) $path';
@@ -881,7 +887,7 @@ class DcmReader extends DcmReaderBase {
     }
     if (length < smallFileThreshold)
       log.warn('**** Trying to read $length bytes');
-  }
+  }*/
 
   /* Flush if not needed.
   TElement _readPrivateData(bool isExplicitVR, PrivateCreator pc) {
@@ -943,7 +949,9 @@ debugReader:
   $rrr: $label $msg
     short Length: ${Int.hex(getUint16(readIndex), 4)}
     long Length: ${Int.hex(getUint32(readIndex + 2), 8)}
-     bytes: [${toHex(readIndex - 12, readIndex + 12, readIndex)}]
+    bytes: [${toHex(readIndex - 12, 8)}, ${toHex(readIndex, 8)} ${toHex
+      (readIndex + 12, 8)}] 
+  
     string: "${toAscii(bd, readIndex - 12, readIndex + 12, readIndex)}"
 ''';
     log.error(s);
@@ -960,8 +968,7 @@ debugReader:
   /// Returns [true] if the File Meta Information was present and
   /// read successfully.
   TransferSyntax xReadFmi([bool checkForPrefix = true]) {
-    if (checkForPrefix && !_readPrefix()) return null;
-    readFMI();
+    if (!readFMI()) return null;
     if (!rootDS.hasFMI || !rootDS.hasValidTransferSyntax) return null;
     return rootDS.transferSyntax;
   }
@@ -989,9 +996,9 @@ debugReader:
   }
 
   // Reads
-  TagDataset xReadDataset([bool isExplicitVR = true]) {
+  TDataset xReadDataset([bool isExplicitVR = true]) {
     log.debug('$rbb readDataset: isExplicitVR($isExplicitVR)');
-    while (_isReadable) {
+    while (isReadable) {
       var e = _readElement(_readTagCode(), isExplicitVR);
       rootDS.add(e);
       e = rootDS[e.code];
@@ -1039,9 +1046,9 @@ debugReader:
   }*/
   static RootTDataset readBytes(Uint8List bytes,
       {String path: "",
-        bool fmiOnly = false,
-        fast = true,
-        TransferSyntax targetTS}) {
+      bool fmiOnly = false,
+      fast = true,
+      TransferSyntax targetTS}) {
     if (bytes == null) throw new ArgumentError('readBytes: $bytes');
     return DcmReader.readDataset(bytes,
         path: path, fmiOnly: fmiOnly, targetTS: targetTS);
@@ -1056,15 +1063,15 @@ debugReader:
   }
 
   static RootTDataset readPath(String path,
-      {bool fmiOnly = false, bool fast = false, TransferSyntax targetTS}) =>
+          {bool fmiOnly = false, bool fast = false, TransferSyntax targetTS}) =>
       readFile(new File(path),
           fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
 
   static TDataset readDataset(obj,
       {String path = "",
-        bool fmiOnly = false,
-        fast = false,
-        TransferSyntax targetTS}) {
+      bool fmiOnly = false,
+      fast = false,
+      TransferSyntax targetTS}) {
     if (obj is String)
       return readPath(obj, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
     if (obj is File)
@@ -1077,9 +1084,9 @@ debugReader:
 
   static Instance readInstance(obj,
       {String path = "",
-        bool fmiOnly = false,
-        fast = false,
-        TransferSyntax targetTS}) {
+      bool fmiOnly = false,
+      fast = false,
+      TransferSyntax targetTS}) {
     var rds = readDataset(obj,
         path: path, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
     return new Instance.fromDataset(rds);

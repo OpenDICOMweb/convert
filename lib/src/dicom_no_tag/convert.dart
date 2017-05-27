@@ -16,7 +16,6 @@ class DSConverter {
   final RootByteDataset sourceRoot;
   final RootTDataset targetRoot;
   ByteDataset sourceDS;
-  List<ByteElement> sourceElts;
   TDataset targetDS;
   PCTag creator;
 
@@ -26,12 +25,12 @@ class DSConverter {
             hadUndefinedLength: sourceRoot.hadUndefinedLength) {
     sourceDS = sourceRoot;
     targetDS = targetRoot;
-    List<ByteElement> sourceElts = sourceDS.elements.toList(growable: false);
   }
 
   TDataset run() {
-    for (int i = 0; i < sourceElts.length; i++) {
-      TElement te = tElement(i, sourceElts[i]);
+    Iterable<ByteElement> elements = sourceDS.elements;
+    for (ByteElement e in elements) {
+      TElement te = tElement(e);
       targetDS[te.code] = te;
     }
     return targetDS;
@@ -52,8 +51,7 @@ class DSConverter {
     }
   }
 
-  TElement tElement(int index, ByteElement e) {
-    int code = e.code;
+  TElement tElement(ByteElement e) {
     if (e is ByteSQ) return tSequence(e);
     var tag = getTag(e);
     VR vr = (tag.vr == VR.kUN) ? tag.vr : e.vr;
@@ -63,11 +61,12 @@ class DSConverter {
 
   SQ tSequence(ByteSQ sq) {
     Tag tag = getTag(sq);
+    var elements = sourceDS.elements;
     List<TItem> tItems = new List<TItem>(sq.items.length);
     for (ByteItem bItem in sq.items) {
       Map<int, TElement> tMap = <int, TElement>{};
-      for (int i = 0; i < sourceElts.length; i++) {
-        TElement te = tElement(i, sourceElts[i]);
+      for (ByteElement e in elements) {
+        TElement te = tElement(e);
         tMap[te.code] = te;
       }
       tItems.add(new TItem(targetDS, tMap, bItem.vfLength));
@@ -75,7 +74,10 @@ class DSConverter {
     return new SQ(tag, tItems, sq.vfLength);
   }
 
-  void group(int group, ByteElement e) {}
+  void group(int group, ByteElement e) {
+  }
+}
+/*
 
   /// Reads and returns a [PrivateGroup].
   ///
@@ -132,7 +134,9 @@ class DSConverter {
     return pg;
   }
 
-/*// Check for Private Data 'in the wild', i.e. invalid.
+*/
+/*
+/ Check for Private Data 'in the wild', i.e. invalid.
 // This group has no creators
   int _readPGLength(int group, int code, ByteElement e, PrivateGroup pg) {
     // log.debugDown('$rbb _readPGroupLength: ${Tag.toDcm(code)}');
@@ -144,7 +148,10 @@ class DSConverter {
     pg.gLength = pgl;
     // log.debugUp('$ree _readPGroupLength pe: ${pgl.info}');
     return _readTagCode();
-  }*/
+  }
+*/
+
+/*
 
 // Reads 'Illegal' [PrivateElement]s in the range (gggg,0000) - (gggg,000F).
   int _readPIllegal(int group, ByteElement e, PrivateGroup pg) {
@@ -287,3 +294,5 @@ class DSConverter {
     return nextCode;
   }
 }
+
+*/

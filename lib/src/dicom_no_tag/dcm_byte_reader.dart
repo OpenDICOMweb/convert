@@ -20,11 +20,13 @@ const int kDataSetTrailingPadding = 0xFFFCFFFC;
 //  1. Move all [String] trimming and validation to the Element.  The reader
 //     and writer should write the values as given.
 //  2. Add a mode that will read with/without [String]s padded to an even length
-//  3. Add a mode that will write with/without [String]s padded to an even length
-//  4. Need a mode where read followed by write will produce two byte for byte identical
-//     byte streams.
+//  3. Add a mode that will write with/without [String]s padded to an even
+//     length
+//  4. Need a mode where read followed by write will produce two byte for byte
+//     identical byte streams.
 //  5. optimize by turning all internal method to private '_'.
-//  6. when fully debugged and performance improvements done. cleanup and document.
+//  6. when fully debugged and performance improvements done. cleanup and
+//     document.
 
 /// The type of the different Value Field readers.  Each [VFReader]
 /// reads the Value Field for a particular Value Representation.
@@ -36,7 +38,8 @@ kSequenceDelimitationItem: 0xfffee0dd 4294893789
     kItemDelimitationItem: 0xfffee00d 4294893581
          kUndefinedLength: 0xffffffff 4294967295
  */
-/// A library for parsing [Uint8List] containing DICOM File Format [ByteDataset]s.
+/// A library for parsing [Uint8List] containing DICOM File Format
+/// [ByteDataset]s.
 ///
 /// Supports parsing LITTLE ENDIAN format in the super class [ByteBuf].
 /// _Notes_:
@@ -48,8 +51,8 @@ kSequenceDelimitationItem: 0xfffee0dd 4294893789
 ///   3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
 class DcmByteReader extends DcmReaderBase {
-  static final Logger _log = new Logger("DcmReader", watermark: Severity
-      .debug2);
+  static final Logger _log =
+      new Logger("DcmReader", watermark: Severity.debug2);
   final RootByteDataset rootDS;
 
   bool _prefixRead = false;
@@ -108,8 +111,8 @@ class DcmByteReader extends DcmReaderBase {
       //      _readDataset(rootDS, endOfBD, 0x00080000);
       while (rIndex < endOfBD) {
         int code = peekTagCode();
-        if (code >= 0x00080000) break;
-        EVRElement e = _readEVR();
+        if (code >= 0x00030000) break;
+        ByteElement e = _readEVR();
         _log.debug('$rmm ${e.info}');
         currentDS.add(e);
       }
@@ -211,36 +214,43 @@ class DcmByteReader extends DcmReaderBase {
     int start = rIndex;
     int code = readTagCode();
     int vrCode = readUint16();
+    assert(rIndex == start + 6);
+    VR vr = VR.lookup(vrCode);
+    assert(vr != null, 'Invalid null VR: vrCode(${toHex16(vrCode)})');
+    _log.debug1('$rbb ${toDcm(code)} $vr');
     if (vrCode == kSQCode) {
       skip(2);
       return _readSequence(code, start, true);
     }
-    VR vr = VR.lookup(vrCode);
-    assert(vr != null, 'Invalid null VR: vrCode(${toHex16(vrCode)})');
-    _log.debug1('$rbb _readEVR: start($start), ${toDcm(code)} $vr');
-    int endOfVF;
+    _log.debug1('$rmm _readEVR: start($start)');
     if (vr.hasShortVF) {
-      int vfLength = 8 + readUint16();
-      endOfVF = start + vfLength;
-      rIndex = endOfVF;
+      int vfLength = readUint16();
+      _log.debug1('$rmm     vfLength: $vfLength');
+      assert(rIndex == start + 8);
+      rIndex += vfLength;
     } else {
       skip(2);
       int vfLength = readUint32();
-      if (code == kPixelData) return _readPixelData(true, vfLength);
-
+      _log.debug1('$rmm     vfLength: $vfLength');
+      assert(rIndex == start + 12);
+      if (code == kPixelData) {
+        EVRPixelData e = _readPixelData(start, vfLength, true);
+        _log.debug1('$ree _readEVR: ${e.info}');
+        return e;
+      }
       if (vfLength == kUndefinedLength) {
-        endOfVF = _findEndOfVF(vfLength);
-        rIndex = endOfVF + 8;
+        // Undefined Length - must find delimiter.
+        log.debug('$rmm: ${toDcm(code)} $vr with Undefined Length');
+        _findEndOfVF(vfLength);
+        log.debug('$rmm: end of element: $rIndex');
       } else {
-        endOfVF = start + 12 + vfLength;
-        rIndex = endOfVF;
-        // Note: Not currently checking if encapsulated PixelData
-        if (code == kPixelData) _checkPixelData(endOfVF);
+        rIndex += vfLength;
       }
     }
-    _log.debug2('$rmm _readIVR: endOfVF($endOfVF)');
-    //Urgent: this will become the external interface
-    var e = new EVRElement(_getElementBD(start, endOfVF));
+    _log.debug2('$rmm _readEVR: endOfVF($rIndex)');
+    //Enhancement: this will become the external interface
+    var e = new EVRElement(_getElementBD(start, rIndex));
+    //Urgent    assert(check(e));
     if (_afterPixelData == true) log.warn('After PixelData: ${e.info}');
     _log.debug1('$ree _readEVR: ${e.info}');
     return e;
@@ -273,20 +283,24 @@ class DcmByteReader extends DcmReaderBase {
     _log.debug1('$rbb _readIVR: start($start), ${toDcm(code)} '
         'vfLength($vfLength, ${toHex32(vfLength)}');
     if (isSequence()) return _readSequence(code, start, false);
-    if (code == kPixelData) return _readPixelData(true, vfLength);
-    int endOfVF;
-    if (vfLength == kUndefinedLength) {
-      endOfVF = _findEndOfVF(vfLength);
-      rIndex = endOfVF + 8;
-    } else {
-      endOfVF = start + 8 + vfLength;
-      rIndex = endOfVF;
-      // Note: Not currently checking if encapsulated PixelData
-      if (code == kPixelData) _checkPixelData(endOfVF);
+    if (code == kPixelData) {
+      EVRPixelData e = _readPixelData(start, vfLength, false);
+      _log.debug1('$ree _readEVR: ${e.info}');
+      return e;
     }
-    _log.debug2('$rmm _readIVR: endOfVF($endOfVF)');
+ //   int endOfVF;
+    if (vfLength == kUndefinedLength) {
+      rIndex = _findEndOfVF(vfLength);
+ //     rIndex = endOfVF + 8;
+    } else {
+     rIndex = start + 8 + vfLength;
+  //    rIndex = endOfVF;
+      // Note: Not currently checking if encapsulated PixelData
+      if (code == kPixelData) _checkPixelData(rIndex);
+    }
+    _log.debug2('$rmm _readIVR: endOfElement($rIndex)');
     //Urgent: this will become the external interface
-    var e = new IVRElement(_getElementBD(start, endOfVF));
+    var e = new IVRElement(_getElementBD(start, rIndex));
     if (_afterPixelData == true) log.warn('After PixelData: ${e.info}');
     _log.debug1('$ree _readIVR: $e');
     return e;
@@ -304,15 +318,20 @@ class DcmByteReader extends DcmReaderBase {
 
   /// Reads an EVR or IVR Sequence. The _readElementMethod detects Sequences.
   ByteElement _readSequence(int code, int start, bool isEVR) {
+    int xxx = rIndex;
     int vfLength = readUint32();
+    if (vfLength.isOdd && vfLength != kUndefinedLength) {
+      log.error('Value Field Length is odd integer: '
+          '$vfLength, 0x${toHex32(vfLength)}');
+      vfLength += 1;
+    }
     int vfStart = rIndex;
-    var hadUndefinedLength = (vfLength == kUndefinedLength);
+    var isUndefined = (vfLength == kUndefinedLength);
     _log.debugDown('$rbb SQ${toDcm(code)} start($start) undefinedLength'
-        '($hadUndefinedLength), vfLength(${toHex32(vfLength)}, $vfLength)');
+        '($isUndefined), vfLength(${toHex32(vfLength)}, $vfLength)');
     int endOfVF;
     List<ByteItem> items = <ByteItem>[];
-    if (hadUndefinedLength) {
-//      _log.debug1('$rmm SQ${toDcm(code)} Undefined Length');
+    if (isUndefined) {
       while (!_checkForSequenceDelimiter()) {
         items.add(_readItem(isEVR));
       }
@@ -320,19 +339,24 @@ class DcmByteReader extends DcmReaderBase {
       _log.debug2('$rmm SQ Undefined Length: start($start) endOfVF($endOfVF)');
     } else {
       endOfVF = vfStart + vfLength;
-      _log.debug2('$rmm SQ: ${toDcm(code)} vfLength($vfLength), '
-          'endOfVF($endOfVF');
-      while (rIndex < endOfVF) items.add(_readItem(isEVR));
-      _log.debug2('$rmm SQ Length($vfLength) start($start) endOfVF($endOfVF)');
+      _log.debug2('$rmm SQ: ${toDcm(code)} vfL($vfLength), EOVF($endOfVF)');
+      while (rIndex < endOfVF) {
+        items.add(_readItem(isEVR));
+        xxx = rIndex;
+      }
+      _log.debug2('$rmm SQ VFL($vfLength) start($start) EOVF($endOfVF)');
     }
-    assert(rIndex == endOfVF);
-    var bdx = _getElementBD(start, endOfVF);
+
+    xxx = rIndex;
+  //  assert(rIndex == endOfVF, "readSequence: rIndex($rIndex) != endOfVF"
+  //      "($endOfVF)");
+    var bdx = _getElementBD(start, rIndex);
     ByteSQ sq;
-    //TODO: should be able to fix the type issue
+    //TODO: should be able to resolve the type
     if (isEVR) {
-      sq = new EVRSequence(bdx, currentDS, items, hadUndefinedLength);
+      sq = new EVRSequence(bdx, currentDS, items, isUndefined);
     } else {
-      sq = new IVRSequence(bdx, currentDS, items, hadUndefinedLength);
+      sq = new IVRSequence(bdx, currentDS, items, isUndefined);
     }
     for (ByteItem item in items) item.addSQ(sq);
     _log.debugUp('$ree $sq');
@@ -343,32 +367,31 @@ class DcmByteReader extends DcmReaderBase {
   // & readElementExplicit
   /// Returns an [ByteItem] or Fragment.
   ByteItem _readItem(bool isExplicitVR) {
+    int xxx = rIndex;
+    int start = rIndex; // start of elements
     int code = readTagCode();
     int vfLength = readUint32();
-    int start = rIndex; // start of elements
     _log.debug('$rbb item kItem(${toHex32(kItem)}, code ${toHex32(code)} '
-        'vfLength($vfLength, ${toHex32(vfLength)}');
+        'vfLength($vfLength, 0x${toHex32(vfLength)})');
     assert(code == kItem, 'Invalid Item code: ${toDcm(code)}');
-
-//    _log.debug('$rmm item vfLength(${toHex32(vfLength)}, $vfLength)');
 
     // Save parent [Dataset], and make [item] is new parent [Dataset].
     ByteDataset parentDS = currentDS;
     Map<int, ByteElement> elements = <int, ByteElement>{};
-    bool hadUndefinedLength = vfLength == kUndefinedLength;
-//    _log.debug1('$rmm readItem hadUndefinedLength=$hadUndefinedLength');
-    int endOfVF;
     try {
-      if (hadUndefinedLength) {
+      if (vfLength == 0) {
+        _log.debug('*** Zero length explicit length item');
+        _log.debug('$rmm item vfLength(${toHex32(vfLength)}, $vfLength)');
+      } else if (vfLength == kUndefinedLength) {
         while (!_checkForItemDelimiter()) {
           ByteElement e = _readElement(isExplicitVR);
           elements[e.code] = e;
         }
-        endOfVF = rIndex;
       } else {
-        endOfVF = start + vfLength;
-        while (rIndex < endOfVF) {
+        int endOfVF = start + vfLength;
+        while (rIndex <= endOfVF) {
           ByteElement e = _readElement(isExplicitVR);
+          xxx = rIndex;
           elements[e.code] = e;
         }
       }
@@ -383,35 +406,30 @@ class DcmByteReader extends DcmReaderBase {
       // Restore previous parent
       currentDS = parentDS;
     }
-
-    ByteData bdx = _getElementBD(start, endOfVF);
+    xxx = rIndex;
+    ByteData bdx = _getElementBD(start, rIndex);
     var item = new ByteItem.fromByteData(bdx, parentDS, elements, vfLength);
     _log.debug('$ree readItemElements: ${item.length} Items');
     return item;
   }
 
-  ByteElement _readPixelData(isEVR, int vfLength) {
+  ByteElement _readPixelData(int start, int vfLength, bool isEVR) {
     log.debug('$rbb _readPixelData: isEVR($isEVR), vfLength($vfLength)');
     int startOfVF = rIndex;
-    int endOfVF;
+    assert(start == startOfVF - 12);
     List<Uint8List> fragments;
     if (vfLength == kUndefinedLength) {
+      // Read until [kSequenceDelimiterItem] found.
       fragments = _readFragments();
-      endOfVF = rIndex;
+      // [rIndex] at end of delimited Element.
+//TODO: assert rIndex - 8 = kSequenceDelimiterItem
+//TODO: assert rIndex - 4 = 0
     } else {
-      int endOfVF = startOfVF + vfLength;
-      rIndex = endOfVF;
+      rIndex = startOfVF + vfLength;
     }
-    int startOfElement = startOfVF - ((isEVR) ? 12 : 8);
-    var bdx = _getElementBD(startOfElement, endOfVF);
-    ByteElement r = rootDS[PTag.kRows.code];
-    int rows = r.uint16;
-    int columns = rootDS[PTag.kColumns.code].uint16;
-/*    return (isEVR)
-        ? new EVRPixelData(bdx, rows, columns, fragments)
-
-        : new IVRPixelData(bdx, rows, columns, fragments);
-*/
+    var bdx = _getElementBD(start, rIndex);
+    int rows = currentDS[PTag.kRows.code].value;
+    int columns = currentDS[PTag.kColumns.code].value;
     ByteElement e = (isEVR)
         ? new EVRPixelData(bdx, rows, columns, fragments)
         : new IVRPixelData(bdx, rows, columns, fragments);
@@ -423,6 +441,7 @@ class DcmByteReader extends DcmReaderBase {
 // & readElementExplicit
   /// Returns an [ByteItem] or Fragment.
   List<Uint8List> _readFragments() {
+    // rIndex at first kItem delimiter
     var fragments = <Uint8List>[];
     int code = readTagCode();
     do {
@@ -432,13 +451,13 @@ class DcmByteReader extends DcmReaderBase {
           vfLength != kUndefinedLength,
           'Invalid length: ${toDcm(
           vfLength)}');
-      int start = rIndex;
+      int startOfVF = rIndex;
       rIndex += vfLength;
-      fragments.add(bd.buffer.asUint8List(start, rIndex - start));
+      fragments.add(bd.buffer.asUint8List(startOfVF, rIndex - startOfVF));
       code = readTagCode();
     } while (code != kSequenceDelimitationItem);
-    code = readTagCode();
-    if (code != 0)
+    int vfLength = readUint32();
+    if (vfLength != 0)
       log.warn('Pixel Data Sequence delimiter has non-zero '
           'value: $code/0x${toHex32(code)}');
     return fragments;
@@ -478,21 +497,19 @@ class DcmByteReader extends DcmReaderBase {
         ' field');
   }
 
+  /// Returns the end of an Element with Undefined Length;
   /// Reads the Value Field until the [kSequenceDelimiter] is found.
+  /// [rIndex] is after delimiter at end of Value Field.
   int _findEndOfVF(int vfLength) {
-    if (vfLength == kUndefinedLength) {
-      while (isReadable) {
-        if (readUint16() != kDelimiterFirst16Bits) continue;
-        if (readUint16() != kSequenceDelimiterLast16Bits) continue;
-        break;
-      }
-      int delimiterLength = readUint32();
-      if (delimiterLength != 0) _delimiterLengthFieldWarning(delimiterLength);
-      int endOfVF = rIndex - 8;
-      return endOfVF;
+    assert(vfLength == kUndefinedLength);
+    while (isReadable) {
+      if (readUint16() != kDelimiterFirst16Bits) continue;
+      if (readUint16() != kSequenceDelimiterLast16Bits) continue;
+      break;
     }
-    hadParsingErrors = true;
-    throw "vfLength($vfLength) not kUndefinedLength";
+    int delimiterLength = readUint32();
+    if (delimiterLength != 0) _delimiterLengthFieldWarning(delimiterLength);
+    return rIndex;
   }
 
   // Enhancement
