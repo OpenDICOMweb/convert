@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:common/logger.dart';
-import 'package:core/src/dataset/dataset_base.dart';
+import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
 import 'bytebuf/bytebuf.dart';
@@ -36,7 +36,7 @@ abstract class DcmReaderBase extends ByteBuf {
   final TransferSyntax targetTS;
 
   /// The current dataset.  This changes as [Item]s are read.
-  DatasetBase currentDS;
+  Dataset currentDS;
   int pixelDataIndex = -1;
   bool hadTrailingZeros = false;
 
@@ -59,7 +59,7 @@ abstract class DcmReaderBase extends ByteBuf {
   }
 
   /// The root Dataset for the object being read.
-  DatasetBase get rootDS;
+  Dataset get rootDS;
   int rIndex = 0;
 
   bool get isReadable => rIndex < endOfBD;
@@ -189,7 +189,6 @@ abstract class DcmReaderBase extends ByteBuf {
   void warnIfShortFile(String path) {
     int length = bd.lengthInBytes;
     if (length < smallFileThreshold) {
-      var s = 'Short file error: length(${bd.lengthInBytes}) $path';
       hadParsingErrors = true;
       if (length < 256)  throw 'Short File Error: ${bd.lengthInBytes}, $path';
       _log.warn('**** Reading $length bytes from File: "$path"');

@@ -113,7 +113,7 @@ class FileResult {
   String get info => '''File Result for "${file.path}":
         FMI only: $fmiOnly
           Length: $length
-              TS: ${rds.transferSyntaxString}
+              TS: ${rds.transferSyntax}
         Elements: ${rds.total}
 $duplicates$parseErrirs$isShortFile$problems''';
 

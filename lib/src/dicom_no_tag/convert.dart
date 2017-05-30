@@ -4,80 +4,187 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:common/logger.dart';
+import 'package:common/common.dart';
 import 'package:dictionary/dictionary.dart';
 import 'package:core/core.dart';
 
-Logger log = new Logger('convert');
+Logger log = new Logger('convert', watermark: Severity.debug2);
 
-typedef Element<I, V> Maker<I, V>(I id, List<V> values, [int vfLength]);
+typedef Element<V> Maker<I, V>(I id, List<V> values, [int vfLength]);
 
 class DSConverter {
   final RootByteDataset sourceRoot;
-  final RootTDataset targetRoot;
+  final RootTDataset resultRoot;
   ByteDataset sourceDS;
-  TDataset targetDS;
+  TDataset resultDS;
   PCTag creator;
 
   DSConverter(this.sourceRoot)
-      : targetRoot = new RootTDataset(
-            path: sourceRoot.path,
-            hadUndefinedLength: sourceRoot.hadUndefinedLength) {
+      : resultRoot = new RootTDataset(
+      path: sourceRoot.path,
+      hadUndefinedLength: sourceRoot.hadUndefinedLength) {
     sourceDS = sourceRoot;
-    targetDS = targetRoot;
+    resultDS = resultRoot;
   }
 
   TDataset run() {
     Iterable<ByteElement> elements = sourceDS.elements;
     for (ByteElement e in elements) {
-      TElement te = tElement(e);
-      targetDS[te.code] = te;
+      Element te = convertElement(e);
+      if (te == null) throw 'null TE';
+      resultDS[te.code] = te;
     }
-    return targetDS;
+    var s0 = new Summary(sourceDS);
+    var s1 = new Summary(resultDS);
+    log.info('$s0');
+    log.info('$s1');
+    return resultDS;
   }
+
+
+  // TODO: integrate this int /dictionary/tag
+  int pcCodeFromPDCode(int pdCode) {
+    int group = Group.fromTag(pdCode);
+//    print('group(${Uint16.hex(group)})');
+    int elt = Elt.fromTag(pdCode);
+//    print('Elt(${Uint16.hex(elt)})');
+    int cElt = elt >> 8;
+//    print('cElt(${Uint16.hex(cElt)})');
+    int pcCode = (group << 16) + cElt;
+//    print('pdCode(${Tag.toHex(pdCode)}, pcCode(${Tag.toHex(pcCode)})');
+    return pcCode;
+  }
+
+  Map<int, PCTag> pcTags = <int, PCTag>{};
 
   Tag getTag(ByteElement e) {
     int code = e.code;
+    VR vr = e.vr;
+    Tag tag;
     if (Tag.isPublicCode(code)) {
-      return PTag.lookupCode(code);
+      tag = PTag.lookupCode(code, vr);
     } else if (Tag.isPrivateCreatorCode(code)) {
-      var creator = new PCTag(code, e.vr, e.value);
-      return creator;
-    } else if (Tag.isValidPrivateDataTag(code, creator.code)) {
-      var tag = creator.dataTags[code];
-      return tag;
+      var name = e.asString;
+      if (e.vr != VR.kLO) log.warn('   Creator $name with vr != VR.kLO: $e');
+      log.debug2('   Creator: $name');
+      tag = new PCTag(code, VR.kLO, name);
+      pcTags[code] = tag;
+    } else if (Tag.isPrivateDataCode(code)) {
+      int creatorCode = pcCodeFromPDCode(code);
+      PCTag creator = pcTags[creatorCode];
+      tag = new PDTag(code, vr, creator);
+
     } else {
       throw 'couldn\'t get tag: ${e.info}';
     }
+    if (e.vr == VR.kUN) log.warn('   VR.kUN to ${tag.vr}');
+    log.debug1('Tag: $tag');
+    return tag;
   }
 
-  TElement tElement(ByteElement e) {
-    if (e is ByteSQ) return tSequence(e);
+
+  Map<String, TElement> pcElements = <String, TElement>{};
+
+  TElement convertElement(ByteElement e) {
+    if (e is ByteSQ) return getSequence(e);
+    log.debug1('  E: $e');
     var tag = getTag(e);
-    VR vr = (tag.vr == VR.kUN) ? tag.vr : e.vr;
-    if (vr != tag.vr) log.warn('e.vr($vr) and tag.vr(${tag.vr}) are not equal');
-    return TElement.make(tag, e.vfBytes);
+    VR vr0 = (e.vr == VR.kUN) ? tag.vr : e.vr;
+    if (vr0 != tag.vr) log.warn(
+        'e.vr($vr0) and tag.vr(${tag.vr}) are not equal');
+
+    TElement te;
+    if (tag is PTag) {
+      Maker maker = TElement.makers[vr0.index];
+      te = maker(tag, e.vfBytes, e.vfLength);
+    } else if (tag is PCTag) {
+      if (e.vr != VR.kLO) log.warn(
+          'Private Creator e.vr($vr0) should be VR.kLO');
+      if (tag.vr != VR.kLO)
+        throw 'Invalid Tag VR: ${tag.vr} should be VR.kLO';
+      Maker maker = TElement.makers[vr0.index];
+      te = maker(tag, e.vfBytes, e.vfLength);
+      assert(tag is PCTag && tag.name == e.asString);
+      pcElements[e.asString] = te;
+    } else if (tag is PDTag) {
+      Maker maker = TElement.makers[vr0.index];
+      te = maker(tag, e.vfBytes, e.vfLength);
+    } else {
+      throw 'Invalid Tag: $tag';
+    }
+    log.debug(' TE: $te');
+    return te;
   }
 
-  SQ tSequence(ByteSQ sq) {
+  void privateGroup(ByteElement e) {
+
+  }
+
+  SQ getSequence(ByteSQ sq) {
     Tag tag = getTag(sq);
-    var elements = sourceDS.elements;
+//    var elements = sourceDS.elements;
     List<TItem> tItems = new List<TItem>(sq.items.length);
-    for (ByteItem bItem in sq.items) {
+    for (int i = 0; i < sq.items.length; i++) {
+      var bItem = sq.items[i];
       Map<int, TElement> tMap = <int, TElement>{};
-      for (ByteElement e in elements) {
-        TElement te = tElement(e);
+      for (ByteElement e in bItem.elements) {
+        TElement te = convertElement(e);
         tMap[te.code] = te;
       }
-      tItems.add(new TItem(targetDS, tMap, bItem.vfLength));
+      tItems[i] = new TItem(resultDS, tMap, bItem.vfLength);
     }
     return new SQ(tag, tItems, sq.vfLength);
   }
 
   void group(int group, ByteElement e) {
   }
-}
-/*
+
+
+/* Urgent: finish this Private Element Converter/Validator
+  Dataset convertDataset(Dataset source, Dataset result) {
+    Iterable<ByteElement> elements = sourceDS.elements;
+    for (ByteElement e in elements) {
+      int code = e.code;
+      if (Tag.isPublicCode(e.code)) {
+      Element te = convertElement(e);
+      assert(te.tag is PCTag);
+        log.debug2(te);
+        if (te == null) throw 'null TE';
+        print('te: $te');
+        resultDS[te.code] = te;
+      } else {
+        int group = Group.fromTag(code);
+        PrivateGroup pg = new PrivateGroup(group);
+        do {
+          int code = e.code;
+          int elt = Elt.fromTag(code);
+          Element te = convertElement(e);
+          if (elt == 0) {
+            // Group Length
+          } else if (elt < 0x10) {
+            // Illegal
+            do {
+
+            } while (elt < 0x10);
+          } else if (elt < 0xFF) {
+            // Creators
+            do {
+
+            } while (elt < 0xFF);
+          } else if (elt > 0x0100 ) {
+            // Data
+            if (elt < 0x1000) {
+              // Illegal Data
+            }
+            do {
+
+            } while ()
+          }
+
+        }
+      }
+    }
+  }
 
   /// Reads and returns a [PrivateGroup].
   ///
@@ -99,200 +206,94 @@ class DSConverter {
   ///     not have a creator. This should be recorded in [Dataset].exceptions.
   ///
   /// Note: designed to read just one PrivateGroup and return it.
-  PrivateGroup readPrivateGroup(int group, List<ByteElement> bElements, int
+  PrivateGroup readPrivateGroup(int group, List<Element> sElements, int
   index) {
-    ByteElement be = bElements[index];
-    assert(Group.isPrivate(be.group), "Non Private Group ${Tag.toHex(code)}");
+    Element be = sElements[index];
+    assert(Group.isPrivate(be.group), "Non Private Group ${Tag.toHex(be.code)
+    }");
 
     var pg = new PrivateGroup(group);
-  //  targetDS.privateGroups.add(pg);
+      resultDS.privateGroups.add(pg);
 
     // Private Group Lengths are retired but still might be present.
     if (be.elt == 0x0000) {
-      var te = tElement(index, be);
-      targetDS.add(te);
+      var te = convertElement(be);
+      resultDS.add(te);
       pg.gLength = te;
       index++;
-      be = bElements[index];
+      be = sElement[index];
     }
-    // There should be no [TElement]s with [Elt] numbers between 0x01 and 0x0F.
+    // There should be no [Element]s with [Elt] numbers between 0x01 and 0x0F.
     // [Elt]s between 0x01 and 0x0F are illegal.
-    if (be.elt < 0x0010) nextCode = _readPIllegal(group, be, pg);
+    if (be.elt < 0x0010) nextCode = toPIllegal(group, be, pg);
 
     // [Elt]s between 0x10 and 0xFF are [PrivateCreator]s.
 
     if (elt >= 0x10 && elt <= 0xFF)
-      nextCode = _readPCreators(group, code, isExplicitVR, pg);
+      nextCode = readPCreators(group, pg);
     // log.debug('subgroups: ${pg.subgroups}');
 
     // Read the PrivateData
     if (Group.fromTag(nextCode) == group)
-      _readAllPData(group, nextCode, isExplicitVR, pg);
+      readPData(group, pg);
 
     // log.debug('$ree _readPrivateGroup-end $pg');
     // log.up;
     return pg;
   }
 
-*/
-/*
-/ Check for Private Data 'in the wild', i.e. invalid.
+
+
+
+// Check for Private Data 'in the wild', i.e. invalid.
 // This group has no creators
-  int _readPGLength(int group, int code, ByteElement e, PrivateGroup pg) {
-    // log.debugDown('$rbb _readPGroupLength: ${Tag.toDcm(code)}');
-
-   // TElement e = _readElement(code, isExplicitVR);
-    // log.debug('$rmm _readPGroupLength e: $e');
+  Element toPGLength(PrivateGroup pg, Element e) {
     PrivateGroupLength pgl = new PrivateGroupLength(e.tag, e);
-    ds.add(pgl);
+    resultDS.add(pgl);
     pg.gLength = pgl;
-    // log.debugUp('$ree _readPGroupLength pe: ${pgl.info}');
-    return _readTagCode();
+    return pgl;
   }
-*/
-
-/*
 
 // Reads 'Illegal' [PrivateElement]s in the range (gggg,0000) - (gggg,000F).
-  int _readPIllegal(int group, ByteElement e, PrivateGroup pg) {
-    // log.down;
-    // log.debug('$rbb _readPIllegal: ${Tag.toDcm(code)}');
-    int nextCode = code;
-    int g;
-    int elt;
-    while (g == group && elt < 0x10) {
-      // log.debug('$rbb _readPIllegal: ${Tag.toDcm(code)}');
-      PrivateTag tag = new PrivateTag.illegal(code);
-      TElement e = _readElement(tag.code, isExplicitVR);
-      // log.debug('$rmm _readPIllegal e: $e');
-      PrivateElement pe = new PrivateIllegal(e);
+  PrivateElement toPIllegal(PrivateGroup pg, int group, TElement e) {
+    PrivateElement pe;
+    while (e.group == group && e.elt < 0x10) {
+      PrivateTag tag = new PrivateTag.illegal(e.code);
+      pe = new PrivateIllegal(e);
       pg.illegal.add(pe);
-      ds.add(pe);
-      // log.debug('$ree _readPIllegal pe: ${pe.info}');
-      // log.up;
-
-      // Check the next TagCode.
-      nextCode = _readTagCode();
-      g = Group.fromTag(nextCode);
-      elt = Elt.fromTag(nextCode);
-      // log.debug('$rmm Next group(${Group.hex(g)}), Elt(${Group.hex(g)})');
+      resultDS.add(pe);
     }
-    return nextCode;
+    return pe;
   }
 
 // Read the Private Group Creators.  There can be up to 240 creators
 // with [Elt]s from 0x10 to 0xFF. All the creators come before the
-// [PrivateData] [TElement]s. So, read all the [PrivateCreator]s first.
+// [PrivateData] [Element]s. So, read all the [PrivateCreator]s first.
 // Returns when the first non-creator code is encountered.
 // VR = LO or UN
-// Returns the code of the next TElement.
+// Returns the code of the next Element.
 //TODO: this can be cleaned up and optimized if needed
-  int _readPCreators(int group, int code, bool isExplicitVR, PrivateGroup pg) {
-    int nextCode = code;
-    int g;
-    int elt;
-    do {
-      VR vr;
-      int vfLength;
-      // **** read PCreator
-      if (isExplicitVR) {
-        vr = _readExplicitVR();
-        // log.debug('$rmm _readPCreator: $vr');
-        if (vr != VR.kLO && vr != VR.kUN) throw 'Bad Private Creator VR($vr)';
-        vfLength = (vr.hasShortVF) ? readUint16() : _readLongLength();
-      } else {
-        // log.debug(
-        //    '$rmm _readImplicitVR: ${Tag.toDcm(nextCode)} vfLength
-        // ($vfLength})');
-        vr = VR.kUN;
-        vfLength = readUint32();
-      }
-      // Read the Value Field for the creator token.
-      List<String> values = _readDcmUtf8VF(vfLength);
-      if (values.length != 1) throw 'InvalidCreatorToken($values)';
-      String token = values[0];
-      // log.debug('nextCode: $nextCode');
-      var tag = new PCTag(nextCode, vr, token);
-      // log.debug('Tag: $tag');
-      LO e = new LO(tag, values);
-      // log.debug('LO: ${e.info}');
-      // log.debug('LO.code: $nextCode');
-      // log.debug('e.tag: ${e.tag.info}');
-      // log.debug('e: ${e.info}');
-      var pc = new PrivateCreator(e);
-      // log.debug('$ree _readTElement: ${pc.info}');
-      // log.up;
-      var psg = new PrivateSubGroup(pg, pc);
-      // log.debug('$rmm _readTElement: pc($pc)');
-      // log.debug('$rmm _readTElement: $psg');
-      ds.add(pc);
-      // **** end read PCreator
+  int readPCreators(int group, PrivateGroup pg, Element e) {
 
-      nextCode = _readTagCode();
-      g = Group.fromTag(nextCode);
-      elt = Elt.fromTag(nextCode);
-      // log.debug('$rmm Next group(${Group.hex(g)}), Elt(${Group.hex(g)})');
-    } while (g == group && (elt >= 0x10 && elt <= 0xFF));
-
-    // log.debug('$ree readAllPCreators-end: $pg');
-    // log.up;
-    return nextCode;
   }
 
-  void _readAllPData(int group, int code, bool isExplicitVR, PrivateGroup pg) {
-    // Now read the [PrivateData] [Element]s for each creator, in order.
-    // log.down;
-    // log.debug('$rbb _readAllPData');
-    int nextCode = code;
-    while (group == Group.fromTag(nextCode)) {
-      // log.debug('nextCode: ${Tag.toDcm(nextCode)}');
-      var sgIndex = Elt.fromTag(nextCode) >> 8;
-      // log.debug('sgIndex: $sgIndex');
-      var sg = pg[sgIndex];
-      // log.debug('Subgroup: $sg');
-      if (sg == null) {
-        // log.warn('This is a Subgroup without a creator');
-        var creator = new PrivateCreator.phantom(nextCode);
-        sg = new PrivateSubGroup(pg, creator);
-      }
-      // log.debug('Subgroup: $sg');
-      nextCode = _readPDSubgroup(nextCode, isExplicitVR, sg);
-      // log.debug('Subgroup: $sg');
-      // log.debug('nextCode: nextCode');
-    }
-    // log.debug('$ree _readAllPData-end');
-    // log.up;
+  void readPData(int group, PrivateGroup pg, Element e) {
+
   }
 
-  int _readPDSubgroup(int code, bool isExplicitVR, PrivateSubGroup sg) {
+  int readPDSubgroup(int code, PrivateSubGroup sg, Element e) {
     int nextCode = code;
     //?? while (pcTag.isValidDataCode(nextCode)) {
     PrivateCreator pc = sg.creator;
     PCTag pcTag = pc.tag;
-    // log.debug('pdInSubgroupt${Tag.toDcm(nextCode)}: ${pc.inSubgroup(nextCode)
-    // }');
     while (pc.inSubgroup(nextCode)) {
-      // log.down;
-      // log.debug('$rbb _readPDataSubgroup: base(${Elt.hex(pc.base)}), '
-      //    'limit(${Elt.hex(pc.limit)})');
-
       PDTagKnown pdTagDef = pcTag.lookupData(nextCode);
       assert(nextCode == pdTagDef.code);
-      // log.debug('_readPDataSubgroup: pdTag: ${pdTagDef.info}');
-      TElement e = _readElement(nextCode, isExplicitVR);
-      // log.debug('_readPDataSubgroup: e: ${e.info}');
-      //  PrivateElement pd = new PrivateData(pdTagDef, e);
-      //  // log.debug('_readPDataSubgroup: pd: ${pd.info}');
       pc.add(e);
-      // log.debug('_readPDataSubgroup: pc: ${pc.info}');
-      ds.add(e);
-
-      // log.debug('$rmm readPD: ${e.info})');
-      // log.up;
-      nextCode = _readTagCode();
+      resultDS.add(e);
     }
-    return nextCode;
-  }
+  }*/
 }
 
-*/
+
+

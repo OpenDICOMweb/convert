@@ -49,7 +49,7 @@ void main() {
   // readWriteFileFast(new File(path7), reps: 1, fmiOnly: false);
   // readFMI(paths, fmiOnly: true);
   //  readWriteFiles(paths, fmiOnly: false);
-   readWriteDirectory(testData, fmiOnly: true);
+   readWriteDirectory(mrStudy, fmiOnly: true);
   //targetTS: TransferSyntax.kImplicitVRLittleEndian);
 }
 
@@ -61,6 +61,9 @@ const int kMB = 1024 * 1024;
 String mbps(int lib, int us) => (lib / us).toStringAsFixed(1);
 String fmt(double v) => v.toStringAsFixed(1).padLeft(7, ' ');
 
+List<String> shortFiles = <String>[];
+int shortFileMark;
+
 void readWriteDirectory(String path,
     {bool fmiOnly = false,
     int printEvery = 100,
@@ -68,6 +71,7 @@ void readWriteDirectory(String path,
     String fileExt = '.dcm',
     int shortFileThreshold = 1024,
     bool isTimed = false}) {
+  shortFileMark = shortFileThreshold;
   Directory dir = new Directory(path);
   List<FileSystemEntity> fList = dir.listSync(recursive: true);
   fList.retainWhere((fse) => fse is File);
@@ -91,11 +95,12 @@ void readWriteDirectory(String path,
   List<String> badTS = <String>[];
   List<String> badExt = <String>[];
   List<String> errors = <String>[];
+
   for (File f in fList) {
     count++;
     if (count % printEvery == 0) currentStats(count, good, bad, timer);
     log.debug('$count length(${f.lengthSync() ~/ 1000}KB): $f');
-    var path = f.path;
+    var path = f.path.replaceAll('\\', '/');
     var fileExt = p.extension(path);
     if (fileExt != "" && fileExt != ".dcm") {
       log.debug('fileExt: "$fileExt"');
@@ -109,6 +114,7 @@ void readWriteDirectory(String path,
         v = (isTimed) ? readWriteFileTimed(f) : readWriteFileFast(f);
         if (!v) {
           log.error('Error:$f');
+          errors.add('"$path"');
           bad++;
         } else {
           good++;
@@ -130,9 +136,10 @@ void readWriteDirectory(String path,
   currentStats(count, good, bad, timer);
 
   log.config('Elapsed Time: ${timer.elapsed}');
-  log.config('Bad TS: $badTS');
-  log.config('Bad File Extension: $badExt');
-  log.config('Errors: $errors');
+  log.config('Map<String, String> badTS = '
+      '<String, String>{${badTS.join(',\n')}};');
+  log.config('List<String> badFileExtension = [${badExt.join(',\n')}];');
+  log.config('List<String> errors = [ ${errors.join(',\n')}');
 }
 
 String padNumber(int n, [int width = 6, String padChar = " "]) =>
@@ -150,6 +157,7 @@ bool readWriteFileFast(File file, {int reps = 1, bool fmiOnly = false}) {
   log.info('Reading: $file');
   Uint8List bytes0 = file.readAsBytesSync();
   if (bytes0 == null) return false;
+  if (bytes0.length <= shortFileMark) shortFiles.add('"${file.path}"');
   RootByteDataset rds0 = DcmByteReader.readBytes(bytes0, path: file.path);
   if (rds0 == null) return false;
   log.info(rds0);
@@ -158,37 +166,39 @@ bool readWriteFileFast(File file, {int reps = 1, bool fmiOnly = false}) {
   return bytesEqual(bytes0, bytes1);
 }
 
+//TODO: cleanup timing
 bool readWriteFileTimed(File file, {int reps = 1, bool fmiOnly = false}) {
   log.info('Reading: $file');
   var timer = new Timer(start: true);
 
-  var start = timer.split;
   Uint8List bytes0 = file.readAsBytesSync();
   var readBytes = timer.split;
   if (bytes0 == null) return false;
+  if (bytes0.length <= shortFileMark) shortFiles.add('"${file.path}"');
 
   RootByteDataset rds0 = DcmByteReader.readBytes(bytes0, path: file.path);
   var parse = timer.split;
   if (rds0 == null) return false;
 
-  timer.start();
+
   var bytes1 = writeDataset(rds0);
   var writeDS = timer.split;
-  var total = timer.elapsed;
+
 
   if (bytes1 == null) return false;
 
   bool areEqual = bytesEqual(bytes0, bytes1);
-  Duration end = timer.elapsed;
-
+  Duration compare = timer.split;
+  var total = timer.elapsed;
   var out = '''
   ${rds0.info}
     Read bytes: $readBytes
          Parse: $parse
   Read & Parse: ${readBytes + parse}
          Write: $writeDS
+       Compare: $compare
          Total: $total
   ''';
   log.config(out);
-  return true;
+  return areEqual;
 }

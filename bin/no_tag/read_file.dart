@@ -19,6 +19,8 @@ const String mWeb = "C:/odw/test_data/mweb";
 const String mrStudy = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
 const String dir6688 = 'C:/odw/test_data/6688/12/0B009D38/0B009D3D';
 
+const String ivrFile = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy/1.2.840'
+    '.113619.2.5.1762583153.215519.978957063.101.dcm';
 const String path0 = 'C:/odw/test_data/6688/12/0B009D38/0B009D3D/4D4E9A56';
 const String path1 = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
 const String path2 = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
@@ -140,7 +142,7 @@ final Logger log =
 const List<String> defaultList = fileList0;
 
 void main() {
-  for (String path in [error10]) {
+  for (String path in errors) {
     try {
       File f = new File(path);
 /*      FileResult r = readFileWithResult(f, fmiOnly: false);

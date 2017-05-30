@@ -613,12 +613,7 @@ class DcmReader extends DcmReaderBase {
     TElement e;
     if (tag == PTag.kPixelData) {
       TransferSyntax ts = currentDS.transferSyntax;
-      log.debug('$rmm PixelData: $ts');
-      int rows = currentDS[kPixelData].value;
-      int columns = currentDS[kPixelData].value;
-      int nFrames = currentDS[kNumberOfFrames].value;
-      log.debug('$rmm nFrames: $nFrames, ts: $ts');
-      e = new OBPixelData.fromBytes(tag, vf, vfLength, rows, columns, ts);
+      e = new OB.fromBytes(tag, vf, vfLength, ts: ts);
     } else {
       e = new OB.fromBytes(tag, vf, vfLength);
     }
@@ -635,15 +630,9 @@ class DcmReader extends DcmReaderBase {
     if (tag == PTag.kPixelData) {
       TransferSyntax ts = currentDS.transferSyntax;
       log.debug('$rmm PixelData: $ts');
-      int rows = currentDS[kPixelData].value;
-      int columns = currentDS[kPixelData].value;
-      int nFrames = currentDS[kNumberOfFrames].value;
-      log.debug('$rmm nFrames: $nFrames, ts: $ts');
-      assert(vf.lengthInBytes % nFrames == 0);
       //TODO: frameLength or offsets which is better
      // Fix: int frameLength = vf.length ~/ nFrames;
-      e = new OWPixelData.fromBytes(tag, vf, vfLength, rows,
-          columns, ts);
+      e = new OW.fromBytes(tag, vf, vfLength,  ts);
     } else {
       e = new OW.fromBytes(tag, vf, vfLength);
     }

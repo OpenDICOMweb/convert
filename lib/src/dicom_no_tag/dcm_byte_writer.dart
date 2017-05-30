@@ -48,7 +48,7 @@ const List<int> _undefinedLengthElements = const <int>[
 ///   return the empty [List] [].
 class DcmByteWriter {
   ///TODO: doc
-  static final Logger log = new Logger("DcmReader", watermark: Severity.debug2);
+  static final Logger log = new Logger("DcmReader", watermark: Severity.info);
   static ByteData _reuse;
 
   static ByteData _reuseBD([int size = defaultBDSize]) {
