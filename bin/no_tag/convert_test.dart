@@ -56,13 +56,28 @@ bool convert(File file, {int reps = 1, bool fmiOnly = false}) {
   // Test dataset equality
   if (rds0.length != rds1.length) throw "";
   if (rds0.total != rds1.total) throw "";
-  log.info(rds1.info);
+  log.info('rds0 Length: ${rds0.length} Total: ${rds0.total}');
+  log.info('rds1 Length: ${rds1.length} Total: ${rds1.total}');
+  log.info('${rds0.info}');
+  log.info('${rds1.info}');
 
   // write out converted dataset and compare the bytes
   //Urgent: make this work
-//  Uint8List bytes1 = DcmWriter.write(rds1, fast: true);
+  Uint8List bytes1 = DcmWriter.write(rds1, fast: true);
 //  if (bytes1 == null) return false;
 //  bytesEqual(bytes0, bytes1);
 
-  return rds0 == rds1;
+  log.info('rds0.parent: ${rds0.parent}');
+  log.info('rds1.parent: ${rds1.parent}');
+  log.info('rds0.hadUndefinedLength: ${rds0.hadUndefinedLength}');
+  log.info('rds1.hadUndefinedLength: ${rds1.hadUndefinedLength}');
+  log.info('rds0.map.length: ${rds0.map.length}');
+  log.info('rds1.map.length: ${rds1.map.length}');
+  for (int code in rds0.map.keys) {
+    if (rds0.map[code] != rds1.map[code])
+      log.info('*** ${toDcm(code)}: ${rds0.map[code]} != ${rds1.map[code]}');
+  }
+  log.info('rds0 == rds1: ${rds0 == rds1}');
+  log.info('rds1 == rds0: ${rds1 == rds0}');
+  return rds1 == rds0;
 }

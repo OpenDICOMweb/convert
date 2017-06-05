@@ -31,6 +31,7 @@ dependencies:
   #    ref: develop
     path: C:/odw/sdk/core
     version: ^0.5.4
+  sprintf: "^3.0.0"
 
 dev_dependencies:
   benchmark_harness: ^1.0.4

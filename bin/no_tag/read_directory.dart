@@ -62,7 +62,7 @@ void main() {
   timer.start();
   log.info('   at: $timestamp');
   var reader = new FileListReader(files, fmiOnly: true, printEvery: 100);
- // reader.read;
+  reader.read;
   timer.stop();
   log.info('Elapsed time: ${timer.elapsed}');
 }

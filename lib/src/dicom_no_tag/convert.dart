@@ -34,10 +34,11 @@ class DSConverter {
       if (te == null) throw 'null TE';
       resultDS[te.code] = te;
     }
-    var s0 = new Summary(sourceDS);
+/*    var s0 = new Summary(sourceDS);
     var s1 = new Summary(resultDS);
     log.info('$s0');
     log.info('$s1');
+    */
     return resultDS;
   }
 
@@ -87,7 +88,7 @@ class DSConverter {
 
   TElement convertElement(ByteElement e) {
     if (e is ByteSQ) return getSequence(e);
-    log.debug1('  E: $e');
+    log.debug1(' BE: $e');
     var tag = getTag(e);
     VR vr0 = (e.vr == VR.kUN) ? tag.vr : e.vr;
     if (vr0 != tag.vr) log.warn(
@@ -113,6 +114,7 @@ class DSConverter {
       throw 'Invalid Tag: $tag';
     }
     log.debug(' TE: $te');
+    print('');
     return te;
   }
 

@@ -9,8 +9,8 @@ import 'dart:typed_data';
 
 import 'package:common/format.dart';
 import 'package:common/logger.dart';
-import 'package:common/timestamp.dart';
-import 'package:core/src/dataset/byte_dataset/byte_dataset.dart';
+import 'package:convertX/timer.dart';
+import 'package:core/core.dart';
 import 'package:convertX/src/dicom_no_tag/dcm_byte_writer.dart';
 import 'package:dictionary/dictionary.dart';
 
@@ -19,25 +19,18 @@ final Logger log = new Logger("convert/bin/no_tag/write_file_list.dart",
 
 final Formatter format = new Formatter();
 
-Uint8List writeDataset(RootByteDataset rds, String path,
+Uint8List writeFile(RootByteDataset rds, String path,
     {bool fmiOnly = false, TransferSyntax targetTS}) {
     var file = new File(path);
-    var timer = new Stopwatch();
-    var timestamp = new Timestamp();
+    var timer = new Timer();
     var total = rds.total;
     log.info('writing ${rds.runtimeType} to "$path"\n'
         '    with $total Elements\n'
-        '    at: $timestamp ...');
+        '    at: ${timer.startTime} ...');
     if (fmiOnly) log.debug('    fmiOnly: $fmiOnly');
 
     timer.start();
-    var writer = new DcmByteWriter(rds, path: path);
-    if (fmiOnly) {
-      writer.writeFMI();
-    } else {
-      writer.writeRootDataset();
-    }
-    file.writeAsBytesSync(writer.bytes);
+    DcmByteWriter.writeFile(rds, file, fmiOnly: fmiOnly);
     timer.stop();
 
     log.info('  Elapsed time: ${timer.elapsed}');

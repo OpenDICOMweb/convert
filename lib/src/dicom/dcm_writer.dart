@@ -34,36 +34,68 @@ typedef dynamic VFWriter<E>(TElement<E> e);
 /// Endianness is the endianness of the host [this] is running on, aka
 /// [Endianness.HOST_ENDIAN].
 ///   * All get* methods _DO NOT_ advance the [readIndex].
-///   * All read* methods advance the [readIndex] by the number of bytes written.
+///   * All read* methods advance the [readIndex] by the number of bytes
+///     written.
 ///   * All set* methods _DO NOT_ advance the [writeIndex].
-///   * All write* methods advance the [writeIndex] by the number of bytes written.
+///   * All write* methods advance the [writeIndex] by the number of bytes
+///     written.
 ///
 /// _Notes_:
-///   1. In all cases DcmBuf writes the Value Fields as they are without modification, except
-///   possibly padding strings to an even length.  This is so they can be written out byte for
-///   byte as they were read, and a bytewise comparator will find them to be equal.
+///   1. In all cases DcmBuf writes the Value Fields as they are without
+///      modification, except possibly padding strings to an even length.
+///      This is so they can be  written out byte for byte as they were read,
+///      and a byte-wise comparator will find them  to be equal.
 ///   2. All String manipulation should be handled in the [Element] itself.
 ///   3. All VFWriters allow the Value Field to be empty.
 class DcmWriter extends ByteBuf {
-  static const int defaultLengthInBytes = 2 * kMB;
-  //TODO: make the buffer grow and shrink adaptively.
   /// The log for debug output.
   static final Logger log = new Logger("DcmWriter", watermark: Severity.debug);
+  static const int defaultBufferLength = 2 * kMB;
+  static ByteData _reuse;
+  //TODO: make the buffer grow and shrink adaptively.
 
-  /// The root Dataset for the object being read.
-  RootTDataset _rootDS;
 
-  final bool isExplicitVR;
+  /// The source of the [Uint8List] being read.
+  final String path;
 
   /// If [true] errors will throw; otherwise, return [null].
   final bool throwOnError;
+
+  /// if [true] [Dataset]s will be allowed to be written in IVRLE.
+  final bool allowImplicitLittleEndian;
+
+  /// If [true], a DICOM File Prefix (PS3.10) will be written even
+  /// if it wasn't present when read.
+  final bool addMissingPrefix;
+
+  /// If [true], a DICOM File Meta Information (PS3.10) will be written
+  /// even if it wasn't present when read.
+  final bool addMissingFMI;
+
+  /// The [TransferSyntax] for the output.
+  final TransferSyntax outputTS;
+
+  /// The root Dataset for the object being read.
+  final RootByteDataset rootDS;
+
+  /// The current dataset.  This changes as Sequences are read and
+  /// [Items]s are pushed on and off the [dsStack].
+  ByteDataset _currentDS;
+
+  TransferSyntax _transferSyntax;
+  bool  _isEncapsulated;
+
+  /// The root Dataset for the object being read.
+ // RootTDataset _rootDS;
+
+ // final bool isExplicitVR;
 
   //*** Constructors ***
   //TODO: what should the default length be
 
   /// Creates a new [DcmWriter], where [readIndex] = [writeIndex] = 0.
   DcmWriter(
-      {int lengthInBytes = defaultLengthInBytes,
+      {int lengthInBytes = defaultBufferLength,
       this.isExplicitVR = true,
       this.throwOnError = true})
       : super.writer(lengthInBytes);
