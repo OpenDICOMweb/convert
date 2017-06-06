@@ -104,13 +104,11 @@ class DcmByteReader extends DcmReaderBase {
 
   /// Reads File Meta Information ([Fmi]) and returns a Map<int, Element>
   /// if any [Fmi] [ByteElement]s were present; otherwise, returns null.
-  bool readFMI() {
-
+  Map<int, Element> readFMI() {
     _log.debug2('$rbb readFmi($currentDS)');
-    if (_fmiRead == true) throw 'DICOM Prefix has already been read';
-    _readPrefix();
+    if (rIndex != 0) throw 'DICOM Prefix has already been read';
+    var prefix = DcmPrefix.readPrefix(bd);
     try {
-      //      _readDataset(rootDS, endOfBD, 0x00080000);
       while (rIndex < endOfBD) {
         int code = peekTagCode();
         if (code >= 0x00030000) break;
@@ -119,46 +117,20 @@ class DcmByteReader extends DcmReaderBase {
       }
     } on InvalidTransferSyntaxError catch (x) {
       rootDS.hadParsingErrors = true;
-      _log.warn('$ree readFMI TS catch: $x');
-      //rethrow;
-      rIndex = 0;
-      return false;
+      _log.warn('$ree readFMI Invalid TS catch: $x');
+      if (throwOnError) rethrow;
     } catch (x) {
       rootDS.hadParsingErrors = true;
       _log.warn('Failed to read FMI: "$path"\nException: $x\n'
           'File length: ${bd.lengthInBytes}\n$ree readFMI catch: $x');
+      if (throwOnError) rethrow;
+    } finally {
       rIndex = 0;
-      rethrow;
+      return {};
     }
-
-    TransferSyntax ts = rootDS.transferSyntax;
-    _log.debug('$rmm readFMI: targetTS($targetTS), TS($ts) isExplicitVR: '
-        '${rootDS.isEVR}');
-    //Urgent: collapse to one if statement
-    if (ts == TransferSyntax.kExplicitVRBigEndian) {
-      hadParsingErrors = true;
-      if (throwOnError)
-        throw new InvalidTransferSyntaxError(
-            ts, 'Explicit VR Big Endian not supported.');
-      rIndex = 0;
-      return false;
-    } else if (!rootDS.hasValidTransferSyntax) {
-      hadParsingErrors = true;
-      if (throwOnError)
-        throw new InvalidTransferSyntaxError(ts, 'Not supported.');
-      rIndex = 0;
-      return false;
-    } else if (targetTS != null && ts != targetTS) {
-      if (throwOnError)
-        throw new InvalidTransferSyntaxError(ts, 'Non-Target TS', ts);
-      rIndex = 0;
-      return false;
-    }
-    _log.debug2('$ree readFmi:\n ${rootDS.info}');
-    return true;
   }
 
-  Uint8List _readPrefix() {
+/*  Uint8List _readPrefix() {
     if (rIndex != 0) throw 'Attempt to read DICOM Prefix at ByteData[$rIndex]';
     if (_prefixRead == true)
       throw 'Attempt to re-read DICOM Preamble and Prefix.';
@@ -184,7 +156,7 @@ class DcmByteReader extends DcmReaderBase {
       }
     }
     return prefix;
-  }
+  }*/
 
   void _readDataset(ByteDataset ds, int endOfDS) {
     assert(currentDS != null);
@@ -206,7 +178,7 @@ class DcmByteReader extends DcmReaderBase {
   }
 
   bool _atEndOfBD(int endOfDS) {
-    if (endOfDS != readIndex) {
+    if (endOfDS != rIndex) {
       _log.error('Not EOF: readIndex($rIndex), endOfDS($endOfDS), '
           'endOfBD(${bd.lengthInBytes})');
       return false;

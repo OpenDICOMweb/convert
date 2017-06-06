@@ -12,11 +12,11 @@ import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
 import 'package:core/src/dicom_utils.dart';
-
+/*
 const k10KB = 10 * 1024;
 const k20KB = 20 * 1024;
 const k50KB = 50 * 1024;
-const k100KB = 100 * 1024;
+const k100KB = 100 * 1024;*/
 const k200KB = 200 * 1024;
 
 ///TODO: doc
@@ -100,7 +100,7 @@ abstract class DcmReaderBase {
     }
     Map<int, Element> fmi = readFmi();
     if (fmi == null) return null;
-    return new Part10Header(bd, true, fmi);
+    return new Part10Header(bd, fmi);
   }
 
   /// Read File Meta Information (PS3.10).
@@ -156,43 +156,36 @@ abstract class DcmReaderBase {
     return fmi;
   }
 
-  TransferSyntax defaultTransferSyntax = TransferSyntax.kImplicitVRLittleEndian;
-
   TransferSyntax getTransferSyntax(Map<int, Element> fmi) {
+    TransferSyntax ts;
     Element e = fmi[kTransferSyntaxUID];
-    if (e == null) return defaultTransferSyntax;
+    if (e == null) return System.defaultTransferSyntax;
     if (e is UI) {
       var s = e.value;
-      if (s == null) return defaultTransferSyntax;
-      TransferSyntax ts = TransferSyntax.lookup(s);
-      if (ts == null) return defaultTransferSyntax;
-
+      if (s == null) {
+        hadParsingErrors = true;
+        ts = System.defaultTransferSyntax;
+      } else {
+        hadParsingErrors = true;
+        ts = TransferSyntax.lookup(s);
+        if (ts == null) ts = System.defaultTransferSyntax;
+      }
       _log.debug('$rmm readFMI: targetTS($targetTS), TS($ts) isExplicitVR: '
-          '${rootDS.isEVR}');
-      //Urgent: collapse to one if statement
-      if (ts == TransferSyntax.kExplicitVRBigEndian) {
-        hadParsingErrors = true;
+            '${rootDS.isEVR}');
+
+      if (targetTS != null && ts != targetTS) {
         if (throwOnError)
-          throw new InvalidTransferSyntaxError(
-              ts, 'Explicit VR Big Endian not supported.');
-        rIndex = 0;
+        throw new InvalidTransferSyntaxError(ts, 'Non-Target TS', ts);
         return null;
-      } else if (!System.isSupportedTransferSyntax(ts)) {
-        hadParsingErrors = true;
+    } else if (!System.isSupportedTransferSyntax(ts)) {
         if (throwOnError)
           throw new InvalidTransferSyntaxError(ts, 'Not supported.');
-        rIndex = 0;
-        return null;
-      } else if (targetTS != null && ts != targetTS) {
-        if (throwOnError)
-          throw new InvalidTransferSyntaxError(ts, 'Non-Target TS', ts);
-        rIndex = 0;
         return null;
       }
       _log.debug2('$ree readFmi:\n ${rootDS.info}');
       return ts;
     }
-    return defaultTransferSyntax;
+    return null;
   }
 
   int readUint16() {
