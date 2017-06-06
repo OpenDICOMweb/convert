@@ -53,6 +53,7 @@ kSequenceDelimitationItem: 0xfffee0dd 4294893789
 class DcmByteReader extends DcmReaderBase {
   static final Logger _log = new Logger("DcmReader", watermark: Severity
       .info);
+  final Part10Header header;
   final RootByteDataset rootDS;
 
   bool _prefixRead = false;
@@ -132,7 +133,7 @@ class DcmByteReader extends DcmReaderBase {
 
     TransferSyntax ts = rootDS.transferSyntax;
     _log.debug('$rmm readFMI: targetTS($targetTS), TS($ts) isExplicitVR: '
-        '${rootDS.isExplicitVR}');
+        '${rootDS.isEVR}');
     //Urgent: collapse to one if statement
     if (ts == TransferSyntax.kExplicitVRBigEndian) {
       hadParsingErrors = true;
@@ -157,15 +158,16 @@ class DcmByteReader extends DcmReaderBase {
     return true;
   }
 
-  bool _readPrefix() {
+  Uint8List _readPrefix() {
     if (rIndex != 0) throw 'Attempt to read DICOM Prefix at ByteData[$rIndex]';
     if (_prefixRead == true)
       throw 'Attempt to re-read DICOM Preamble and Prefix.';
-    skip(128);
+    final preable = read(128);
+
     final String prefix = readAsciiString(4);
     bool v = (prefix == "DICM") ? true : false;
     if (v == true) {
-      rootDS.prefix = bd.buffer.asUint8List(0, 132);
+      Uint8List prefix = bd.buffer.asUint8List(0, 132);
       for (int i = 0; i < 128; i++) {
         if (bd.getUint8(i) != 0) {
           log.warn('**** Reading non-zero DICOM Prefix: '
@@ -181,15 +183,15 @@ class DcmByteReader extends DcmReaderBase {
         skip(-132);
       }
     }
-    return v;
+    return prefix;
   }
 
   void _readDataset(ByteDataset ds, int endOfDS) {
     assert(currentDS != null);
-    _log.debugDown('$rbb readDataset: isExplicitVR(${ds.isExplicitVR} endOfDS'
+    _log.debugDown('$rbb readDataset: isEVR(${ds.isEVR} endOfDS'
         '($endOfDS)');
     try {
-      if (ds.isExplicitVR) {
+      if (ds.isEVR) {
         while (rIndex < endOfDS) currentDS.add(_readEVR());
       } else {
         while (rIndex < endOfDS) currentDS.add(_readIVR());
@@ -200,7 +202,7 @@ class DcmByteReader extends DcmReaderBase {
       rethrow;
     }
     assert(endOfDS == rIndex, 'endOfDS($endOfDS} != rIndex($rIndex)');
-    _log.debugUp('$ree end readDataset: isExplicitVR(${ds.isExplicitVR})');
+    _log.debugUp('$ree end readDataset: isEVR(${ds.isEVR})');
   }
 
   bool _atEndOfBD(int endOfDS) {
@@ -223,7 +225,7 @@ class DcmByteReader extends DcmReaderBase {
     _log.debug1('$rbb ${toDcm(code)} $vr');
     if (vrCode == kSQCode) {
       skip(2);
-      return _readSequence(code, start, true);
+      return _readSequence(code, start);
     }
     _log.debug1('$rmm     start($start) _readEVR: ');
     if (vr.hasShortVF) {
@@ -287,7 +289,7 @@ class DcmByteReader extends DcmReaderBase {
     print('$rmm vfLength($vfLength) ');
     _log.debug1('$rbb _readIVR: start($start), ${toDcm(code)} '
         'vfLength($vfLength, ${toHex32(vfLength)}');
-    if (isSequence()) return _readSequence(code, start, false);
+    if (isSequence()) return _readSequence(code, start);
     if (code == kPixelData) {
       IVRPixelData e = _readPixelData(start, vfLength, false);
       _log.debug1('$ree _readEVR: ${e.info}');
@@ -334,7 +336,7 @@ class DcmByteReader extends DcmReaderBase {
   // reading the value field of these [Element]s. Returns an [SQ] [Element].
 
   /// Reads an EVR or IVR Sequence. The _readElementMethod detects Sequences.
-  ByteElement _readSequence(int code, int start, bool isEVR) {
+  ByteElement _readSequence(int code, int start) {
     int xxx = rIndex;
     int vfLength = readUint32();
     if (vfLength.isOdd && vfLength != kUndefinedLength) {
@@ -350,7 +352,7 @@ class DcmByteReader extends DcmReaderBase {
     List<ByteItem> items = <ByteItem>[];
     if (isUndefined) {
       while (!_checkForSequenceDelimiter()) {
-        items.add(_readItem(isEVR));
+        items.add(_readItem());
       }
       endOfVF = rIndex;
       _log.debug2('$rmm SQ Undefined Length: start($start) endOfVF($endOfVF)');
@@ -358,7 +360,7 @@ class DcmByteReader extends DcmReaderBase {
       endOfVF = vfStart + vfLength;
       _log.debug2('$rmm SQ: ${toDcm(code)} vfL($vfLength), EOVF($endOfVF)');
       while (rIndex < endOfVF) {
-        items.add(_readItem(isEVR));
+        items.add(_readItem());
         xxx = rIndex;
       }
       _log.debug2('$rmm SQ VFL($vfLength) start($start) EOVF($endOfVF)');
@@ -370,7 +372,7 @@ class DcmByteReader extends DcmReaderBase {
     var bdx = _getElementBD(start, rIndex);
     ByteSQ sq;
     //TODO: should be able to resolve the type
-    if (isEVR) {
+    if (rootDS.isEVR) {
       sq = new EVRSequence(bdx, currentDS, items, isUndefined);
     } else {
       sq = new IVRSequence(bdx, currentDS, items, isUndefined);
@@ -383,7 +385,7 @@ class DcmByteReader extends DcmReaderBase {
   //TODO this can be moved to Dataset_base if we abstract DatasetExplicit
   // & readElementExplicit
   /// Returns an [ByteItem] or Fragment.
-  ByteItem _readItem(bool isExplicitVR) {
+  ByteItem _readItem() {
     int xxx = rIndex;
     int start = rIndex; // start of elements
     int code = readTagCode();
@@ -401,13 +403,13 @@ class DcmByteReader extends DcmReaderBase {
         _log.debug('$rmm item vfLength(${toHex32(vfLength)}, $vfLength)');
       } else if (vfLength == kUndefinedLength) {
         while (!_checkForItemDelimiter()) {
-          ByteElement e = _readElement(isExplicitVR);
+          ByteElement e = _readElement();
           elements[e.code] = e;
         }
       } else {
         int endOfVF = start + vfLength;
         while (rIndex <= endOfVF) {
-          ByteElement e = _readElement(isExplicitVR);
+          ByteElement e = _readElement();
           xxx = rIndex;
           elements[e.code] = e;
         }
@@ -547,41 +549,41 @@ class DcmByteReader extends DcmReaderBase {
     return rootDS.transferSyntax;
   }
 
-  ByteElement _readElement(bool isExplicitVR) =>
-      (isExplicitVR) ? _readEVR() : _readIVR();
+  ByteElement _readElement() =>
+      (rootDS.isEVR) ? _readEVR() : _readIVR();
 
-  ByteElement xReadPublicElement([bool isExplicitVR = true]) =>
-      _readElement(isExplicitVR);
-
-  // External Interface for testing
-  ByteElement xReadPGLength([bool isExplicitVR = true]) =>
-      _readElement(isExplicitVR);
+  ByteElement xReadPublicElement() =>
+      _readElement();
 
   // External Interface for testing
-  ByteElement xReadPrivateIllegal(int code, [bool isExplicitVR = true]) =>
-      _readElement(isExplicitVR);
+  ByteElement xReadPGLength() =>
+      _readElement();
 
   // External Interface for testing
-  ByteElement xReadPrivateCreator([bool isExplicitVR = true]) =>
-      _readElement(isExplicitVR);
+  ByteElement xReadPrivateIllegal(int code, ) =>
+      _readElement();
 
   // External Interface for testing
-  ByteElement xReadPrivateData(ByteElement pc, [bool isExplicitVR = true]) {
+  ByteElement xReadPrivateCreator() =>
+      _readElement();
+
+  // External Interface for testing
+  ByteElement xReadPrivateData(ByteElement pc, ) {
     //  _TagMaker maker =
     //      (int nextCode, VR vr, [name]) => new PDTag(nextCode, vr, pc.tag);
-    return _readElement(isExplicitVR);
+    return _readElement();
   }
 
   // Reads
-  ByteDataset xReadDataset([bool isExplicitVR = true]) {
-    _log.debug('$rbb readDataset: isExplicitVR($isExplicitVR)');
+  ByteDataset xReadDataset() {
+    _log.debug('$rbb readDataset: isEVR(${rootDS.isEVR})');
     while (isReadable) {
-      var e = _readElement(isExplicitVR);
+      var e = _readElement();
       rootDS.add(e);
       e = rootDS[e.code];
       assert(e == e);
     }
-    _log.debug('$ree end readDataset: isExplicitVR($isExplicitVR)');
+    _log.debug('$ree end readDataset: isEVR(${rootDS.isEVR})');
     return currentDS;
   }
 

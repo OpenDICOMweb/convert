@@ -128,7 +128,9 @@ class DcmByteWriter {
 
   Uint8List get bytes => bd.buffer.asUint8List(0, _wIndex);
 
+/*
   int get _endOfBD => bd.lengthInBytes;
+*/
 
   void _endOfBDError(int end) {
     throw 'EndOfBD length($end) _wIndex($_wIndex}) LIBytes(${bd
@@ -198,13 +200,17 @@ class DcmByteWriter {
           [int offset = 0, int limit, int padChar = kSpace]) =>
       _writeStringBytes(ASCII.encode(s), padChar);
 
+/*
   /// Writes an [UTF8] [String] to the output [bd].
   void _writeUtf8String(String s, [int offset = 0, int limit]) =>
       _writeStringBytes(UTF8.encode(s), kSpace);
+*/
 
   // **** DICOM encoding stuff ****
 
-  bool get _isFMIPresent => rootDS.hasFMI;
+/*
+  bool get _isFMIPresent => rootDS.hasFmi;
+*/
 
 /*
   /// Returns [true] if the [ByteDataset] being write has an
@@ -217,9 +223,13 @@ class DcmByteWriter {
     _writeUint16(tag & 0xFFFF);
   }
 
+/*
   bool _isFMICode(int code) => code >= 0x00020000 && code < 0x00020016;
+*/
 
+/*
   bool _isNotFMICode(int code) => !_isFMICode(code);
+*/
 
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
@@ -288,7 +298,7 @@ class DcmByteWriter {
     _currentDS = ds;
     log.down;
     assert(_currentDS != null);
-    log.debug('$wbb writeDataset: $ds isExplicitVR(${ds.isExplicitVR})');
+    log.debug('$wbb writeDataset: $ds isExplicitVR(${ds.isEVR})');
     for (ByteElement e in ds.elements) _writeElement(e);
     log.debug('$wee end writeDataset');
     log.up;
@@ -499,10 +509,10 @@ class DcmByteWriter {
   }
 
   Uint8List xWriteDataset(ByteDataset ds) {
-    log.debugDown('$wbb writeDataset: isExplicitVR(${ds.isExplicitVR})');
+    log.debugDown('$wbb writeDataset: isExplicitVR(${ds.isEVR})');
     var writer = new DcmByteWriter(ds);
     writer._writeDataset(ds);
-    log.debugUp('$wee end writeDataset: isExplicitVR(${ds.isExplicitVR})');
+    log.debugUp('$wee end writeDataset: isExplicitVR(${ds.isEVR})');
     return writer.bytes;
   }
 

@@ -53,7 +53,7 @@ class DcmByteWriter {
   static ByteData _reuse;
 
   /// The root Dataset being written.
-  final RootByteDataset rootDS;
+  final Dataset rootDS;
 
   /// The source of the [Uint8List] being read.
   final String path;
@@ -84,7 +84,7 @@ class DcmByteWriter {
 
   /// The current dataset.  This changes as Sequences are read and
   /// [Items]s are pushed on and off the [dsStack].
-  ByteDataset _currentDS;
+  Dataset _currentDS;
 
   // **** Reader fields ****
 
@@ -167,7 +167,7 @@ class DcmByteWriter {
     _currentDS = rootDS;
 
     log.debug('TransferSyntax(${_ts.name}), isEncapsulated($_isEncapsulated)');
-    if (!allowMissingFMI && !rootDS.hasFMI) {
+    if (!allowMissingFMI && !rootDS.hasFmi) {
       log.error('Dataset $rootDS is missing FMI elements');
       return null;
     }
@@ -181,13 +181,13 @@ class DcmByteWriter {
   }
 
   /// Writes the [Dataset] to a [Uint8List]. Returns the [Uint8List].
-  static Uint8List writeBytes(ByteDataset ds,
+  static Uint8List writeBytes(Dataset ds,
       {String path = "",
       bool fmiOnly = false,
       fast = false,
       TransferSyntax targetTS}) {
     if (ds == null || ds.length == 0)
-      throw new ArgumentError('Empty ' 'Empty ByteDataset: $ds');
+      throw new ArgumentError('Empty ' 'Empty Dataset: $ds');
     var writer = (fast) ? new DcmByteWriter.fast(ds) : new DcmByteWriter(ds);
     Uint8List bytes = writer.writeDataset();
     if (bytes == null || bytes.length == 0) throw 'Invalid bytes error: $bytes';
@@ -197,7 +197,7 @@ class DcmByteWriter {
 
   /// Writes the [Dataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
-  static Uint8List writeFile(ByteDataset ds, File file,
+  static Uint8List writeFile(Dataset ds, File file,
       {bool fmiOnly = false, fast = false, TransferSyntax targetTS}) {
     if (file == null) throw new ArgumentError('');
     Uint8List bytes;
@@ -217,7 +217,7 @@ class DcmByteWriter {
   /// Creates a new empty [File] at [path], writes the [Dataset] to a
   /// [Uint8List], and then writes the [Uint8List] to the [File].
   /// Returns the [Uint8List].
-  static Uint8List writePath(ByteDataset ds, String path,
+  static Uint8List writePath(Dataset ds, String path,
       {bool fmiOnly = false, fast = false, TransferSyntax targetTS}) {
     if (path == "") throw new ArgumentError('Empty path: $path');
     return writeFile(ds, new File(path),
@@ -358,7 +358,7 @@ class DcmByteWriter {
 
   // **** DICOM encoding stuff ****
 
-  bool get _isFMIPresent => rootDS.hasFMI;
+  bool get _isFMIPresent => rootDS.hasFmi;
 
 /*
   /// Returns [true] if the [Dataset] being write has an
@@ -518,6 +518,7 @@ class DcmByteWriter {
             '($start) = ${end - start}');
         throw 'Invalid SQ:';
       }
+      // Make independent (e.info)
       log.debug2('$wee _writeSequence: _wIndex($_wIndex) bd.offset(${e.bd
           .offsetInBytes + e.bd.lengthInBytes})');
     }
