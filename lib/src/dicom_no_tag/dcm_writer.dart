@@ -497,26 +497,51 @@ class DcmByteWriter {
     log.debug2('$wbb _writeSequence: _wIndex($_wIndex) '
         'e.lengthInBytes(${e.lengthInBytes}) bd.offset(${e.bd.offsetInBytes})');
     if (rootDS.isEVR) {
-      _writeEVRSQHeader(e);
-      for (Dataset item in e.items) _writeItem(item);
-    } else if (e is IVRSequence) {
-      _writeIVRSQHeader(e);
-      for (Item item in e.items) _writeItem(item);
-    }
-    log.debug2('$wmm _writeSequence: e.vfLength(${e.vfLength})');
-    if (e.vfLength == kUndefinedLength) _writeSequenceDelimiter();
-    int end = _wIndex;
+      if (e.isSequence) {
+        _writeEVRSQHeader(e);
+        for (Dataset item in e.items)
+          _writeItem(item);
+      } else if (e is IVRSequence) {
+        _writeIVRSQHeader(e);
+        for (Item item in e.items)
+          _writeItem(item);
+      }
+      log.debug2('$wmm _writeSequence: e.vfLength(${e.vfLength})');
+      if (e.vfLength == kUndefinedLength) _writeSequenceDelimiter();
+      int end = _wIndex;
 
-    //    var b = bd.buffer.asUint8List(start, end - start);
-    //   log.debug('(${e.bytes.lengthInBytes})${e.bytes}');
-    //   log.debug('(${b.lengthInBytes})$b');
-    if ((end - start) != e.lengthInBytes) {
-      log.debug('Invalid SQ: length(${e.lengthInBytes}) end($end) - start'
-          '($start) = ${end - start}');
-      throw 'Invalid SQ:';
+      //    var b = bd.buffer.asUint8List(start, end - start);
+      //   log.debug('(${e.bytes.lengthInBytes})${e.bytes}');
+      //   log.debug('(${b.lengthInBytes})$b');
+      if ((end - start) != e.lengthInBytes) {
+        log.debug('Invalid SQ: length(${e.lengthInBytes}) end($end) - start'
+            '($start) = ${end - start}');
+        throw 'Invalid SQ:';
+      }
+      log.debug2('$wee _writeSequence: _wIndex($_wIndex) bd.offset(${e.bd
+          .offsetInBytes + e.bd.lengthInBytes})');
     }
-    log.debug2('$wee _writeSequence: _wIndex($_wIndex) bd.offset(${e.bd
-        .offsetInBytes + e.bd.lengthInBytes})');
+  }
+
+  /// Writes an EVR (short == 8 bytes, long == 12 bytes) or IVR (8 bytes)
+  /// header.
+  void _writeHeader(Element e) {
+    int start = _wIndex;
+    _writeTagCode(e.code);
+    if (isEVR) {
+      _writeUint16(e.vr.code);
+      if (e.vr.hasShortVF) {
+        _writeUint16(e.vfBytes.lengthInBytes);
+        assert(_wIndex == start + 4);
+      } else {
+        _writeUint16(0);
+        _writeUint32(e.vfBytes.lengthInBytes);
+        assert(_wIndex == start + 8);
+      }
+    } else {
+      _writeUint32(e.vfBytes.lengthInBytes);
+      assert(_wIndex == start + 4);
+    }
   }
 
   void _writeEVRSQHeader(Element e) {
@@ -525,12 +550,12 @@ class DcmByteWriter {
     _writeTagCode(e.code);
     _writeUint16(kSQCode);
     _writeUint16(0);
-    if (e.vfLength == kUndefinedLength) {
-      _writeUint32(kUndefinedLength);
-    } else {
+    if (e.vfLength != kUndefinedLength || removeUndefinedLengths) {
       _writeUint32(e.vfBytes.lengthInBytes);
-      //TODO:  if (e.vf.lengthInBytes.isOdd)
+    } else {
+      _writeUint32(kUndefinedLength);
     }
+    //TODO:  if (e.vf.lengthInBytes.isOdd)
     int end = _wIndex;
     var bdx = bd.buffer.asUint8List(start, end - start);
     log.debug('$wee _writeEVRSQHeader: start($start), end($end), '
@@ -539,12 +564,13 @@ class DcmByteWriter {
 
   void _writeIVRSQHeader(Element e) {
     _writeTagCode(e.code);
-    if (e.vfLength == kUndefinedLength) {
-      _writeUint32(kUndefinedLength);
-    } else {
+    if (e.vfLength != kUndefinedLength || removeUndefinedLengths) {
       _writeUint32(e.vfBytes.lengthInBytes);
-      //TODO:  if (e.vf.lengthInBytes.isOdd)
+    } else {
+      _writeUint32(kUndefinedLength);
     }
+    //TODO:  if (e.vf.lengthInBytes.isOdd)
+
   }
 
   //TODO this can be moved to Dataset_base if we abstract DatasetExplicit

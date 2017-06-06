@@ -10,7 +10,7 @@ import 'dart:typed_data';
 import 'package:common/format.dart';
 import 'package:common/logger.dart';
 import 'package:common/timestamp.dart';
-import 'package:core/src/dataset/byte_dataset/byte_dataset.dart';
+import 'package:core/core.dart';
 import 'package:convertX/src/dicom_no_tag/dcm_byte_reader.dart';
 import 'package:convertX/src/dicom_no_tag/dcm_byte_writer.dart';
 import 'package:dictionary/dictionary.dart';
@@ -43,7 +43,7 @@ RootByteDataset readFile(File file,
   if (bytes.length < 1024)
     _log.warn('***** Short file length(${bytes.length}): $path');
 
-  RootByteDataset rds;
+  Dataset rds;
   timer.start();
   rds = DcmByteReader.readBytes(bytes, path: path, fmiOnly: fmiOnly);
 

@@ -8,13 +8,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:common/logger.dart';
+import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:convertX/src/dicom_no_tag/compare_bytes.dart';
-import 'package:core/src/dataset/byte_dataset/byte_dataset.dart';
 import 'package:convertX/src/dicom_no_tag/dcm_byte_reader.dart';
-
 import 'package:convertX/timer.dart';
 import 'read_utils.dart';
 import 'utils.dart';
@@ -50,7 +49,7 @@ const int kMB = 1024 * 1024;
 
 bool readWriteFileFast(File inFile, {int reps = 1, bool fmiOnly = false}) {
   Uint8List bytes0 = inFile.readAsBytesSync();
-  RootByteDataset rds0 = DcmByteReader.readBytes(bytes0);
+  Dataset rds0 = DcmByteReader.readBytes(bytes0);
   Uint8List bytes1 = writeDataset(rds0);
   // RootDataset rds1 =
   DcmByteReader.readBytes(bytes1);

@@ -10,11 +10,13 @@ import 'dart:io';
 
 import 'package:common/format.dart';
 import 'package:common/logger.dart';
-import 'package:core/src/dataset/byte_dataset/byte_dataset.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_byte_reader.dart';
-import 'package:convertX/timer.dart';
+import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 import 'package:path/path.dart' as p;
+
+import 'package:convertX/dicom_no_tag.dart';
+import 'package:convertX/timer.dart';
+
 
 final Logger log =
     new Logger("convert/bin/no_tag/read_utils.dart", watermark: Severity.warn);
@@ -70,7 +72,7 @@ Timings for ${file.path}
 
 class FileResult {
   File file;
-  RootByteDataset rds;
+  Dataset rds;
   bool fmiOnly;
   TransferSyntax targetTS;
   FileTiming times;
@@ -78,12 +80,11 @@ class FileResult {
 
   String path;
   int length;
-  bool isOkay;
-  bool hadTransferSyntax;
+  TransferSyntax ts;
   bool hasDuplicates;
   int duplicateCount;
   bool isShort;
-  TransferSyntax ts;
+
 
   FileResult(this.file, this.rds,
       {this.fmiOnly = false,
@@ -91,9 +92,8 @@ class FileResult {
       this.times,
       this.hasProblem = false}) {
     path = file.path;
-    length = rds.bd.lengthInBytes;
-    isOkay = rds.hadParsingErrors;
-    hadTransferSyntax = rds.hadTransferSyntax;
+    length = rds.lengthInBytes;
+    ts = rds.transferSyntax;
     hasDuplicates = rds.hasDuplicates;
     duplicateCount = rds.duplicates.length;
     isShort = rds.wasShortFile;
@@ -121,7 +121,7 @@ $duplicates$parseErrirs$isShortFile$problems''';
   String toString() => '''File Result for "${file.path}":
         FMI only: $fmiOnly
           Length: $length
-    Parse errors: $isOkay
+    Parse errors: ${rds.hadP}
   Total Elements: ${rds.total}
   ''';
 }

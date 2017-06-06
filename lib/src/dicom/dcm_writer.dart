@@ -96,7 +96,7 @@ class DcmWriter extends ByteBuf {
   /// Creates a new [DcmWriter], where [readIndex] = [writeIndex] = 0.
   DcmWriter(
       {int lengthInBytes = defaultBufferLength,
-      this.isExplicitVR = true,
+      this.isEVR = true,
       this.throwOnError = true})
       : super.writer(lengthInBytes);
 

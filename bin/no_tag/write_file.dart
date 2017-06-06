@@ -7,12 +7,12 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:common/format.dart';
-import 'package:common/logger.dart';
-import 'package:convertX/timer.dart';
+import 'package:common/common.dart';
 import 'package:core/core.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_byte_writer.dart';
 import 'package:dictionary/dictionary.dart';
+
+import 'package:convertX/src/dicom_no_tag/dcm_byte_writer.dart';
+import 'package:convertX/timer.dart';
 
 final Logger log = new Logger("convert/bin/no_tag/write_file_list.dart",
     watermark: Severity.info);
