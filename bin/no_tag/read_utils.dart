@@ -72,7 +72,7 @@ Timings for ${file.path}
 
 class FileResult {
   File file;
-  Dataset rds;
+  RootDataset rds;
   bool fmiOnly;
   TransferSyntax targetTS;
   FileTiming times;
@@ -92,18 +92,19 @@ class FileResult {
       this.times,
       this.hasProblem = false}) {
     path = file.path;
-    length = rds.lengthInBytes;
+    length = rds.vfLength;
     ts = rds.transferSyntax;
     hasDuplicates = rds.hasDuplicates;
-    duplicateCount = rds.duplicates.length;
-    isShort = rds.wasShortFile;
+    isShort = rds.wasShort;
     ts = rds.transferSyntax;
   }
 
   String get duplicates =>
-      (rds.duplicates.length == 0) ? "" : "      Duplicates: $duplicateCount\n";
-  String get parseErrirs =>
-      (rds.hadParsingErrors) ? "" : "    Parse errors: $isOkay\n";
+      (rds.duplicates.length == 0)
+          ? "" : "      Duplicates: ${rds.duplicates.length}\n";
+
+  String get parseErrors =>
+      (rds.hadParsingErrors) ? "No\n" : "Yes\n";
   String get isShortFile =>
       (rds.wasShortFile) ? "" : "      Short file: $isShort\n";
   String get problems => (hasProblem) ? "" : "  Has Problem(s): $hasProblem\n";
@@ -115,13 +116,13 @@ class FileResult {
           Length: $length
               TS: ${rds.transferSyntax}
         Elements: ${rds.total}
-$duplicates$parseErrirs$isShortFile$problems''';
+$duplicates$parseErrors$isShortFile$problems''';
 
   @override
   String toString() => '''File Result for "${file.path}":
         FMI only: $fmiOnly
           Length: $length
-    Parse errors: ${rds.hadP}
+    Parse errors: ${rds.hadParsingErrors}
   Total Elements: ${rds.total}
   ''';
 }
@@ -181,19 +182,19 @@ Test ResultSet for $type
   void fileWithDuplicates(FileResult file) => hadDuplicates.add(file);
 
   void add(FileResult r) {
-    if (r.isOkay) {
-      successes.add(r);
-    } else {
+    if (r.hasProblem) {
       failures.add(r);
+    } else {
+      successes.add(r);
     }
     if (r.hasDuplicates) hadDuplicates.add(r);
-    if (!r.hadTransferSyntax) noTransferSyntax.add(r);
+    if (r.ts == null) noTransferSyntax.add(r);
     if (r.ts == targetTS) hasTargetTS.add(r);
     addFileByTS(r);
 
     if (r.isShort) {
       shortFiles.add(r);
-      if (!r.isOkay) shortFileFailures.add(r);
+      if (r.hasProblem) shortFileFailures.add(r);
     }
   }
 
@@ -295,7 +296,7 @@ ResultSet readFileList(List<File> files,
 
   DateTime startTime = new DateTime.now();
 
-  log.info('Reading ${files.length} files ...\n'
+  log.debug('Reading ${files.length} files ...\n'
       '    with $fseCount entities\n'
       '    at $startTime');
 

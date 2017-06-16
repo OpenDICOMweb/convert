@@ -104,7 +104,7 @@ void readWriteDirectory(String path,
     var fileExt = p.extension(path);
     if (fileExt != "" && fileExt != ".dcm") {
       log.debug('fileExt: "$fileExt"');
-      log.info('Non DICOM file??? $path');
+      log.warn('Non DICOM file??? $path');
       badExt.add('"$path"');
       continue;
     } else {
@@ -154,13 +154,13 @@ void currentStats(int count, int good, int bad, Timer timer) {
 }
 
 bool readWriteFileFast(File file, {int reps = 1, bool fmiOnly = false}) {
-  log.info('Reading: $file');
+  log.debug('Reading: $file');
   Uint8List bytes0 = file.readAsBytesSync();
   if (bytes0 == null) return false;
   if (bytes0.length <= shortFileMark) shortFiles.add('"${file.path}"');
   RootByteDataset rds0 = DcmByteReader.readBytes(bytes0, path: file.path);
   if (rds0 == null) return false;
-  log.info(rds0);
+  log.debug(rds0);
   Uint8List bytes1 = writeDataset(rds0);
   if (bytes1 == null) return false;
   return bytesEqual(bytes0, bytes1);
@@ -168,7 +168,7 @@ bool readWriteFileFast(File file, {int reps = 1, bool fmiOnly = false}) {
 
 //TODO: cleanup timing
 bool readWriteFileTimed(File file, {int reps = 1, bool fmiOnly = false}) {
-  log.info('Reading: $file');
+  log.debug('Reading: $file');
   var timer = new Timer(start: true);
 
   Uint8List bytes0 = file.readAsBytesSync();

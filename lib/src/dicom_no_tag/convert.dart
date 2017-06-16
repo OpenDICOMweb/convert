@@ -10,7 +10,9 @@ import 'package:core/core.dart';
 
 Logger log = new Logger('convert', watermark: Severity.debug2);
 
-typedef Element<V> Maker<I, V>(I id, List<V> values, [int vfLength]);
+typedef Element<I, V> Maker<I, V>(I id, List<V> values, [int vfLength]);
+
+/*
 
 class DSConverter {
   final RootByteDataset sourceRoot;
@@ -21,8 +23,9 @@ class DSConverter {
 
   DSConverter(this.sourceRoot)
       : resultRoot = new RootTDataset(
-      path: sourceRoot.path,
-      hadUndefinedLength: sourceRoot.hadUndefinedLength) {
+            path: sourceRoot.path,
+            part10: sourceRoot.part10,
+            hadULength: sourceRoot.hadULength) {
     sourceDS = sourceRoot;
     resultDS = resultRoot;
   }
@@ -34,25 +37,15 @@ class DSConverter {
       if (te == null) throw 'null TE';
       resultDS[te.code] = te;
     }
-/*    var s0 = new Summary(sourceDS);
-    var s1 = new Summary(resultDS);
-    log.info('$s0');
-    log.info('$s1');
-    */
     return resultDS;
   }
-
 
   // TODO: integrate this int /dictionary/tag
   int pcCodeFromPDCode(int pdCode) {
     int group = Group.fromTag(pdCode);
-//    print('group(${Uint16.hex(group)})');
     int elt = Elt.fromTag(pdCode);
-//    print('Elt(${Uint16.hex(elt)})');
     int cElt = elt >> 8;
-//    print('cElt(${Uint16.hex(cElt)})');
     int pcCode = (group << 16) + cElt;
-//    print('pdCode(${Tag.toHex(pdCode)}, pcCode(${Tag.toHex(pcCode)})');
     return pcCode;
   }
 
@@ -74,7 +67,6 @@ class DSConverter {
       int creatorCode = pcCodeFromPDCode(code);
       PCTag creator = pcTags[creatorCode];
       tag = new PDTag(code, vr, creator);
-
     } else {
       throw 'couldn\'t get tag: ${e.info}';
     }
@@ -83,7 +75,6 @@ class DSConverter {
     return tag;
   }
 
-
   Map<String, TElement> pcElements = <String, TElement>{};
 
   TElement convertElement(ByteElement e) {
@@ -91,18 +82,17 @@ class DSConverter {
     log.debug1(' BE: $e');
     var tag = getTag(e);
     VR vr0 = (e.vr == VR.kUN) ? tag.vr : e.vr;
-    if (vr0 != tag.vr) log.warn(
-        'e.vr($vr0) and tag.vr(${tag.vr}) are not equal');
+    if (vr0 != tag.vr)
+      log.warn('e.vr($vr0) and tag.vr(${tag.vr}) are not equal');
 
     TElement te;
     if (tag is PTag) {
       Maker maker = TElement.makers[vr0.index];
       te = maker(tag, e.vfBytes, e.vfLength);
     } else if (tag is PCTag) {
-      if (e.vr != VR.kLO) log.warn(
-          'Private Creator e.vr($vr0) should be VR.kLO');
-      if (tag.vr != VR.kLO)
-        throw 'Invalid Tag VR: ${tag.vr} should be VR.kLO';
+      if (e.vr != VR.kLO)
+        log.warn('Private Creator e.vr($vr0) should be VR.kLO');
+      if (tag.vr != VR.kLO) throw 'Invalid Tag VR: ${tag.vr} should be VR.kLO';
       Maker maker = TElement.makers[vr0.index];
       te = maker(tag, e.vfBytes, e.vfLength);
       assert(tag is PCTag && tag.name == e.asString);
@@ -114,13 +104,10 @@ class DSConverter {
       throw 'Invalid Tag: $tag';
     }
     log.debug(' TE: $te');
-    print('');
     return te;
   }
 
-  void privateGroup(ByteElement e) {
-
-  }
+  void privateGroup(ByteElement e) {}
 
   SQ getSequence(ByteSQ sq) {
     Tag tag = getTag(sq);
@@ -138,10 +125,17 @@ class DSConverter {
     return new SQ(tag, tItems, sq.vfLength);
   }
 
-  void group(int group, ByteElement e) {
-  }
+  void group(int group, ByteElement e) {}
+
+*/
+/*  static Map<int, TElement> convertFMI(Map<int, ByteElement> fmi) {
+    var tFMI = <int, TElement>{};
+    for (ByteElement e in fmi.values)
+      tFMI[e.code] = convertElement(e);
+  }*//*
 
 
+*/
 /* Urgent: finish this Private Element Converter/Validator
   Dataset convertDataset(Dataset source, Dataset result) {
     Iterable<ByteElement> elements = sourceDS.elements;
@@ -294,8 +288,7 @@ class DSConverter {
       pc.add(e);
       resultDS.add(e);
     }
-  }*/
+  }*//*
+
 }
-
-
-
+*/

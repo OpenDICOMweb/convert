@@ -47,7 +47,7 @@ typedef dynamic VFWriter<E>(TElement<E> e);
 ///      and a byte-wise comparator will find them  to be equal.
 ///   2. All String manipulation should be handled in the [Element] itself.
 ///   3. All VFWriters allow the Value Field to be empty.
-class DcmWriter extends ByteBuf {
+class DcmTagWriter extends DcmWriterBase {
   /// The log for debug output.
   static final Logger log = new Logger("DcmWriter", watermark: Severity.debug);
   static const int defaultBufferLength = 2 * kMB;
@@ -72,11 +72,18 @@ class DcmWriter extends ByteBuf {
   /// even if it wasn't present when read.
   final bool addMissingFMI;
 
+  final bool removeUndefinedLengths;
+
+  final bool reUseBD;
+
   /// The [TransferSyntax] for the output.
   final TransferSyntax outputTS;
 
   /// The root Dataset for the object being read.
   final RootByteDataset rootDS;
+
+
+
 
   /// The current dataset.  This changes as Sequences are read and
   /// [Items]s are pushed on and off the [dsStack].
@@ -93,15 +100,29 @@ class DcmWriter extends ByteBuf {
   //*** Constructors ***
   //TODO: what should the default length be
 
-  /// Creates a new [DcmWriter], where [readIndex] = [writeIndex] = 0.
-  DcmWriter(
-      {int lengthInBytes = defaultBufferLength,
-      this.isEVR = true,
+  /// Creates a new [DcmTagWriter], where [readIndex] = [writeIndex] = 0.
+  DcmTagWriter(this.rootDS,
+      {this.path = "",
+        this.outputTS,
+        endianness = Endianness.LITTLE_ENDIAN,
+        this.throwOnError = true,
+        this.allowImplicitLittleEndian = true,
+        this.addMissingPrefix = false,
+        this.addMissingFMI = false,
+        this.removeUndefinedLengths = false,
+        this.reUseBD = true})
+      : _wIndex = 0,
+        bd = (reUseBD)
+            ? _reuseBD(rootDS.lengthInBytes + 1024)
+            : new ByteData(defaultBufferLength),
+        super.writer(lengthInBytes)
+/*      {int lengthInBytes = defaultBufferLength,
+      isEVR = true,
       this.throwOnError = true})
-      : super.writer(lengthInBytes);
+      : super.writer(lengthInBytes); */
 
   //TODO: explain use case for this.
-  /// Creates a new writable [DcmWriter] from the [Uint8List] [bytes].
+  /// Creates a new writable [DcmTagWriter] from the [Uint8List] [bytes].
   //DcmWriter.from(DcmWriter buf, [int offset = 0, int length])
   //    : super.from(buf, offset, length);
 

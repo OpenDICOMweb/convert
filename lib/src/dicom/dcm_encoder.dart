@@ -19,7 +19,7 @@ import 'dcm_writer.dart';
 /// Encoder for DICOM File Format octet streams (Uint8List)
 /// [DcmEncoder] reads DICOM SOP Instances and returns a [Dataset].
 /// TODO: finish doc
-class DcmEncoder extends DcmWriter {
+class DcmEncoder extends DcmTagWriter {
   //TODO: make the buffer grow and shrink adaptively.
   static const int defaultLengthInBytes = 10 * kMB;
   static final Logger log = new Logger("DcmEncoder", watermark: Severity.debug);

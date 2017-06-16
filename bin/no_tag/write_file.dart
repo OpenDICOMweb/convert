@@ -20,22 +20,24 @@ final Logger log = new Logger("convert/bin/no_tag/write_file_list.dart",
 final Formatter format = new Formatter();
 
 Uint8List writeFile(RootByteDataset rds, String path,
-    {bool fmiOnly = false, TransferSyntax targetTS}) {
+    {bool fmiOnly = false, TransferSyntax outputTS}) {
     var file = new File(path);
     var timer = new Timer();
     var total = rds.total;
-    log.info('writing ${rds.runtimeType} to "$path"\n'
+    log.debug('writing ${rds.runtimeType} to "$path"\n'
         '    with $total Elements\n'
         '    at: ${timer.startTime} ...');
     if (fmiOnly) log.debug('    fmiOnly: $fmiOnly');
 
     timer.start();
+    DcmByteWriter writer = new DcmByteWriter(rds, path: path);
+    writer.writeRootDataset();
     DcmByteWriter.writeFile(rds, file, fmiOnly: fmiOnly);
     timer.stop();
 
-    log.info('  Elapsed time: ${timer.elapsed}');
+    log.debug('  Elapsed time: ${timer.elapsed}');
     int msPerElement = (timer.elapsedMicroseconds ~/ total) ~/ 1000;
-    log.info('  $msPerElement ms per Element: ');
+    log.debug('  $msPerElement ms per Element: ');
     return writer.bytes;
 }
 

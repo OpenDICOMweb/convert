@@ -13,8 +13,8 @@ import 'package:core/src/dataset/byte_dataset/byte_dataset.dart';
 import 'package:core/src/element/byte_element/byte_element.dart';
 import 'package:core/src/dicom_utils.dart';
 
-/// TODO
-bool bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError = true]) {
+/// TODO DOC
+bool bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError = false]) {
   if (b0.lengthInBytes != b1.lengthInBytes)
     return compareUnequalLengths(b0, b1);
 
@@ -33,17 +33,21 @@ bool bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError = true]) {
 
 bool compareUnequalLengths(Uint8List b0, Uint8List b1,
     [bool throwOnError = true]) {
+  print('  b0 Length: ${b0.length}');
+  print('  b1 Length: ${b1.length}');
+  print('  Differnece: ${(b0.lengthInBytes - b1.lengthInBytes).abs()}');
   int length = (b0.lengthInBytes < b1.lengthInBytes)
   ? b0.lengthInBytes
   : b1.lengthInBytes;
   for (int i = 0; i < length; i++) {
     if (b0[i] != b1[i]) {
-      print('b0: ${b0.sublist(i, i + 20)}');
-      print('b0: ${b0.sublist(i, i + 20)}');
-      break;
+      print('  diff @$i');
+      print('  b0: ${b0.sublist(i, i + 20)}');
+      print('  b1: ${b1.sublist(i, i + 20)}');
+      return false;
     }
   }
-  return false;
+  return true;
 }
 
 void showBytes(Uint8List b0, Uint8List b1, int offset) {

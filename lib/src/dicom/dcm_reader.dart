@@ -37,8 +37,8 @@ typedef TElement<E> VFReader<E>(int tag, VR<E> vr, int vfLength);
 /// super class [ByteBuf]. The default
 /// Endianness is the endianness of the host [this] is running on, aka
 /// [Endianness.HOST_ENDIAN].
-///   * All get* methods _DO NOT_ advance the [readIndex].
-///   * All read* methods advance the [readIndex] by the number of bytes read.
+///   * All get* methods _DO NOT_ advance the [rIndex].
+///   * All read* methods advance the [rIndex] by the number of bytes read.
 ///   * All set* methods _DO NOT_ advance the [writeIndex].
 ///   * All write* methods advance the [writeIndex] by the number of bytes written.
 ///
@@ -51,8 +51,10 @@ typedef TElement<E> VFReader<E>(int tag, VR<E> vr, int vfLength);
 ///   3. All VFReaders allow the Value Field to be empty.  The [String] VFReaders return "",
 ///   and the Integer, FLoat VFReaders return new [null].
 class DcmReader extends DcmReaderBase {
-  final RootTDataset rootDS;
+  RootTDataset rootDS;
   TDataset currentDS;
+  final bool reUseBD;
+  bool _afterPixelData = false;
 
   //TODO: Doc
   /// Creates a new [DcmReader]  where [_rIndex] = [writeIndex] = 0.
@@ -72,15 +74,23 @@ class DcmReader extends DcmReaderBase {
       {String path = "",
       bool throwOnError = true,
       bool allowILEVR = true,
+      bool allowMissingPrefix = false,
       bool allowMissingFMI = false,
-      TransferSyntax targetTS})
-      : rootDS = new RootTDataset.fromByteData(bd, hadUndefinedLength: true),
-        super(bd,
+      TransferSyntax targetTS,
+      this.reUseBD = false})
+      : super(bd, <int, ByteElement>{},
             path: path,
             throwOnError: throwOnError,
             allowILEVR: allowILEVR,
+            allowMissingPrefix: allowMissingPrefix,
             allowMissingFMI: allowMissingFMI,
-            targetTS: targetTS);
+            targetTS: targetTS) {
+    if (part10 == null) throw 'invalid part10';
+    rootDS = new RootTDataset(
+        bd: bd, vfLength: bd.lengthInBytes, part10: part10, path: path);
+    currentDS = rootDS;
+    log.debug('DcmByteReader: $part10');
+  }
 
   /// Creates a new [DcmReader]  where [_rIndex] = [writeIndex] = 0.
   factory DcmReader.fromBytes(Uint8List bytes,
@@ -138,8 +148,8 @@ class DcmReader extends DcmReaderBase {
     if (!readFMI()) return null;
     if (rootDS.transferSyntax == null) throw "Unsupported Null TransferSyntax";
     log.debug('$rmm readRootDataset: transferSyntax(${rootDS.transferSyntax})');
-    log.debug('$rmm readRootDataset: ${rootDS.hasValidTransferSyntax}');
-    if (!rootDS.hasValidTransferSyntax) return rootDS;
+    log.debug('$rmm readRootDataset: ${rootDS.hasSupportedTransferSyntax}');
+    if (!rootDS.hasSupportedTransferSyntax) return rootDS;
     final bool isExplicitVR =
         rootDS.transferSyntax != TransferSyntax.kImplicitVRLittleEndian;
     log.debug('$rmm readRootDataset: isExplicitVR($isExplicitVR)');
@@ -154,7 +164,7 @@ class DcmReader extends DcmReaderBase {
   }
 
   bool _hasPrefix() {
-    skipReadBytes(128);
+    skip(128);
     final String prefix = readAsciiString(4);
     return (prefix == "DICM");
   }
@@ -178,16 +188,16 @@ class DcmReader extends DcmReaderBase {
     }
     log.debug('$ree readFmi: ${rootDS.transferSyntax}');
     log.up;
- //   return rootDS.transferSyntax;
+    //   return rootDS.transferSyntax;
     return true;
   }
 
-  /// Peek at next tag - doesn't move the [readIndex].
+  /// Peek at next tag - doesn't move the [rIndex].
   int _peekTagCode() {
     //Issue: do we really want to make all local variables final?
     //Issue: Doesn't it make it harder to read the code?
-    final int group = getUint16(readIndex);
-    final int element = getUint16(readIndex + 2);
+    final int group = readUint16(rIndex);
+    final int element = readUint16(rIndex + 2);
     final int code = (group << 16) + element;
     return code;
   }
@@ -288,7 +298,7 @@ class DcmReader extends DcmReaderBase {
   /// It should not be used for VRs that can have an Undefined Length (-1).
   //TODO: consider inlining
   int _readLongLength() {
-    skipReadBytes(2);
+    skip(2);
     return readUint32();
   }
 
@@ -466,18 +476,18 @@ class DcmReader extends DcmReaderBase {
     log.debug('$rbb ${sq.info}');
     if (vfLength == kUndefinedLength) {
       log.debug('$rmm SQ: ${tag.dcm} Undefined Length');
-     // int start = readIndex;
+      // int start = rIndex;
       while (!_sequenceDelimiterFound()) {
         TItem item = _readItem(sq);
         items.add(item);
       }
       // Fix
-      //     sq.lengthInBytes = (readIndex - 8) - start;
+      //     sq.lengthInBytes = (rIndex - 8) - start;
       log.debug('$rmm end of uLength SQ');
     } else {
       log.debug('$rmm SQ: ${tag.dcm} length($vfLength)');
-      int limit = readIndex + vfLength;
-      while (readIndex < limit) {
+      int limit = rIndex + vfLength;
+      while (rIndex < limit) {
         TItem item = _readItem(sq);
         items.add(item);
       }
@@ -494,7 +504,7 @@ class DcmReader extends DcmReaderBase {
     log.debug(
         '$rmm _delimiterFound($v) target${Int.hex(target)}, value${Int.hex(delimiter)}');
     if (delimiter == target) {
-      int length = getUint32(4);
+      int length = readUint32(4);
       log.debug(
           '$rmm target(${Int.hex(target)}), delimiter(${Int.hex(delimiter)}), length(${Int.hex
                 (length, 8)
@@ -539,27 +549,27 @@ class DcmReader extends DcmReaderBase {
     log.down;
     log.debug('$rbb readItemElements parent($parentDS) '
         'child(${currentDS.info}');
-    int start = readIndex;
+    int start = rIndex;
     try {
       if (vfLength == kUndefinedLength) {
-        int start = readIndex;
+        int start = rIndex;
         while (!_itemDelimiterFound()) {
           log.debug('$rmm reading undefined length');
           readElement();
         }
-        // [readIndex] is at the end of delimiter and length (8 bytes)
-        item.actualLengthInBytes = (readIndex - 8) - start;
+        // [rIndex] is at the end of delimiter and length (8 bytes)
+        item.actualLengthInBytes = (rIndex - 8) - start;
       } else {
-        int limit = readIndex + vfLength;
-        while (readIndex < limit) readElement();
+        int limit = rIndex + vfLength;
+        while (rIndex < limit) readElement();
       }
     } finally {
       // Restore previous parent
       currentDS = parentDS;
       log.debug('$ree readItemElements: ds($currentDS) ${item.info}');
     }
-    int end = readIndex;
-    item.actualLengthInBytes = end - start;
+    int end = rIndex;
+    item.vfLength = end - start;
     log.up;
     log.debug('$ree ${item.info}');
     log.up;
@@ -572,7 +582,7 @@ class DcmReader extends DcmReaderBase {
     log.debug('$rbb _uLengthGetBytes: vfLength(${Int32.hex(vfLength)}})');
     Uint8List values;
     if (vfLength == kUndefinedLength) {
-      int start = readIndex;
+      int start = rIndex;
       do {
         if (readUint16() != kDelimiterFirst16Bits) continue;
         if (readUint16() != kSequenceDelimiterLast16Bits) continue;
@@ -580,7 +590,7 @@ class DcmReader extends DcmReaderBase {
       } while (isReadable);
       // int delimiterLengthField = readUint32();
       if (readUint32() != 0) log.warn('Sequence Delimter with non-zero value');
-      int end = readIndex - 8;
+      int end = rIndex - 8;
       lengthInBytes = end - start;
       log.debug('$rmm start($start), length($lengthInBytes)');
       values = (lengthInBytes == 0)
@@ -631,8 +641,8 @@ class DcmReader extends DcmReaderBase {
       TransferSyntax ts = currentDS.transferSyntax;
       log.debug('$rmm PixelData: $ts');
       //TODO: frameLength or offsets which is better
-     // Fix: int frameLength = vf.length ~/ nFrames;
-      e = new OW.fromBytes(tag, vf, vfLength,  ts);
+      // Fix: int frameLength = vf.length ~/ nFrames;
+      e = new OW.fromBytes(tag, vf, vfLength, ts);
     } else {
       e = new OW.fromBytes(tag, vf, vfLength);
     }
@@ -915,7 +925,7 @@ class DcmReader extends DcmReaderBase {
   //TODO: eventually to be used in trying to read corrupted studies.
   /*
   int _findNextValidTag() {
-    int start = readIndex;
+    int start = rIndex;
     //TODO: finish
     return -1;
   }
@@ -923,7 +933,7 @@ class DcmReader extends DcmReaderBase {
 
   //TODO: improve
   void _debugReader(tag, obj, [int vfLength, String msg]) {
-    // [readIndex] should be at start + 6
+    // [rIndex] should be at start + 6
     var label;
     if (tag is Tag) {
       label = tag.dcm;
@@ -936,12 +946,12 @@ class DcmReader extends DcmReaderBase {
 
 debugReader:
   $rrr: $label $msg
-    short Length: ${Int.hex(getUint16(readIndex), 4)}
-    long Length: ${Int.hex(getUint32(readIndex + 2), 8)}
-    bytes: [${toHex(readIndex - 12, 8)}, ${toHex(readIndex, 8)} ${toHex
-      (readIndex + 12, 8)}] 
+    short Length: ${Int.hex(readUint16(rIndex), 4)}
+    long Length: ${Int.hex(readUint32(rIndex + 2), 8)}
+    bytes: [${toHex(rIndex - 12, 8)}, ${toHex(rIndex, 8)} ${toHex
+      (rIndex + 12, 8)}] 
   
-    string: "${toAscii(bd, readIndex - 12, readIndex + 12, readIndex)}"
+    string: "${toAscii(bd, rIndex - 12, rIndex + 12, rIndex)}"
 ''';
     log.error(s);
   }

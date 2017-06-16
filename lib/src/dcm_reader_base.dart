@@ -12,6 +12,7 @@ import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
 import 'package:core/src/dicom_utils.dart';
+
 /*
 const k10KB = 10 * 1024;
 const k20KB = 20 * 1024;
@@ -19,10 +20,22 @@ const k50KB = 50 * 1024;
 const k100KB = 100 * 1024;*/
 const k200KB = 200 * 1024;
 
+
+// Next 3 values are 2x16bit little Endian values as one 32bit value.
+const kSequenceDelimitationItem32Bit = 0xfeffdde0;
+const kItem32Bit = 0xfeff00e0;
+const kItemDelimitationItem32Bit = 0xfeff0de0;
+
 ///TODO: doc
 abstract class DcmReaderBase {
-  static final Logger _log =
-      new Logger("DcmReader", watermark: Severity.config);
+  static final Logger _log = new Logger("DcmReader", watermark: Severity
+      .debug2);
+
+  //TODO: make private later
+  /// The root Dataset for the object being read.
+  Dataset get rootDS;
+  Dataset get currentDS;
+  int rIndex = 0;
 
   /// The source of the [Uint8List] being read.
   final String path;
@@ -34,37 +47,36 @@ abstract class DcmReaderBase {
   final bool allowMissingFMI;
   final TransferSyntax targetTS;
 
-  /// The current dataset.  This changes as [Item]s are read.
-  //TODO: make private later
-  Dataset currentDS;
   int pixelDataIndex = -1;
-  bool hadTrailingZeros = false;
+  bool hadShortByteData;
+  bool preamblePresent;
+  bool preambleWasZeros;
+  bool hadFMI = false;
+  bool hadProblems = false;
   bool hadParsingErrors = false;
+  bool hadTrailingZeros = false;
+  Part10Header part10;
 
   // **** Reader fields ****
-
   /// The [ByteData] being read.
   final ByteData bd;
   final int endOfBD;
-  Part10Header _p10Header;
-  bool _hadParsingErrors;
-  bool _wasShortBD;
+  int endOfPixelData;
 
   /// Creates a new [DcmByteReader]  where [_rIndex] = [writeIndex] = 0.
-  DcmReaderBase(this.bd,
+  DcmReaderBase(this.bd, Map<int, dynamic> fmi,
       {this.path = "",
       this.throwOnError = true,
       this.allowILEVR = true,
       this.allowMissingPrefix = true,
       this.allowMissingFMI = false,
       this.targetTS})
-      : endOfBD = bd.lengthInBytes {
-    warnIfShortFile(path);
-  }
+      : endOfBD = bd.lengthInBytes;
 
-  /// The root Dataset for the object being read.
-  Dataset get rootDS;
-  int rIndex = 0;
+  Element readElement();
+
+  /// The DICOM Part 10 Prefix.
+  String  get prefix => 'DICM';
 
   bool get isReadable => rIndex < endOfBD;
 
@@ -91,102 +103,61 @@ abstract class DcmReaderBase {
 
   /// Reads File Meta Information ([Fmi]) and returns a Map<int, Element>
   /// if any [Fmi] [ByteElement]s were present; otherwise, returns null.
-  Part10Header readPart10Header(ByteData bd) {
-    if (rIndex != 0) throw 'DICOM Prefix has already been read';
-    String prefix = ASCII.decode(bd.buffer.asUint8List(128, 132));
-    if (prefix != 'DICM') {
-      rIndex == 0;
-      return null;
+  bool readPrefix(ByteData bd, [bool checkForZeros = true]) {
+    if (rIndex != 0) throw 'Read Index $rIndex != 0';
+    if (rootDS == null) throw 'Missing Root Dataset';
+    if (bd.lengthInBytes < smallFileThreshold) {
+      hadProblems = true;
+      hadShortByteData == true;
+      if (bd.lengthInBytes < 256) throw 'File too short';
     }
-    Map<int, Element> fmi = readFmi();
-    if (fmi == null) return null;
-    return new Part10Header(bd, fmi);
+
+    if (checkForZeros) {
+      for(int i = 0; i < 128; i += 8)
+        if (bd.getUint64(i) != 0) preambleWasZeros = false;;
+      preambleWasZeros = true;
+      rIndex = 128;
+
+    }
+
+    var token = ASCII.decode(bd.buffer.asUint8List(128, 4));
+    if (token == 'DICM') {
+      preamblePresent = true;
+      rIndex = 132;
+      return true;
+    }
+    rIndex = 0;
+    return false;
   }
 
-  /// Read File Meta Information (PS3.10).
-  Map<int, Element> readFmi() {
-    Map<int, Element> fmi = <int, Element>{};
-    try {
-      //      _readDataset(rootDS, endOfBD, 0x00080000);
-      while (rIndex < endOfBD) {
-        int code = peekTagCode();
-        if (code >= 0x00030000) break;
-        ByteElement e = _readElement();
-        fmi[e.code] = e;
-      }
-    } on InvalidTransferSyntaxError catch (x) {
-      _hadParsingErrors = true;
-      _log.warn('$ree readFMI TS catch: $x');
-      //rethrow;
-      rIndex = 0;
-      return null;
-    } catch (x) {
-      _hadParsingErrors = true;
-      _log.warn('Failed to read FMI: "$path"\nException: $x\n'
-          'File length: ${bd.lengthInBytes}\n$ree readFMI catch: $x');
-      rIndex = 0;
-      rethrow;
-    }
-
-    //TODO: move to Reader
-    TransferSyntax ts = rootDS.transferSyntax;
-    _log.debug('$rmm readFMI: targetTS($targetTS), TS($ts) isExplicitVR: '
-        '${rootDS.isEVR}');
-    //Urgent: collapse to one if statement
-    if (ts == TransferSyntax.kExplicitVRBigEndian) {
-      hadParsingErrors = true;
-      if (throwOnError)
-        throw new InvalidTransferSyntaxError(
-            ts, 'Explicit VR Big Endian not supported.');
-      rIndex = 0;
-      return null;
-    } else if (!rootDS.hasValidTransferSyntax) {
-      hadParsingErrors = true;
-      if (throwOnError)
-        throw new InvalidTransferSyntaxError(ts, 'Not supported.');
-      rIndex = 0;
-      return null;
-    } else if (targetTS != null && ts != targetTS) {
-      if (throwOnError)
-        throw new InvalidTransferSyntaxError(ts, 'Non-Target TS', ts);
-      rIndex = 0;
-      return null;
-    }
-    _log.debug2('$ree readFmi:\n ${rootDS.info}');
-    return fmi;
-  }
-
-  TransferSyntax getTransferSyntax(Map<int, Element> fmi) {
+  /// Returns a valid [TransferSyntax] or [null] if not valid.
+  TransferSyntax getTransferSyntax(Map<int, Element> fmi,
+      [TransferSyntax targetTS]) {
     TransferSyntax ts;
     Element e = fmi[kTransferSyntaxUID];
-    if (e == null) return System.defaultTransferSyntax;
-    if (e is UI) {
-      var s = e.value;
-      if (s == null) {
-        hadParsingErrors = true;
-        ts = System.defaultTransferSyntax;
-      } else {
-        hadParsingErrors = true;
-        ts = TransferSyntax.lookup(s);
-        if (ts == null) ts = System.defaultTransferSyntax;
-      }
-      _log.debug('$rmm readFMI: targetTS($targetTS), TS($ts) isExplicitVR: '
-            '${rootDS.isEVR}');
+    if (e == null) return null;
+    _log.debug('TS: (${e.asString.length})"${e.asString}"');
+    if (e.vr != VR.kUI) return null;
 
-      if (targetTS != null && ts != targetTS) {
-        if (throwOnError)
-        throw new InvalidTransferSyntaxError(ts, 'Non-Target TS', ts);
-        return null;
-    } else if (!System.isSupportedTransferSyntax(ts)) {
-        if (throwOnError)
-          throw new InvalidTransferSyntaxError(ts, 'Not supported.');
-        return null;
-      }
-      _log.debug2('$ree readFmi:\n ${rootDS.info}');
-      return ts;
+    var s = e.asString;
+    if (s != null) ts = TransferSyntax.lookup(s);
+    if (ts == null) {
+      _log.warn('Unknown Transfer Syntax: "${e.asString}"');
+      return null;
     }
-    return null;
+
+    _log.debug('targetTS($targetTS), TS($ts)');
+    if (targetTS != null && ts != targetTS && throwOnError)
+      throw new InvalidTransferSyntaxError(ts, 'Non-Target TS', ts);
+    if (!System.isSupportedTransferSyntax(ts) && throwOnError)
+      throw new InvalidTransferSyntaxError(ts, 'Not supported.');
+    if (ts == TransferSyntax.kExplicitVRBigEndian && throwOnError) {
+      throw new InvalidTransferSyntaxError(
+          ts, 'Explicit VR Big Endian not supported.');
+    }
+    return ts;
   }
+
 
   int readUint16() {
     int v = bd.getUint16(rIndex, Endianness.HOST_ENDIAN);
@@ -287,12 +258,15 @@ abstract class DcmReaderBase {
     }
   }
 
-  void warnIfShortFile(String path) {
+  bool warnIfShortFile(String path) {
     int length = bd.lengthInBytes;
     if (length < smallFileThreshold) {
-      hadParsingErrors = true;
-      if (length < 256)  throw 'Short File Error: ${bd.lengthInBytes}, $path';
+      hadProblems = true;
+      if (length < 256) throw 'Short File Error: ${bd.lengthInBytes}, $path';
       _log.warn('**** Reading $length bytes from File: "$path"');
+      return true;
     }
+    return false;
   }
+
 }

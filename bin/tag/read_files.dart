@@ -60,7 +60,7 @@ String test = 'C:/odw/sdk/test_tools/test_data/TransferUIDs'
     '/1.2.840.10008.1.2.5.dcm';
 String badDir = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
 final Logger log =
-    new Logger("io/bin/read_file.dart", watermark: Severity.warn);
+    new Logger("io/bin/read_files.dart", watermark: Severity.warn);
 
 void main() {
   readFile(path2);

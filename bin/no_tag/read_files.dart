@@ -137,13 +137,13 @@ List<String> testErrors = const <String>[
 ];
 
 final Logger log =
-    new Logger("io/bin/read_file.dart", watermark: Severity.debug2);
+    new Logger("io/bin/read_files.dart", watermark: Severity.info);
 
 const List<String> defaultList = fileList0;
 
 void main() {
-  for (String path in errors) {
-    try {
+  for (String path in [error4]) {
+//    try {
       File f = new File(path);
 /*      FileResult r = readFileWithResult(f, fmiOnly: false);
       if (r == null) {
@@ -152,31 +152,34 @@ void main() {
         log.config('${r.info}');
       }*/
       readWriteCheck(f, fmiOnly: false);
-    } catch (e) {
+/*    } catch (e) {
       print('Error: $e');
       rethrow;
-    }
+    }*/
   }
 }
 
 bool readWriteCheck(File file, {int reps = 1, bool fmiOnly = false}) {
   log.debug('Reading: $file');
   Uint8List bytes0 = file.readAsBytesSync();
-  log.info('Reading: $file with ${bytes0.lengthInBytes} bytes');
-//  print('${bytes0.buffer.asUint8List(0, 10)}');
-//  print('${bytes0.buffer.asUint8List(128, 10)}');
+  log.config('Reading: $file with ${bytes0.lengthInBytes} bytes');
+  log.down;
   if (bytes0 == null) return false;
   RootByteDataset rds0 =
       DcmByteReader.readBytes(bytes0, path: file.path, fast: true);
+  ByteElement e = rds0[0x00020010];
+  print('e: $e');
   if (rds0 == null) return false;
-  log.info(rds0);
+  log.info('  Original: $rds0');
+
   Uint8List bytes1 = DcmByteWriter.write(rds0, fast: true);
-//  print('${bytes1.buffer.asUint8List(0, 10)}');
-//  print('${bytes1.buffer.asUint8List(128, 10)}');
   if (bytes1 == null) return false;
-  bytesEqual(bytes0, bytes1);
+  if (!bytesEqual(bytes0, bytes1))
+    print('********* Files are not equal!');
   RootByteDataset rds1 =
       DcmByteReader.readBytes(bytes1, path: file.path, fast: true);
+  log.info('      Copy: $rds1');
+  log.up2;
   return rds0 == rds1;
 }
 

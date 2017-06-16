@@ -158,7 +158,7 @@ FileResult readWriteFileTiming(File file,
     var times = new FileTiming(
         file, start, stop, readBD, readDS0, writeDS0, readDS1, compareDS);
 
-    result = new FileResult(file, rds0,
+    result = new FileResult(file, rds0 as RootDataset,
         fmiOnly: fmiOnly,
         targetTS: targetTS,
         times: times,

@@ -11,12 +11,13 @@ import 'package:common/format.dart';
 import 'package:common/logger.dart';
 import 'package:common/timestamp.dart';
 import 'package:core/core.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_byte_reader.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_byte_writer.dart';
 import 'package:dictionary/dictionary.dart';
 
+import 'package:convertX/src/dicom_no_tag/dcm_byte_reader.dart';
+import 'package:convertX/src/dicom_no_tag/dcm_byte_writer.dart';
+
 final Logger _log =
-    new Logger("io/bin/read_file.dart", watermark: Severity.warn);
+    new Logger("io/bin/read_files.dart", watermark: Severity.warn);
 
 final Formatter format = new Formatter();
 
@@ -30,7 +31,7 @@ RootByteDataset readFile(File file,
   var timer = new Stopwatch();
   var timestamp = new Timestamp();
 
-  _log.info('Reading $path ...\n'
+  _log.debug('Reading $path ...\n'
       '   fmiOnly: $fmiOnly\n'
       '   at: $timestamp');
 
@@ -38,7 +39,7 @@ RootByteDataset readFile(File file,
 //  var file = new File(path);
   Uint8List bytes = file.readAsBytesSync();
   timer.stop();
-  _log.info('   read ${bytes.length} bytes in ${timer.elapsedMicroseconds}us');
+  _log.debug('   read ${bytes.length} bytes in ${timer.elapsedMicroseconds}us');
 
   if (bytes.length < 1024)
     _log.warn('***** Short file length(${bytes.length}): $path');
@@ -55,13 +56,13 @@ RootByteDataset readFile(File file,
     var n = rds.total;
     var us = timer.elapsedMicroseconds;
     var msPerElement = us ~/ n;
-    _log.info('  Elapsed time: ${timer.elapsed}');
-    _log.info('  $n elements');
-    _log.info('  ${msPerElement}us per element');
+    _log.debug('  Elapsed time: ${timer.elapsed}');
+    _log.debug('  $n elements');
+    _log.debug('  ${msPerElement}us per element');
 
-    _log.info('  Has valid TS(${rds.hasValidTransferSyntax}) '
+    _log.debug('  Has valid TS(${rds.hasSupportedTransferSyntax}) '
         '${rds.transferSyntax}');
-    // _log.info('RDS: ${rds.info}');
+    // _log.debug('RDS: ${rds.info}');
     if (printDS) formatDataset(rds);
     return rds;
   }
@@ -85,7 +86,7 @@ RootByteDataset readRoot(Uint8List bytes, [String path = ""]) {
 RootByteDataset readRootNoFMI(Uint8List bytes, [String path = ""]) {
   ByteData bd = bytes.buffer.asByteData();
   DcmByteReader decoder = new DcmByteReader(bd);
-  ByteDataset rds = decoder.xReadDataset();
+  ByteDataset rds = decoder.readRootDataset();
   return rds;
 }
 
@@ -98,7 +99,7 @@ Uint8List writeDataset(RootByteDataset rds,
   var timestamp = new Timestamp();
   var total = rds.total;
   _log.debug('current dir: ${Directory.current}');
-  _log.info('Writing ${rds.runtimeType} to "$path"\n'
+  _log.debug('Writing ${rds.runtimeType} to "$path"\n'
       '    with $total Elements\n'
       '    fmiOnly: $fmiOnly\n'
       '    at: $timestamp ...');
@@ -107,9 +108,9 @@ Uint8List writeDataset(RootByteDataset rds,
   var bytes = DcmByteWriter.write(rds,
       path: path, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
   timer.stop();
-  _log.info('  Elapsed time: ${timer.elapsed}');
+  _log.debug('  Elapsed time: ${timer.elapsed}');
   int msPerElement = (timer.elapsedMicroseconds ~/ total) ~/ 1000;
-  _log.info('  $msPerElement ms per Element: ');
+  _log.debug('  $msPerElement ms per Element: ');
   return bytes;
 }
 

@@ -8,7 +8,7 @@ import 'package:common/logger.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/tag.dart';
 
-import 'package:convertX/dicom.dart';
+import 'package:convertX/dicom_no_tag.dart';
 
 /// Logger
 Logger log = new Logger("read_write_element");
@@ -28,16 +28,16 @@ bool elementTest(TElement e0, List values) {
   log.debug('e1: ${e0.info}, e2: ${e1.info}');
   if (e0 != e1) return false;
   if (e1 != e2) return false;
-
+  RootTDataset rootDS = new RootTDataset.empty();
   // Write the element
-  DcmWriter wBuf = new DcmWriter(lengthInBytes: 128);
+  DcmWriter wBuf = new DcmWriter(rootDS);
   wBuf.xWritePublicElement(e1);
   int wIndex = wBuf.writeIndex;
 
   // Read the element
-  DcmReader reader = new DcmReader.fromBytes(wBuf.bytes);
-  TElement e3 = reader.xReadElement(isExplicitVR: true);
-  int rIndex = reader.readIndex;
+  DcmByteReader reader = new DcmByteReader.fromBytes(wBuf.bytes);
+  ByteElement e3 = reader.readElement();
+  int rIndex = reader.rIndex;
   log.debug('wIndex: $wIndex, rIndex: $rIndex');
   if (wIndex != rIndex) return false;
 

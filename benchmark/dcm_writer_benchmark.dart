@@ -10,10 +10,8 @@ import 'dart:typed_data';
 // Import BenchmarkBase class.
 import 'package:benchmark_harness/benchmark_harness.dart';
 
-import 'package:convertX/src/dicom_no_tag/compare_bytes.dart';
+import 'package:convertX/dicom_no_tag.dart';
 import 'package:core/src/dataset/byte_dataset/byte_dataset.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_byte_reader.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_byte_writer.dart';
 import 'package:convertX/timer.dart';
 
 import 'test_files.dart';
