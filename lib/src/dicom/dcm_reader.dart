@@ -8,10 +8,7 @@ import 'dart:typed_data';
 
 import 'package:common/common.dart';
 import 'package:convertX/src/bytebuf/bytebuf.dart';
-import 'package:convertX/src/dataset_stack.dart';
-import 'package:convertX/src/exception.dart';
-import 'package:core/dataset.dart';
-import 'package:core/element.dart';
+import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
 //TODO: remove log.debug when working
@@ -47,7 +44,7 @@ class DcmReader<E> extends ByteBuf {
 
   //TODO: remove this it's not necessary
   /// A stack of [Dataset]s.  Used to save parent [Dataset].
-  final DatasetStack dsStack = new DatasetStack();
+//flush  final DatasetStack dsStack = new DatasetStack();
 
   /// If [true] errors will throw; otherwise, return [null].
   final bool throwOnError;
@@ -64,10 +61,9 @@ class DcmReader<E> extends ByteBuf {
 
   //TODO: finish
   /// Creates a new [DcmReader]  where [readIndex] = [writeIndex] = 0.
-  DcmReader(Uint8List bytes,
+  DcmReader(Uint8List bytes, this._rootDS,
       {this.path = "", this.throwOnError = false, this.allowILEVR = true})
-      : rootDS = new RootDataset(),
-        super.reader(bytes) {
+      : super.reader(bytes) {
     _warnIfShortFile(bytes.lengthInBytes);
     currentDS = rootDS;
   }

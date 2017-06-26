@@ -15,9 +15,9 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:common/common.dart';
+import 'package:convertX/src/dicom_no_tag/old/dataset.dart';
 import 'package:dictionary/dictionary.dart';
 
-import 'dataset.dart';
 import 'element.dart';
 import 'utils.dart';
 
@@ -501,13 +501,3 @@ class DcmWriter {
   }
 }
 
-class InvalidTransferSyntaxError extends Error {
-  final TransferSyntax ts;
-
-  InvalidTransferSyntaxError(this.ts, [Logger log]) {
-    if (log != null) log.error(toString());
-  }
-
-  @override
-  String toString() => '$runtimeType:\n  Element(${ts.info})';
-}

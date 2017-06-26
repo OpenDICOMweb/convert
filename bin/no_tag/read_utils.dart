@@ -10,8 +10,8 @@ import 'dart:io';
 
 import 'package:common/format.dart';
 import 'package:common/logger.dart';
-import 'package:convertX/src/dicom_no_tag/dataset.dart';
 import 'package:convertX/src/dicom_no_tag/dcm_reader.dart';
+import 'package:convertX/src/dicom_no_tag/old/dataset.dart';
 import 'package:convertX/timer.dart';
 import 'package:dictionary/dictionary.dart';
 import 'package:path/path.dart' as p;
@@ -86,7 +86,7 @@ class FileResult {
   TransferSyntax ts;
 
   FileResult(this.file, this.rds,
-      {this.fmiOnly = false, this.targetTS, this.times, this.hasProblem}) {
+      {this.fmiOnly = false, this.targetTS, this.times, this.hasProblem = false}) {
     path = file.path;
     length = rds.bd.lengthInBytes;
     isOkay = rds.hadParsingErrors;

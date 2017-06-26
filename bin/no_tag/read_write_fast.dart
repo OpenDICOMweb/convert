@@ -8,14 +8,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:common/logger.dart';
+import 'package:convertX/src/dicom_no_tag/compare_bytes.dart';
+import 'package:convertX/src/dicom_no_tag/dcm_reader.dart';
+import 'package:convertX/timer.dart';
+import 'package:core/core.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:convertX/src/dicom_no_tag/compare_bytes.dart';
-import 'package:convertX/src/dicom_no_tag/dataset.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_reader.dart';
-
-import 'package:convertX/timer.dart';
-import 'utils.dart';
 
 String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
 String path1 =
@@ -141,8 +139,9 @@ void readWriteDirectory(String path,
 bool readWriteFileFast(File inFile, {int reps = 1, bool fmiOnly = false}) {
   Uint8List bytes0 = inFile.readAsBytesSync();
   if (bytes0 == null) return false;
-  RootDataset rds0 = DcmReader.readBytes(bytes0);
-  if (rds0 == null) return false;
+  ByteData bd = bytes0.buffer.asByteData();
+  RootByteDataset rds0 = new RootByteDataset(bd);
+  DcmReader.readBytes(bytes0, rds0);
   Uint8List bytes1 = writeDataset(rds0);
   if (bytes1 == null) return false;
   return bytesEqual(bytes0, bytes1);

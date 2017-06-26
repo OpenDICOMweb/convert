@@ -7,9 +7,7 @@
 import 'dart:typed_data';
 
 import 'package:common/format.dart';
-import 'package:core/dataset.dart';
-import 'package:core/element.dart';
-import 'package:core/entity.dart';
+import 'package:core/core.dart';
 
 import '../bytebuf/bytebuf.dart';
 

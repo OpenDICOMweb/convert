@@ -8,9 +8,9 @@ import 'dart:collection';
 import 'dart:typed_data';
 
 import 'package:common/common.dart';
+import 'package:convertX/src/dicom_no_tag/old/dataset.dart';
 import 'package:dictionary/dictionary.dart';
 
-import 'dataset.dart';
 import 'utils.dart';
 
 abstract class Element {

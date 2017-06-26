@@ -1,7 +1,7 @@
 // Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
-// Original author: Jim Philbin <jfphilbin@gmail.edu> - 
+// Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
 import 'dart:io';
@@ -10,22 +10,20 @@ import 'dart:typed_data';
 import 'package:common/format.dart';
 import 'package:common/logger.dart';
 import 'package:common/timestamp.dart';
-import 'package:convertX/src/dicom_no_tag/dataset.dart';
 import 'package:convertX/src/dicom_no_tag/dcm_reader.dart';
 import 'package:convertX/src/dicom_no_tag/dcm_writer.dart';
+import 'package:convertX/src/dicom_no_tag/old/dataset.dart';
 import 'package:dictionary/dictionary.dart';
 
-final Logger _log =
-new Logger("io/bin/read_file.dart", watermark: Severity.warn);
+final Logger _log = new Logger("io/bin/read_file.dart", watermark: Severity.warn);
 
 final Formatter format = new Formatter();
 
 RootDataset readFile(File file,
     {bool fmiOnly = false,
-      TransferSyntax targetTS,
-      Severity logLevel: Severity.warn,
-      bool printDS: false}) {
-
+    TransferSyntax targetTS,
+    Severity logLevel: Severity.warn,
+    bool printDS: false}) {
   _log.watermark = logLevel;
   var path = file.path;
   var timer = new Stopwatch();
@@ -41,16 +39,13 @@ RootDataset readFile(File file,
   timer.stop();
   _log.info('   read ${bytes.length} bytes in ${timer.elapsedMicroseconds}us');
 
-  if (bytes.length < 1024)
-    _log.warn('***** Short file length(${bytes.length}): $path');
+  if (bytes.length < 1024) _log.warn('***** Short file length(${bytes.length}): $path');
 
   RootDataset rds;
   timer.start();
-  if (fmiOnly) {
-    rds = DcmReader.fmi(bytes, path: path);
-  } else {
-    rds = DcmReader.rootDataset(bytes, path: path);
-  }
+
+  rds = DcmReader.readBytes(bytes, fmiOnly: fmiOnly, path: path);
+
   timer.stop();
   if (rds == null) {
     _log.error('Null Instance $path');
@@ -65,7 +60,7 @@ RootDataset readFile(File file,
 
     _log.info('  Has valid TS(${rds.hasValidTransferSyntax}) '
         '${rds.transferSyntax}');
-   // _log.info('RDS: ${rds.info}');
+    // _log.info('RDS: ${rds.info}');
     if (printDS) formatDataset(rds);
     return rds;
   }
@@ -76,8 +71,8 @@ void formatDataset(RootDataset rds, [bool includePrivate = true]) {
   _log.debug(rds.format(z));
 }
 
-RootDataset readFMI(Uint8List bytes, [String path = ""]) =>
-    DcmReader.fmi(bytes);
+/*
+RootDataset readFMI(Uint8List bytes, [String path = ""]) => DcmReader.readFmiOnly(bytes);
 
 RootDataset readRoot(Uint8List bytes, [String path = ""]) {
   ByteData bd = bytes.buffer.asByteData();
@@ -92,10 +87,10 @@ RootDataset readRootNoFMI(Uint8List bytes, [String path = ""]) {
   Dataset rds = decoder.xReadDataset();
   return rds;
 }
+*/
 
-Uint8List writeDataset(RootDataset rds,
-    {String path = "", bool fast = true, bool fmiOnly = false, TransferSyntax
-    targetTS}) {
+Uint8List writeDatasetWithTimer(RootDataset rds,
+    {String path = "", bool fast = true, bool fmiOnly = false, TransferSyntax targetTS}) {
   var timer = new Stopwatch();
   var timestamp = new Timestamp();
   var total = rds.total;
@@ -120,12 +115,9 @@ Uint8List writeDataset(RootDataset rds,
   return writer.bytes;
 }
 
-Uint8List writeFMI(RootDataset rds, [String path]) =>
-    DcmWriter.fmi(rds, path: path);
+//Urgent: make these DcmWriter static
+Uint8List writeFMI(RootDataset rds, [String path]) => DcmWriter.fmi(rds, path: path);
 
-Uint8List writeRoot(RootDataset rds, {String path}) =>
-    DcmWriter.rootDataset(rds, path: path);
+Uint8List writeRoot(RootDataset rds, {String path}) => DcmWriter.rootDataset(rds, path: path);
 
-Uint8List writeRootNoFMI(RootDataset rds, {String path = ""}) =>
-    DcmWriter.fmi(rds, path: path);
-
+Uint8List writeRootNoFMI(RootDataset rds, {String path = ""}) => DcmWriter.fmi(rds, path: path);

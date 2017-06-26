@@ -8,16 +8,14 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:common/logger.dart';
+import 'package:convertX/src/dicom_no_tag/compare_bytes.dart';
+import 'package:convertX/src/dicom_no_tag/dcm_reader.dart';
+import 'package:convertX/src/dicom_no_tag/old/dataset.dart';
+import 'package:convertX/timer.dart';
 import 'package:dictionary/dictionary.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:convertX/src/dicom_no_tag/compare_bytes.dart';
-import 'package:convertX/src/dicom_no_tag/dataset.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_reader.dart';
-
-import 'package:convertX/timer.dart';
 import 'read_utils.dart';
-import 'utils.dart';
 
 final Logger log =
     new Logger("convert/bin/read_write_files.dart", watermark: Severity.info);
