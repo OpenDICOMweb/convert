@@ -7,7 +7,7 @@ author: Jim Philbin <jfphilbin@gmail.com>
 homepage: https://github.com/OpenDICOMweb/convert.git
 
 environment:
-  sdk: ^1.22.0
+  sdk: ^1.24.1
 
 dependencies:
   common:
