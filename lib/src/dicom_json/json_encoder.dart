@@ -8,7 +8,6 @@ import 'dart:typed_data';
 
 import 'package:common/format.dart';
 import 'package:core/core.dart';
-import 'package:core/entity.dart';
 
 import '../bytebuf/bytebuf.dart';
 
@@ -86,8 +85,8 @@ class JsonEncoder extends ByteBuf {
   ///         "value": [ values ]
   ///         }
   ///     }
-  void writeDataset(TDataset ds, Formatter fmt) {
-    for (TElement e in ds.elements) {
+  void writeDataset(Dataset ds, Formatter fmt) {
+    for (Element e in ds.map.values) {
       fmt.down;
       writeString('\n$fmt"${e.tag.hex}": {'
           '\n$fmt"vr": "${e.vr.id}",'
@@ -99,14 +98,13 @@ class JsonEncoder extends ByteBuf {
   }
 
   /// Write [e]s [List] of values.
-  ByteBuf writeValues(TElement e, Formatter fmt) {
+  ByteBuf writeValues(Element e, Formatter fmt) {
     String s;
     //  if ((e is OB) || (e is OD) || (e is OF) || (e is OL) || (e is OW) || (e is UN)) {
-    if (e is StringBase) {
-      s = e.asString;
+    if ((e is IntBase) || (e is Float32Base) || (e is Float64Base)) {
+  //fix    s = e.base64;
     } else {
-      //Fix: this is wrong
-      s = e.vfBase64;
+      s = e.asString;
     }
     return writeString(s);
   }
@@ -163,10 +161,10 @@ class JsonEncoder extends ByteBuf {
   */
 
   /// Write an [SQ] [Element] in JSON.
-  void writeSequence(TElement e, Formatter fmt) {}
+  void writeSequence(Element e, Formatter fmt) {}
 
   /// Note: empty items are represented as empty JSON objects "{}".
-  void writeItem(TItem item, Formatter fmt) {}
+  void writeItem(Item item, Formatter fmt) {}
 
   /// Write a [PrivateGroup]
   void writePrivateGroup(PrivateGroup group, Formatter fmt) {}
