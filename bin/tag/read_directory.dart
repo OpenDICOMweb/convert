@@ -8,7 +8,7 @@ import 'dart:io';
 
 import 'package:common/logger.dart';
 import 'package:common/timestamp.dart';
-import 'package:dcm_convert/dicom_no_tag.dart';
+import 'package:dcm_convert/dcm.dart';
 import 'package:path/path.dart' as p;
 
 String inRoot0 = "C:/odw/test_data/sfd/CR";

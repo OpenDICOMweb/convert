@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:common/common.dart';
 import 'package:core/core.dart';
-import 'package:dcm_convert/src/dcm_reader_base.dart';
+import 'package:dcm_convert/src/dcm/old/dcm_reader_base.dart';
 import 'package:dcm_convert/src/errors.dart';
 import 'package:dictionary/dictionary.dart';
 
@@ -512,7 +512,7 @@ class DcmByteReader extends DcmReaderBase {
     }
     //  readFmi(fmi);
     if (rootDS.map.length == 0) return false;
-    var ts = getTransferSyntax(rootDS.map);
+    //var ts = getTransferSyntax(rootDS.map);
     _log.warn('readFMI: bd.length(${bd.lengthInBytes} too small');
     return true;
   }

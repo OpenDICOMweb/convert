@@ -89,11 +89,11 @@ class ByteReader extends DcmReader {
       new ByteItem.fromMap(bd, parent, elements, vfLength, hadULength, sq);
 
   ByteSQ makeSequence(
-      int code, List<ByteItem> items, ByteData vfBD, bool hadULength,
+      int code, List<ByteItem> items, ByteData e, bool hadULength,
       [bool isEVR = true]) {
     ByteSQ sq = (isEVR)
-        ? new EVRSequence.fromByteData(bd, currentDS, items, hadULength)
-        : new IVRSequence.fromByteData(bd, currentDS, items, hadULength);
+        ? new EVRSequence.fromByteData(e, currentDS, items, hadULength)
+        : new IVRSequence.fromByteData(e, currentDS, items, hadULength);
     for (ByteItem item in items) item.addSQ(sq);
     return sq;
   }

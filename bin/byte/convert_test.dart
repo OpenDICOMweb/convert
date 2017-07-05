@@ -8,8 +8,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:common/common.dart';
-import 'package:dcm_convert/dicom_no_tag.dart';
-import 'package:dcm_convert/src/dicom_no_tag/convert_byte_to_tag.dart';
+import 'package:dcm_convert/dcm.dart';
+import 'package:dcm_convert/src/dcm/convert_byte_to_tag.dart';
 import 'package:dictionary/dictionary.dart';
 
 const String path0 = 'C:/odw/test_data/6688/12/0B009D38/0B009D3D/4D4E9A56';

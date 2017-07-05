@@ -180,6 +180,7 @@ abstract class DcmReader {
 
     _nTopLevelElements = rootDS.length;
     _parseInfo = getParseInfo();
+    rootDS.parseInfo = _parseInfo;
     log.debug('$rmm nTopLevelElements: ${rootDS.length}');
     log.debug('$ree readRootDataset: ${rootDS.info}');
     log.debug('elementIndex: length($nthElement)');
@@ -400,7 +401,7 @@ abstract class DcmReader {
     log.debugDown('$rbb readSQ ${toDcm(code)}');
     int vfLength = _readUint32();
     int vfStart = _rIndex;
-//    int start = _rIndex - headerLength;
+    int eStart = _rIndex - headerLength;
     var hadULength = (vfLength == kUndefinedLength);
     int endOfVF;
     // Note: this is a list of Items.
@@ -418,8 +419,8 @@ abstract class DcmReader {
       //log.debug1('$rmm SQ Length($vfLength) start($start) endOfVF($endOfVF)');
     }
 //    var e = bd.buffer.asByteData(start, endOfVF - start);
-    var vfBD = bd.buffer.asByteData(vfStart, endOfVF);
-    Element sq = makeSequence(code, items, vfBD, hadULength, isEVR);
+    var e = bd.buffer.asByteData(eStart, endOfVF);
+    Element sq = makeSequence(code, items, e, hadULength, isEVR);
     _nSequences++;
     if (Tag.isPrivateCode(code)) _nPrivateSequences++;
     log.debugUp('$ree readSQ $sq ${sq.values.length} items');
@@ -444,7 +445,7 @@ abstract class DcmReader {
     Dataset parentDS = currentDS;
     Map<int, Element> elements = <int, Element>{};
     bool hadULength = vfLength == kUndefinedLength;
-    //  log.debug1('$rmm readItem hadUndefinedLength=$hadUndefinedLength');
+    //  log.debug1('$rmm readItem hadULength=$hadULength');
     int endOfVF;
     try {
       if (hadULength) {

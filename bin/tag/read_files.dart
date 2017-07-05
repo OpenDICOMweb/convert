@@ -5,13 +5,11 @@
 // See the   AUTHORS file for other contributors.
 
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:common/format.dart';
-import 'package:common/logger.dart';
+import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/dicom_no_tag.dart';
+import 'package:dcm_convert/dcm.dart';
 import 'package:dcm_convert/src/utilities/file_list_reader.dart';
 
 
@@ -49,6 +47,7 @@ void readFiles(List<String> paths) {
   reader.read;
 }
 
+/* Flush if not needed
 RootByteDataset _readFile(File file) {
   Uint8List bytes = file.readAsBytesSync();
   if (bytes.length < 8 * 1024)
@@ -65,4 +64,4 @@ RootByteDataset _readFile(File file) {
     rds = ByteReader.readBytes(bytes, path: file.path, fmiOnly: true);
   }
   return rds;
-}
+}*/

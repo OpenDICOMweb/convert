@@ -9,9 +9,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:common/common.dart';
+import 'package:common/timer.dart';
 import 'package:core/core.dart';
-import 'package:dcm_convert/dicom_no_tag.dart';
-import 'package:dcm_convert/timer.dart';
+import 'package:dcm_convert/dcm.dart';
 import 'package:dictionary/dictionary.dart';
 import 'package:path/path.dart' as p;
 

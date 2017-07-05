@@ -7,11 +7,10 @@
 import 'dart:typed_data';
 
 import 'package:common/ascii.dart';
-import 'package:dictionary/dictionary.dart';
-
 import 'package:core/src/dataset/byte_dataset/byte_dataset.dart';
-import 'package:core/src/element/byte_element/byte_element.dart';
 import 'package:core/src/dicom_utils.dart';
+import 'package:core/src/element/byte_element/byte_element.dart';
+import 'package:dictionary/dictionary.dart';
 
 /// TODO DOC
 bool bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError = false]) {
@@ -112,7 +111,9 @@ bool compareDatasets(ByteDataset ds0, ByteDataset ds1,
       if (e0.code != e1.code ||
           e0.vrCode != e1.vrCode ||
           e0.vfLength != e1.vfLength ||
-          e0.vfBytes.length != e1.vfLength) {
+          e0.vfBytes.length != e1.vfBytes.length) {
+        print('e0: ${e0.info}');
+        print('e1: ${e1.info}');
         if (throwOnError) {
           throw 'ds0 != ds1';
         } else {

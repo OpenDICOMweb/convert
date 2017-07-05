@@ -7,7 +7,7 @@
 import 'dart:io';
 
 import 'package:common/logger.dart';
-import 'package:dcm_convert/dicom_no_tag.dart';
+import 'package:dcm_convert/dcm.dart';
 
 class FileListReader {
   static final Logger log =

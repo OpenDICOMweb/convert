@@ -7,11 +7,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:common/logger.dart';
+import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/dicom_no_tag.dart';
-import 'package:dcm_convert/timer.dart';
+import 'package:dcm_convert/dcm.dart';
 import 'package:dictionary/dictionary.dart';
 import 'package:path/path.dart' as p;
 
@@ -21,12 +20,11 @@ import 'utils.dart';
 final Logger log = new Logger("convert/bin/read_write_files.dart", watermark: Severity.info);
 
 void main() {
-   File file = new File(path0);
-   readWriteFileFast(file, reps: 1, fmiOnly: false);
+   readWritePath(test6684_01, reps: 1, fmiOnly: false);
   // readWriteFileTimed(file, reps: 1, fmiOnly: false);
   // readFMI(paths, fmiOnly: true);
   //  readWriteFiles(paths, fmiOnly: false);
- // readWriteDirectory(mrStudy, fmiOnly: false);
+ // readWriteDirectory(dir36_4485_6684);
   //targetTS: TransferSyntax.kImplicitVRLittleEndian);
 }
 
@@ -40,11 +38,12 @@ final Stopwatch watch = new Stopwatch();
 //TODO: move to common/constants.dart or elsewhere
 const int kMB = 1024 * 1024;
 
-bool readWriteFileFast(File inFile, {int reps = 1, bool fmiOnly = false}) {
+bool readWritePath(String path, {int reps = 1, bool fmiOnly = false}) {
+  File inFile = new File(path);
   Uint8List bytes0 = inFile.readAsBytesSync();
 
   ByteReader reader = new ByteReader(bytes0.buffer.asByteData());
-  RootByteDataset rds0 = reader.readRootDataset();
+  RootByteDataset rds0 = reader.readRootByteDataset();
   List<int> elementIndex0 = reader.elementIndex.sublist(0, reader.nthElement);
   log.info(rds0.parseInfo);
   log.info(rds0.info);

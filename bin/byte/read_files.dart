@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:common/logger.dart';
 import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/dicom_no_tag.dart';
+import 'package:dcm_convert/dcm.dart';
 
 final Logger log =
     new Logger("io/bin/read_files.dart", watermark: Severity.info);

@@ -38,7 +38,6 @@ TagElement convertElement(TagDataset result, ByteElement e) {
   log.debug1(' BE: $e');
   var code = e.code;
   var vrCode = e.vrCode;
-  var isEVR = e.isEVR;
   var tag = getTag(e);
 
   if (e.vr == VR.kUN && tag.vr != VR.kUN)
@@ -63,21 +62,18 @@ TagElement convertElement(TagDataset result, ByteElement e) {
       }
       log.info('**** Tag Pixel Data ${te.info}');
     } else {
-      te = TagElement.makeElementFromBytes(
-          code, vrCode, e.vfBytes, e.vfLength, isEVR);
+      te = TagElement.makeElementFromBytes(code, vrCode, e.vfBytes, e.vfLength);
     }
   } else if (tag is PCTag) {
     if (e.vr != VR.kLO)
       log.warn('Private Creator e.vr(${e.vr}) should be VR.kLO');
     if (vrCode != VR.kLO.code)
       throw 'Invalid Tag VR: ${tag.vr} should be VR.kLO';
-    te = TagElement.makeElementFromBytes(
-        code, vrCode, e.vfBytes, e.vfLength, isEVR);
+    te = TagElement.makeElementFromBytes(code, vrCode, e.vfBytes, e.vfLength);
     assert(tag is PCTag && tag.name == e.asString);
     pcElements[e.asString] = te;
   } else if (tag is PDTag) {
-    te = TagElement.makeElementFromBytes(
-        code, vrCode, e.vfBytes, e.vfLength, isEVR);
+    te = TagElement.makeElementFromBytes(code, vrCode, e.vfBytes, e.vfLength);
   } else {
     throw 'Invalid Tag: $tag';
   }

@@ -5,6 +5,8 @@
 // See the AUTHORS file for other contributors.
 
 const String test6684_01 = 'C:/odw/test_data/36_4485_6684/IM-0001-0001-0001.dcm';
+const String test6684_02 = 'C:/odw/test_data/36_4485_6684/IM-0001-0001-0002.dcm';
+
 const String ivrFile = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy/1.2.840'
     '.113619.2.5.1762583153.215519.978957063.101.dcm';
 

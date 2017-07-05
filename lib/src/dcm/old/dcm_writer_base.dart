@@ -63,10 +63,10 @@ class DcmWriterBase {
 
   /// The current dataset.  This changes as Sequences are read and
   /// [Items]s are pushed on and off the [dsStack].
-  Dataset _currentDS;
+//  Dataset _currentDS;
 
-  TransferSyntax _transferSyntax;
-  bool _isEncapsulated;
+//  TransferSyntax _transferSyntax;
+//  bool _isEncapsulated;
 
   final ByteData bd;
   int _wIndex;

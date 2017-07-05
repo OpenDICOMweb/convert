@@ -82,7 +82,7 @@ abstract class DcmWriter {
   final int bdLength;
 
   final List<int> elementIndex = new List<int>(2000);
-  int nthElement;
+  int nthElement = 0;
 
   /// The current dataset.  This changes as Sequences are written.
   Dataset _currentDS;
