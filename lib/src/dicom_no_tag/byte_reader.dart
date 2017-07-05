@@ -24,7 +24,8 @@ class ByteReader extends DcmReader {
       bool allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true})
-      : rootDS = new RootByteDataset(bd, path: path, vfLength: bd.lengthInBytes),
+      : rootDS =
+            new RootByteDataset(bd, path: path, vfLength: bd.lengthInBytes),
         super(bd,
             path: path,
             fmiOnly: fmiOnly,
@@ -57,37 +58,41 @@ class ByteReader extends DcmReader {
   ByteDataset get currentDS => _currentDS;
   void set currentDS(ByteDataset ds) => _currentDS = ds;
 
-  ByteElement makeElement(bool isEVR, int code, int vrCode, Uint8List vfBytes, [List values]) =>
+  ByteElement makeElement(bool isEVR, int code, int vrCode, Uint8List vfBytes,
+          [List values]) =>
       throw new UnimplementedError();
 
-  ByteElement makeElementFromBytes(bool isEVR, int code, int vrCode, Uint8List vfBytes) =>
+  ByteElement makeElementFromBytes(
+          bool isEVR, int code, int vrCode, Uint8List vfBytes) =>
       throw new UnimplementedError();
 
-  ByteElement makeElementFromByteData(bool isEVR, int code, int vrCode, ByteData e) =>
+  ByteElement makeElementFromByteData(
+          bool isEVR, int code, int vrCode, ByteData e) =>
       (isEVR) ? new EVRElement(bd) : new IVRElement(e);
 
   void add(ByteElement e) => currentDS.add(e);
 
-  ByteItem makeItem(ByteData bd, ByteDataset parent, Map<int, Element> elements, int vfLength,
-          bool hadULength,
+  ByteItem makeItem(ByteData bd, ByteDataset parent, Map<int, Element> elements,
+          int vfLength, bool hadULength,
           [ByteElement sq]) =>
       new ByteItem.fromMap(bd, parent, elements, vfLength, hadULength, sq);
 
   ByteSQ makeSequence(
-          bool isEVR, ByteData bd, ByteDataset ds, List<ByteItem> items, bool hadULength) {
- //   List<ByteItem> bItems = items as List<ByteItem>;
+      int code, List<ByteItem> items, ByteData vfBD, bool hadULength,
+      [bool isEVR = true]) {
     ByteSQ sq = (isEVR)
         ? new EVRSequence(bd, currentDS, items, hadULength)
         : new IVRSequence(bd, currentDS, items, hadULength);
     for (ByteItem item in items) item.addSQ(sq);
-   // addSequence(items, sq);
     return sq;
-    }
+  }
+/*
 
   List<Dataset> addSequence(List<Dataset> items, Element sq) {
     for (ByteItem item in items) item.addSQ(sq);
     return items;
   }
+*/
 
   bool readFMI([bool checkPreamble = false]) {
     var hadFmi = dcmReadFMI(checkPreamble);
@@ -105,24 +110,33 @@ class ByteReader extends DcmReader {
 
   /// Reads only the File Meta Information ([FMI], if present.
   static Dataset readBytes(Uint8List bytes,
-      {String path = "", bool fmiOnly = false, fast = true, TransferSyntax targetTS}) {
-    ByteData bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
-    ByteReader reader = new ByteReader(bd, path: path, fmiOnly: fmiOnly, targetTS: targetTS);
+      {String path = "",
+      bool fmiOnly = false,
+      fast = true,
+      TransferSyntax targetTS}) {
+    ByteData bd =
+        bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
+    ByteReader reader =
+        new ByteReader(bd, path: path, fmiOnly: fmiOnly, targetTS: targetTS);
     return reader.readRootByteDataset();
   }
 
   static Dataset readFile(File file,
           {bool fmiOnly = false, fast = true, TransferSyntax targetTS}) =>
-      readBytes(file.readAsBytesSync(), path: file.path, fmiOnly: fmiOnly, targetTS: targetTS);
+      readBytes(file.readAsBytesSync(),
+          path: file.path, fmiOnly: fmiOnly, targetTS: targetTS);
 
   static Dataset readPath(String path,
           {bool fmiOnly = false, fast = true, TransferSyntax targetTS}) =>
       readFile(new File(path), fmiOnly: fmiOnly, targetTS: targetTS);
 
   /// Reads only the File Meta Information ([FMI], if present.
-  static Dataset readFmiOnly(dynamic pathOrFile, {fast = true, TransferSyntax targetTS}) {
-    if (pathOrFile is String) readPath(pathOrFile, fmiOnly: true, fast: fast, targetTS: targetTS);
-    if (pathOrFile is File) readFile(pathOrFile, fmiOnly: true, fast: fast, targetTS: targetTS);
+  static Dataset readFmiOnly(dynamic pathOrFile,
+      {fast = true, TransferSyntax targetTS}) {
+    if (pathOrFile is String)
+      readPath(pathOrFile, fmiOnly: true, fast: fast, targetTS: targetTS);
+    if (pathOrFile is File)
+      readFile(pathOrFile, fmiOnly: true, fast: fast, targetTS: targetTS);
     throw 'Invalid path or file: $pathOrFile';
   }
 }

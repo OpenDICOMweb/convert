@@ -21,7 +21,11 @@ const int kOBCode = 0x424f;
 const int kOWCode = 0x574f;
 const int kUNCode = 0x4e55;
 
-const List<int> _undefinedLengthElements = const <int>[kOBCode, kOWCode, kUNCode];
+const List<int> _undefinedLengthElements = const <int>[
+  kOBCode,
+  kOWCode,
+  kUNCode
+];
 
 //TODO: rewrite all comments to reflect current state of code
 
@@ -128,18 +132,21 @@ abstract class DcmReader {
 
   Element makeElement(bool isEVR, int code, int vrCode, List values);
 
-  Element makeElementFromBytes(bool isEVR, int code, int vrCode, Uint8List vfBytes);
+  Element makeElementFromBytes(
+      bool isEVR, int code, int vrCode, Uint8List vfBytes);
 
-  Element makeElementFromByteData(bool isEVR, int code, int vrCode, ByteData bd);
+  Element makeElementFromByteData(
+      bool isEVR, int code, int vrCode, ByteData bd);
 
-  Dataset makeItem(
-      ByteData bd, Dataset parent, Map<int, Element> elements, int vfLength, bool hadULength,
+  Dataset makeItem(ByteData bd, Dataset parent, Map<int, Element> elements,
+      int vfLength, bool hadULength,
       [Element sq]);
 
-  Element makeSequence(
-      bool isEVR, ByteData e, Dataset currentDS, List items, bool hadUndefinedLength);
+  Element makeSequence(int code, List items, ByteData vf, bool hadULength,
+      [bool isEVR = true]);
 
-  String get info => '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${currentDS.info}';
+  String get info =>
+      '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${currentDS.info}';
 
   ParseInfo _parseInfo;
   ParseInfo get parseInfo => _parseInfo ??= getParseInfo();
@@ -179,7 +186,8 @@ abstract class DcmReader {
     if (!allowMissingFMI && !_hadFmi) return null;
 
     log.debug('$rmm targetTS: $targetTS');
-    TransferSyntax ts = (_hadFmi) ? rootDS.transferSyntax : System.defaultTransferSyntax;
+    TransferSyntax ts =
+        (_hadFmi) ? rootDS.transferSyntax : System.defaultTransferSyntax;
     if (targetTS != null && ts != targetTS) return rootDS;
 
     log.debug('$rmm readRootDataset: TS($ts)}, isExplicitVR: ${rootDS.isEVR}');
@@ -214,8 +222,10 @@ abstract class DcmReader {
     }
 
     String msg = "";
-    if (_rIndex != 0) msg += 'Attempt to read DICOM Prefix at ByteData[$_rIndex]\n';
-    if (_hadPrefix != null) msg += 'Attempt to re-read DICOM Preamble and Prefix.\n';
+    if (_rIndex != 0)
+      msg += 'Attempt to read DICOM Prefix at ByteData[$_rIndex]\n';
+    if (_hadPrefix != null)
+      msg += 'Attempt to re-read DICOM Preamble and Prefix.\n';
     if (endOfBD <= 132) msg += 'ByteData length($endOfBD) < 132';
     if (msg.length > 0) {
       log.error(msg);
@@ -224,7 +234,8 @@ abstract class DcmReader {
     if (checkPreamble) {
       _preambleWasZeros = true;
       _preamble = bd.buffer.asUint8List(0, 128);
-      for (int i = 0; i < 128; i++) if (bd.getUint8(i) != 0) _preambleWasZeros = false;
+      for (int i = 0; i < 128; i++)
+        if (bd.getUint8(i) != 0) _preambleWasZeros = false;
     }
     _skip(128);
 
@@ -399,30 +410,32 @@ abstract class DcmReader {
   /// Reads an EVR or IVR Sequence. The _readElementMethod detects Sequences.
   Element _readSequence(int code, int headerLength, bool isEVR) {
     /// Returns [true] if the [kSequenceDelimitationItem] delimiter is found.
-    bool checkForSequenceDelimiter() => _checkForDelimiter(kSequenceDelimitationItem);
+    bool checkForSequenceDelimiter() =>
+        _checkForDelimiter(kSequenceDelimitationItem);
 
     log.debugDown('$rbb readSQ ${toDcm(code)}');
     int vfLength = _readUint32();
-    int start = _rIndex - headerLength;
-    var hadUndefinedLength = (vfLength == kUndefinedLength);
-    //  log.debugDown('$rbb SQ${toDcm(code)} start($start) undefinedLength'
-    //      '($hadUndefinedLength), vfLength(${toHex32(vfLength)}, $vfLength)');
+    int vfStart = _rIndex;
+//    int start = _rIndex - headerLength;
+    var hadULength = (vfLength == kUndefinedLength);
     int endOfVF;
     // Note: this is a list of Items.
+    // FIX: give this a type when understood.
     List items = [];
-    if (hadUndefinedLength) {
+    if (hadULength) {
       //    log.debug1('$rmm SQ${toDcm(code)} Undefined Length');
       while (!checkForSequenceDelimiter()) items.add(_readItem(isEVR));
       endOfVF = _rIndex;
       //    log.debug1('$rmm SQ Undefined Length: start($start) endOfVF($endOfVF)');
     } else {
       //    log.debug1('$rmm SQ: ${toDcm(code)} vfLength($vfLength)');
-      endOfVF = start + headerLength + vfLength;
+      endOfVF = vfStart + vfLength;
       while (_rIndex < endOfVF) items.add(_readItem(isEVR));
-      //     log.debug1('$rmm SQ Length($vfLength) start($start) endOfVF($endOfVF)');
+      //log.debug1('$rmm SQ Length($vfLength) start($start) endOfVF($endOfVF)');
     }
-    var e = bd.buffer.asByteData(start, endOfVF - start);
-    Element sq = makeSequence(isEVR, e, currentDS, items, hadUndefinedLength);
+//    var e = bd.buffer.asByteData(start, endOfVF - start);
+    var vfBD = bd.buffer.asByteData(vfStart, endOfVF);
+    Element sq = makeSequence(code, items, vfBD, hadULength, isEVR);
     _nSequences++;
     if (Tag.isPrivateCode(code)) _nPrivateSequences++;
     log.debugUp('$ree readSQ $sq ${sq.values.length} items');
@@ -609,7 +622,8 @@ abstract class DcmReader {
       }
     }
     _hadTrailingZeros = true;
-    log.warn('returning from reading zeros from @$mark to @$_rIndex in "$path"');
+    log.warn(
+        'returning from reading zeros from @$mark to @$_rIndex in "$path"');
     return true;
   }
 }

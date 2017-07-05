@@ -8,10 +8,10 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:common/common.dart';
-import 'package:dcm_convert/src/bytebuf/bytebuf.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
+import 'package:dcm_convert/src/bytebuf/bytebuf.dart';
 
 //TODO:
 //  1. Move all [String] trimming and validation to the Element.  The reader
@@ -123,8 +123,8 @@ class DcmTagWriter  {
       : _wIndex = 0,
         bd = (reUseBD)
             ? _reuseBD(rootDS.lengthInBytes + 1024)
-            : new ByteData(defaultBufferLength),
-        super.writer(lengthInBytes)
+            : new ByteData(defaultBufferLength);
+
 /*      {int lengthInBytes = defaultBufferLength,
       isEVR = true,
       this.throwOnError = true})

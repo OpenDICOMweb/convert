@@ -5,8 +5,8 @@
 // See the AUTHORS file for other contributors.
 
 import 'package:common/common.dart';
-import 'package:dictionary/dictionary.dart';
 import 'package:core/core.dart';
+import 'package:dictionary/dictionary.dart';
 
 Logger log = new Logger('convert', watermark: Severity.info);
 
@@ -96,7 +96,7 @@ SQ getSequence(TagDataset result, ByteSQ sq) {
   }
   currentBDS = parentBDS;
   currentTDS = parentTDS;
-  return new SQ(tag, tItems, sq.vfLength);
+  return new SQ(tag, tItems, sq.vfLength, sq.hadULength);
 }
 
 final Map<int, PCTag> pcTags = <int, PCTag>{};
