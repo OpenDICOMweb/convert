@@ -1,13 +1,13 @@
 # TODO: figure out why "convert" doesn't work for name.
 name: convertX
-version: 0.5.4
+version: 0.5.5
 description: A package for encoding/decoding DICOM binary, json, ...
 author: Jim Philbin <jfphilbin@gmail.com>
 
 homepage: https://github.com/OpenDICOMweb/convert.git
 
 environment:
-  sdk: ^1.24.1
+  sdk: ^1.24.2
 
 dependencies:
   common:
@@ -15,20 +15,20 @@ dependencies:
   #    url: https://github.com/OpenDICOMweb/common.git
   #    ref: develop
     path: C:/odw/sdk/common
-    version: ^0.5.4
+    version: ^0.5.6
   crypto: ^2.0.1
   dictionary:
   #  git:
   #    url: https://github.com/OpenDICOMweb/dictionary.git
   #    ref: develop
     path: C:/odw/sdk/dictionary
-    version: ^0.5.4
+    version: ^0.5.6
   core:
   #  git:
   #    url: https://github.com/OpenDICOMweb/core.git
   #    ref: develop
     path: C:/odw/sdk/core
-    version: ^0.5.4
+    version: ^0.5.6
 
 dev_dependencies:
   benchmark_harness: ^1.0.4
