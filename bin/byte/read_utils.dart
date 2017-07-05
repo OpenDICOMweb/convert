@@ -15,7 +15,7 @@ import 'package:dcm_convert/timer.dart';
 import 'package:dictionary/dictionary.dart';
 import 'package:path/path.dart' as p;
 
-final Logger log = new Logger("convert/bin/no_tag/read_utils.dart", watermark: Severity.warn);
+final Logger log = new Logger("convert/bin/byte/read_utils.dart", watermark: Severity.warn);
 
 final Formatter format = new Formatter();
 

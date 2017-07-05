@@ -10,8 +10,6 @@ import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
-import 'package:core/src/dicom_utils.dart';
-
 /*
 const k10KB = 10 * 1024;
 const k20KB = 20 * 1024;

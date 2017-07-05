@@ -239,7 +239,7 @@ ResultSet readWriteDirectory(String path,
   log.info('$fileCount files');
 
   //TODO: make this work
-  File errFile = new File('bin/no_tag/errors.log');
+  File errFile = new File('bin/byte/errors.log');
   errFile.openWrite(mode: FileMode.WRITE_ONLY_APPEND);
   var startTime = new DateTime.now();
 

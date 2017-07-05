@@ -11,21 +11,6 @@ import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:dcm_convert/src/errors.dart';
 import 'package:dictionary/dictionary.dart';
-//import 'dataset.dart';
-//import 'element.dart';
-//import 'utils.dart';
-
-/// Fix: move to constants in Dictionary
-const int kSQCode = 0x5153;
-const int kOBCode = 0x424f;
-const int kOWCode = 0x574f;
-const int kUNCode = 0x4e55;
-
-const List<int> _undefinedLengthElements = const <int>[
-  kOBCode,
-  kOWCode,
-  kUNCode
-];
 
 //TODO: rewrite all comments to reflect current state of code
 
@@ -84,16 +69,10 @@ abstract class DcmReader {
   int _nSequences = 0;
   int _nPrivateElements = 0;
   int _nPrivateSequences = 0;
-
-  //Urgent:
-  // sq, nItems, [eCount, ...]
-  //Map<int, List<Dataset>> _seqInfo;
-
   bool _wasShortFile = false;
   bool _preambleWasZeros;
   Uint8List _preamble;
   bool _hadPrefix;
-  //Urgent: parseInfo
   bool _hadGroupLengths = false;
   bool _hadFmi = false;
   TransferSyntax _ts;
@@ -130,13 +109,13 @@ abstract class DcmReader {
   Dataset get currentDS;
   void set currentDS(Dataset ds);
 
-  Element makeElement(bool isEVR, int code, int vrCode, List values);
+  Element makeElement(int code, int vrCode, [List values, bool isEVR = true]);
 
-  Element makeElementFromBytes(
-      bool isEVR, int code, int vrCode, Uint8List vfBytes);
+  Element makeElementFromBytes(int code, int vrCode, int vfOffset,
+      Uint8List vfBytes, int vfLength, bool isEVR,
+      [VFFragments fragments]);
 
-  Element makeElementFromByteData(
-      bool isEVR, int code, int vrCode, ByteData bd);
+  Element makeElementFromByteData(ByteData bd, bool isEVR);
 
   Dataset makeItem(ByteData bd, Dataset parent, Map<int, Element> elements,
       int vfLength, bool hadULength,
@@ -330,7 +309,7 @@ abstract class DcmReader {
   }
 
   Element _readEVR(int code) {
-    int start = _rIndex - 4; // for code
+    int eStart = _rIndex - 4; // for code
     int vrCode = _readUint16();
     VR vr = VR.lookup(vrCode);
     assert(vr != null, 'Invalid null VR: vrCode(${toHex16(vrCode)})');
@@ -339,35 +318,38 @@ abstract class DcmReader {
       return _readSequence(code, 12, true);
     }
 
-    log.debugDown('$rbb _readEVR: start($start), ${toDcm(code)} $vr');
+    log.debugDown('$rbb _readEVR: start($eStart), ${toDcm(code)} $vr');
     int eLength;
     if (vr.hasShortVF) {
       eLength = 8 + _readUint16();
-      _rIndex = start + eLength;
+      _rIndex = eStart + eLength;
     } else {
       _skip(2);
       int vfLength = _readUint32();
       if (vfLength == kUndefinedLength) {
         int endOfVF = _findEndOfVF(vfLength);
-        eLength = endOfVF - start;
+        eLength = endOfVF - eStart;
         _rIndex = endOfVF + 8;
       } else {
         eLength = 12 + vfLength;
-        _rIndex = start + eLength;
+        _rIndex = eStart + eLength;
       }
     }
-    ByteData bdx = _getElementBD(start, eLength);
-    var e = new EVRElement(bdx);
+    var e = _makeElement(eStart, eLength, isEVR: true);
+/* FLush when working
+   ByteData bdx = _getElementBD(eStart, eLength);
+    var e = new EVRElement.fromByteData(bdx);*/
     log.debugUp('$ree _readEVR: $e');
     return e;
   }
 
-  ByteData _getElementBD(int start, int eLength) {
-    int endOfVF = start + eLength;
+  Element _makeElement(int eStart, int eLength, {bool isEVR: true}) {
+    int endOfVF = eStart + eLength;
     if (endOfVF > endOfBD)
       log.error('$rmm endOfVR($endOfVF) is beyond the end of File: $path\n'
-          '    start($start) + eLength($eLength) = $endOfVF > $endOfBD');
-    return bd.buffer.asByteData(start, eLength);
+          '    start($eStart) + eLength($eLength) = $endOfVF > $endOfBD');
+    var e = bd.buffer.asByteData(eStart, eLength);
+    return makeElementFromByteData(e, isEVR);
   }
 
   Element _readIVR(int code) {
@@ -380,23 +362,25 @@ abstract class DcmReader {
       return false;
     }
 
-    int start = _rIndex - 4; // for code
+    int eStart = _rIndex - 4; // for code
     int vfLength = _readUint32();
     if (isSequence()) return _readSequence(code, 8, false);
 
-    log.debugDown('$rbb _readIVR: ${toDcm(code)} start($start), '
-        'vfL($vfLength), endOfVF(${start + vfLength}');
+    log.debugDown('$rbb _readIVR: ${toDcm(code)} start($eStart), '
+        'vfL($vfLength), endOfVF(${eStart + vfLength}');
     int eLength;
     if (vfLength == kUndefinedLength) {
       int endOfVF = _findEndOfVF(vfLength);
-      eLength = endOfVF - start;
+      eLength = endOfVF - eStart;
       _rIndex = endOfVF + 8;
     } else {
       eLength = 8 + vfLength;
-      _rIndex = start + eLength;
+      _rIndex = eStart + eLength;
     }
-    ByteData bdx = _getElementBD(start, eLength);
-    var e = new IVRElement(bdx);
+    var e = _makeElement(eStart, eLength, isEVR: false);
+/* FLush when working
+    ByteData bdx = _getElementBD(eStart, eLength);
+    var e = new IVRElement.fromByteData(bdx);*/
     log.debugUp('$ree _readIVR: $e');
     return e;
   }

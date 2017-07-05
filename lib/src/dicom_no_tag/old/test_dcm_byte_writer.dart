@@ -10,7 +10,7 @@ import 'package:common/logger.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
-import 'dcm_byte_writer.dart';
+import 'package:dcm_convert/src/dicom_no_tag/old/dcm_byte_writer.dart';
 
 class TestDcmByteWriter extends DcmByteWriter {
   static final Logger log = new Logger("DcmWriter", watermark: Severity.debug2);

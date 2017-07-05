@@ -12,6 +12,8 @@ import 'package:dictionary/dictionary.dart';
 
 import 'dcm_reader.dart';
 
+/// A decoder for Binary DICOM (application/dicom).  The resulting [Dataset]
+/// is a [RootTagDataset].
 class TagReader extends DcmReader {
   final RootTagDataset _rootDS;
   TagDataset _currentDS;
@@ -34,10 +36,10 @@ class TagReader extends DcmReader {
             targetTS: targetTS,
             reUseBD: reUseBD);
 
-  /// Creates a [Uint8List] with the same length as the elements in [list],
-  /// and copies over the elements.  Values are truncated to fit in the list
-  /// when they are copied, the same way storing values truncates them.
-  factory TagReader.fromList(List<int> list, RootDataset rootDS,
+  /// Creates a [Uint8List] with the same length as [list<int>];
+  /// and copies the values to the [Uint8List].  Values are truncated
+  /// to fit in the [Uint8List] as they are copied.
+  factory TagReader.fromList(List<int> list, RootTagDataset rootDS,
       {String path = "",
       bool fmiOnly = false,
       bool throwOnError = false,
@@ -55,20 +57,23 @@ class TagReader extends DcmReader {
         reUseBD: true);
   }
 
-  RootDataset get rootDS => _rootDS as RootDataset;
+  RootTagDataset get rootDS => _rootDS;
   TagDataset get currentDS => _currentDS;
   void set currentDS(TagDataset ds) => _currentDS = ds;
 
-  TagElement makeElement(bool isEVR, int code, int vrCode, List values) =>
-      TagElement.makeElement(isEVR, code, vrCode, values);
+  //Flush if not needed
+  TagElement makeElement(int code, int vrCode,
+          [List values, bool isEVR = true]) =>
+      TagElement.makeElement(code, vrCode, values, isEVR);
 
-  TagElement makeElementFromBytes(
-          bool isEVR, int code, int vrCode, Uint8List vfBytes,
-          [int vfLength]) =>
-      TagElement.makeElementFromBytes(isEVR, code, vrCode, vfBytes, vfLength);
+  TagElement makeElementFromBytes(int code, int vrCode, int vfOffset,
+          Uint8List vfBytes, int vfLength, bool isEVR,
+          [VFFragments fragments]) =>
+      TagElement.makeElementFromBytes(
+          code, vrCode, vfBytes, vfLength, fragments);
 
-  TagElement makeElementFromByteData(
-          bool isEVR, int code, int vrCode, ByteData e) =>
+  // Flush if not needed
+  TagElement makeElementFromByteData(ByteData e, bool isEVR) =>
       throw new UnimplementedError();
 
   void add(TagElement e) => currentDS.add(e);

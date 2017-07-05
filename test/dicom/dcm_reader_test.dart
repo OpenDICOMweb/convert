@@ -8,9 +8,8 @@ import 'dart:io';
 
 import 'package:common/logger.dart';
 import 'package:core/core.dart';
+import 'package:dcm_convert/src/dicom_no_tag/old/dcm_byte_reader.dart';
 import 'package:test/test.dart';
-
-import 'package:dcm_convert/src/dicom_no_tag/dcm_byte_reader.dart';
 
 void main() {
   String path0 =

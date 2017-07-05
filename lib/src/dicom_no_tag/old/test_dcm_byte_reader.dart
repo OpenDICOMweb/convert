@@ -10,7 +10,7 @@ import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
-import 'package:dcm_convert/src/dicom_no_tag/dcm_byte_reader.dart';
+import 'package:dcm_convert/src/dicom_no_tag/old/dcm_byte_reader.dart';
 
 /// An internal class designed for testing DcmReader.
 class TestDcmByteReader extends DcmByteReader {

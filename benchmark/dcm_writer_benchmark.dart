@@ -10,8 +10,8 @@ import 'dart:typed_data';
 import 'package:benchmark_harness/benchmark_harness.dart';
 import 'package:core/core.dart';
 import 'package:dcm_convert/src/dicom_no_tag/compare_bytes.dart';
-import 'package:dcm_convert/src/dicom_no_tag/dcm_byte_reader.dart';
-import 'package:dcm_convert/src/dicom_no_tag/dcm_byte_writer.dart';
+import 'package:dcm_convert/src/dicom_no_tag/old/dcm_byte_reader.dart';
+import 'package:dcm_convert/src/dicom_no_tag/old/dcm_byte_writer.dart';
 import 'package:dcm_convert/timer.dart';
 
 import 'test_files.dart';

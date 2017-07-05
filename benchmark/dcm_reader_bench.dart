@@ -7,13 +7,13 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-// Import BenchmarkBase class.
 import 'package:benchmark_harness/benchmark_harness.dart';
-
-import 'package:dcm_convert/src/dicom_no_tag/dcm_byte_reader.dart';
+import 'package:dcm_convert/src/dicom_no_tag/old/dcm_byte_reader.dart';
 import 'package:dcm_convert/timer.dart';
 
 import 'test_files.dart';
+// Import BenchmarkBase class.
+
 
 
 

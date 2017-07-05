@@ -12,8 +12,10 @@ import 'package:dictionary/dictionary.dart';
 
 import 'dcm_reader.dart';
 
+/// A decoder for Binary DICOM (application/dicom).  The resulting [Dataset]
+/// is a [RootByteDataset].
 class ByteReader extends DcmReader {
-  final RootByteDataset rootDS;
+  final RootByteDataset _rootDS;
   ByteDataset _currentDS;
 
   /// Creates a new [ByteReader].
@@ -24,7 +26,7 @@ class ByteReader extends DcmReader {
       bool allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true})
-      : rootDS =
+      : _rootDS =
             new RootByteDataset(bd, path: path, vfLength: bd.lengthInBytes),
         super(bd,
             path: path,
@@ -34,10 +36,10 @@ class ByteReader extends DcmReader {
             targetTS: targetTS,
             reUseBD: reUseBD);
 
-  /// Creates a [Uint8List] with the same length as the elements in [list],
-  /// and copies over the elements.  Values are truncated to fit in the list
-  /// when they are copied, the same way storing values truncates them.
-  factory ByteReader.fromList(List<int> list, RootDataset rootDS,
+  /// Creates a [Uint8List] with the same length as [list<int>];
+  /// and copies the values to the [Uint8List].  Values are truncated
+  /// to fit in the [Uint8List] as they are copied.
+  factory ByteReader.fromList(List<int> list, RootByteDataset rootDS,
       {String path = "",
       bool fmiOnly = false,
       bool throwOnError = false,
@@ -55,22 +57,31 @@ class ByteReader extends DcmReader {
         reUseBD: true);
   }
 
+  RootByteDataset get rootDS => _rootDS;
   ByteDataset get currentDS => _currentDS;
   void set currentDS(ByteDataset ds) => _currentDS = ds;
 
-  ByteElement makeElement(bool isEVR, int code, int vrCode, Uint8List vfBytes,
-          [List values]) =>
+  //Flush if not needed
+  ByteElement makeElement(int code, int vrCode, [List values, bool isEVR]) =>
       throw new UnimplementedError();
 
-  ByteElement makeElementFromBytes(
-          bool isEVR, int code, int vrCode, Uint8List vfBytes) =>
-      throw new UnimplementedError();
+  //Flush if not needed
+  ByteElement makeElementFromBytes(int code, int vrCode, int vfOffset,
+          Uint8List vfBytes, int vfLength, bool isEVR,
+          [VFFragments fragments]) =>
+      (isEVR)
+          ? new EVRElement.fromBytes(code, vrCode, vfOffset, vfBytes)
+          : new IVRElement.fromBytes(code, vrCode, vfOffset, vfBytes);
 
-  ByteElement makeElementFromByteData(
-          bool isEVR, int code, int vrCode, ByteData e) =>
-      (isEVR) ? new EVRElement(bd) : new IVRElement(e);
+  ByteElement makeElementFromByteData(ByteData e, bool isEVR) =>
+      (isEVR) ? new EVRElement.fromByteData(e) : new IVRElement.fromByteData(e);
 
-  void add(ByteElement e) => currentDS.add(e);
+  TagElement makeTagElementFromByteElement(ByteElement e, bool isEVR) =>
+      TagElement.makeElementFromBytes(e.code, e.vrCode, e.vfBytes, e.vfLength);
+
+  TagElement makeTagElementFromBytePixelData(BytePixelData e, bool isEVR) =>
+      TagElement.makeElementFromBytes(
+          e.code, e.vrCode, e.vfBytes, e.vfLength, e.fragments);
 
   ByteItem makeItem(ByteData bd, ByteDataset parent, Map<int, Element> elements,
           int vfLength, bool hadULength,
@@ -81,11 +92,13 @@ class ByteReader extends DcmReader {
       int code, List<ByteItem> items, ByteData vfBD, bool hadULength,
       [bool isEVR = true]) {
     ByteSQ sq = (isEVR)
-        ? new EVRSequence(bd, currentDS, items, hadULength)
-        : new IVRSequence(bd, currentDS, items, hadULength);
+        ? new EVRSequence.fromByteData(bd, currentDS, items, hadULength)
+        : new IVRSequence.fromByteData(bd, currentDS, items, hadULength);
     for (ByteItem item in items) item.addSQ(sq);
     return sq;
   }
+
+  void add(ByteElement e) => currentDS.add(e);
 /*
 
   List<Dataset> addSequence(List<Dataset> items, Element sq) {

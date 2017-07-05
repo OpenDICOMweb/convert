@@ -6,13 +6,15 @@
 
 
 export 'package:core/core.dart';
+export 'package:dcm_convert/src/dicom_no_tag/old/dcm_byte_reader.dart';
+export 'package:dcm_convert/src/dicom_no_tag/old/dcm_byte_writer.dart';
 
 /// Encoder and Decoder for DICOM File Format octet streams (Uint8List)
 
 export 'src/dicom_no_tag/byte_reader.dart';
 export 'src/dicom_no_tag/byte_writer.dart';
 export 'src/dicom_no_tag/compare_bytes.dart';
-export 'src/dicom_no_tag/dcm_byte_reader.dart';
-export 'src/dicom_no_tag/dcm_byte_writer.dart';
 export 'src/dicom_no_tag/dcm_writer.dart';
+/// Encoder and Decoder for DICOM File Format octet streams (Uint8List)
+
 

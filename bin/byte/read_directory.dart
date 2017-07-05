@@ -8,11 +8,9 @@ import 'dart:io';
 
 import 'package:common/logger.dart';
 import 'package:common/timestamp.dart';
-import 'package:path/path.dart' as p;
-
-import 'package:dcm_convert/src/utilities/file_list_reader.dart';
-
 import 'package:dcm_convert/data/test_directories.dart';
+import 'package:dcm_convert/src/utilities/file_list_reader.dart';
+import 'package:path/path.dart' as p;
 
 String outRoot0 = 'test/output/root0';
 String outRoot1 = 'test/output/root1';

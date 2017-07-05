@@ -204,7 +204,7 @@ class DcmByteReader extends DcmReaderBase {
     }
     _log.debug2('$rmm     endOfVF($rIndex) _readEVR: ');
     //Enhancement: this will become the external interface
-    var e = new EVRElement(_getElementBD(start, rIndex));
+    var e = new EVRElement.fromByteData(_getElementBD(start, rIndex));
     //Urgent    assert(check(e));
     if (_afterPixelData == true) log.warn('After PixelData: ${e.info}');
     _log.debug1('$ree     $e');
@@ -249,7 +249,7 @@ class DcmByteReader extends DcmReaderBase {
     }
     _log.debug2('$rmm _readIVR: start($start) end($rIndex)');
     //Urgent: this will become the external interface
-    var e = new IVRElement(_getElementBD(start, rIndex));
+    var e = new IVRElement.fromByteData(_getElementBD(start, rIndex));
     if (_afterPixelData == true) log.warn('After PixelData: $e');
     print(e.runtimeType);
     print(e.dcm);
@@ -314,9 +314,9 @@ class DcmByteReader extends DcmReaderBase {
     ByteSQ sq;
     //TODO: should be able to resolve the type
     if (rootDS.isEVR) {
-      sq = new EVRSequence(bdx, currentDS, items, isUndefined);
+      sq = new EVRSequence.fromByteData(bdx, currentDS, items, isUndefined);
     } else {
-      sq = new IVRSequence(bdx, currentDS, items, isUndefined);
+      sq = new IVRSequence.fromByteData(bdx, currentDS, items, isUndefined);
     }
     for (ByteItem item in items) item.addSQ(sq);
     _log.debugUp('$ree $sq');

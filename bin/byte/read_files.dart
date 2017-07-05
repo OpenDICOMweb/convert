@@ -8,7 +8,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:common/logger.dart';
-
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dicom_no_tag.dart';
 

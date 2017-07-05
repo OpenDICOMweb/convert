@@ -4,21 +4,19 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:common/common.dart';
 import 'package:core/core.dart';
-import 'package:dcm_convert/src/dicom_no_tag/dcm_byte_writer.dart';
+import 'package:dcm_convert/src/dicom_no_tag/old/dcm_byte_writer.dart';
 import 'package:dcm_convert/timer.dart';
 import 'package:dictionary/dictionary.dart';
 
-final Logger log = new Logger("convert/bin/no_tag/write_file_list.dart",
+final Logger log = new Logger("convert/bin/byte/write_file_list.dart",
     watermark: Severity.info);
 
 Uint8List writeFile(RootByteDataset rds, String path,
     {bool fmiOnly = false, TransferSyntax outputTS}) {
-    var file = new File(path);
     var timer = new Timer();
     var total = rds.total;
     log.debug('writing ${rds.runtimeType} to "$path"\n'

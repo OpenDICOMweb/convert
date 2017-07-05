@@ -38,6 +38,7 @@ TagElement convertElement(TagDataset result, ByteElement e) {
   log.debug1(' BE: $e');
   var code = e.code;
   var vrCode = e.vrCode;
+  var isEVR = e.isEVR;
   var tag = getTag(e);
 
   if (e.vr == VR.kUN && tag.vr != VR.kUN)
@@ -48,7 +49,8 @@ TagElement convertElement(TagDataset result, ByteElement e) {
       log.info('**** Byte Element Pixel Data ${e.info}');
       if (e is BytePixelData) {
         if (e.isEncapsulated) {
-          if (e.vrCode == VR.kUN.code) log.warn('Pixel Data vr(${e.vr} -> VR.kOB');
+          if (e.vrCode == VR.kUN.code)
+            log.warn('Pixel Data vr(${e.vr} -> VR.kOB');
           log.info('**** OB Pixel Data ${e.info}');
           log.info('**** OB Fragments ${e.fragments.info}');
           te = OB.parseBytes(tag, e.vfBytes, e.vfLength, e.fragments);
@@ -61,17 +63,21 @@ TagElement convertElement(TagDataset result, ByteElement e) {
       }
       log.info('**** Tag Pixel Data ${te.info}');
     } else {
-     te = TagElement.makeElementFromBytes(isEVR, code, vrCode, e.vfBytes, e.vfLength);
+      te = TagElement.makeElementFromBytes(
+          code, vrCode, e.vfBytes, e.vfLength, isEVR);
     }
   } else if (tag is PCTag) {
     if (e.vr != VR.kLO)
       log.warn('Private Creator e.vr(${e.vr}) should be VR.kLO');
-    if (vrCode != VR.kLO.code) throw 'Invalid Tag VR: ${tag.vr} should be VR.kLO';
-    te = TagElement.makeElementFromBytes(isEVR, code, vrCode, e.vfBytes, e.vfLength);
+    if (vrCode != VR.kLO.code)
+      throw 'Invalid Tag VR: ${tag.vr} should be VR.kLO';
+    te = TagElement.makeElementFromBytes(
+        code, vrCode, e.vfBytes, e.vfLength, isEVR);
     assert(tag is PCTag && tag.name == e.asString);
     pcElements[e.asString] = te;
   } else if (tag is PDTag) {
-    te = TagElement.makeElementFromBytes(isEVR, code, vrCode, e.vfBytes, e.vfLength);
+    te = TagElement.makeElementFromBytes(
+        code, vrCode, e.vfBytes, e.vfLength, isEVR);
   } else {
     throw 'Invalid Tag: $tag';
   }
@@ -86,8 +92,8 @@ SQ getSequence(TagDataset result, ByteSQ sq) {
   var parentTDS = currentTDS;
   for (int i = 0; i < sq.items.length; i++) {
     ByteDataset currentBDS = sq.items[i];
-    var currentTDS = new TagItem(currentBDS.bd, parentTDS, currentBDS.vfLength, currentBDS
-        .hadULength);
+    var currentTDS = new TagItem(
+        currentBDS.bd, parentTDS, currentBDS.vfLength, currentBDS.hadULength);
     for (ByteElement e in currentBDS.elements) {
       TagElement te = convertElement(result, e);
       currentTDS.add(te);
