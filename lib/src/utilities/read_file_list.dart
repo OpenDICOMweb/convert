@@ -8,8 +8,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:common/logger.dart';
-import 'package:convertX/convert.dart';
 import 'package:core/core.dart';
+import 'package:dcm_convert/convert.dart';
 
 class FileListReader {
   static final Logger log =

@@ -7,8 +7,8 @@
 import 'dart:typed_data';
 
 import 'package:common/logger.dart';
-import 'package:convertX/convert.dart';
 import 'package:core/core.dart';
+import 'package:dcm_convert/convert.dart';
 import 'package:dictionary/dictionary.dart';
 
 /// Logger

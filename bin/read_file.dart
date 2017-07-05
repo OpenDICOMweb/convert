@@ -9,9 +9,9 @@ import 'dart:typed_data';
 
 import 'package:common/format.dart';
 import 'package:common/logger.dart';
-import 'package:convertX/convert.dart';
-import 'package:convertX/src/utilities/read_file_list.dart';
 import 'package:core/core.dart';
+import 'package:dcm_convert/convert.dart';
+import 'package:dcm_convert/src/utilities/read_file_list.dart';
 
 String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
 String path1 =

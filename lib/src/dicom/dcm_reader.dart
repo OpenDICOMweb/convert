@@ -7,8 +7,8 @@
 import 'dart:typed_data';
 
 import 'package:common/common.dart';
-import 'package:convertX/src/bytebuf/bytebuf.dart';
 import 'package:core/core.dart';
+import 'package:dcm_convert/src/bytebuf/bytebuf.dart';
 import 'package:dictionary/dictionary.dart';
 
 //TODO: remove log.debug when working
@@ -61,7 +61,7 @@ class DcmReader<E> extends ByteBuf {
 
   //TODO: finish
   /// Creates a new [DcmReader]  where [readIndex] = [writeIndex] = 0.
-  DcmReader(Uint8List bytes, this._rootDS,
+  DcmReader(Uint8List bytes, this.rootDS,
       {this.path = "", this.throwOnError = false, this.allowILEVR = true})
       : super.reader(bytes) {
     _warnIfShortFile(bytes.lengthInBytes);

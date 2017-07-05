@@ -8,8 +8,8 @@ import 'dart:io';
 
 import 'package:common/logger.dart';
 import 'package:common/timestamp.dart';
-import 'package:convertX/convert.dart';
 import 'package:core/core.dart';
+import 'package:dcm_convert/convert.dart';
 import 'package:path/path.dart' as p;
 
 String inRoot0 = "C:/odw/test_data/sfd/CR";

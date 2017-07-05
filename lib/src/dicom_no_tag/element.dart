@@ -8,7 +8,7 @@ import 'dart:collection';
 import 'dart:typed_data';
 
 import 'package:common/common.dart';
-import 'package:convertX/src/dicom_no_tag/old/dataset.dart';
+import 'package:dcm_convert/src/dicom_no_tag/old/dataset.dart';
 import 'package:dictionary/dictionary.dart';
 
 import 'utils.dart';

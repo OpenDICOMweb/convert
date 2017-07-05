@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:common/logger.dart';
-import 'package:convertX/src/dicom/dcm_reader.dart';
 import 'package:core/core.dart';
+import 'package:dcm_convert/src/dicom/dcm_reader.dart';
 
 void main() {
     String path0 = 'C:/odw/sdk/test_tools/test_data/TransferUIDs'

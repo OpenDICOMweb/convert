@@ -10,9 +10,9 @@ import 'dart:typed_data';
 import 'package:common/format.dart';
 import 'package:common/logger.dart';
 import 'package:common/timestamp.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_reader.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_writer.dart';
-import 'package:convertX/src/dicom_no_tag/old/dataset.dart';
+import 'package:dcm_convert/src/dicom_no_tag/dcm_reader.dart';
+import 'package:dcm_convert/src/dicom_no_tag/dcm_writer.dart';
+import 'package:dcm_convert/src/dicom_no_tag/old/dataset.dart';
 import 'package:dictionary/dictionary.dart';
 
 final Logger _log = new Logger("io/bin/read_file.dart", watermark: Severity.warn);

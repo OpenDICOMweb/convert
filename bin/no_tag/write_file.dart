@@ -10,8 +10,8 @@ import 'dart:typed_data';
 import 'package:common/format.dart';
 import 'package:common/logger.dart';
 import 'package:common/timestamp.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_writer.dart';
-import 'package:convertX/src/dicom_no_tag/old/dataset.dart';
+import 'package:dcm_convert/src/dicom_no_tag/dcm_writer.dart';
+import 'package:dcm_convert/src/dicom_no_tag/old/dataset.dart';
 import 'package:dictionary/dictionary.dart';
 
 final Logger log = new Logger("convert/bin/no_tag/write_file_list.dart",

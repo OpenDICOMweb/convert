@@ -7,8 +7,8 @@
 import 'dart:io';
 
 import 'package:common/logger.dart';
-import 'package:convertX/src/dicom/dcm_reader.dart';
 import 'package:core/core.dart';
+import 'package:dcm_convert/src/dicom/dcm_reader.dart';
 import 'package:test/test.dart';
 
 void main() {

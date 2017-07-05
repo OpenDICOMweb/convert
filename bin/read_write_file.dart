@@ -9,8 +9,8 @@ import 'dart:typed_data';
 
 import 'package:common/format.dart';
 import 'package:common/logger.dart';
-import 'package:convertX/convert.dart';
 import 'package:core/core.dart';
+import 'package:dcm_convert/convert.dart';
 import 'package:dictionary/tag.dart';
 
 //import 'package:io/src/test/compare_files.dart';
