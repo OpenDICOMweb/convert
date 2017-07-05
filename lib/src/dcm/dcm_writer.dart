@@ -18,13 +18,6 @@ import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
-const List<int> _undefinedLengthElements = const <int>[
-  kSQCode,
-  kOBCode,
-  kOWCode,
-  kUNCode
-];
-
 //TODO: remove log.debug when working
 //TODO: rewrite all comments to reflect current state of code
 
@@ -40,7 +33,7 @@ const List<int> _undefinedLengthElements = const <int>[
 // There are four [Element]s that might have an Undefined Length value
 // (0xFFFFFFFF), [SQ], [OB], [OW], [UN].
 abstract class DcmWriter {
-  static final Logger log = new Logger("DcmWriter", watermark: Severity.debug2);
+  static final Logger log = new Logger("DcmWriter", watermark: Severity.info);
 
   //Urgent: this should grow and shrink automatically
   static const int defaultBufferLength = 200 * kMB;
@@ -154,9 +147,7 @@ abstract class DcmWriter {
     _ts = rootDS.transferSyntax;
     _isEncapsulated = rootDS.transferSyntax.isEncapsulated;
     _isEVR = rootDS.isEVR;
-    log.debug(
-        '$wmm TransferSyntax(${_ts.name}), isEncapsulated($_isEncapsulated)');
-
+    log.debug('$wmm TS(${_ts.name}), isEncapsulated($_isEncapsulated)');
     if (!allowMissingFMI && !rootDS.hasFMI) {
       log.error('Dataset $rootDS is missing FMI elements');
       return null;
@@ -208,6 +199,7 @@ abstract class DcmWriter {
     var pInfo = rootDS.parseInfo;
     if (pInfo.hadPrefix == false && !addMissingPrefix) {
       log.debug2('$wmm not writing prefix');
+      log.up;
       return;
     }
     if ((pInfo.preamble != null) && !addCleanPrefix) {
@@ -238,14 +230,13 @@ abstract class DcmWriter {
     nthElement++;
     log.debugDown('$wbb writing: ${e.info}');
     if (e.isSequence) {
-      log.debug1('$wmm Writing Sequence: $e');
       _writeSequence(e);
     } else {
       _writeHeader(e);
       _writeBytes(e.vfBytes);
     }
     if (e.hadUndefinedLength) {
-      assert(_undefinedLengthElements.contains(e.vrCode));
+      assert(kUndefinedLengthElements.contains(e.vrCode));
       _writeDelimiter(kSequenceDelimitationItem);
     }
     _nElements++;
@@ -286,7 +277,6 @@ abstract class DcmWriter {
     assert(e.isSequence);
     log.debugDown('$wbb SQ $e');
     _writeHeader(e);
-
     _writeItems(e);
     if (e.hadUndefinedLength) _writeDelimiter(kSequenceDelimitationItem);
     _nSequences++;
@@ -328,7 +318,6 @@ abstract class DcmWriter {
   /// if [removeUndefinedLengths] is true this method should not be called.
   void _writeDelimiter(int delimiter, [int lengthInBytes = 0]) {
     assert(removeUndefinedLengths == false);
-    //  log.debug('$wmm delimiter(${toHex32(delimiter)})');
     _writeTagCode(delimiter);
     _writeUint32(lengthInBytes);
   }

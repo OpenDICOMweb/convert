@@ -13,7 +13,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
@@ -23,7 +22,6 @@ import 'dcm_writer.dart';
 /// and then possibly writing it to a [File]. Supports encoding
 /// all LITTLE ENDIAN [TransferSyntax]es.
 class ByteWriter extends DcmWriter {
-  static final Logger log = new Logger("DcmWriter", watermark: Severity.info);
 
   /// The [RootByteDataset] being written.
   final RootByteDataset _rootDS;

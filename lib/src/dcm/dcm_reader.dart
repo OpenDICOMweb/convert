@@ -33,7 +33,7 @@ abstract class DcmReader {
   static const int shortFileThreshold = 1024;
   //TODO: remove log.debug when working
   /// The [Logger] for this
-  static final Logger log = new Logger("DcmReader", watermark: Severity.debug2);
+  static final Logger log = new Logger("DcmReader", watermark: Severity.info);
 
   /// The [ByteData] being read.
   final ByteData bd;
@@ -180,7 +180,6 @@ abstract class DcmReader {
 
     _nTopLevelElements = rootDS.length;
     _parseInfo = getParseInfo();
-    rootDS.parseInfo = _parseInfo;
     log.debug('$rmm nTopLevelElements: ${rootDS.length}');
     log.debug('$ree readRootDataset: ${rootDS.info}');
     log.debug('elementIndex: length($nthElement)');
@@ -419,7 +418,7 @@ abstract class DcmReader {
       //log.debug1('$rmm SQ Length($vfLength) start($start) endOfVF($endOfVF)');
     }
 //    var e = bd.buffer.asByteData(start, endOfVF - start);
-    var e = bd.buffer.asByteData(eStart, endOfVF);
+    var e = bd.buffer.asByteData(eStart, endOfVF - eStart);
     Element sq = makeSequence(code, items, e, hadULength, isEVR);
     _nSequences++;
     if (Tag.isPrivateCode(code)) _nPrivateSequences++;

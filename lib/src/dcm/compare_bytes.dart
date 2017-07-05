@@ -112,8 +112,8 @@ bool compareDatasets(ByteDataset ds0, ByteDataset ds1,
           e0.vrCode != e1.vrCode ||
           e0.vfLength != e1.vfLength ||
           e0.vfBytes.length != e1.vfBytes.length) {
-        print('e0: ${e0.info}');
-        print('e1: ${e1.info}');
+//        print('e0: ${e0.info}');
+//        print('e1: ${e1.info}');
         if (throwOnError) {
           throw 'ds0 != ds1';
         } else {

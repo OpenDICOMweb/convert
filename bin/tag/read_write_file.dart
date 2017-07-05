@@ -35,7 +35,7 @@ String path5 =
     '/2.16.840.1.114255.1870665029.949635505.10220.175.dcm';
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
-final Logger log = new Logger("read_write_file", watermark: Severity.debug2);
+final Logger log = new Logger("read_write_file", watermark: Severity.info);
 
 void main(List<String> args) {
   File file = new File(path0);

@@ -11,7 +11,7 @@ import 'package:common/logger.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 
-final Logger log = new Logger("io/bin/read_files.dart", watermark: Severity.debug2);
+final Logger log = new Logger("io/bin/read_files.dart", watermark: Severity.info);
 
 void main() {
   var path = test6684_01;

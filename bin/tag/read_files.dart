@@ -15,7 +15,7 @@ import 'package:dcm_convert/src/utilities/file_list_reader.dart';
 
 
 final Logger log =
-    new Logger("io/bin/read_files.dart", watermark: Severity.debug);
+    new Logger("io/bin/read_files.dart", watermark: Severity.info);
 
 void main() {
  // readFile(path0);
