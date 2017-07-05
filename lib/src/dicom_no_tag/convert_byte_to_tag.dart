@@ -10,44 +10,45 @@ import 'package:core/core.dart';
 
 Logger log = new Logger('convert', watermark: Severity.info);
 
-typedef Element<I, V> Maker<I, V>(I id, List<V> values,
+typedef Element<K, T, V> Maker<K, T, V>(K id, List<V> values,
     [int vfLength, VFFragments fragments]);
 
-RootTDataset convertByteToTag(RootByteDataset source) {
-  RootTDataset result = new RootTDataset.fromByteData(
-      bd: source.bd,
-      path: source.path,
-      vfLength: source.vfLength,
-      hadUndefinedLength: source.hadULength);
+ByteDataset currentBDS;
+TagDataset currentTDS;
+bool isEVR;
 
-  Iterable<ByteElement> elements = source.elements;
+RootTagDataset convertByteDSToTagDS(RootByteDataset rootBDS) {
+  currentBDS = rootBDS;
+  isEVR = rootBDS.isEVR;
+  RootTagDataset rootTDS = new RootTagDataset.fromByteData(rootBDS.bd);
+
+  Iterable<ByteElement> elements = rootBDS.elements;
   for (ByteElement e in elements) {
-    TElement te = convertElement(result, e);
+    TagElement te = convertElement(rootTDS, e);
     if (te == null) throw 'null TE';
-    result.add(te);
+    rootTDS.add(te);
   }
-  return result;
+  return rootTDS;
 }
 
-Map<String, TElement> pcElements = <String, TElement>{};
+Map<String, TagElement> pcElements = <String, TagElement>{};
 
-TElement convertElement(TDataset result, ByteElement e) {
+TagElement convertElement(TagDataset result, ByteElement e) {
   if (e is ByteSQ) return getSequence(result, e);
   log.debug1(' BE: $e');
+  var code = e.code;
+  var vrCode = e.vrCode;
   var tag = getTag(e);
-  VR vr = e.vr;
-  if (e.vr == VR.kUN && tag.vr != VR.kUN) {
-    VR oldVR = e.vr;
-    VR vr0 = tag.vr;
-    log.warn('e.vr of $oldVR was changed to ${tag.vr}');
-  }
 
-  TElement te;
+  if (e.vr == VR.kUN && tag.vr != VR.kUN)
+    log.warn('e.vr of ${e.vr} was changed to ${tag.vr}');
+  TagElement te;
   if (tag is PTag) {
     if (tag.code == kPixelData) {
       log.info('**** Byte Element Pixel Data ${e.info}');
       if (e is BytePixelData) {
         if (e.isEncapsulated) {
+          if (e.vrCode == VR.kUN.code) log.warn('Pixel Data vr(${e.vr} -> VR.kOB');
           log.info('**** OB Pixel Data ${e.info}');
           log.info('**** OB Fragments ${e.fragments.info}');
           te = OB.parseBytes(tag, e.vfBytes, e.vfLength, e.fragments);
@@ -60,20 +61,17 @@ TElement convertElement(TDataset result, ByteElement e) {
       }
       log.info('**** Tag Pixel Data ${te.info}');
     } else {
-      Maker maker = TElement.makers[vr.index];
-      te = maker(tag, e.vfBytes, e.vfLength);
+     te = TagElement.makeElementFromBytes(isEVR, code, vrCode, e.vfBytes, e.vfLength);
     }
   } else if (tag is PCTag) {
     if (e.vr != VR.kLO)
       log.warn('Private Creator e.vr(${e.vr}) should be VR.kLO');
-    if (tag.vr != VR.kLO) throw 'Invalid Tag VR: ${tag.vr} should be VR.kLO';
-    Maker maker = TElement.makers[vr.index];
-    te = maker(tag, e.vfBytes, e.vfLength);
+    if (vrCode != VR.kLO.code) throw 'Invalid Tag VR: ${tag.vr} should be VR.kLO';
+    te = TagElement.makeElementFromBytes(isEVR, code, vrCode, e.vfBytes, e.vfLength);
     assert(tag is PCTag && tag.name == e.asString);
     pcElements[e.asString] = te;
   } else if (tag is PDTag) {
-    Maker maker = TElement.makers[vr.index];
-    te = maker(tag, e.vfBytes, e.vfLength);
+    te = TagElement.makeElementFromBytes(isEVR, code, vrCode, e.vfBytes, e.vfLength);
   } else {
     throw 'Invalid Tag: $tag';
   }
@@ -81,19 +79,23 @@ TElement convertElement(TDataset result, ByteElement e) {
   return te;
 }
 
-SQ getSequence(TDataset result, ByteSQ sq) {
+SQ getSequence(TagDataset result, ByteSQ sq) {
   Tag tag = getTag(sq);
-//    var elements = source.elements;
-  List<TItem> tItems = new List<TItem>(sq.items.length);
+  var tItems = new List<TagItem>(sq.items.length);
+  var parentBDS = currentBDS;
+  var parentTDS = currentTDS;
   for (int i = 0; i < sq.items.length; i++) {
-    var bItem = sq.items[i];
-    Map<int, TElement> tMap = <int, TElement>{};
-    for (ByteElement e in bItem.elements) {
-      TElement te = convertElement(result, e);
-      tMap[te.code] = te;
+    ByteDataset currentBDS = sq.items[i];
+    var currentTDS = new TagItem(currentBDS.bd, parentTDS, currentBDS.vfLength, currentBDS
+        .hadULength);
+    for (ByteElement e in currentBDS.elements) {
+      TagElement te = convertElement(result, e);
+      currentTDS.add(te);
     }
-    tItems[i] = new TItem(result, tMap, bItem.vfLength);
+    tItems[i] = currentTDS;
   }
+  currentBDS = parentBDS;
+  currentTDS = parentTDS;
   return new SQ(tag, tItems, sq.vfLength);
 }
 

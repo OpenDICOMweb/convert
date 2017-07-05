@@ -46,13 +46,16 @@ abstract class DcmReaderBase {
   final bool allowMissingPrefix;
   final bool allowMissingFMI;
   final TransferSyntax targetTS;
+  final bool reUseBD;
 
   int pixelDataIndex = -1;
   bool hadShortByteData;
   bool preamblePresent;
+  bool hadPrefix;
   bool preambleWasZeros;
   bool hadFMI = false;
   bool hadProblems = false;
+  bool hadNonZeroDelimiterLength = true;
   bool hadParsingErrors = false;
   bool hadTrailingZeros = false;
   Part10Header part10;
@@ -70,7 +73,8 @@ abstract class DcmReaderBase {
       this.allowILEVR = true,
       this.allowMissingPrefix = true,
       this.allowMissingFMI = false,
-      this.targetTS})
+      this.targetTS,
+      this.reUseBD})
       : endOfBD = bd.lengthInBytes;
 
   Element readElement();
@@ -104,6 +108,7 @@ abstract class DcmReaderBase {
   /// Reads File Meta Information ([Fmi]) and returns a Map<int, Element>
   /// if any [Fmi] [ByteElement]s were present; otherwise, returns null.
   bool readPrefix(ByteData bd, [bool checkForZeros = true]) {
+    _log.debugDown('$rbb readPrefix');
     if (rIndex != 0) throw 'Read Index $rIndex != 0';
     if (rootDS == null) throw 'Missing Root Dataset';
     if (bd.lengthInBytes < smallFileThreshold) {
@@ -117,16 +122,17 @@ abstract class DcmReaderBase {
         if (bd.getUint64(i) != 0) preambleWasZeros = false;;
       preambleWasZeros = true;
       rIndex = 128;
-
     }
 
     var token = ASCII.decode(bd.buffer.asUint8List(128, 4));
     if (token == 'DICM') {
       preamblePresent = true;
       rIndex = 132;
+      _log.debug('$ree readPrefix true');
       return true;
     }
     rIndex = 0;
+    _log.debug('$rbb readPrefix **** false');
     return false;
   }
 

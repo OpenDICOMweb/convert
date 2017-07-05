@@ -10,16 +10,9 @@ import 'package:common/logger.dart';
 import 'package:common/timestamp.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:convertX/src/utilities/read_file_list.dart';
+import 'package:dcm_convert/src/utilities/file_list_reader.dart';
 
-String inRoot0 = "C:/odw/test_data/sfd/CR";
-String inRoot1 = "C:/odw/test_data/sfd/CR_and_RF";
-String inRoot2 = "C:/odw/test_data/sfd/CT";
-String inRoot3 = "C:/odw/test_data/sfd/MG";
-String inRoot4 = "C:/odw/test_data/sfd";
-String inRoot5 = "C:/odw/test_data";
-String mWeb = "C:/odw/test_data/mweb";
-String testData = "C:/odw/test_data";
+import 'package:dcm_convert/data/test_directories.dart';
 
 String outRoot0 = 'test/output/root0';
 String outRoot1 = 'test/output/root1';
@@ -27,19 +20,12 @@ String outRoot2 = 'test/output/root2';
 String outRoot3 = 'test/output/root3';
 String outRoot4 =  'test/output/root4';
 
-String mweb0 = 'C:/odw/test_data/mweb/10 Patient IDs';
-String mweb1 = 'C:/odw/test_data/mweb/100 MB Studies';
-String hologic = 'C:/odw/test_data/mweb/Hologic';
-
-String badDir0 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
-String badDir1 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop";
-
-Logger log = new Logger("read_a_directory", watermark: Severity.warn);
+Logger log = new Logger("read_a_directory", watermark: Severity.info);
 
 void main() {
   int fsEntityCount;
 
-  Directory dir = new Directory(inRoot3);
+  Directory dir = new Directory(dir36_4485_6684);
 
   List<FileSystemEntity> fList = dir.listSync(recursive: true);
   fsEntityCount = fList.length;

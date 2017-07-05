@@ -7,11 +7,11 @@
 import 'dart:io';
 
 import 'package:common/logger.dart';
-import 'package:convertX/dicom_no_tag.dart';
+import 'package:dcm_convert/dicom_no_tag.dart';
 
 class FileListReader {
   static final Logger log =
-      new Logger("read_a_directory", watermark: Severity.warn);
+      new Logger("read_a_directory", watermark: Severity.info);
   List<String> paths;
   bool fmiOnly;
   bool throwOnError;
@@ -33,29 +33,30 @@ class FileListReader {
     int count = -1;
     RootByteDataset rds;
 
-    for (String fPath in paths) {
+    for (String path  in paths) {
       if (count++ % printEvery == 0)
         log.info('$count good($successCount), bad($failureCount)');
-      log.debug('Reading file: $fPath');
-      File file = new File(fPath);
+      log.debug('Reading file: $path ');
+      File f = new File(path);
       try {
-        var bytes = file.readAsBytesSync();
-        rds = DcmByteReader.readBytes(bytes, path: fPath, fmiOnly: fmiOnly);
-        log.info('${rds.info}');
+        var bytes = f.readAsBytesSync();
+        rds = ByteReader.readBytes(bytes, path: path , fmiOnly: fmiOnly);
+        log.info('${rds.parseInfo}');
+        log.info('  Dataset: $rds');
         if (rds == null) {
-          failures.add('"$fPath"');
+          failures.add('"$path "');
         } else {
           log.debug('Dataset: ${rds.info}');
-          successful.add('"$fPath"');
+          successful.add('"$path "');
         }
       } on InvalidTransferSyntaxError catch (e) {
         log.info(e);
-        badTransferSyntax.add(fPath);
+        badTransferSyntax.add(path );
       } catch (e) {
-        log.info('Fail: $fPath');
-        failures.add('"$fPath"');
+        log.info('Fail: $path ');
+        failures.add('"$path "');
         //   log.info('failures: ${failure.length}');
-        if (throwOnError) throw 'Failed: $fPath';
+        if (throwOnError) throw 'Failed: $path ';
         continue;
       }
       log.reset;
@@ -77,31 +78,3 @@ class FileListReader {
   }
 }
 
-/*
-RootByteDataset readFMI(Uint8List bytes, [String path = ""]) =>
-    DcmByteReader.readBytes(bytes, path: path, fmiOnly: true);
-
-RootByteDataset readRoot(ByteData bd, [String path = ""]) {
-  DcmByteReader reader = new DcmByteReader(bd);
-  RootByteDataset rds = reader.readRootDataset();
-  return rds;
-}
-
-
-*/
-/* Enhancement
-RootByteDataset readRootNoFMI(Uint8List bytes, [String path = ""]) =>
-    DcmByteReader.readBytes(bytes, path: path);
-*//*
-
-
-RootByteDataset readBytes(Uint8List bytes,
-        [String path = "", bool fmiOnly = false]) =>
-    DcmByteReader.readBytes(bytes, path: path, fmiOnly: fmiOnly);
-
-RootByteDataset readFile(File file, [String path = "", bool fmiOnly = false]) =>
-    readBytes(file.readAsBytesSync(), path);
-
-RootByteDataset readPath(String path, [bool fmiOnly = false]) =>
-    readFile(new File(path), path);
-*/

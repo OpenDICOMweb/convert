@@ -8,8 +8,7 @@ import 'dart:io';
 
 import 'package:common/logger.dart';
 import 'package:common/timestamp.dart';
-import 'package:convertX/convert.dart';
-//import 'package:core/core.dart';
+import 'package:dcm_convert/dicom_no_tag.dart';
 import 'package:path/path.dart' as p;
 
 String inRoot0 = "C:/odw/test_data/sfd/CR";
@@ -34,7 +33,7 @@ String hologic = 'C:/odw/test_data/mweb/Hologic';
 String badDir0 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
 String badDir1 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop";
 
-Logger log = new Logger("read_a_directory", watermark: Severity.warn);
+Logger log = new Logger("read_a_directory", watermark: Severity.info);
 
 void main() {
   int fsEntityCount;
@@ -77,7 +76,7 @@ void readFileList(List<File> files, {bool fmiOnly = false}) {
 
 
   int count = -1;
-  RootTDataset rds;
+  RootTagDataset rds;
   List<String> success = [];
   List<String> failure = [];
   for (File file in files) {
@@ -85,7 +84,7 @@ void readFileList(List<File> files, {bool fmiOnly = false}) {
         'bad(${failure.length})');
     log.debug('Reading file: $file');
     try {
-      rds = readRDS(file);
+      rds = ByteReader.readFile(file);
       if (rds == null) {
         failure.add('"${file.path}"');
       } else {
@@ -114,10 +113,4 @@ void readFileList(List<File> files, {bool fmiOnly = false}) {
   var bad = failure.join(',  \n');
 //  log.info('Good Files: [\n$good,\n]\n');
   log.info('bad Files: [\n$bad,\n]\n');
-}
-
-RootTDataset readRDS(File f) {
-  var bytes = f.readAsBytesSync();
-  // print('LengthInBytes: ${bytes.length}');
-  return  DcmReader.readDataset(bytes, path: f.path);
 }

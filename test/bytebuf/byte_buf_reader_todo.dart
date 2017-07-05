@@ -6,7 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:convertX/src/bytebuf/bytebuf_reader.dart';
+import 'package:dcm_convert/src/bytebuf/bytebuf_reader.dart';
 import "package:test/test.dart";
 
 import 'test_utilities.dart';

@@ -7,20 +7,23 @@
 import 'dart:typed_data';
 
 import 'package:common/common.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_reader.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
+import 'package:dcm_convert/src/dicom_no_tag/dcm_byte_reader.dart';
+
 /// An internal class designed for testing DcmReader.
-class TestDcmReader extends DcmReader {
+class TestDcmByteReader extends DcmByteReader {
+
   /// Creates a new [DcmReader]  where [_rIndex] = [writeIndex] = 0.
-  TestDcmReader(ByteData bd, RootDataset rootDS,
+  TestDcmByteReader(ByteData bd,
       {String path = "",
       bool fmiOnly = false,
       bool throwOnError = true,
       bool allowMissingFMI = false,
-      TransferSyntax targetTS})
-      : super(bd, rootDS,
+      TransferSyntax targetTS,
+      bool reUseBD = false})
+      : super(bd,
             path: path,
             fmiOnly: fmiOnly,
             throwOnError: throwOnError,
@@ -30,7 +33,7 @@ class TestDcmReader extends DcmReader {
   /// Creates a [Uint8List] with the same length as the elements in [list],
   /// and copies over the elements.  Values are truncated to fit in the list
   /// when they are copied, the same way storing values truncates them.
-  factory TestDcmReader.fromList(List<int> list, RootDataset rootDS,
+  factory TestDcmByteReader.fromList(List<int> list, Dataset rootDS,
       {String path = "",
       bool fmiOnly = false,
       bool throwOnError = false,
@@ -38,7 +41,7 @@ class TestDcmReader extends DcmReader {
       TransferSyntax targetTS}) {
     Uint8List bytes = new Uint8List.fromList(list);
     ByteData bd = bytes.buffer.asByteData();
-    return new TestDcmReader(bd, rootDS,
+    return new TestDcmByteReader(bd,
         path: path,
         fmiOnly: fmiOnly,
         throwOnError: throwOnError,
@@ -52,9 +55,11 @@ class TestDcmReader extends DcmReader {
   /// Returns [true] if the File Meta Information was present and
   /// read successfully.
   TransferSyntax xReadFmi([bool checkForPrefix = true]) {
-    var hasFMI = readFMI(checkForPrefix);
-    if (hasFMI || !rootDS.hasValidTransferSyntax) return null;
-    return rootDS.transferSyntax;
+    readFmi(checkForPrefix);
+    if (rootDS.length == 0) return null;
+    var ts = rootDS.transferSyntax;
+    if (!System.isSupportedTransferSyntax(ts))return null;
+    return ts;
   }
 
   Element xReadPublicElement([bool isExplicitVR = true]) => readElement(isExplicitVR);

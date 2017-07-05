@@ -1,36 +1,81 @@
 // Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
-// Original author: Jim Philbin <jfphilbin@gmail.edu> -
+// Author: Jim Philbin <jfphilbin@gmail.edu>
 // See the AUTHORS file for other contributors.
 
-
-String badFile0 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy/1.2.840.113619"
-    ".2.5.1762583153.215519.978957063.101.dcm";
-
-String badFile1 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
-    ".840.10008.5.1.4.1.1.1.2.1.dcm";
-
-String badFile2 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
-    ".840.10008.5.1.4.1.1.104.2.dcm ";
-
-String badFile3 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
-    ".840.10008.5.1.4.1.1.128.1.dcm";
-
-String badFile4 =
-    "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm";
-
-String badFile5 = "C:/odw/test_data/sfd/Peds/Patient_55/1_DICOM_Original"
-    "/IM000510.dcm";
-
-String badFile6 = "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1"
-    ".2.840.10008.5.1.4.1.1.20.dcm";
-String test = 'C:/odw/sdk/test_tools/test_data/TransferUIDs'
-    '/1.2.840.10008.1.2.5.dcm';
-String badDir = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
+const String test6684_01 = 'C:/odw/test_data/36_4485_6684/IM-0001-0001-0001.dcm';
+const String ivrFile = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy/1.2.840'
+    '.113619.2.5.1762583153.215519.978957063.101.dcm';
 
 
-const List<String> fileList0 = const <String>[
+const String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
+const String path1 = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
+const String path2 = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
+const String path3 = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368';
+const String path4 = 'C:/odw/test_data/mweb/100 MB Studies'
+    '/8963-largefiles/89688';
+
+
+const String path5 =
+    'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255'
+    '.393386351.1568457295.17895.5.dcm';
+const String path6 =
+    'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original/'
+    'CR.2.16.840.1.114255.393386351.1568457295.48879.7.dcm';
+const String path7 =
+    'C:/odw/test_data/sfd/CT/Patient_4_3_phase_abd/'
+    '1_DICOM_Original/IM000002.dcm';
+const String path8 =
+    'C:/odw/sdk/io/example/input/'
+    '1.2.840.113696.596650.500.5347264.20120723195848/1.2'
+    '.392.200036.9125.3.3315591109239.64688154694.35921044/'
+    '1.2.392.200036.9125.9.0.252688780.254812416.1536946029.dcm';
+const String path9 =
+    'C:/odw/sdk/io/example/input/'
+    '1.2.840.113696.596650.500.5347264.20120723195848/'
+    '2.16.840.1.114255.1870665029.949635505.39523.169/'
+    '2.16.840.1.114255.1870665029.949635505.10220.175.dcm';
+
+const String path10 = 'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop'
+    '/1.2.840.10008.5.1.4.1.1.88.67.dcm';
+
+const String path11 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/'
+    'Anonymized1.2'
+    '.840.10008.5.1.4.1.1.12.1.dcm';
+
+const String path12 = 'C:/odw/test_data/mweb/Different_Transfer_UIDs'
+    '/Anonymized1.2'
+    '.840.10008.1.2.4.50.dcm';
+
+const String path13 = 'C:/odw/test_data/mweb/Radiologic/2/I00221';
+
+const String path14 = 'C:/odw/sdk/test_tools/test_data/TransferUIDs/1.2.840.10008.1.2.5.dcm';
+
+const String path15 =
+    'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255'
+    '.393386351.1568457295.17895.5.dcm';
+const String path16 =
+    'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255.393386351.1568457295.48879.7.dcm';
+const String path17 =
+    'C:/odw/test_data/sfd/CT/Patient_4_3_phase_abd/1_DICOM_Original/IM000002.dcm';
+const String path18 =
+    'C:/odw/sdk/io/example/input/1.2.840.113696.596650.500.5347264.20120723195848/1.2'
+    '.392.200036.9125.3.3315591109239.64688154694.35921044/1.2.392.200036.9125.9.0.252688780.254812416.1536946029.dcm';
+const String path19 =
+    'C:/odw/sdk/io/example/input/1.2.840.113696.596650.500.5347264.20120723195848/2.16.840.1.114255.1870665029.949635505.39523.169/2.16.840.1.114255.1870665029.949635505.10220.175.dcm';
+const String path20 = "C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/CT.2.16"
+    ".840.1.114255.390617858.1794098916.62037.38690.dcm";
+const String path21 = 'C:/odw/test_data/6688/12/0B009D38/0B009D3D/4D4E9A56';
+
+const List<String> paths = const <String>[path0, path1, path2, path3, path4, path5];
+
+const List<String> testPaths = const <String>[
+  path0, path1, path2, path3, path4, path5, path6, path7,
+  path8, path9, path10, path11, path12, path13, path14 // No reformat
+];
+
+const List<String> fileList8 = const <String>[
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.128.1.dcm",
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.2.dcm",
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.4.dcm",
@@ -41,55 +86,7 @@ const List<String> fileList0 = const <String>[
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.88.33.dcm",
 ];
 
-const List<String> badFileList1 = const <String>[
-  "C:/odw/test_data/mweb/ASPERA/DICOM files only/22c82bd4-6926-46e1-b055-c6b788388014.dcm",
-  "C:/odw/test_data/mweb/ASPERA/DICOM files only/4cf05f57-4893-4453-b540-4070ac1a9ffb.dcm",
-  "C:/odw/test_data/mweb/ASPERA/DICOM files only/523a693d-94fa-4143-babb-be8a847a38cd.dcm",
-  "C:/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.5.5.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.6.1.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.20.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.7.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.22.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.67.dcm",
-  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.1.dcm",
-  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.2.dcm",
-  "C:/odw/test_data/mweb/Sample Dose Sheets/4cf05f57-4893-4453-b540-4070ac1a9ffb.dcm",
-];
-
-const List<String> badFileList2 = const <String>[
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.5.5.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.6.1.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.20.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.22.dcm",
-  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.1.dcm",
-];
-
-const List<String> badFileList3 = const <String>[
-  "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm",
-  "C:/odw/test_data/mweb/ASPERA/DICOM files only/22c82bd4-6926-46e1-b055-c6b788388014.dcm",
-  "C:/odw/test_data/mweb/ASPERA/DICOM files only/4cf05f57-4893-4453-b540-4070ac1a9ffb.dcm",
-  "C:/odw/test_data/mweb/ASPERA/DICOM files only/523a693d-94fa-4143-babb-be8a847a38cd.dcm",
-  "C:/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.20.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.7.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.22.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.67.dcm",
-  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.1.dcm",
-  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.2.dcm",
-  "C:/odw/test_data/mweb/Sample Dose Sheets/4cf05f57-4893-4453-b540-4070ac1a9ffb.dcm",
-];
-
-const List<String> badFileList4 = const <String>[
-  "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.20.dcm",
-  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.22.dcm",
-  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.1.dcm",
-];
-
-const List<String> fileList1 = const <String>[
+const List<String> fileList6 = const <String>[
   "C:/odw/test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original/IM000001.dcm",
   "C:/odw/test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original/IM000002.dcm",
   "C:/odw/test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original/IM000003.dcm",
@@ -150,7 +147,377 @@ const List<String> fileList1 = const <String>[
   "C:/odw/test_data/sfd/CR_and_RF/Patient_31_Skeletal_survey/1_DICOM_Original/IM000019.dcm",
 ];
 
-const List<String> badFileList5 = const <String>[
+const String shortFile0 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs'
+    '/Anonymized1.2'
+    '.826.0.1.3680043.2.93.1.0.1.dcm';
+const String shortFile2 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs'
+    '/Anonymized1.2'
+    '.826.0.1.3680043.2.93.1.0.2.dcm';
+
+const List<String> shortFiles = const <String>[
+  'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.66.dcm',
+  'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.826.0.1.3680043.2.93.1.0.1.dcm'
+];
+// File with Non-Zero Prefix
+const String error0 = 'C:/odw/test_data/mweb/ASPERA'
+    '/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.88.67.dcm';
+
+// File with only 132 Bytes
+const String error1 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs'
+    '/Anonymized1.2.840.10008.5.1.4.1.1.20.dcm';
+
+// File with only 132 Bytes
+const String error2 = 'C:/odw/test_data/mweb/Radiologic/2/I00221';
+
+// Laurel Bridge can open either.
+const String error3 = 'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX'
+    '/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)'
+    '/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm';
+
+// Laurel Bridge can open either.
+const String error4 = "C:/odw/test_data/sfd/CT"
+    "/Patient_16_CT_Maxillofacial_-_Wegners/1_DICOM_Original/IM000006.dcm";
+
+// Laurel Bridge can open either.
+const String error5 = "C:/odw/test_data/sfd/CT/Patient_6_Lung_CA/1_DICOM_Original/IM000003.dcm";
+
+// Laurel Bridge can open either.
+const String error6 = "C:/odw/test_data/sfd/CT/Patient_7_Dural_Ectasia/1_DICOM_Original"
+    "/IM000001.dcm";
+
+// Laurel Bridge can open either.
+const String error7 = "C:/odw/test_data/sfd/CT"
+    "/Patient_8_Non_ossifying_fibroma/1_DICOM_Original/IM000004.dcm";
+
+/// Error: cannot open file.
+const String error8 = "C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/CT"
+    ".2.16.840.1.114255.390617858.1794098916.10199.38535.dcm";
+
+// Failed to read FMI
+// It has a sequence in the FMI data.
+const String error9 = "C:/odw/test_data/sfd/MG/DICOMDIR";
+
+const String error10 = 'C:/odw/test_data/sfd/MG/Patient_38/1_DICOM_Original'
+    '/IM000001.dcm';
+
+// Odd Length Value Field
+const String error11 = 'C:/odw/test_data/sfd/MG/Patient_41/1_DICOM_Original'
+    '/IM000001.dcm';
+
+const String error12 = 'C:/odw/test_data/sfd/MG/Patient_46/1_DICOM_Original'
+    '/IM000003.dcm';
+
+const String error13 = 'C:/odw/test_data/sfd/MG/Patient_48/1_DICOM_Original'
+    '/IM000010.dcm';
+
+const String error14 = 'C:/odw/test_data/mweb/TransferUIDs/1.2.840.10008.1.2.4.80.dcm';
+
+
+//const List<String> error6 = [];
+//const List<String> error6 = [];
+
+const List<String> testErrors = const <String>[
+  error0, error1, error2, error3, error4, error5, error6, error7, error8,
+  error9, error10, error11, error12, error12, // No Reformat
+];
+
+const String badFile0 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy/1.2.840.113619"
+    ".2.5.1762583153.215519.978957063.101.dcm";
+
+const String badFile1 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
+    ".840.10008.5.1.4.1.1.1.2.1.dcm";
+
+const String badFile2 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
+    ".840.10008.5.1.4.1.1.104.2.dcm ";
+
+const String badFile3 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
+    ".840.10008.5.1.4.1.1.128.1.dcm";
+
+const String badFile4 =
+    "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm";
+
+const String badFile5 = "C:/odw/test_data/sfd/Peds/Patient_55/1_DICOM_Original"
+    "/IM000510.dcm";
+
+const String badFile6 = "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1"
+    ".2.840.10008.5.1.4.1.1.20.dcm";
+
+const String badFile7 = "C:/odw/test_data/mweb/100 MB Studies/Site 3/Case 1 Ped"
+    "/1.2.840.113704.1.111.8916.1202763720.15"
+    "/1.2.840.113704.1.111.1608.1202763888.37524.dcm ";
+
+const String badFile8 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy/1.2.840.113619"
+    ".2.5.1762583153.215519.978957063.101.dcm";
+
+const String badFile9 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
+    ".840.10008.5.1.4.1.1.1.2.1.dcm";
+
+const String badFile10 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
+    ".840.10008.5.1.4.1.1.104.2.dcm ";
+
+const String badFile11 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
+    ".840.10008.5.1.4.1.1.128.1.dcm";
+
+const String badFile12 = "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/"
+    "Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/"
+    "A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm";
+
+const List<String> badFileList0 = const [
+  badFile0, badFile1,  badFile2,  badFile3,  badFile4, badFile5, badFile6, badFile7,
+  badFile8, badFile9, badFile10, badFile11, badFile12 // no reformat
+];
+
+const List<String> badFileList1 = const <String>[
+  "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.1.2.1.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.128.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.6.2.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.9.1.2.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.1.2.1.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.128.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.6.2.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.9.1.2.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0001.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0002.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0003.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0004.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0005.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0006.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0007.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0008.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0009.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0010.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0011.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0012.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0013.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0014.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0015.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0016.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0017.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0018.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0019.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0020.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0021.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0022.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0023.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0024.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0025.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0026.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0027.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0028.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0029.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0030.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0031.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0032.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0033.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0034.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0035.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0036.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0037.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0038.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0039.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0040.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0041.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0042.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0043.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0044.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0045.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0046.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0047.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0048.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0049.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0050.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0051.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0052.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0053.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0054.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0055.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0056.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0057.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0058.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0059.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0060.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0061.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0062.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0063.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0064.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0065.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0066.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0067.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0068.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0069.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0070.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0071.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0072.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0073.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0074.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0075.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0076.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0077.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0078.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0079.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0080.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0081.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0082.dcm",
+  "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0083.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0001.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0002.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0003.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0004.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0005.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0006.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0007.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0008.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0009.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0010.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0011.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0012.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0013.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0014.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0015.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0016.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0017.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0018.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0019.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0020.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0021.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0022.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0023.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0024.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0025.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0026.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0027.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0028.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0029.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0030.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0031.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0032.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0033.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0034.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0035.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0036.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0037.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0038.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0039.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0040.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0041.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0042.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0043.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0044.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0045.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0046.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0047.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0048.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0049.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0050.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0051.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0052.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0053.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0054.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0055.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0056.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0057.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0058.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0059.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc  10/Projection MIP - 806/IM-0001-0060.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0001.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0002.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0003.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0004.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0005.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0006.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0007.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0008.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0009.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0010.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0011.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0012.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0013.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0014.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0015.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0016.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0017.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0018.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0019.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0020.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0021.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0022.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0023.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0024.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0025.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0026.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0027.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0028.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0029.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0030.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0031.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0032.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0033.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0034.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0035.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0036.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0037.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0038.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0039.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0040.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0041.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0042.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0043.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0044.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0045.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0046.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0047.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0048.dcm",
+  "C:/odw/test_data/mweb/Dicom files2/PET PETCT_WB_apc (Adult) --7 Series/mpr.cor.pet - 605/IM-0001-0049.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.1.2.1.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.1.2.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.11.1.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.3.1.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.6.1.dcm",
+  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.4.70.dcm",
+  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.4.90.dcm",
+  "C:/odw/test_data/mweb/Sop/1.2.840.10008.5.1.4.1.1.1.2.1.dcm",
+  "C:/odw/test_data/mweb/Sop/1.2.840.10008.5.1.4.1.1.128.dcm",
+  "C:/odw/test_data/mweb/Sop/1.2.840.10008.5.1.4.1.1.6.2.dcm",
+  "C:/odw/test_data/mweb/Sop/1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/Sop/1.2.840.10008.5.1.4.1.1.9.1.2.dcm",
+  "C:/odw/test_data/mweb/Sop-selected/1.2.840.10008.5.1.4.1.1.1.2.1.dcm",
+  "C:/odw/test_data/mweb/Sop-selected/1.2.840.10008.5.1.4.1.1.128.dcm",
+  "C:/odw/test_data/mweb/Sop-selected/1.2.840.10008.5.1.4.1.1.6.2.dcm",
+  "C:/odw/test_data/mweb/Sop-selected/1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/Sop-selected/1.2.840.10008.5.1.4.1.1.9.1.2.dcm",
+];
+
+const List<String> badFileList2 = const <String>[
+  "C:/odw/test_data/mweb/100 MB Studies/Brain026/ST000000/SE000000/IM000000.png",
+  "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/35196654Phase2/ST-8955934202186539155/__index.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/35196654Phase2/__index.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/56406654Phase2/__index.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/59516654Phase2/ST-3319147862064506277/__index.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/59516654Phase2/__index.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/73856654Phase2/ST-4792088524786772475/__index.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/73856654Phase2/__index.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 2/CTCAP 2 CTID 2.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 2/CTCAP 2 CTID 3.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 2/CTCAP 2 CTID 4.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 2/CTCAP 2 CTIDs.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 2/CTCAP 2 Protocol.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 2/CTCAP2 questionaire.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 4/Site 4 Paperwork/CTCAP 4 agreement.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 4/Site 4 Paperwork/CTCAP 4 CTIDs.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 4/Site 4 Paperwork/CTCAP 4 PS info.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 4/Site 4 Paperwork/CTCAP 4 Questionaire.pdf",
+  "C:/odw/test_data/mweb/New Dicom Files/Neuro Crane-7 over/Debug_Rolling.log",
+  "C:/odw/test_data/mweb/New Dicom Files/Neuro Crane-7 over/OQ 4.3 SP1 Hotfix Release.zip",
+  "C:/odw/test_data/mweb/New Dicom Files/Neuro Crane-7 over/Top_Users_Rport.html",
+  "C:/odw/test_data/mweb/Small Studies/BBC-0010-C US/1_timeseries.png",
+  "C:/odw/test_data/mweb/Small Studies/BBC-0010-C US/1_timeseries2.png",
+];
+
+const List<String> badFileList3 = const <String>[
   "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.20.dcm",
   "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.22.dcm",
   "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.1.dcm",
@@ -670,4 +1037,266 @@ const List<String> badFileList5 = const <String>[
   "C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/CT.2.16.840.1.114255.390617858.1794098916.9844.38603.dcm",
   "C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/CT.2.16.840.1.114255.390617858.1794098916.9955.38374.dcm",
   "C:/odw/test_data/sfd/Peds/Patient_55/1_DICOM_Original/IM000510.dcm",
+];
+
+const List<String> badFileList4 = const <String>[
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/22c82bd4-6926-46e1-b055-c6b788388014.dcm",
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/4cf05f57-4893-4453-b540-4070ac1a9ffb.dcm",
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/523a693d-94fa-4143-babb-be8a847a38cd.dcm",
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.5.5.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.6.1.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.20.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.7.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.22.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.1.dcm",
+  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.2.dcm",
+  "C:/odw/test_data/mweb/Sample Dose Sheets/4cf05f57-4893-4453-b540-4070ac1a9ffb.dcm",
+];
+
+const List<String> badFileList5 = const <String>[
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.5.5.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.6.1.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.20.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.22.dcm",
+  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.1.dcm",
+];
+
+const List<String> badFileList6 = const <String>[
+  "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm",
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/22c82bd4-6926-46e1-b055-c6b788388014.dcm",
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/4cf05f57-4893-4453-b540-4070ac1a9ffb.dcm",
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/523a693d-94fa-4143-babb-be8a847a38cd.dcm",
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.20.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.7.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.22.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.1.dcm",
+  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.2.dcm",
+  "C:/odw/test_data/mweb/Sample Dose Sheets/4cf05f57-4893-4453-b540-4070ac1a9ffb.dcm",
+];
+
+const List<String> badFileList7 = const <String>[
+  "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.20.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.22.dcm",
+  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.1.dcm",
+];
+
+const List<String> badFileList8 = const <String>[
+  "C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205",
+  "C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368",
+  "C:/odw/test_data/mweb/100 MB Studies/8963-largefiles/89688",
+  "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.392.200036.9123.100.12.11.3.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.66.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.9.1.2.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2.392.200036.9123.100.12.11.3.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.66.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.9.1.2.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case1 [Case1]/20080408 023126 [ - BREAST IMAGING TOMOSYNTHESIS]/Series 73100000 [MG - L MLO Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.69.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case10 [Case10]/20080708 033624 [ - BREAST IMAGING TOMOSYNTHESIS]/Series 73100000 [MG - L CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.97.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case10 [Case10]/20080708 033624 [ - BREAST IMAGING TOMOSYNTHESIS]/Series 73100000 [MG - L MLO Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.99.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case11 [Case11]/20080625 031326 [ - BREAST IMAGING TOMOSYNTHESIS]/Series 73100000 [MG - L CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.120.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case12 [Case12]/20081202 021026 [ - Combo Unilateral Left]/Series 73111100 [MG - L CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.148.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case12 [Case12]/20081202 021026 [ - Combo Unilateral Left]/Series 73112200 [MG - L ML Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.150.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case13 [Case13]/20080716 034953 [ - BREAST IMAGING TOMOSYNTHESIS]/Series 73100000 [MG - R CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.178.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case13 [Case13]/20080716 034953 [ - BREAST IMAGING TOMOSYNTHESIS]/Series 73100000 [MG - R ML Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.180.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case14 [Case14]/20080915 034948 [ - DUCTO GALACTOGRAM 1 DUCT LT]/Series 73111100 [MG - L CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.44.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case14 [Case14]/20080915 034948 [ - DUCTO GALACTOGRAM 1 DUCT LT]/Series 73112300 [MG - L LM Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.46.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case14 [Case14]/20080915 082127 [ - MAMMOGRAM DIGITAL DX BILAT]/Series 73100000 [MG - L CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.36.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case14 [Case14]/20080915 082127 [ - MAMMOGRAM DIGITAL DX BILAT]/Series 73100000 [MG - L MLO Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.38.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case14 [Case14]/20080915 082127 [ - MAMMOGRAM DIGITAL DX BILAT]/Series 73100000 [MG - R CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.40.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case14 [Case14]/20080915 082127 [ - MAMMOGRAM DIGITAL DX BILAT]/Series 73100000 [MG - R MLO Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.42.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case15 [Case15]/20080312 025831 [ - MAMMOGRAM DIGITAL DX UNILAT RT]/Series 73100000 [MG - R ML Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.208.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case15 [Case15]/20080312 025831 [ - MAMMOGRAM DIGITAL DX UNILAT RT]/Series 73100000 [MG - R XCCL Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.210.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case16 [Case16]/20081021 024920 [ - Combo Unilateral Right]/Series 73121100 [MG - R CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.238.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case16 [Case16]/20081021 024920 [ - Combo Unilateral Right]/Series 73122200 [MG - R ML Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.240.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case17 [Case17]/20080514 041955 [ - MAMMOGRAM DIGITAL DX UNILAT LT]/Series 73100000 [MG - L CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.275.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case17 [Case17]/20080514 041955 [ - MAMMOGRAM DIGITAL DX UNILAT LT]/Series 73100000 [MG - L ML Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.277.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case17 [Case17]/20080514 103944 [ - BREAST IMAGING TOMOSYNTHESIS]/Series 73100000 [MG - L MLO Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.279.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case2 [Case2]/20071120 080520 [ - MAMMOGRAM DIGITAL SCR BILAT]/Series 73100000 [MG - L CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.392.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case2 [Case2]/20071120 080520 [ - MAMMOGRAM DIGITAL SCR BILAT]/Series 73100000 [MG - L MLO Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.394.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case2 [Case2]/20071120 080520 [ - MAMMOGRAM DIGITAL SCR BILAT]/Series 73100000 [MG - R CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.396.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case2 [Case2]/20071120 080520 [ - MAMMOGRAM DIGITAL SCR BILAT]/Series 73100000 [MG - R MLO Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.398.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case20 [Case20]/20080527 064103 [ - COMBO BILAT]/Series 73100000 [MG - L CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.433.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case20 [Case20]/20080527 064103 [ - COMBO BILAT]/Series 73100000 [MG - L ML Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.435.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case20 [Case20]/20080527 064103 [ - COMBO BILAT]/Series 73100000 [MG - R ML Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.437.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case3 [Case3]/20071120 034906 [ - MAMMOGRAM DIGITAL SCR BILAT]/Series 73100000 [MG - L CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.543.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case3 [Case3]/20071120 034906 [ - MAMMOGRAM DIGITAL SCR BILAT]/Series 73100000 [MG - L MLO Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.545.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case3 [Case3]/20071120 034906 [ - MAMMOGRAM DIGITAL SCR BILAT]/Series 73100000 [MG - R CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.547.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case3 [Case3]/20071120 034906 [ - MAMMOGRAM DIGITAL SCR BILAT]/Series 73100000 [MG - R MLO Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.549.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case4 [Case4]/20071218 093012 [ - MAMMOGRAM DIGITAL SCR BILAT]/Series 73100000 [MG - L CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.585.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case4 [Case4]/20071218 093012 [ - MAMMOGRAM DIGITAL SCR BILAT]/Series 73100000 [MG - L MLO Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.587.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case4 [Case4]/20071218 093012 [ - MAMMOGRAM DIGITAL SCR BILAT]/Series 73100000 [MG - R CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.589.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case4 [Case4]/20071218 093012 [ - MAMMOGRAM DIGITAL SCR BILAT]/Series 73100000 [MG - R MLO Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.591.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case5 [Case5]/20071127 035303 [ - BREAST IMAGING TOMOSYNTHESIS]/Series 73100000 [MG - L CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.615.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case5 [Case5]/20071127 035303 [ - BREAST IMAGING TOMOSYNTHESIS]/Series 73100000 [MG - L ML Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.617.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case8 [Case8]/20080629 090944 [ - Standard Screening  Combo]/Series 73100000 [MG - R MLO Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.710.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case9 [Case9]/20080610 073024 [ - Combo Unilateral Right]/Series 73100000 [MG - R CC Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.744.0.dcm",
+  "C:/odw/test_data/mweb/DICOMTestdata/Case9 [Case9]/20080610 073024 [ - Combo Unilateral Right]/Series 73100000 [MG - R LM Tomosynthesis Reconstruction]/1.3.6.1.4.1.5962.99.1.2280943358.716200484.1363785608958.746.0.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.826.0.1.3680043.2.93.1.0.1.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.826.0.1.3680043.2.93.1.0.2.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.12.1.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.20.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.22.dcm",
+  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.1.dcm",
+  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.4.50.dcm",
+  "C:/odw/test_data/mweb/Radiologic/2/I00221",
+  "C:/odw/test_data/mweb/Radiologic/2/I00422",
+  "C:/odw/test_data/mweb/Radiologic/2/I00587",
+  "C:/odw/test_data/mweb/Radiologic/2/I00738",
+  "C:/odw/test_data/mweb/Radiologic/2/I00895",
+  "C:/odw/test_data/mweb/Radiologic/2/I00994",
+  "C:/odw/test_data/mweb/Radiologic/2/I01132",
+  "C:/odw/test_data/mweb/Radiologic/2/I01187",
+  "C:/odw/test_data/mweb/Radiologic/2/I01364",
+  "C:/odw/test_data/mweb/Radiologic/2/I01573",
+  "C:/odw/test_data/mweb/Radiologic/6/I00422",
+  "C:/odw/test_data/mweb/Radiologic/6/I00587",
+  "C:/odw/test_data/mweb/Radiologic/6/I00738",
+  "C:/odw/test_data/mweb/Radiologic/6/I00895",
+  "C:/odw/test_data/mweb/Radiologic/6/I00994",
+  "C:/odw/test_data/mweb/Radiologic/6/I01132",
+  "C:/odw/test_data/mweb/Radiologic/6/I01187",
+  "C:/odw/test_data/mweb/Radiologic/6/I01573",
+  "C:/odw/test_data/mweb/Radiologic/7/I00005",
+  "C:/odw/test_data/mweb/Radiologic/7/I00265",
+  "C:/odw/test_data/mweb/Radiologic/7/I00455",
+  "C:/odw/test_data/mweb/Radiologic/7/I00715",
+  "C:/odw/test_data/mweb/Radiologic/7/I00988",
+  "C:/odw/test_data/mweb/Radiologic/7/I01223",
+  "C:/odw/test_data/mweb/Radiologic/7/I01454",
+  "C:/odw/test_data/mweb/Radiologic/7/I01745",
+  "C:/odw/test_data/mweb/Sop/1.2.392.200036.9123.100.12.11.3.dcm",
+  "C:/odw/test_data/mweb/Sop/1.2.840.10008.5.1.4.1.1.66.dcm",
+  "C:/odw/test_data/mweb/Sop/1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/Sop/1.2.840.10008.5.1.4.1.1.9.1.2.dcm",
+  "C:/odw/test_data/mweb/Sop-selected/1.2.392.200036.9123.100.12.11.3.dcm",
+  "C:/odw/test_data/mweb/Sop-selected/1.2.840.10008.5.1.4.1.1.66.dcm",
+  "C:/odw/test_data/mweb/Sop-selected/1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/Sop-selected/1.2.840.10008.5.1.4.1.1.9.1.2.dcm",
+  "C:/odw/test_data/mweb/TransferUIDs/1.2.840.10008.1.2.4.80.dcm",
+  "C:/odw/test_data/mweb/TransferUIDs/1.2.840.10008.1.2.4.90.dcm",
+  "C:/odw/test_data/mweb/TransferUIDs/1.2.840.10008.1.2.5.dcm"
+];
+
+const List<String> badFileList9 = const <String>[
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop"
+      "/1.2.392.200036.9123.100.12.11.3.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop"
+      "/1.2.840.10008.5.1.4.1.1.66.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop"
+      "/1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop"
+      "/1.2.840.10008.5.1.4.1.1.9.1.2.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)"
+      "/1.2.392.200036.9123.100.12.11.3.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)"
+      "/1.2.840.10008.5.1.4.1.1.66.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)"
+      "/1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)"
+      "/1.2.840.10008.5.1.4.1.1.9.1.2.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs"
+      "/Anonymized1.2.826.0.1.3680043.2.93.1.0.1.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs"
+      "/Anonymized1.2.826.0.1.3680043.2.93.1.0.2.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs"
+      "/Anonymized1.2.840.10008.5.1.4.1.1.12.1.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs"
+      "/Anonymized1.2.840.10008.5.1.4.1.1.20.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs"
+      "/Anonymized1.2.840.10008.5.1.4.1.1.88.22.dcm",
+  "C:/odw/test_data/mweb/Different_Transfer_UIDs"
+      "/Anonymized1.2.840.10008.1.2.1.dcm",
+  "C:/odw/test_data/mweb/Different_Transfer_UIDs"
+      "/Anonymized1.2.840.10008.1.2.4.50.dcm",
+  "C:/odw/test_data/mweb/Radiologic/2/I00221",
+  "C:/odw/test_data/mweb/Radiologic/2/I00422",
+  "C:/odw/test_data/mweb/Radiologic/2/I01364",
+  "C:/odw/test_data/mweb/Radiologic/2/I01573",
+  "C:/odw/test_data/mweb/Radiologic/6/I00422",
+  "C:/odw/test_data/mweb/Radiologic/6/I00587",
+  "C:/odw/test_data/mweb/Radiologic/6/I00738",
+  "C:/odw/test_data/mweb/Radiologic/6/I01187",
+  "C:/odw/test_data/mweb/Radiologic/6/I01573",
+  "C:/odw/test_data/mweb/Sop/1.2.392.200036.9123.100.12.11.3.dcm",
+  "C:/odw/test_data/mweb/Sop/1.2.840.10008.5.1.4.1.1.66.dcm",
+  "C:/odw/test_data/mweb/Sop/1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/Sop/1.2.840.10008.5.1.4.1.1.9.1.2.dcm",
+  "C:/odw/test_data/mweb/Sop-selected/1.2.392.200036.9123.100.12.11.3.dcm",
+  "C:/odw/test_data/mweb/Sop-selected/1.2.840.10008.5.1.4.1.1.66.dcm",
+  "C:/odw/test_data/mweb/Sop-selected/1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/Sop-selected/1.2.840.10008.5.1.4.1.1.9.1.2.dcm",
+  "C:/odw/test_data/mweb/TransferUIDs/1.2.840.10008.1.2.4.80.dcm",
+  "C:/odw/test_data/mweb/TransferUIDs/1.2.840.10008.1.2.5.dcm"
+];
+
+const List<String> badExtensions = const <String>[
+  "C:/odw/test_data/mweb/10 Patient IDs"
+      "/GECRSENODMRFUJI_1.CR.1001.1002.2008"
+      ".03.10.13.06.53.62500.12180812.IMA",
+  "C:/odw/test_data/mweb/100 MB Studies/Brain026/ST000000/SE000000/IM000000.png",
+  "C:/odw/test_data/mweb/100 MB Studies/Brain026/ST000000/SE000002/.dcm.IM000194",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/35196654Phase2"
+      "/ST-8955934202186539155/__index.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/35196654Phase2/__guests.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/35196654Phase2/__index.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/56406654Phase2/__guests.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/56406654Phase2/__index.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/59516654Phase2"
+      "/ST-3319147862064506277/__index.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/59516654Phase2/__guests.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/59516654Phase2/__index.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/73856654Phase2"
+      "/ST-4792088524786772475/__index.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/73856654Phase2/__guests.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Samples for IROC/73856654Phase2/__index.xml",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 2/CTCAP 2 CTID 2.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 2/CTCAP 2 CTID 3.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 2/CTCAP 2 CTID 4.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 2/CTCAP 2 CTIDs.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 2/CTCAP 2 Protocol.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 2/CTCAP2 questionaire.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 4/Site 4 Paperwork/CTCAP 4 agreement.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 4/Site 4 Paperwork/CTCAP 4 CTIDs.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 4/Site 4 Paperwork/CTCAP 4 PS info.pdf",
+  "C:/odw/test_data/mweb/500 MB Studies/Site 4/Site 4 Paperwork/CTCAP 4 Questionaire.pdf",
+  "C:/odw/test_data/mweb/New Dicom Files/Neuro Crane-7 over/Debug_Rolling.log",
+  "C:/odw/test_data/mweb/New Dicom Files/Neuro Crane-7 over/OQ 4.3 SP1 Hotfix Release.zip",
+  "C:/odw/test_data/mweb/New Dicom Files/Neuro Crane-7 over/Top_Users_Rport.html",
+  "C:/odw/test_data/mweb/Small Studies/BBC-0010-C US/1_timeseries.png",
+  "C:/odw/test_data/mweb/Small Studies/BBC-0010-C US/1_timeseries2.png",
+  "C:/odw/test_data/mweb/Small Studies/Two Studies/ARGLH001.DCM"
+];
+
+const List<String> bigEndianTS = const <String>[
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/22c82bd4-6926-46e1-b055-c6b788388014.dcm",
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/4cf05f57-4893-4453-b540-4070ac1a9ffb.dcm",
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/523a693d-94fa-4143-babb-be8a847a38cd.dcm",
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.7.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.2.dcm",
+  "C:/odw/test_data/mweb/Sample Dose Sheets/4cf05f57-4893-4453-b540-4070ac1a9ffb.dcm"
+];
+
+const List<String> badTSFileList = const <String>[
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/22c82bd4-6926-46e1-b055-c6b788388014.dcm",
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/4cf05f57-4893-4453-b540-4070ac1a9ffb.dcm",
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/523a693d-94fa-4143-babb-be8a847a38cd.dcm",
+  "C:/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.7.dcm",
+  "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/Different_Transfer_UIDs/Anonymized1.2.840.10008.1.2.2.dcm",
+  "C:/odw/test_data/mweb/Sample Dose Sheets/4cf05f57-4893-4453-b540-4070ac1a9ffb.dcm",
 ];

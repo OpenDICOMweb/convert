@@ -7,7 +7,7 @@
 import 'dart:typed_data';
 
 import 'package:common/common.dart';
-import 'package:convertX/src/bytebuf/bytebuf.dart';
+import 'package:dcm_convert/src/bytebuf/bytebuf.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
@@ -17,7 +17,7 @@ import 'package:dictionary/dictionary.dart';
 
 /// The type of the different Value Field readers.  Each [VFReader]
 /// reads the Value Field for a particular Value Representation.
-typedef Element<E> VFReader<E>(int tag, VR<E> vr, int vfLength);
+typedef Element<K, T, V> VFReader<K, T, V>(int tag, VR<V> vr, int vfLength);
 
 //The type of a Tag TagMaker.
 typedef Tag _TagMaker(int code, VR vr, [extra]);
@@ -61,7 +61,7 @@ class DcmReader<E> extends ByteBuf {
 
   //TODO: finish
   /// Creates a new [DcmReader]  where [readIndex] = [writeIndex] = 0.
-  DcmReader(Uint8List bytes, this._rootDS,
+  DcmReader(Uint8List bytes, this.rootDS,
       {this.path = "", this.throwOnError = false, this.allowILEVR = true})
       : super.reader(bytes) {
     _warnIfShortFile(bytes.lengthInBytes);

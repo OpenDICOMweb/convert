@@ -9,10 +9,9 @@ import 'dart:typed_data';
 
 import 'package:common/common.dart';
 import 'package:core/core.dart';
+import 'package:dcm_convert/src/dcm_reader_base.dart';
+import 'package:dcm_convert/src/errors.dart';
 import 'package:dictionary/dictionary.dart';
-
-import 'package:convertX/src/dcm_reader_base.dart';
-import 'package:convertX/src/exception.dart';
 
 const int kDataSetTrailingPadding = 0xFFFCFFFC;
 
@@ -51,58 +50,51 @@ const int kDataSetTrailingPadding = 0xFFFCFFFC;
 ///   3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
 class DcmByteReader extends DcmReaderBase {
-  static final Logger _log = new Logger("DcmReader", watermark: Severity
-      .debug2);
+  static final Logger _log = new Logger("DcmReader", watermark: Severity.debug2);
   RootByteDataset rootDS;
   ByteDataset currentDS;
-  final bool reUseBD;
-  bool _afterPixelData = false;
+  bool _afterPixelData;
+
   //TODO: Doc
   /// Creates a new [DcmByteReader]  where [_rIndex] = [writeIndex] = 0.
   DcmByteReader(ByteData bd,
       {String path = "",
+      bool fmiOnly = false,
       bool throwOnError = true,
-      bool allowILEVR = true,
-      bool allowMissingPrefix = false,
       bool allowMissingFMI = false,
       TransferSyntax targetTS,
-      this.reUseBD = false})
+      bool reUseBD = false})
       : super(bd, <int, ByteElement>{},
             path: path,
             throwOnError: throwOnError,
-            allowILEVR: allowILEVR,
-            allowMissingPrefix: allowMissingPrefix,
             allowMissingFMI: allowMissingFMI,
-            targetTS: targetTS) {
-    rootDS =
-        new RootByteDataset(bd, path: path);
+            targetTS: targetTS,
+            reUseBD: reUseBD) {
+    rootDS = new RootByteDataset(bd, path: path);
     currentDS = rootDS;
   }
 
   /// Creates a new [DcmByteReader]  where [_rIndex] = [writeIndex] = 0.
   factory DcmByteReader.fromBytes(Uint8List bytes,
       {String path = "",
+      bool fmiOnly = false,
       bool throwOnError = true,
-      bool allowILEVR = true,
       bool allowMissingFMI = false,
-      TransferSyntax targetTS}) {
+      TransferSyntax targetTS,
+      bool reUseBD = true}) {
     var bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     return new DcmByteReader(bd,
-        path: path,
-        throwOnError: throwOnError,
-        allowILEVR: allowILEVR,
-        allowMissingPrefix: allowMissingFMI,
-        targetTS: targetTS);
+        path: path, throwOnError: throwOnError, targetTS: targetTS, reUseBD: reUseBD);
   }
 
   /// Reads a [RootByteDataset] from [this] and returns it. If an error is
   /// encountered [readRootDataset] will throw an Error is or [null].
   RootByteDataset readRootDataset({bool allowMissingFMI = false}) {
     _log.debug1('$rbb readRootDataset: endOfBD($endOfBD) Part10($part10})');
-    rootDS.hasPrefix = readPrefix(bd);
+    hadPrefix = readPrefix(bd);
     rootDS.hasCmdElements = _readUntil(0x00020000);
-    rootDS.hasFMI = _readUntil(0x00030000);
-    rootDS.hasDicomDir = _readUntil(0x00050000);
+    hadFMI = _readUntil(0x00030000);
+    rootDS.isDicomDir = _readUntil(0x00050000);
 
     if (!hadFMI && !allowMissingFMI && !hadFMI) return null;
     _log.info('  isEVR: ${rootDS.isEVR}');
@@ -167,8 +159,7 @@ class DcmByteReader extends DcmReaderBase {
 
   ByteElement readElement([bool isEVR = true]) => _readElement();
 
-  ByteElement _readElement([bool isEVR = true]) =>
-      (isEVR) ? _readEVR() : _readIVR;
+  ByteElement _readElement([bool isEVR = true]) => (isEVR) ? _readEVR() : _readIVR;
 
   // bool beyondPixelData = false;
   ByteElement _readEVR() {
@@ -225,8 +216,7 @@ class DcmByteReader extends DcmReaderBase {
     bool isSequence() {
       int delimiter = bd.getUint32(rIndex);
       //  int code = peekTagCode();
-      if (delimiter == kItem32Bit ||
-          delimiter == kSequenceDelimitationItem32Bit) {
+      if (delimiter == kItem32Bit || delimiter == kSequenceDelimitationItem32Bit) {
         skip(-4);
         return true;
       }
@@ -289,7 +279,6 @@ class DcmByteReader extends DcmReaderBase {
 
   /// Reads an EVR or IVR Sequence. The _readElementMethod detects Sequences.
   ByteElement _readSequence(int code, int start) {
-    int xxx = rIndex;
     int vfLength = readUint32();
     if (vfLength.isOdd && vfLength != kUndefinedLength) {
       log.error('Value Field Length is odd integer: '
@@ -338,7 +327,6 @@ class DcmByteReader extends DcmReaderBase {
   // & readElementExplicit
   /// Returns an [ByteItem] or Fragment.
   ByteItem _readItem() {
-    int xxx = rIndex;
     int start = rIndex; // start of elements
     int code = readTagCode();
     int vfLength = readUint32();
@@ -366,17 +354,16 @@ class DcmByteReader extends DcmReaderBase {
         int endOfVF = start + vfLength;
         while (rIndex <= endOfVF) {
           ByteElement e = _readElement();
-          xxx = rIndex;
           map[e.code] = e;
         }
       }
-    } on EndOfDataException catch (e, stacktrace) {
+    } on EndOfDataError catch (e, stacktrace) {
       _log.error('$ree _readItem end of data exception: @$rIndex');
       _log.error('e: $e');
       _log.error(stacktrace);
       rethrow;
     } catch (e, stacktrace) {
-      rootDS.hadParsingErrors = true;
+      hadParsingErrors = true;
       _log.error(e);
       _log.error(stacktrace);
       rethrow;
@@ -384,10 +371,8 @@ class DcmByteReader extends DcmReaderBase {
       // Restore previous parent
       currentDS = parentDS;
     }
-    xxx = rIndex;
     ByteData bdx = _getElementBD(start, rIndex);
-    var item =
-        new ByteItem.fromByteData(bdx, parentDS, map, vfLength, hadULength);
+    var item = new ByteItem.fromMap(bdx, parentDS, map, vfLength, hadULength);
     _log.debugUp('$ree Item: $item');
     return item;
   }
@@ -408,9 +393,7 @@ class DcmByteReader extends DcmReaderBase {
       rIndex = startOfVF + vfLength;
     }
     var bdx = _getElementBD(start, rIndex);
-    ByteElement e = (isEVR)
-        ? new EVRPixelData(bdx, fragments)
-        : new IVRPixelData(bdx, fragments);
+    ByteElement e = (isEVR) ? new EVRPixelData(bdx, fragments) : new IVRPixelData(bdx, fragments);
     endOfPixelData = rIndex;
     _afterPixelData = true;
     if (endOfPixelData < endOfBD)
@@ -431,8 +414,7 @@ class DcmByteReader extends DcmReaderBase {
     do {
       assert(code == kItem, 'Invalid Item code: ${toDcm(code)}');
       int vfLength = readUint32();
-      assert(
-          vfLength != kUndefinedLength, 'Invalid length: ${toDcm(vfLength)}');
+      assert(vfLength != kUndefinedLength, 'Invalid length: ${toDcm(vfLength)}');
       int startOfVF = rIndex;
       rIndex += vfLength;
       fragments.add(bd.buffer.asUint8List(startOfVF, rIndex - startOfVF));
@@ -467,7 +449,7 @@ class DcmByteReader extends DcmReaderBase {
   }
 
   void _delimiterLengthFieldWarning(int dLength) {
-    rootDS.hadNonZeroDelimiterLength = true;
+    hadNonZeroDelimiterLength = true;
     _log.warn('$rmm: Encountered a delimiter with a non zero length($dLength)'
         ' field');
   }
@@ -488,7 +470,7 @@ class DcmByteReader extends DcmReaderBase {
   }
 
   /// Read File Meta Information (PS3.10).
-  void readFmi() {
+  void readFmi([bool checkForPrefix = true]) {
     try {
       while (rIndex < endOfBD) {
         int code = peekTagCode();
@@ -506,13 +488,9 @@ class DcmByteReader extends DcmReaderBase {
     }
     //  readFmi(fmi);
     if (rootDS.map.length == 0) return;
-    var ts = getTransferSyntax(rootDS.map);
-     part10 = new Part10Header(bd, rootDS.map, ts);
-     rootDS.part10ag = part10;
-
-    _log.warn('readFMI: bd.length(${bd.lengthInBytes} too small');
+    // var ts = getTransferSyntax(rootDS.map);
+    _log.warn('readFMI: bd.length(${bd.lengthInBytes} bbbbbbbbbtoo small');
   }
-
 
   /// Read Read Elements until a [code] >= [codeLimit]
   bool _readUntil(int codeLimit) {
@@ -529,15 +507,12 @@ class DcmByteReader extends DcmReaderBase {
       _log.warn('Failed to readUntil ${toDcm(codeLimit)}: '
           '"$path"\nException: $x\n '
           'File length: ${bd.lengthInBytes}\n$ree readFMI catch: $x');
-  //    rIndex = 0;
+      //    rIndex = 0;
       rethrow;
     }
     //  readFmi(fmi);
     if (rootDS.map.length == 0) return false;
     var ts = getTransferSyntax(rootDS.map);
-    part10 = new Part10Header(bd, rootDS.map, ts);
-    rootDS.part10 = part10;
-
     _log.warn('readFMI: bd.length(${bd.lengthInBytes} too small');
     return true;
   }
@@ -545,17 +520,13 @@ class DcmByteReader extends DcmReaderBase {
   // **** Static Methods
 
   static RootByteDataset readBytes(Uint8List bytes,
-      {String path: "",
-      bool fmiOnly = false,
-      fast = true,
-      TransferSyntax targetTS}) {
+      {String path: "", bool fmiOnly = false, fast = true, TransferSyntax targetTS}) {
     if (bytes == null) throw new ArgumentError('readBytes: $bytes');
     if (bytes.length < 256) {
       log.error('**** DcmReader: Too few bytes: ${bytes.length} in $path');
       return null;
     }
-    DcmByteReader reader =
-        new DcmByteReader.fromBytes(bytes, path: path, targetTS: targetTS);
+    DcmByteReader reader = new DcmByteReader.fromBytes(bytes, path: path, targetTS: targetTS);
     if (fmiOnly) return (reader.hadFMI) ? reader.rootDS : null;
     return reader.readRootDataset();
   }
@@ -564,37 +535,25 @@ class DcmByteReader extends DcmReaderBase {
       {bool fmiOnly = false, bool fast: false, TransferSyntax targetTS}) {
     if (file == null) throw new ArgumentError('readFile: $file');
     Uint8List bytes = file.readAsBytesSync();
-    return readBytes(bytes,
-        path: file.path, fmiOnly: fmiOnly, targetTS: targetTS);
+    return readBytes(bytes, path: file.path, fmiOnly: fmiOnly, targetTS: targetTS);
   }
 
   static RootByteDataset readPath(String path,
           {bool fmiOnly = false, bool fast = false, TransferSyntax targetTS}) =>
-      readFile(new File(path),
-          fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
+      readFile(new File(path), fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
 
   static ByteDataset read(from,
-      {String path = "",
-      bool fmiOnly = false,
-      fast = false,
-      TransferSyntax targetTS}) {
-    if (from is String)
-      return readPath(from, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
-    if (from is File)
-      return readFile(from, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
+      {String path = "", bool fmiOnly = false, fast = false, TransferSyntax targetTS}) {
+    if (from is String) return readPath(from, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
+    if (from is File) return readFile(from, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
     if (from is Uint8List)
-      return readBytes(from,
-          path: path, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
+      return readBytes(from, path: path, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
     throw new ArgumentError('$from');
   }
 
   static Instance readInstance(obj,
-      {String path = "",
-      bool fmiOnly = false,
-      fast = false,
-      TransferSyntax targetTS}) {
-    var rds =
-        read(obj, path: path, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
+      {String path = "", bool fmiOnly = false, fast = false, TransferSyntax targetTS}) {
+    var rds = read(obj, path: path, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
     return new Instance.fromDataset(rds);
   }
 }

@@ -4,11 +4,14 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:typed_data';
+
 import 'package:common/logger.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/tag.dart';
 
-import 'package:convertX/dicom_no_tag.dart';
+import 'package:dcm_convert/src/dicom_no_tag/test_dcm_byte_reader.dart';
+import 'package:dcm_convert/src/dicom_no_tag/test_dcm_byte_writer.dart';
 
 /// Logger
 Logger log = new Logger("read_write_element");
@@ -20,23 +23,25 @@ void main(List<String> args) {
 }
 
 /// Test
-bool elementTest(TElement e0, List values) {
+bool elementTest(Element e0, List values) {
 
-  TElement e1 = e0.copy;
+  Element e1 = e0.copy;
   log.debug('e0: ${e0.info}, e1: ${e1.info}');
-  TElement e2 = e0.update(values);
+  Element e2 = e0.update(values);
   log.debug('e1: ${e0.info}, e2: ${e1.info}');
   if (e0 != e1) return false;
   if (e1 != e2) return false;
-  RootTDataset rootDS = new RootTDataset.empty();
+
   // Write the element
-  DcmWriter wBuf = new DcmWriter(rootDS);
-  wBuf.xWritePublicElement(e1);
-  int wIndex = wBuf.writeIndex;
+  var bd = new ByteData(4096);
+  TestDcmByteWriter writer = new TestDcmByteWriter(new RootByteDataset(bd));
+  writer.xWritePublicElement(e1);
+  int wIndex = writer.wIndex;
 
   // Read the element
-  DcmByteReader reader = new DcmByteReader.fromBytes(wBuf.bytes);
-  ByteElement e3 = reader.readElement();
+  RootTagDataset rds1 = new RootTagDataset.empty();
+  TestDcmByteReader reader = new TestDcmByteReader.fromList(writer.bytes, rds1);
+  Element e3 = reader.xReadPublicElement();
   int rIndex = reader.rIndex;
   log.debug('wIndex: $wIndex, rIndex: $rIndex');
   if (wIndex != rIndex) return false;

@@ -7,9 +7,10 @@
 import 'dart:io';
 
 import 'package:common/logger.dart';
-import 'package:convertX/src/dicom/dcm_reader.dart';
 import 'package:core/core.dart';
 import 'package:test/test.dart';
+
+import 'package:dcm_convert/src/dicom_no_tag/dcm_byte_reader.dart';
 
 void main() {
   String path0 =
@@ -23,7 +24,7 @@ void main() {
       File script = new File(path0);
       var bytes = script.readAsBytesSync();
 
-      TDataset rds = DcmReader.readDataset(bytes, path: path0);
+      RootByteDataset rds = DcmByteReader.readBytes(bytes, path: path0);
       log.debug('${rds.info}');
       //    Subject subject = new Subject(rds);
       //    Study stu = new Study(subject, uid, rds);

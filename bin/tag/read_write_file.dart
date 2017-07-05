@@ -7,11 +7,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:common/format.dart';
-import 'package:common/logger.dart';
-import 'package:convertX/convert.dart';
+import 'package:common/common.dart';
 import 'package:core/core.dart';
-import 'package:dictionary/tag.dart';
+import 'package:dcm_convert/dicom_no_tag.dart';
+import 'package:dictionary/dictionary.dart';
 
 //import 'package:io/src/test/compare_files.dart';
 String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
@@ -36,33 +35,33 @@ String path5 =
     '/2.16.840.1.114255.1870665029.949635505.10220.175.dcm';
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
-final Logger log = new Logger("read_write_file", watermark: Severity.warn);
+final Logger log = new Logger("read_write_file", watermark: Severity.debug2);
 
 void main(List<String> args) {
   File file = new File(path0);
   log.info('Reading: $file');
   Uint8List bytes0 = file.readAsBytesSync();
   log.info('  ${bytes0.length} bytes');
-  Instance instance0 = DcmReader.readInstance(bytes0, path: file.path);
-  log.info('Decoded: $instance0');
-  if (instance0 == null) return null;
-  log.debug(instance0.format(new Formatter(maxDepth: -1)));
-  log.info('${instance0.lookup(kFileMetaInformationGroupLength).info}');
-  log.info('${instance0.lookup(kFileMetaInformationVersion).info}');
+  ByteDataset bds0 = ByteReader.readBytes(bytes0, path: file.path);
+  log.info('Decoded: $bds0');
+  if (bds0 == null) return null;
+  log.debug(bds0.format(new Formatter(maxDepth: -1)));
+  log.info('${bds0[kFileMetaInformationGroupLength].info}');
+  log.info('${bds0[kFileMetaInformationVersion].info}');
   // Write a File
   File output = new File(outPath);
-  var bytes = DcmEncoder.encode(instance0);
+  var bytes = ByteWriter.writeBytes(bds0);
   output.writeAsBytesSync(bytes);
 
   log.info('Re-reading: $output');
   Uint8List bytes1 = output.readAsBytesSync();
   log.info('read ${bytes1.length} bytes');
-  Instance instance1 = DcmReader.readInstance(bytes1, path: file.path);
-  log.info(instance1);
-  log.debug(instance1.format(new Formatter(maxDepth: -1)));
+  ByteDataset bds1 = ByteReader.readBytes(bytes1, path: file.path);
+  log.info(bds1);
+  log.debug(bds1.format(new Formatter(maxDepth: -1)));
 
   // Compare [Dataset]s
-  var comparator = new DatasetComparitor(instance0.dataset, instance1.dataset);
+  var comparator = new DatasetComparitor(bds0, bds1);
   comparator.run;
   if (comparator.hasDifference) {
     log.fatal('Result: ${comparator.info}');

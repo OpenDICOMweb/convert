@@ -18,11 +18,7 @@ import 'package:common/common.dart';
 import 'package:dictionary/dictionary.dart';
 import 'package:core/core.dart';
 
-const List<int> _undefinedLengthElements = const <int>[
-  kOBCode,
-  kOWCode,
-  kUNCode
-];
+const List<int> _undefinedLengthElements = const <int>[kOBCode, kOWCode, kUNCode];
 
 //bool _undefinedAllowed(int vrCode) =>
 // _undefinedLengthElements.contains(vrCode);
@@ -61,8 +57,8 @@ class DcmByteWriter {
   /// The [TransferSyntax] for the output.
   final TransferSyntax outputTS;
 
-  /// The [Endianness] of the output.
-  final Endianness endianness;
+  // The [Endianness] of the output.
+  //final Endianness endianness;
 
   /// If [true] errors will throw; otherwise, return [null].
   final bool throwOnError;
@@ -105,7 +101,7 @@ class DcmByteWriter {
     this.rootDS, {
     this.path = "",
     this.outputTS,
-    this.endianness = Endianness.LITTLE_ENDIAN,
+    //   this.endianness = Endianness.LITTLE_ENDIAN,
     this.throwOnError = true,
     this.allowImplicitLittleEndian = true,
     this.addMissingPrefix = false,
@@ -114,9 +110,7 @@ class DcmByteWriter {
     this.reUseBD = true,
   })
       : _wIndex = 0,
-        bd = (reUseBD)
-            ? _reuseBD(rootDS.vfLength + 1024)
-            : new ByteData(rootDS.vfLength);
+        bd = (reUseBD) ? _reuseBD(rootDS.vfLength + 1024) : new ByteData(rootDS.vfLength);
 
   Uint8List get bytes => bd.buffer.asUint8List(0, _wIndex);
 
@@ -129,6 +123,8 @@ class DcmByteWriter {
     if ((_wIndex + n) >= bd.lengthInBytes) _endOfBDError(_wIndex + n);
     return true;
   }
+
+  int get wIndex => _wIndex;
 
   /// The current readIndex as a string.
   String get www => 'W@$_wIndex';
@@ -184,8 +180,7 @@ class DcmByteWriter {
   }
 
   /// Writes an [ASCII] [String] to the output [bd].
-  void _writeAsciiString(String s,
-          [int offset = 0, int limit, int padChar = kSpace]) =>
+  void _writeAsciiString(String s, [int offset = 0, int limit, int padChar = kSpace]) =>
       _writeStringBytes(ASCII.encode(s), padChar);
 
   void _writeTagCode(int tag) {
@@ -193,8 +188,7 @@ class DcmByteWriter {
     _writeUint16(tag & 0xFFFF);
   }
 
-  String get info =>
-      '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
+  String get info => '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
   /// Writes File Meta Information ([Fmi]) to the output.
   //TODO: if no FMI is present in the rootDS, should it create it?
@@ -235,6 +229,12 @@ class DcmByteWriter {
     log.debug('$wee Returning ${rootDS.length} elements in ${_wIndex} bytes');
     return v;
   }
+
+  /// Testing interface
+  void writeDataset(Dataset ds) => _writeDataset(ds);
+
+  /// Testing interface
+  void writeElement(ByteElement e) => _writeElement(e);
 
   void _writePrefix() {
     log.down;
@@ -460,39 +460,6 @@ class DcmByteWriter {
     _writeUint32(0);
   }
 
-  //Urgent Move to TestByteWriter
-// External Interface for Testing
-// **** These methods should not be used in the code above ****
-
-  /// Returns [true] if the File Meta Information was present and
-  /// write successfully.
-  void xWriteFmi(RootByteDataset rds) {
-    if (!rds.hasFMI || !rds.hasSupportedTransferSyntax) return null;
-    writeFMI();
-  }
-
-  Uint8List xWriteDataset(ByteDataset ds) {
-    log.debugDown('$wbb writeDataset: isExplicitVR(${ds.isEVR})');
-    var writer = new DcmByteWriter(ds);
-    writer._writeDataset(ds);
-    log.debugUp('$wee end writeDataset: isExplicitVR(${ds.isEVR})');
-    return writer.bytes;
-  }
-
-  void xWritePublicElement(ByteElement e) => _writeElement(e);
-
-  // External Interface for testing
-  void xWritePGLength(ByteElement e) => _writeElement(e);
-
-  // External Interface for testing
-  void xWritePrivateIllegal(int code, ByteElement e) => _writeElement(e);
-
-  // External Interface for testing
-  void xWritePrivateCreator(ByteElement e) => _writeElement(e);
-
-  // External Interface for testing
-  void xWritePrivateData(ByteElement pc, ByteElement e) => _writeElement(e);
-
   static ByteData _reuseBD([int size = defaultBufferLength]) {
     if (_reuse == null) return _reuse = new ByteData(size);
     if (size > _reuse.lengthInBytes) {
@@ -504,12 +471,8 @@ class DcmByteWriter {
   }
 
   static Uint8List writeBytes(ByteDataset ds,
-      {String path = "",
-      bool fmiOnly = false,
-      fast = false,
-      TransferSyntax targetTS}) {
-    if (ds == null || ds.length == 0)
-      throw new ArgumentError('Empty ' 'Empty ByteDataset: $ds');
+      {String path = "", bool fmiOnly = false, fast = false, TransferSyntax targetTS}) {
+    if (ds == null || ds.length == 0) throw new ArgumentError('Empty ' 'Empty ByteDataset: $ds');
     var writer = new DcmByteWriter(ds);
     Uint8List bytes = writer.writeRootDataset();
     //log.debug('bytes: $bytes');
@@ -523,8 +486,7 @@ class DcmByteWriter {
     if (file == null) throw new ArgumentError('');
     Uint8List bytes;
     try {
-      bytes = writeBytes(ds,
-          path: file.path, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
+      bytes = writeBytes(ds, path: file.path, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
       file.writeAsBytesSync(bytes);
       log.debug('Wrote ${bytes.length} bytes to "${file.path}"');
     } on IOException catch (e) {
@@ -537,8 +499,7 @@ class DcmByteWriter {
   static Uint8List writePath(ByteDataset ds, String path,
       {bool fmiOnly = false, fast = false, TransferSyntax targetTS}) {
     if (path == "") throw new ArgumentError('Empty path: $path');
-    return writeFile(ds, new File(path),
-        fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
+    return writeFile(ds, new File(path), fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
   }
 
 /* Enhancement
@@ -555,17 +516,9 @@ class DcmByteWriter {
 */
 
   static Uint8List write(ByteDataset ds,
-      {String path = "",
-      File file,
-      bool fmiOnly = false,
-      fast = false,
-      TransferSyntax targetTS}) {
-    if (file != null)
-      return writeFile(ds, file,
-          fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
-    if (path != "")
-      return writePath(ds, path,
-          fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
+      {String path = "", File file, bool fmiOnly = false, fast = false, TransferSyntax targetTS}) {
+    if (file != null) return writeFile(ds, file, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
+    if (path != "") return writePath(ds, path, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
     return writeBytes(ds, fmiOnly: fmiOnly, fast: fast, targetTS: targetTS);
   }
 }

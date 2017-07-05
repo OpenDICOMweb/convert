@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:common/common.dart';
-import 'package:convertX/src/bytebuf/bytebuf.dart';
+import 'package:dcm_convert/src/bytebuf/bytebuf.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
@@ -25,7 +25,7 @@ import 'package:dictionary/dictionary.dart';
 //TODO: add Type Parameter to Element once Dataset has a typedef paramter for elements.
 
 /// The type of Value Field Writers.
-typedef dynamic VFWriter<E>(TElement<E> e);
+typedef dynamic VFWriter<E>(TagElement<E> e);
 
 /// A library for parsing [Uint8List] containing DICOM File Format [Dataset]s.
 ///
@@ -47,19 +47,28 @@ typedef dynamic VFWriter<E>(TElement<E> e);
 ///      and a byte-wise comparator will find them  to be equal.
 ///   2. All String manipulation should be handled in the [Element] itself.
 ///   3. All VFWriters allow the Value Field to be empty.
-class DcmTagWriter extends DcmWriterBase {
+class DcmTagWriter  {
   /// The log for debug output.
   static final Logger log = new Logger("DcmWriter", watermark: Severity.debug);
   static const int defaultBufferLength = 2 * kMB;
-  static ByteData _reuse;
+//  static ByteData _reuse;
   //TODO: make the buffer grow and shrink adaptively.
 
+  /// The [ByteData] being read.
+  final ByteData bd;
 
   /// The source of the [Uint8List] being read.
   final String path;
+  final bool fmiOnly;
 
   /// If [true] errors will throw; otherwise, return [null].
   final bool throwOnError;
+
+  /// If [true] and [FMI] is not present, abort reading.
+  final bool reUseBD;
+
+  /// The index where reading should stop.
+  final int endOfBD;
 
   /// if [true] [Dataset]s will be allowed to be written in IVRLE.
   final bool allowImplicitLittleEndian;
@@ -74,28 +83,28 @@ class DcmTagWriter extends DcmWriterBase {
 
   final bool removeUndefinedLengths;
 
-  final bool reUseBD;
-
   /// The [TransferSyntax] for the output.
   final TransferSyntax outputTS;
 
   /// The root Dataset for the object being read.
-  final RootByteDataset rootDS;
+  final RootTagDataset rootDS;
 
-
-
+  final bool isEVR;
 
   /// The current dataset.  This changes as Sequences are read and
   /// [Items]s are pushed on and off the [dsStack].
-  ByteDataset _currentDS;
+  ByteDataset currentDS;
 
   TransferSyntax _transferSyntax;
   bool  _isEncapsulated;
 
+  /// The current write index.
+  int _wIndex = 0;
+  bool get _isWritable => _wIndex < endOfBD;
+
   /// The root Dataset for the object being read.
  // RootTDataset _rootDS;
 
- // final bool isExplicitVR;
 
   //*** Constructors ***
   //TODO: what should the default length be
@@ -268,8 +277,8 @@ class DcmTagWriter extends DcmWriterBase {
     writeUint32(lengthInBytes);
   }
 
-  /// Write the Value Field for this [TElement].
-  void _writeVF(TElement e) {
+  /// Write the Value Field for this [TagElement].
+  void _writeVF(TagElement e) {
     /// The order of the VRs in this [List] MUST correspond to the [VR.index]
     /// in the definitions of [VR].  Note: the [VR.index]es start at 1, so
     /// in this [List] the 0th function is [_debugWriter].
@@ -349,11 +358,11 @@ class DcmTagWriter extends DcmWriterBase {
     return s;
   }
 
-  //**** Writers for 2-byte [TElement]s.
+  //**** Writers for 2-byte [TagElement]s.
   ByteBuf _writeSS(SS e) => writeInt16List(e.values);
   ByteBuf _writeUS(US e) => writeUint16List(e.values);
 
-  //**** Writers for 4-byte [TElement]s.
+  //**** Writers for 4-byte [TagElement]s.
   ByteBuf _writeSL(SL e) => writeInt32List(e.values);
   ByteBuf _writeAT(AT e) => writeUint32List(e.values);
   ByteBuf _writeFL(FL e) => writeFloat32List(e.values);
@@ -361,7 +370,7 @@ class DcmTagWriter extends DcmWriterBase {
   ByteBuf _writeOL(OL e) => writeUint32List(e.values);
   ByteBuf _writeUL(UL e) => writeUint32List(e.values);
 
-  //**** Writers for 8-byte [TElement]s.
+  //**** Writers for 8-byte [TagElement]s.
 
   ByteBuf _writeFD(FD e) => writeFloat64List(e.values);
   ByteBuf _writeOD(OD e) => writeFloat64List(e.values);
@@ -370,7 +379,7 @@ class DcmTagWriter extends DcmWriterBase {
 
   //**** Sequences and Items
 
-  void _writeSQ(TElement e) {
+  void _writeSQ(TagElement e) {
     if (e is SQ) {
       log.down;
       log.debug('$wbb writeSequence:${e.info}');
@@ -389,7 +398,7 @@ class DcmTagWriter extends DcmWriterBase {
       log.debug('$wee writeSequence-end');
       log.up;
     } else {
-      throw 'TElement $e is not an SQ (Sequence)';
+      throw 'TagElement $e is not an SQ (Sequence)';
     }
   }
 
@@ -430,7 +439,7 @@ class DcmTagWriter extends DcmWriterBase {
       log.debug('$wbb Item hadUndefinedLength');
       // Can't use _writeLongLength here!
       _writeItemHeader(kUndefinedLength);
-      for (TElement e in item.elements) _writeElement(e);
+      for (TagElement e in item.elements) _writeElement(e);
       _writeItemDelimiter();
       log.debug('$wbb Item hadUndefinedLength-end');
       log.up;
@@ -439,7 +448,7 @@ class DcmTagWriter extends DcmWriterBase {
       _writeItemHeader(item.vfLength);
       log.debug(
           '$wbb writeItem vfLength(${item.vfLength}, ${Int.hex(item.vfLength)}');
-      for (TElement e in item.elements) _writeElement(e);
+      for (TagElement e in item.elements) _writeElement(e);
     }
     log.debug('$wee writeItem-end');
     log.up;
@@ -502,7 +511,7 @@ class DcmTagWriter extends DcmWriterBase {
     log.up;
   }
 
-  void _debugWriter(TElement e, String msg) {
+  void _debugWriter(TagElement e, String msg) {
     //TODO:
   }
 
@@ -516,22 +525,22 @@ class DcmTagWriter extends DcmWriterBase {
     _writeFmi(rootDS);
   }
 
-  void xWritePublicElement(TElement e, [bool isExplicitVR = true]) =>
+  void xWritePublicElement(TagElement e, [bool isExplicitVR = true]) =>
       _writeElement(e, isExplicitVR);
 
   // External Interface for testing
-  void xWritePGLength(TElement e, [bool isExplicitVR = true]) =>
+  void xWritePGLength(TagElement e, [bool isExplicitVR = true]) =>
       _writeElement(e, isExplicitVR);
 
   // External Interface for testing
-  void xWritePrivateIllegal(TElement e, [bool isExplicitVR = true]) =>
+  void xWritePrivateIllegal(TagElement e, [bool isExplicitVR = true]) =>
       _writeElement(e, isExplicitVR);
 
   // External Interface for testing
-  void xWritePrivateCreator(TElement e, [bool isExplicitVR = true]) =>
+  void xWritePrivateCreator(TagElement e, [bool isExplicitVR = true]) =>
       _writeElement(e, isExplicitVR);
 
   // External Interface for testing
-  void xWritePrivateData(TElement e, [bool isExplicitVR = true]) =>
+  void xWritePrivateData(TagElement e, [bool isExplicitVR = true]) =>
       _writeElement(e, isExplicitVR);
 }

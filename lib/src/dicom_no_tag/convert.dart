@@ -10,7 +10,7 @@ import 'package:core/core.dart';
 
 Logger log = new Logger('convert', watermark: Severity.debug2);
 
-typedef Element<I, V> Maker<I, V>(I id, List<V> values, [int vfLength]);
+typedef Element<K, T, V> Maker<K, T, V>(K id, List<V> values, [int vfLength]);
 
 /*
 

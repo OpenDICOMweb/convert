@@ -4,54 +4,56 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
+import 'package:dcm_convert/src/dicom_no_tag/byte_reader.dart';
 import 'package:dictionary/dictionary.dart';
 
-import 'package:convertX/src/dicom_no_tag/dcm_byte_reader.dart';
-
-
 /// External Interface for Testing Only!!!
-class TestByteReader extends DcmByteReader {
+class TestByteReader extends ByteReader {
   /// Creates a new [DcmByteReader]  where [_rIndex] = [writeIndex] = 0.
   TestByteReader(ByteData bd,
       {String path = "",
+      bool fmiOnly = false,
       bool throwOnError = true,
-      bool allowILEVR = true,
       bool allowMissingFMI = false,
-      TransferSyntax targetTS})
+      TransferSyntax targetTS,
+      bool reUseBD = true})
       : super(bd,
             path: path,
+            fmiOnly: fmiOnly,
             throwOnError: throwOnError,
-            allowILEVR: allowILEVR,
-            allowMissingPrefix: allowMissingFMI,
-            targetTS: targetTS);
+            allowMissingFMI: allowMissingFMI,
+            targetTS: targetTS,
+            reUseBD: reUseBD);
 
   /// Creates a new [DcmByteReader]  where [_rIndex] = [writeIndex] = 0.
   factory TestByteReader.fromBytes(Uint8List bytes,
       {String path = "",
+      bool fmiOnly = false,
       bool throwOnError = true,
-      bool allowILEVR = true,
       bool allowMissingFMI = false,
-      TransferSyntax targetTS}) {
+      TransferSyntax targetTS,
+      bool reUseBD = true}) {
     var bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
-    return new DcmByteReader(bd,
+    return new ByteReader(bd,
         path: path,
+        fmiOnly: fmiOnly,
         throwOnError: throwOnError,
-        allowILEVR: allowILEVR,
-        allowMissingPrefix: allowMissingFMI,
-        targetTS: targetTS);
+        allowMissingFMI: allowMissingFMI,
+        targetTS: targetTS,
+        reUseBD: reUseBD);
   }
-
 
 // **** These methods should not be used in the code above ****
 
   /// Returns [true] if the File Meta Information was present and
   /// read successfully.
   TransferSyntax xReadFmi([bool checkForPrefix = true]) {
-    if (!hadFMI || !rootDS.hasFMI || !rootDS.hasSupportedTransferSyntax)
-      return null;
+     bool hadFmi = readFMI(checkForPrefix);
+    if (!hadFmi || !rootDS.hasFMI || !rootDS.hasSupportedTransferSyntax) return null;
     return rootDS.transferSyntax;
   }
 
@@ -80,19 +82,22 @@ class TestByteReader extends DcmByteReader {
     return currentDS;
   }
 
-
-  static RootByteDataset readBytes(Uint8List bytes,
-      {String path: "",
-        bool fmiOnly = false,
-        fast = true,
-        TransferSyntax targetTS}) {
-    if (bytes == null) throw new ArgumentError('readBytes: $bytes');
-    if (bytes.length < 256) {
-      return null;
-    }
-    DcmByteReader reader =
-    new DcmByteReader.fromBytes(bytes, path: path, targetTS: targetTS);
-    if (fmiOnly) return (reader.hadFMI) ? reader.rootDS : null;
+  /// Reads only the File Meta Information ([FMI], if present.
+  static Dataset readBytes(Uint8List bytes, Dataset rootDS,
+      {String path = "", bool fmiOnly = false, TransferSyntax targetTS}) {
+    ByteData bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
+    ByteReader reader = new ByteReader(bd, path: path, fmiOnly: fmiOnly, targetTS: targetTS);
     return reader.readRootDataset();
   }
+
+  static RootDataset readFile(File file, RootDataset rootDS,
+      {bool fmiOnly = false, TransferSyntax targetTS}) {
+    Uint8List bytes = file.readAsBytesSync();
+    return readBytes(bytes, rootDS, path: file.path, fmiOnly: fmiOnly, targetTS: targetTS);
+  }
+
+  /// Reads only the File Meta Information ([FMI], if present.
+  static RootDataset readFileFmiOnly(File file, RootDataset rootDS,
+      {String path = "", TransferSyntax targetTS}) =>
+      readFile(file, rootDS, fmiOnly: true, targetTS: targetTS);
 }

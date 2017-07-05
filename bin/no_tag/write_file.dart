@@ -9,15 +9,12 @@ import 'dart:typed_data';
 
 import 'package:common/common.dart';
 import 'package:core/core.dart';
+import 'package:dcm_convert/src/dicom_no_tag/dcm_byte_writer.dart';
+import 'package:dcm_convert/timer.dart';
 import 'package:dictionary/dictionary.dart';
-
-import 'package:convertX/src/dicom_no_tag/dcm_byte_writer.dart';
-import 'package:convertX/timer.dart';
 
 final Logger log = new Logger("convert/bin/no_tag/write_file_list.dart",
     watermark: Severity.info);
-
-final Formatter format = new Formatter();
 
 Uint8List writeFile(RootByteDataset rds, String path,
     {bool fmiOnly = false, TransferSyntax outputTS}) {
@@ -30,21 +27,14 @@ Uint8List writeFile(RootByteDataset rds, String path,
     if (fmiOnly) log.debug('    fmiOnly: $fmiOnly');
 
     timer.start();
-    DcmByteWriter writer = new DcmByteWriter(rds, path: path);
-    writer.writeRootDataset();
-    DcmByteWriter.writeFile(rds, file, fmiOnly: fmiOnly);
+    var bytes = DcmByteWriter.writePath(rds, path, fmiOnly: fmiOnly);
     timer.stop();
 
     log.debug('  Elapsed time: ${timer.elapsed}');
     int msPerElement = (timer.elapsedMicroseconds ~/ total) ~/ 1000;
     log.debug('  $msPerElement ms per Element: ');
-    return writer.bytes;
+    return bytes;
 }
 
-Uint8List writeFMI(RootByteDataset rds, [String path]) =>
-    DcmByteWriter.write(rds, path: path, fmiOnly: true);
-
-Uint8List writeRoot(RootByteDataset rds, {String path}) =>
-    DcmByteWriter.write(rds, path: path);
 
 

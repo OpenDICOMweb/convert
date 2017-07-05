@@ -7,7 +7,7 @@
 import 'dart:typed_data';
 
 import 'package:common/logger.dart';
-import 'package:convertX/convert.dart';
+import 'package:dcm_convert/convert.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
@@ -27,23 +27,24 @@ void main(List<String> args) {
 */
 }
 
-bool writeReadElementTest<E>(TElement<E> e0, [PrivateCreator pc]) {
+bool writeReadElementTest<E>(TagElement<E> e0, [PrivateCreator pc]) {
   log.debug('writeReadElement: ${e0.info}');
   // Create Dataset DS0 and write E0
-  DcmTagWriter wBuf0 = new DcmTagWriter(lengthInBytes: 512);
-  wBuf0.xWritePublicElement(e0);
-  int wIndex0 = wBuf0.writeIndex;
+  RootTagDataset rds0 = new RootTagDataset.empty();
+  DcmTagWriter writer0 = new DcmTagWriter(rds0);
+  writer0.xWritePublicElement(e0);
+  int wIndex0 = writer0.wIndex;
   log.debug('wIndex0($wIndex0)');
 
   // Now read the Dataset from the bytes.
-  Uint8List bytes = wBuf0.bytes;
+  Uint8List bytes = writer0.bytes;
   log.debug('bytes: (${bytes.length})$bytes');
-  DcmReader rBuf0 = new DcmReader.fromBytes(wBuf0.bytes);
+  DcmReader rBuf0 = new DcmReader.fromBytes(writer0.bytes);
   log.debug('rBuf0: $rBuf0');
 
   int rIndex0;
-  TElement pc0;
-  TElement e1;
+  TagElement pc0;
+  TagElement e1;
   if (e0.tag is PTag) {
     e1 = rBuf0.xReadPublicElement();
     log.debug('PTag: ${e1.info}');
@@ -78,7 +79,7 @@ bool writeReadElementTest<E>(TElement<E> e0, [PrivateCreator pc]) {
 
   // Now read the Dataset from the bytes.
   DcmReader rBuf1 = new DcmReader.fromBytes(wBuf1.bytes);
-  TElement e2 = rBuf1.xReadPublicElement();
+  TagElement e2 = rBuf1.xReadPublicElement();
   int rIndex1 = rBuf1.rIndex;
 
   // Now Compare the buffer index and the elements
@@ -93,12 +94,12 @@ bool writeReadElementTest<E>(TElement<E> e0, [PrivateCreator pc]) {
   return true;
 }
 
-TElement<E> writeReadDataset<E>(RootTDataset ds0, TElement<E> e0) {
+TagElement<E> writeReadDataset<E>(RootTDataset ds0, TagElement<E> e0) {
   RootTDataset ds0 = new RootTDataset();
   ds0.add(e0);
   DcmTagWriter wBuf0 = new DcmTagWriter(lengthInBytes: 128);
   wBuf0.writeDataset(ds0);
-  TElement<E> e;
+  TagElement<E> e;
   //TODO: create Dataset DS2 and write E1
 
   // Dataset rds1 = rBuf.readRootDataset()
@@ -137,7 +138,7 @@ void testPrivateGroupLengthElement() {
 bool testPrivateGroupLength() {
   // Create Element
   Tag tag = new PrivateGroupLengthTag(0x00090000, VR.kCS);
-  TElement e0 = new UL(tag, [1024]);
+  TagElement e0 = new UL(tag, [1024]);
   //TODO: create Dataset DS0 and write E0
   //      create writer
   RootTDataset rds0 = new RootTDataset();
@@ -145,12 +146,12 @@ bool testPrivateGroupLength() {
   DcmTagWriter wBuf0 = new DcmTagWriter(lengthInBytes: 128);
   wBuf0.xWritePublicElement(e0);
   // wBuf0.writeDataset(rds0);
-  int wIndex0 = wBuf0.writeIndex;
+  int wIndex0 = wBuf0.wIndex;
 
   // Read the Dataset from the bytes.
   //TODO: create Dataset DS1
   DcmReader rBuf = new DcmReader.fromBytes(wBuf0.bytes);
-  TElement e1 = rBuf.xReadPublicElement();
+  TagElement e1 = rBuf.xReadPublicElement();
  // Dataset rds1 = rBuf.readRootDataset()
   int rIndex = rBuf.rIndex;
   if (wIndex0 != rIndex || e0 != e1) {
@@ -164,7 +165,7 @@ bool testPrivateGroupLength() {
   DcmTagWriter wBuf1 = new DcmTagWriter(lengthInBytes: 128);
 
   wBuf1.xWritePublicElement(e0);
-  int wIndex1 = wBuf1.writeIndex;
+  int wIndex1 = wBuf1.wIndex;
   if (wIndex0 != wIndex1) return false;
   return true;
 }

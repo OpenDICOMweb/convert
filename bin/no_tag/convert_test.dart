@@ -8,8 +8,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:common/common.dart';
-import 'package:convertX/dicom_no_tag.dart';
-import 'package:convertX/src/dicom_no_tag/convert_byte_to_tag.dart';
+import 'package:dcm_convert/dicom_no_tag.dart';
+import 'package:dcm_convert/src/dicom_no_tag/convert_byte_to_tag.dart';
 import 'package:dictionary/dictionary.dart';
 
 const String path0 = 'C:/odw/test_data/6688/12/0B009D38/0B009D3D/4D4E9A56';
@@ -49,7 +49,7 @@ bool convert(File file, {int reps = 1, bool fmiOnly = false}) {
       DcmByteReader.readBytes(bytes0, path: file.path, fast: true);
   if (byteRoot == null) return false;
 
-  RootTDataset tRoot = convertByteToTag(byteRoot);
+  RootTagDataset tRoot = convertByteDSToTagDS(byteRoot);
 
   // Test dataset equality
   if (byteRoot.length != tRoot.length) throw "";
@@ -88,7 +88,7 @@ bool convert(File file, {int reps = 1, bool fmiOnly = false}) {
 
   for (int code in byteRoot.map.keys) {
     ByteElement be = byteRoot.map[code];
-    TElement te = tRoot.map[code];
+    TagElement te = tRoot.map[code];
 
     bool error = false;
     if (be.code != te.code) {

@@ -9,32 +9,24 @@ import 'dart:typed_data';
 
 import 'package:common/logger.dart';
 import 'package:core/core.dart';
+import 'package:dcm_convert/data/test_files.dart';
+import 'package:dcm_convert/dicom_no_tag.dart';
+import 'package:dcm_convert/timer.dart';
 import 'package:dictionary/dictionary.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:convertX/src/dicom_no_tag/compare_bytes.dart';
-import 'package:convertX/src/dicom_no_tag/dcm_byte_reader.dart';
-import 'package:convertX/timer.dart';
 import 'read_utils.dart';
 import 'utils.dart';
 
-final Logger log =
-    new Logger("convert/bin/read_write_files.dart", watermark: Severity.info);
+final Logger log = new Logger("convert/bin/read_write_files.dart", watermark: Severity.info);
 
-String testData = "C:/odw/test_data";
-String test6688 = "C:/odw/test_data/6688";
-String mWeb = "C:/odw/test_data/mweb";
-String mrStudy = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
-
-String badFile1 = "C:/odw/test_data/mweb/100 MB Studies/Site 3/Case 1 Ped"
-    "/1.2.840.113704.1.111.8916.1202763720.15"
-    "/1.2.840.113704.1.111.1608.1202763888.37524.dcm ";
 void main() {
-  // File file = new File(ivrle);
-  // readWriteFileTimed(file, reps: 10, fmiOnly: false);
+   File file = new File(path0);
+   readWriteFileFast(file, reps: 1, fmiOnly: false);
+  // readWriteFileTimed(file, reps: 1, fmiOnly: false);
   // readFMI(paths, fmiOnly: true);
   //  readWriteFiles(paths, fmiOnly: false);
-  readWriteDirectory(mrStudy, fmiOnly: false);
+ // readWriteDirectory(mrStudy, fmiOnly: false);
   //targetTS: TransferSyntax.kImplicitVRLittleEndian);
 }
 
@@ -45,15 +37,34 @@ void readWriteFiles(List<String> paths, {bool fmiOnly = false}) {
 final String tempDir = Directory.systemTemp.path;
 final Stopwatch watch = new Stopwatch();
 
+//TODO: move to common/constants.dart or elsewhere
 const int kMB = 1024 * 1024;
 
 bool readWriteFileFast(File inFile, {int reps = 1, bool fmiOnly = false}) {
   Uint8List bytes0 = inFile.readAsBytesSync();
-  Dataset rds0 = DcmByteReader.readBytes(bytes0);
-  Uint8List bytes1 = writeDataset(rds0);
-  // RootDataset rds1 =
-  DcmByteReader.readBytes(bytes1);
-  return _bytesEqual(bytes0, bytes1);
+
+  ByteReader reader = new ByteReader(bytes0.buffer.asByteData());
+  RootByteDataset rds0 = reader.readRootDataset();
+  List<int> elementIndex0 = reader.elementIndex.sublist(0, reader.nthElement);
+  log.info(rds0.parseInfo);
+  log.info(rds0.info);
+
+  ByteWriter writer = new ByteWriter(rds0, bytes0.lengthInBytes);
+  Uint8List bytes1 = writer.writeRootDataset();
+  List<int> elementIndex1 = writer.elementIndex.sublist(0, writer.nthElement);
+  if (reader.nthElement != writer.nthElement) print('reader: ${reader.nthElement}, writer: '
+      '${writer.nthElement}');
+  for(int i = 0; i < reader.nthElement; i++)
+    if (elementIndex0[i] != elementIndex1[i]) print('$i: ${elementIndex0[i]} != '
+        '${elementIndex1[i]}');
+  RootByteDataset rds1 = ByteReader.readBytes(bytes1);
+  log.info(rds1.parseInfo);
+  log.info(rds1.info);
+  bool areDatasetsEqual = _compareDatasets(rds0, rds1);
+  log.info('$rds0 == $rds1: $areDatasetsEqual');
+  bool areBytesEqual = _bytesEqual(bytes0, bytes1);
+  log.info('bytes0 == bytes1: $areBytesEqual');
+  return areBytesEqual;
 }
 
 bool readWriteFileTimed(File inFile, {int reps = 1, bool fmiOnly = false}) {
@@ -62,8 +73,7 @@ bool readWriteFileTimed(File inFile, {int reps = 1, bool fmiOnly = false}) {
   */
   String fmt(double v) => v.toStringAsFixed(1).padLeft(7, ' ');
 
-  String inMS(Duration v) =>
-      (v.inMicroseconds / 1000).toStringAsFixed(1).padLeft(7, ' ');
+  String inMS(Duration v) => (v.inMicroseconds / 1000).toStringAsFixed(1).padLeft(7, ' ');
 
   log.info('File: ${inFile.path}');
   Timer timer = new Timer();
@@ -73,14 +83,14 @@ bool readWriteFileTimed(File inFile, {int reps = 1, bool fmiOnly = false}) {
   log.info('     read: ${inMS(rbTime)} ms');
 
   for (int i = 0; i < reps; i++) {
-    RootByteDataset rds0 = DcmByteReader.readBytes(bytes0);
+    RootByteDataset rds0 = ByteReader.readBytes(bytes0);
     Duration readDS0 = timer.split;
 
-    Uint8List bytes1 = writeDataset(rds0);
+    Uint8List bytes1 = writeTimed(rds0);
     Duration writeDS0 = timer.split;
 
     //  RootDataset rds1 =
-    DcmByteReader.readBytes(bytes1);
+    ByteReader.readBytes(bytes1);
     Duration readDS1 = timer.split;
 
     bool hasProblem = _bytesEqual(bytes0, bytes1);
@@ -129,13 +139,13 @@ FileResult readWriteFileTiming(File file,
       return null;
     }
 
-    RootByteDataset rds0 = DcmByteReader.readBytes(bytes0);
+    RootByteDataset rds0 = ByteReader.readBytes(bytes0);
     Duration readDS0 = timer.elapsed;
 
-    Uint8List bytes1 = writeDataset(rds0, path: path);
+    Uint8List bytes1 = writeTimed(rds0, path: path);
     Duration writeDS0 = timer.elapsed;
 
-    RootByteDataset rds1 = DcmByteReader.readBytes(bytes1);
+    RootByteDataset rds1 = ByteReader.readBytes(bytes1);
     Duration readDS1 = timer.elapsed;
 
     //TODO: make this work?
@@ -155,14 +165,10 @@ FileResult readWriteFileTiming(File file,
     Duration stop = timer.elapsed;
     if (!v) hasProblem = true;
 
-    var times = new FileTiming(
-        file, start, stop, readBD, readDS0, writeDS0, readDS1, compareDS);
+    var times = new FileTiming(file, start, stop, readBD, readDS0, writeDS0, readDS1, compareDS);
 
-    result = new FileResult(file, rds0 as RootDataset,
-        fmiOnly: fmiOnly,
-        targetTS: targetTS,
-        times: times,
-        hasProblem: hasProblem);
+    result = new FileResult(file, rds0,
+        fmiOnly: fmiOnly, targetTS: targetTS, times: times, hasProblem: hasProblem);
 
     //TODO: flush if not useful
     /*
@@ -174,7 +180,7 @@ FileResult readWriteFileTiming(File file,
       Uint8List bytes2 = outFile.readAsBytesSync();
       Duration readBD2 = getElapsed();
 
-      RootDataset rds2 = DcmReader.readBytes(bytes1);
+      RootDataset rds2 = ByteReader.readBytes(bytes1);
       Duration readDS2 = getElapsed();
 
       if (shouldCompareDatasets) {
@@ -198,8 +204,7 @@ FileResult readWriteFileTiming(File file,
   return result;
 }
 
-bool _compareDatasets(RootByteDataset rds0, RootByteDataset rds1,
-    [bool throwOnError]) {
+bool _compareDatasets(RootByteDataset rds0, RootByteDataset rds1, [bool throwOnError = true]) {
   bool v = compareDatasets(rds0, rds1, throwOnError);
   if (!v) {
     log.error('Unequal datasets:/n'
@@ -242,8 +247,8 @@ ResultSet readWriteDirectory(String path,
       '    with $fileCount files\n'
       '    at $startTime');
 
-  var rSet = new ResultSet(dir, fList.length,
-      fmiOnly: fmiOnly, shortFileThreshold: shortFileThreshold);
+  var rSet =
+      new ResultSet(dir, fList.length, fmiOnly: fmiOnly, shortFileThreshold: shortFileThreshold);
   Timer timer = new Timer();
   int count = -1;
   for (File f in fList) {
