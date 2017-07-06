@@ -277,7 +277,7 @@ ResultSet readWriteDirectory(String path,
     if (fileExt == "" || fileExt == fileExt) {
       log.debug('Reading $path');
 
-      var r = (fast) ? readWriteFile(f) : readWriteFileTiming(f);
+      FileResult r = (fast) ? readWriteFile(f) : readWriteFileTiming(f);
       if (r != null) {
         log.info('${r.info}');
         rSet.add(r);

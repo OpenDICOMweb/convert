@@ -68,13 +68,27 @@ class ByteReader extends DcmReader {
   //Flush if not needed
   ByteElement makeElementFromBytes(int code, int vrCode, int vfOffset,
           Uint8List vfBytes, int vfLength, bool isEVR,
-          [VFFragments fragments]) =>
-      (isEVR)
+          [VFFragments fragments]) {
+    if (code == kPixelData) {
+      return (isEVR)
+          ? new EVRPixelData(bd).fromBytes(code, vrCode, vfOffset, vfBytes)
+          : new IVRElement.fromBytes(code, vrCode, vfOffset, vfBytes);
+    } else {
+      return (isEVR)
           ? new EVRElement.fromBytes(code, vrCode, vfOffset, vfBytes)
           : new IVRElement.fromBytes(code, vrCode, vfOffset, vfBytes);
+    }
+  }
+
 
   ByteElement makeElementFromByteData(ByteData e, bool isEVR) =>
       (isEVR) ? new EVRElement.fromByteData(e) : new IVRElement.fromByteData(e);
+
+  //Urgent: fix
+  /// Makes a PixelData [Element] from [ByteData]
+  ByteElement makePixelData(int code, int vrCode, int vfOffset,
+  Uint8List vfBytes, int vfLength, bool isEVR, [VFFragments fragments]) =>
+    makeElementFromByteData(e, isEVR);
 
   TagElement makeTagElementFromByteElement(ByteElement e, bool isEVR) =>
       TagElement.makeElementFromBytes(e.code, e.vrCode, e.vfBytes, e.vfLength);
@@ -122,7 +136,7 @@ class ByteReader extends DcmReader {
   }
 
   /// Reads only the File Meta Information ([FMI], if present.
-  static Dataset readBytes(Uint8List bytes,
+  static ByteDataset readBytes(Uint8List bytes,
       {String path = "",
       bool fmiOnly = false,
       fast = true,

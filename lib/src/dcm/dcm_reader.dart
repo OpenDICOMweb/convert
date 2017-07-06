@@ -14,6 +14,11 @@ import 'package:dictionary/dictionary.dart';
 
 //TODO: rewrite all comments to reflect current state of code
 
+// Next 3 values are 2x16bit little Endian values as one 32bit value.
+const kSequenceDelimitationItem32Bit = 0xfeffdde0;
+const kItem32Bit = 0xfeff00e0;
+const kItemDelimitationItem32Bit = 0xfeff0de0;
+
 /// The type of the different Value Field readers.  Each [VFReader]
 /// reads the Value Field for a particular Value Representation.
 typedef Element ElementMaker<V>(int code, VR<V> vr, int vfLength);
@@ -109,18 +114,27 @@ abstract class DcmReader {
   Dataset get currentDS;
   void set currentDS(Dataset ds);
 
+  /// Interface to Element constructors.
   Element makeElement(int code, int vrCode, [List values, bool isEVR = true]);
 
+  /// Interface to Element.fromBytes constructors.
   Element makeElementFromBytes(int code, int vrCode, int vfOffset,
       Uint8List vfBytes, int vfLength, bool isEVR,
       [VFFragments fragments]);
 
+  Element makePixelData(int code, int vrCode, int vfOffset, Uint8List vfBytes,
+      int vfLength, bool isEVR,
+      [VFFragments fragments]);
+
+  /// Interface to Element.fromByteData constructors.
   Element makeElementFromByteData(ByteData bd, bool isEVR);
 
+  /// Interface to Item constructor.
   Dataset makeItem(ByteData bd, Dataset parent, Map<int, Element> elements,
       int vfLength, bool hadULength,
       [Element sq]);
 
+  /// Interface to Sequence constructor.
   Element makeSequence(int code, List items, ByteData vf, bool hadULength,
       [bool isEVR = true]);
 
@@ -293,22 +307,33 @@ abstract class DcmReader {
     elementIndex[nthElement] = _rIndex;
     nthElement++;
 
+    Element e;
     int code = _readTagCode();
-    // Sometimes there are zeros at the end of the file
-    if (code == 0) _zeroEncountered(code);
-    if (code == kPixelData) _pixelDataStart = _rIndex;
-    Element e = (isEVR) ? _readEVR(code) : _readIVR(code);
+    if (code == 0) {
+      // Sometimes there are zeros at the end of the file
+      _zeroEncountered(code);
+    } else if (code == kPixelData) {
+      _pixelDataStart = _rIndex;
+      e = __readElement(code, isEVR, true);
+      _pixelDataEnd = _rIndex;
+      _endOfLastElement = _rIndex;
+      return e;
+    } else {
+      //TODO: is this test really important?
+      //Urgent add to dict isGroupLength
+      if ((code & 0xFFFF) == 0) _hadGroupLengths = true;
+      e = __readElement(code, isEVR, false);
+    }
     // Statistics
     _nElements++;
     if (Tag.isPrivateCode(code)) _nPrivateElements++;
-    //Urgent add to dict isGroupLength
-    if ((code & 0xFFFF) == 0) _hadGroupLengths = true;
-    if (code == kPixelData) _pixelDataEnd = _rIndex;
-    _endOfLastElement = _rIndex;
     return e;
   }
 
-  Element _readEVR(int code) {
+  Element __readElement(int code, bool isEVR, [bool isPixelData = false]) =>
+      (isEVR) ? _readEVR(code) : _readIVR(code);
+
+  Element _readEVR(int code, [bool isPixelData = false]) {
     int eStart = _rIndex - 4; // for code
     int vrCode = _readUint16();
     VR vr = VR.lookup(vrCode);
@@ -336,9 +361,6 @@ abstract class DcmReader {
       }
     }
     var e = _makeElement(eStart, eLength, isEVR: true);
-/* FLush when working
-   ByteData bdx = _getElementBD(eStart, eLength);
-    var e = new EVRElement.fromByteData(bdx);*/
     log.debugUp('$ree _readEVR: $e');
     return e;
   }
@@ -395,7 +417,7 @@ abstract class DcmReader {
   Element _readSequence(int code, int headerLength, bool isEVR) {
     /// Returns [true] if the [kSequenceDelimitationItem] delimiter is found.
     bool checkForSequenceDelimiter() =>
-        _checkForDelimiter(kSequenceDelimitationItem);
+        _checkForDelimiter(kSequenceDelimitationItem32Bit);
 
     log.debugDown('$rbb readSQ ${toDcm(code)}');
     int vfLength = _readUint32();
@@ -431,12 +453,14 @@ abstract class DcmReader {
   /// Returns an [Item] or Fragment.
   Dataset _readItem(isExplicitVR) {
     /// Returns [true] if the [kItemDelimitationItem] delimiter is found.
-    bool checkForItemDelimiter() => _checkForDelimiter(kItemDelimitationItem);
+    bool checkForItemDelimiter() =>
+        _checkForDelimiter(kItemDelimitationItem32Bit);
 
     int start = _rIndex;
-    int code = _readTagCode();
+   // int code = _readTagCode();
+    int code = bd.getUint32(_rIndex);
     log.debugDown('$rbb item kItem(${toHex32(kItem)}, code ${toHex32(code)}');
-    assert(code == kItem, 'Invalid Item code: ${toDcm(code)}');
+    assert(code == kItem32Bit, 'Invalid Item code: ${toDcm(code)}');
     int vfLength = _readUint32();
     //  log.debug('$rmm item vfLength(${toHex32(vfLength)}, $vfLength)');
 
@@ -482,7 +506,8 @@ abstract class DcmReader {
   /// delimiter is found [_rIndex] is advanced past the Value Length Field;
   /// otherwise, readIndex does not change
   bool _checkForDelimiter(int target) {
-    int delimiter = _peekTagCode();
+    // int delimiter = _peekTagCode();
+    int delimiter = bd.getUint32(_rIndex);
     //  log.debug('$rmm delimiter(${toHex32(delimiter)}), '
     //      'target(${toHex32(target)})');
     if (delimiter == target) {
@@ -516,6 +541,35 @@ abstract class DcmReader {
     }
     _hadParsingErrors = true;
     throw "vfLength($vfLength) not kUndefinedLength";
+  }
+
+  // TODO: move into Pixel Data
+// & readElementExplicit
+  /// Returns an [ByteItem] or Fragment.
+  VFFragments _readFragments() {
+    log.debugDown('$rbb readFragements');
+    // rIndex at first kItem delimiter
+    var fragments = <Uint8List>[];
+    int code = _readTagCode();
+    do {
+      assert(code == kItem, 'Invalid Item code: ${toDcm(code)}');
+      int vfLength = _readUint32();
+      assert(
+          vfLength != kUndefinedLength, 'Invalid length: ${toDcm(vfLength)}');
+      int startOfVF = _rIndex;
+      _rIndex += vfLength;
+      fragments.add(bd.buffer.asUint8List(startOfVF, _rIndex - startOfVF));
+      code = _readTagCode();
+    } while (code != kSequenceDelimitationItem);
+    int vfLength = _readUint32();
+    if (vfLength != 0)
+      log.warn('Pixel Data Sequence delimiter has non-zero '
+          'value: $code/0x${toHex32(code)}');
+    var vfFragments = new VFFragments(fragments);
+    var delimiter = bd.getUint32(_rIndex - 8);
+    assert(delimiter == kSequenceDelimitationItem32Bit);
+    log.debugUp('$ree readFragements: $vfFragments');
+    return vfFragments;
   }
 
   /// Reads a group and element and combines them into a Tag.code.

@@ -72,6 +72,24 @@ class TagReader extends DcmReader {
       TagElement.makeElementFromBytes(
           code, vrCode, vfBytes, vfLength, fragments);
 
+  TagElement makePixelData(int code, int vrCode, int vfOffset,
+      Uint8List vfBytes, int vfLength, bool isEVR,
+      [VFFragments fragments]) {
+    assert(code == kPixelData);
+    if (vrCode == VR.kOB.code) {
+      if (vfLength == kUndefinedLength) {
+        VFFragments fragments = VFFragments.fromBytes(vfBytes);
+        return new OBPixelData(PTag.kPixelData, vfBytes, vfLength, fragments);
+      } else {
+        return new OBPixelData(PTag.kPixelData, vfBytes, vfLength);
+      }
+    } else if (vrCode == VR.kOW.code) {
+      assert(vfLength != kUndefinedLength);
+      return new OW.fromBytes(PTag.kPixelData, vfBytes, vfLength);
+    } else {
+      throw 'Invalid VR($vrCode) for Pixel Data';
+    }
+  }
   // Flush if not needed
   TagElement makeElementFromByteData(ByteData e, bool isEVR) =>
       throw new UnimplementedError();
