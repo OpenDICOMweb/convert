@@ -68,27 +68,21 @@ class ByteReader extends DcmReader {
   //Flush if not needed
   ByteElement makeElementFromBytes(int code, int vrCode, int vfOffset,
           Uint8List vfBytes, int vfLength, bool isEVR,
-          [VFFragments fragments]) {
-    if (code == kPixelData) {
-      return (isEVR)
-          ? new EVRPixelData(bd).fromBytes(code, vrCode, vfOffset, vfBytes)
-          : new IVRElement.fromBytes(code, vrCode, vfOffset, vfBytes);
-    } else {
-      return (isEVR)
+          [VFFragments fragments]) =>
+      (isEVR)
           ? new EVRElement.fromBytes(code, vrCode, vfOffset, vfBytes)
           : new IVRElement.fromBytes(code, vrCode, vfOffset, vfBytes);
-    }
-  }
-
 
   ByteElement makeElementFromByteData(ByteData e, bool isEVR) =>
       (isEVR) ? new EVRElement.fromByteData(e) : new IVRElement.fromByteData(e);
 
   //Urgent: fix
   /// Makes a PixelData [Element] from [ByteData]
+  /// Note: ByteReader doesn't handel fragments.
   ByteElement makePixelData(int code, int vrCode, int vfOffset,
-  Uint8List vfBytes, int vfLength, bool isEVR, [VFFragments fragments]) =>
-    makeElementFromByteData(e, isEVR);
+          Uint8List vfBytes, int vfLength, bool isEVR,
+          [VFFragments fragments]) =>
+      makeElementFromBytes(code, vrCode, vfOffset, vfBytes, vfLength, isEVR);
 
   TagElement makeTagElementFromByteElement(ByteElement e, bool isEVR) =>
       TagElement.makeElementFromBytes(e.code, e.vrCode, e.vfBytes, e.vfLength);

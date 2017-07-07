@@ -363,46 +363,33 @@ abstract class DcmReader {
         _rIndex = eStart + eLength;
       }
     }
+
     var e = _makeElement(eStart, eLength, isEVR: true);
     log.debugUp('$ree _readEVR: $e');
     return e;
   }
 
-  Element _readValueField(int code, int vrCode, int vfLength, int eStart) {
-    int eLength;
-    if (vfLength == kUndefinedLength) {
-      int endOfVF = _findEndOfVF(vfLength);
-      eLength = endOfVF - eStart;
-      _rIndex = endOfVF + 8;
-    } else {
-      eLength = 12 + vfLength;
-      _rIndex = eStart + eLength;
-    }
-    var e = _makeElement(eStart, eLength, isEVR: true);
-    log.debugUp('$ree _readEVR: $e');
-  }
-
-
-/* Urgent see if it makes sense to do this.
+ // Urgent see if it makes sense to do this.
    Element _makeElement(int eStart, int eLength, {bool isEVR: true}) {
     int endOfVF = eStart + eLength;
     if (endOfVF > endOfBD)
-      log.error('$rmm endOfVR($endOfVF) is beyond the end of File: $path\n'
+      log.error('$rmm endOfVR($endOfVF) > EOF: $path\n'
           '    start($eStart) + eLength($eLength) = $endOfVF > $endOfBD');
     var e = bd.buffer.asByteData(eStart, eLength);
     return makeElementFromByteData(e, isEVR);
-  }*/
+  }
 
   /// Read an Implicit VR Little Endian Element.
   Element _readIVR(int code) {
     /// If this is a Sequence, it is wither empty, in which case the next
     /// 32-bits will be a [kSequenceDelimitationItem32Bit]; or it is not
     /// empty, in which case the next 32 bits will be an [kItem32Bit] value.
-    bool isSequence() {
+    bool isSequence(int code) {
     //  int code = _peekTagCode();
-      int code = _readUint32();
+      if (code == kPixelData) return false;
+      int delimiter = bd.getUint32(_rIndex);
     //  if (code == kItem || code == kSequenceDelimitationItem) {
-      if (code == kItem32Bit || code == kSequenceDelimitationItem32Bit) {
+      if (delimiter == kItem32Bit || delimiter == kSequenceDelimitationItem32Bit) {
         _skip(-4);
         return true;
       }
@@ -411,7 +398,7 @@ abstract class DcmReader {
 
     int eStart = _rIndex - 4; // for code
     int vfLength = _readUint32();
-    if (isSequence()) return _readSequence(code, 8, false);
+    if (isSequence(code)) return _readSequence(code, 8, false);
 
     log.debugDown('$rbb _readIVR: ${toDcm(code)} start($eStart), '
         'vfL($vfLength), endOfVF(${eStart + vfLength}');
@@ -571,7 +558,7 @@ abstract class DcmReader {
   // TODO: move into Pixel Data
 // & readElementExplicit
   /// Returns an [ByteItem] or Fragment.
-  VFFragments _readFragments() {
+  VFFragments readFragments() {
     log.debugDown('$rbb readFragements');
     // rIndex at first kItem delimiter
     var fragments = <Uint8List>[];

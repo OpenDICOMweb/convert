@@ -78,7 +78,7 @@ class TagReader extends DcmReader {
     assert(code == kPixelData);
     if (vrCode == VR.kOB.code) {
       if (vfLength == kUndefinedLength) {
-        VFFragments fragments = VFFragments.fromBytes(vfBytes);
+        VFFragments fragments = readFragments(vfBytes);
         return new OBPixelData(PTag.kPixelData, vfBytes, vfLength, fragments);
       } else {
         return new OBPixelData(PTag.kPixelData, vfBytes, vfLength);
