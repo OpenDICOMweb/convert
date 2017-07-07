@@ -14,10 +14,12 @@ import 'package:dictionary/dictionary.dart';
 
 //TODO: rewrite all comments to reflect current state of code
 
+/* Flush when working
 // Next 3 values are 2x16bit little Endian values as one 32bit value.
-const kSequenceDelimitationItem32Bit = 0xfeffdde0;
 const kItem32Bit = 0xfeff00e0;
+const kSequenceDelimitationItem32Bit = 0xfeffdde0;
 const kItemDelimitationItem32Bit = 0xfeff0de0;
+*/
 
 /// The type of the different Value Field readers.  Each [VFReader]
 /// reads the Value Field for a particular Value Representation.
@@ -320,8 +322,9 @@ abstract class DcmReader {
       return e;
     } else {
       //TODO: is this test really important?
-      //Urgent add to dict isGroupLength
-      if ((code & 0xFFFF) == 0) _hadGroupLengths = true;
+      //Urgent add to dict isGroupLength - remove when working
+      //if ((code & 0xFFFF) == 0) _hadGroupLengths = true;
+      if (Tag.isGroupLengthCode(code)) _hadGroupLengths = true;
       e = __readElement(code, isEVR, false);
     }
     // Statistics
@@ -365,19 +368,41 @@ abstract class DcmReader {
     return e;
   }
 
-  Element _makeElement(int eStart, int eLength, {bool isEVR: true}) {
+  Element _readValueField(int code, int vrCode, int vfLength, int eStart) {
+    int eLength;
+    if (vfLength == kUndefinedLength) {
+      int endOfVF = _findEndOfVF(vfLength);
+      eLength = endOfVF - eStart;
+      _rIndex = endOfVF + 8;
+    } else {
+      eLength = 12 + vfLength;
+      _rIndex = eStart + eLength;
+    }
+    var e = _makeElement(eStart, eLength, isEVR: true);
+    log.debugUp('$ree _readEVR: $e');
+  }
+
+
+/* Urgent see if it makes sense to do this.
+   Element _makeElement(int eStart, int eLength, {bool isEVR: true}) {
     int endOfVF = eStart + eLength;
     if (endOfVF > endOfBD)
       log.error('$rmm endOfVR($endOfVF) is beyond the end of File: $path\n'
           '    start($eStart) + eLength($eLength) = $endOfVF > $endOfBD');
     var e = bd.buffer.asByteData(eStart, eLength);
     return makeElementFromByteData(e, isEVR);
-  }
+  }*/
 
+  /// Read an Implicit VR Little Endian Element.
   Element _readIVR(int code) {
+    /// If this is a Sequence, it is wither empty, in which case the next
+    /// 32-bits will be a [kSequenceDelimitationItem32Bit]; or it is not
+    /// empty, in which case the next 32 bits will be an [kItem32Bit] value.
     bool isSequence() {
-      int code = _peekTagCode();
-      if (code == kItem || code == kSequenceDelimitationItem) {
+    //  int code = _peekTagCode();
+      int code = _readUint32();
+    //  if (code == kItem || code == kSequenceDelimitationItem) {
+      if (code == kItem32Bit || code == kSequenceDelimitationItem32Bit) {
         _skip(-4);
         return true;
       }
@@ -409,13 +434,13 @@ abstract class DcmReader {
 
   // There are four [Element]s that might have an Undefined Length value
   // (0xFFFFFFFF), [SQ], [OB], [OW], [UN]. If the length is the Undefined,
-  // then it searches for the matching [kSequenceDelimitationItem] to
+  // then it searches for the matching [kSequenceDelimitationItem32Bit] to
   // determine the length. Returns a [kUndefinedLength], which is used for
   // reading the value field of these [Element]s. Returns an [SQ] [Element].
 
   /// Reads an EVR or IVR Sequence. The _readElementMethod detects Sequences.
   Element _readSequence(int code, int headerLength, bool isEVR) {
-    /// Returns [true] if the [kSequenceDelimitationItem] delimiter is found.
+    /// Returns [true] if the [kSequenceDelimitationItem32Bit] delimiter is found.
     bool checkForSequenceDelimiter() =>
         _checkForDelimiter(kSequenceDelimitationItem32Bit);
 
@@ -452,18 +477,16 @@ abstract class DcmReader {
   // & readElementExplicit
   /// Returns an [Item] or Fragment.
   Dataset _readItem(isExplicitVR) {
-    /// Returns [true] if the [kItemDelimitationItem] delimiter is found.
+    /// Returns [true] if the [kItemDelimitationItem32Bit] delimiter is found.
     bool checkForItemDelimiter() =>
         _checkForDelimiter(kItemDelimitationItem32Bit);
 
     int start = _rIndex;
    // int code = _readTagCode();
     int code = bd.getUint32(_rIndex);
-    log.debugDown('$rbb item kItem(${toHex32(kItem)}, code ${toHex32(code)}');
+    log.debugDown('$rbb item kItem(${toHex32(kItem32Bit)}, code ${toHex32(code)}');
     assert(code == kItem32Bit, 'Invalid Item code: ${toDcm(code)}');
     int vfLength = _readUint32();
-    //  log.debug('$rmm item vfLength(${toHex32(vfLength)}, $vfLength)');
-
     // Save parent [Dataset], and make [item] is new parent [Dataset].
     Dataset parentDS = currentDS;
     Map<int, Element> elements = <int, Element>{};
@@ -526,6 +549,8 @@ abstract class DcmReader {
   }
 
   /// Reads the Value Field until the [kSequenceDelimiter] is found.
+  /// Note: Since the Value Field is 16-bit aligned, it must be checked
+  /// 16 bits at a time.
   int _findEndOfVF(int vfLength) {
     // log.debug1('$rbb _findLength: vfLength(0x${toHex32(vfLength)}})');
     if (vfLength == kUndefinedLength) {
@@ -550,17 +575,20 @@ abstract class DcmReader {
     log.debugDown('$rbb readFragements');
     // rIndex at first kItem delimiter
     var fragments = <Uint8List>[];
-    int code = _readTagCode();
+   // int code = _readTagCode();
+    int code = _readUint32();
     do {
-      assert(code == kItem, 'Invalid Item code: ${toDcm(code)}');
+  //    assert(code == kItem, 'Invalid Item code: ${toDcm(code)}');
+      assert(code == kItem32Bit, 'Invalid Item code: ${toDcm(code)}');
       int vfLength = _readUint32();
       assert(
           vfLength != kUndefinedLength, 'Invalid length: ${toDcm(vfLength)}');
       int startOfVF = _rIndex;
       _rIndex += vfLength;
       fragments.add(bd.buffer.asUint8List(startOfVF, _rIndex - startOfVF));
-      code = _readTagCode();
-    } while (code != kSequenceDelimitationItem);
+      code = _readUint32();
+    } while (code != kSequenceDelimitationItem32Bit);
+    // Read the Sequence Delimitation Item length field.
     int vfLength = _readUint32();
     if (vfLength != 0)
       log.warn('Pixel Data Sequence delimiter has non-zero '
