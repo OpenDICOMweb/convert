@@ -1,13 +1,1 @@
-Info: Test ResultSet for C:/odw/test_data/36_4485_6684
-           total time: 0:02:36.334355
-          total files: 126
-              success: 126
-             failures: 0
-               bad TS: 0
-                no TS: 0
-          short files: 0
-  short file failures: 0
-       had duplicates: 0
-                    bad TS: 0
-
-   - 
+Info:   Dataset: RootByteDataset: Elements(101), total(121)  - 

@@ -1,4 +1,4 @@
-// Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
+// Copyright (c) 2016, 2017, Open DICOMweb Project. All rights reserved.
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
@@ -12,8 +12,8 @@ import 'package:dictionary/dictionary.dart';
 
 import 'dcm_reader.dart';
 
-/// A decoder for Binary DICOM (application/dicom).  The resulting [Dataset]
-/// is a [RootTagDataset].
+/// A decoder for Binary DICOM (application/dicom).
+/// The resulting [Dataset] is a [RootTagDataset].
 class TagReader extends DcmReader {
   final RootTagDataset _rootDS;
   TagDataset _currentDS;
@@ -21,6 +21,8 @@ class TagReader extends DcmReader {
   /// Creates a new [TagReader].
   TagReader(ByteData bd,
       {String path = "",
+      bool async: true,
+      bool fast: true,
       bool fmiOnly = false,
       bool throwOnError = true,
       bool allowMissingFMI = false,
@@ -30,6 +32,8 @@ class TagReader extends DcmReader {
             new RootTagDataset(bd: bd, path: path, vfLength: bd.lengthInBytes),
         super(bd,
             path: path,
+            async: async,
+            fast: fast,
             fmiOnly: fmiOnly,
             throwOnError: throwOnError,
             allowMissingFMI: allowMissingFMI,
@@ -41,6 +45,8 @@ class TagReader extends DcmReader {
   /// to fit in the [Uint8List] as they are copied.
   factory TagReader.fromList(List<int> list, RootTagDataset rootDS,
       {String path = "",
+      async: true,
+      fast: true,
       bool fmiOnly = false,
       bool throwOnError = false,
       bool allowMissingFMI = false,
@@ -50,6 +56,8 @@ class TagReader extends DcmReader {
     ByteData bd = bytes.buffer.asByteData();
     return new TagReader(bd,
         path: path,
+        async: async,
+        fast: fast,
         fmiOnly: fmiOnly,
         throwOnError: throwOnError,
         allowMissingFMI: allowMissingFMI,
@@ -61,10 +69,19 @@ class TagReader extends DcmReader {
   TagDataset get currentDS => _currentDS;
   void set currentDS(TagDataset ds) => _currentDS = ds;
 
-  //Flush if not needed
-  TagElement makeElement(int code, int vrCode,
-          [List values, bool isEVR = true]) =>
-      TagElement.makeElement(code, vrCode, values, isEVR);
+  bool readTagFMI([bool checkPreamble = false]) {
+    var hadFmi = dcmReadFMI(checkPreamble);
+    rootDS.parseInfo = parseInfo;
+    return hadFmi;
+  }
+
+  /// Reads a [RootDataset] from [this] and returns it. If an error is
+  /// encountered [readRootDataset] will throw an Error is or [null].
+  Dataset readRootTagDataset({bool allowMissingFMI = false}) {
+    readRootDataset(allowMissingFMI: allowMissingFMI);
+    rootDS.parseInfo = parseInfo;
+    return rootDS;
+  }
 
   TagElement makeElementFromBytes(int code, int vrCode, int vfOffset,
           Uint8List vfBytes, int vfLength, bool isEVR,
@@ -72,13 +89,29 @@ class TagReader extends DcmReader {
       TagElement.makeElementFromBytes(
           code, vrCode, vfBytes, vfLength, fragments);
 
+  /// Returns a new TagSequence.
+  /// [vf] is [ByteData] for the complete Value Field of the Sequence.
+  SQ makeSequence(int code, List<TagItem> items, ByteData vf,
+      [bool hadULength = false, bool isEVR]) {
+    Tag tag = Tag.lookup(code);
+    SQ sq = new SQ(tag, items, vf.lengthInBytes, hadULength);
+    for (TagItem item in items) item.addSQ(sq);
+    return sq;
+  }
+
+  /// Returns a new [TagItem].
+  TagItem makeItem(ByteData bd, TagDataset parent,
+          Map<int, TagElement> elements, int vfLength,
+          [bool hadULength = false, TagElement sq]) =>
+      new TagItem.fromMap(bd, parent, elements, vfLength, hadULength, sq);
+
   TagElement makePixelData(int code, int vrCode, int vfOffset,
       Uint8List vfBytes, int vfLength, bool isEVR,
       [VFFragments fragments]) {
     assert(code == kPixelData);
     if (vrCode == VR.kOB.code) {
       if (vfLength == kUndefinedLength) {
-        VFFragments fragments = readFragments(vfBytes);
+        VFFragments fragments = readFragments();
         return new OBPixelData(PTag.kPixelData, vfBytes, vfLength, fragments);
       } else {
         return new OBPixelData(PTag.kPixelData, vfBytes, vfLength);
@@ -90,53 +123,60 @@ class TagReader extends DcmReader {
       throw 'Invalid VR($vrCode) for Pixel Data';
     }
   }
-  // Flush if not needed
-  TagElement makeElementFromByteData(ByteData e, bool isEVR) =>
-      throw new UnimplementedError();
 
-  void add(TagElement e) => currentDS.add(e);
-
-  TagItem makeItem(ByteData bd, TagDataset parent,
-          Map<int, TagElement> elements, int vfLength, bool hadULength,
-          [TagElement sq]) =>
-      new TagItem.fromMap(bd, parent, elements, vfLength, hadULength, sq);
-
-  SQ makeSequence(int code, List<TagItem> items, ByteData vfBD, bool hadULength,
-      [bool isEVR]) {
-    //   List<ByteItem> bItems = items as List<ByteItem>;
-    Tag tag = Tag.lookup(code);
-    SQ sq = new SQ(tag, items, vfBD.lengthInBytes, hadULength);
-
-    for (TagItem item in items) item.addSQ(sq);
-    // addSequence(items, sq);
-    return sq;
-  }
-
-/* Flush when fully debugged
-  List<Dataset> addSequence(List<Dataset> items, Element sq) {
-    for (TagItem item in items) item.addSQ(sq);
-    return items;
-  }*/
-
+  // TODO: add Async argument and make it the default
   /// Reads only the File Meta Information ([FMI], if present.
-  static Dataset readBytes(Uint8List bytes, Dataset rootDS,
-      {String path = "", bool fmiOnly = false, TransferSyntax targetTS}) {
+  static Dataset readBytes(Uint8List bytes,
+      {String path = "",
+      async = true,
+      fast = true,
+      bool fmiOnly = false,
+      TransferSyntax targetTS}) {
     ByteData bd =
         bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
-    TagReader reader =
-        new TagReader(bd, path: path, fmiOnly: fmiOnly, targetTS: targetTS);
+    TagReader reader = new TagReader(bd,
+        path: path,
+        async: async,
+        fast: fast,
+        fmiOnly: fmiOnly,
+        targetTS: targetTS);
     return reader.readRootDataset();
   }
 
-  static RootDataset readFile(File file, RootDataset rootDS,
-      {bool fmiOnly = false, TransferSyntax targetTS}) {
+  static RootDataset readFile(File file,
+      {async: true,
+      fast = true,
+      bool fmiOnly = false,
+      TransferSyntax targetTS}) {
     Uint8List bytes = file.readAsBytesSync();
-    return readBytes(bytes, rootDS,
-        path: file.path, fmiOnly: fmiOnly, targetTS: targetTS);
+    return readBytes(bytes,
+        path: file.path,
+        async: async,
+        fast: fast,
+        fmiOnly: fmiOnly,
+        targetTS: targetTS);
   }
 
+  static Dataset readPath(String path,
+          {bool async: true,
+          bool fast = true,
+          bool fmiOnly = false,
+          TransferSyntax targetTS}) =>
+      readFile(new File(path),
+          async: async, fast: fast, fmiOnly: fmiOnly, targetTS: targetTS);
+
   /// Reads only the File Meta Information ([FMI], if present.
-  static RootDataset readFileFmiOnly(File file, RootDataset rootDS,
-          {String path = "", TransferSyntax targetTS}) =>
-      readFile(file, rootDS, fmiOnly: true, targetTS: targetTS);
+  static Dataset readFmiOnly(dynamic pathOrFile,
+      {async = true, fast = true, TransferSyntax targetTS}) {
+    var func;
+    if (pathOrFile is String) {
+      func = readPath;
+    } else if (pathOrFile is File) {
+      func = readFile;
+    } else {
+      throw 'Invalid path or file: $pathOrFile';
+    }
+    func(pathOrFile,
+        async: async, fmiOnly: true, fast: fast, targetTS: targetTS);
+  }
 }

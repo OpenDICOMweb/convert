@@ -40,7 +40,7 @@ abstract class DcmReader {
   static const int shortFileThreshold = 1024;
   //TODO: remove log.debug when working
   /// The [Logger] for this
-  static final Logger log = new Logger("DcmReader", watermark: Severity.info);
+  static final Logger log = new Logger("DcmReader", watermark: Severity.debug2);
 
   /// The [ByteData] being read.
   final ByteData bd;
@@ -116,25 +116,30 @@ abstract class DcmReader {
   Dataset get currentDS;
   void set currentDS(Dataset ds);
 
+/*
   /// Interface to Element constructors.
   Element makeElement(int code, int vrCode, [List values, bool isEVR = true]);
+*/
 
   /// Interface to Element.fromBytes constructors.
   Element makeElementFromBytes(int code, int vrCode, int vfOffset,
       Uint8List vfBytes, int vfLength, bool isEVR,
       [VFFragments fragments]);
 
+/* Flush
   Element makePixelData(int code, int vrCode, int vfOffset, Uint8List vfBytes,
       int vfLength, bool isEVR,
       [VFFragments fragments]);
-
+*/
+/* Flush
   /// Interface to Element.fromByteData constructors.
   Element makeElementFromByteData(ByteData bd, bool isEVR);
+*/
 
   /// Interface to Item constructor.
-  Dataset makeItem(ByteData bd, Dataset parent, Map<int, Element> elements,
-      int vfLength, bool hadULength,
-      [Element sq]);
+  Dataset makeItem(
+      ByteData bd, Dataset parent, Map<int, Element> elements, int vfLength,
+      [bool hadULength = false, Element sq]);
 
   /// Interface to Sequence constructor.
   Element makeSequence(int code, List items, ByteData vf, bool hadULength,
@@ -178,6 +183,7 @@ abstract class DcmReader {
     log.debug('$rbb readRootDataset');
     currentDS = rootDS;
     _hadFmi = _readFMI(true);
+    log.debug2('$rmm hadFMI: $_hadFmi');
     if (!allowMissingFMI && !_hadFmi) return null;
 
     log.debug('$rmm targetTS: $targetTS');
@@ -316,25 +322,22 @@ abstract class DcmReader {
       _zeroEncountered(code);
     } else if (code == kPixelData) {
       _pixelDataStart = _rIndex;
-      e = __readElement(code, isEVR, true);
+      e = (isEVR) ? _readEVR(code) : _readIVR(code);
       _pixelDataEnd = _rIndex;
-      _endOfLastElement = _rIndex;
-      return e;
+      log.debug('$rmm readPixelData: $_pixelDataStart - $_pixelDataEnd');
     } else {
       //TODO: is this test really important?
       //Urgent add to dict isGroupLength - remove when working
       //if ((code & 0xFFFF) == 0) _hadGroupLengths = true;
       if (Tag.isGroupLengthCode(code)) _hadGroupLengths = true;
-      e = __readElement(code, isEVR, false);
+      e = (isEVR) ? _readEVR(code) : _readIVR(code);
     }
     // Statistics
     _nElements++;
     if (Tag.isPrivateCode(code)) _nPrivateElements++;
+    _endOfLastElement = _rIndex;
     return e;
   }
-
-  Element __readElement(int code, bool isEVR, [bool isPixelData = false]) =>
-      (isEVR) ? _readEVR(code) : _readIVR(code);
 
   Element _readEVR(int code, [bool isPixelData = false]) {
     int eStart = _rIndex - 4; // for code
@@ -369,8 +372,8 @@ abstract class DcmReader {
     return e;
   }
 
- // Urgent see if it makes sense to do this.
-   Element _makeElement(int eStart, int eLength, {bool isEVR: true}) {
+  // Urgent see if it makes sense to do this.
+  Element _makeElement(int eStart, int eLength, {bool isEVR: true}) {
     int endOfVF = eStart + eLength;
     if (endOfVF > endOfBD)
       log.error('$rmm endOfVR($endOfVF) > EOF: $path\n'
@@ -385,11 +388,12 @@ abstract class DcmReader {
     /// 32-bits will be a [kSequenceDelimitationItem32Bit]; or it is not
     /// empty, in which case the next 32 bits will be an [kItem32Bit] value.
     bool isSequence(int code) {
-    //  int code = _peekTagCode();
+      //  int delimiter = _peekTagCode();
       if (code == kPixelData) return false;
       int delimiter = bd.getUint32(_rIndex);
-    //  if (code == kItem || code == kSequenceDelimitationItem) {
-      if (delimiter == kItem32Bit || delimiter == kSequenceDelimitationItem32Bit) {
+      //  if (code == kItem || code == kSequenceDelimitationItem) {
+      if (delimiter == kItem32BitLE ||
+          delimiter == kSequenceDelimitationItem32BitLE) {
         _skip(-4);
         return true;
       }
@@ -429,7 +433,7 @@ abstract class DcmReader {
   Element _readSequence(int code, int headerLength, bool isEVR) {
     /// Returns [true] if the [kSequenceDelimitationItem32Bit] delimiter is found.
     bool checkForSequenceDelimiter() =>
-        _checkForDelimiter(kSequenceDelimitationItem32Bit);
+        _checkForDelimiter(kSequenceDelimitationItem32BitLE);
 
     log.debugDown('$rbb readSQ ${toDcm(code)}');
     int vfLength = _readUint32();
@@ -460,19 +464,20 @@ abstract class DcmReader {
     return sq;
   }
 
+  /// Returns [true] if the [kItemDelimitationItem32Bit] delimiter is found.
+  bool _checkForItemDelimiter() =>
+      _checkForDelimiter(kItemDelimitationItem32BitLE);
   //TODO this can be moved to Dataset_base if we abstract DatasetExplicit
   // & readElementExplicit
   /// Returns an [Item] or Fragment.
-  Dataset _readItem(isExplicitVR) {
-    /// Returns [true] if the [kItemDelimitationItem32Bit] delimiter is found.
-    bool checkForItemDelimiter() =>
-        _checkForDelimiter(kItemDelimitationItem32Bit);
-
+  Dataset _readItem(isEVR) {
     int start = _rIndex;
-   // int code = _readTagCode();
-    int code = bd.getUint32(_rIndex);
-    log.debugDown('$rbb item kItem(${toHex32(kItem32Bit)}, code ${toHex32(code)}');
-    assert(code == kItem32Bit, 'Invalid Item code: ${toDcm(code)}');
+    // int code = _readTagCode();
+    int delimiter = _readUint32();
+    print('delimiter: ${toDcm(delimiter)}');
+    log.debugDown(
+        '$rbb item kItem(${toHex32(kItem32BitLE)}, code ${toHex32(delimiter)}');
+    assert(delimiter == kItem32BitLE, 'Invalid Item code: ${toDcm(delimiter)}');
     int vfLength = _readUint32();
     // Save parent [Dataset], and make [item] is new parent [Dataset].
     Dataset parentDS = currentDS;
@@ -482,15 +487,15 @@ abstract class DcmReader {
     int endOfVF;
     try {
       if (hadULength) {
-        while (!checkForItemDelimiter()) {
-          Element e = _readElement(isExplicitVR);
+        while (!_checkForItemDelimiter()) {
+          Element e = _readElement(isEVR);
           elements[e.code] = e;
         }
         endOfVF = _rIndex;
       } else {
         endOfVF = start + vfLength;
         while (_rIndex < endOfVF) {
-          Element e = _readElement(isExplicitVR);
+          Element e = _readElement(isEVR);
           elements[e.code] = e;
         }
       }
@@ -518,8 +523,8 @@ abstract class DcmReader {
   bool _checkForDelimiter(int target) {
     // int delimiter = _peekTagCode();
     int delimiter = bd.getUint32(_rIndex);
-    //  log.debug('$rmm delimiter(${toHex32(delimiter)}), '
-    //      'target(${toHex32(target)})');
+    log.debug('$rmm delimiter(${toHex32(delimiter)}), '
+        'target(${toHex32(target)})');
     if (delimiter == target) {
       _skip(4);
       int delimiterLength = _readUint32();
@@ -562,11 +567,11 @@ abstract class DcmReader {
     log.debugDown('$rbb readFragements');
     // rIndex at first kItem delimiter
     var fragments = <Uint8List>[];
-   // int code = _readTagCode();
+    // int code = _readTagCode();
     int code = _readUint32();
     do {
-  //    assert(code == kItem, 'Invalid Item code: ${toDcm(code)}');
-      assert(code == kItem32Bit, 'Invalid Item code: ${toDcm(code)}');
+      //    assert(code == kItem, 'Invalid Item code: ${toDcm(code)}');
+      assert(code == kItem32BitLE, 'Invalid Item code: ${toDcm(code)}');
       int vfLength = _readUint32();
       assert(
           vfLength != kUndefinedLength, 'Invalid length: ${toDcm(vfLength)}');
@@ -574,7 +579,7 @@ abstract class DcmReader {
       _rIndex += vfLength;
       fragments.add(bd.buffer.asUint8List(startOfVF, _rIndex - startOfVF));
       code = _readUint32();
-    } while (code != kSequenceDelimitationItem32Bit);
+    } while (code != kSequenceDelimitationItem32BitLE);
     // Read the Sequence Delimitation Item length field.
     int vfLength = _readUint32();
     if (vfLength != 0)
@@ -582,7 +587,7 @@ abstract class DcmReader {
           'value: $code/0x${toHex32(code)}');
     var vfFragments = new VFFragments(fragments);
     var delimiter = bd.getUint32(_rIndex - 8);
-    assert(delimiter == kSequenceDelimitationItem32Bit);
+    assert(delimiter == kSequenceDelimitationItem32BitLE);
     log.debugUp('$ree readFragements: $vfFragments');
     return vfFragments;
   }
