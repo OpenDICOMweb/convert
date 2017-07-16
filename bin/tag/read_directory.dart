@@ -84,7 +84,7 @@ void readFileList(List<File> files, {bool fmiOnly = false}) {
         'bad(${failure.length})');
     log.debug('Reading file: $file');
     try {
-      rds = ByteReader.readFile(file);
+      rds = TagReader.readFile(file);
       if (rds == null) {
         failure.add('"${file.path}"');
       } else {

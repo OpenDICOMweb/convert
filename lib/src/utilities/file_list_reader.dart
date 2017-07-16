@@ -33,14 +33,14 @@ class FileListReader {
     int count = -1;
     RootByteDataset rds;
 
-    for (String path  in paths) {
+    for (String path in paths) {
       if (count++ % printEvery == 0)
         log.info('$count good($successCount), bad($failureCount)');
       log.debug('Reading file: $path ');
       File f = new File(path);
       try {
         var bytes = f.readAsBytesSync();
-        rds = ByteReader.readBytes(bytes, path: path , fmiOnly: fmiOnly);
+        rds = ByteReader.readBytes(bytes, path: path, fmiOnly: fmiOnly);
         log.info('${rds.parseInfo}');
         log.info('  Dataset: $rds');
         if (rds == null) {
@@ -51,9 +51,11 @@ class FileListReader {
         }
       } on InvalidTransferSyntaxError catch (e) {
         log.info(e);
-        badTransferSyntax.add(path );
+        log.reset;
+        badTransferSyntax.add(path);
       } catch (e) {
         log.info('Fail: $path ');
+        log.reset;
         failures.add('"$path "');
         //   log.info('failures: ${failure.length}');
         if (throwOnError) throw 'Failed: $path ';
@@ -77,4 +79,3 @@ class FileListReader {
     return failures;
   }
 }
-

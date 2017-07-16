@@ -8,13 +8,13 @@ import 'package:common/logger.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 
-final Logger log =
-    new Logger("io/bin/read_files.dart", watermark: Severity.info);
+final Logger log = new Logger("io/bin/read_files.dart", watermark: Severity.info);
 
 void main() {
-  var path = path1;
-  log.config('Byte Reader: $path');
-  RootByteDataset rds0 = ByteReader.readPath(path);
+  var path = path1; //test6684_02;
+  log.info('TagReader: $path');
+  RootTagDataset rds0 = TagReader.readPath(path);
   log.info('${rds0.parseInfo}');
-  log.info('Bytes Dataset: ${rds0.info}');
+  log.info('TagDataset: ${rds0.info}');
 }
+

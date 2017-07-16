@@ -21,8 +21,8 @@ class ByteReader extends DcmReader {
   /// Creates a new [ByteReader].
   ByteReader(ByteData bd,
       {String path = "",
-      bool async: true,
-      bool fast: true,
+      bool async = true,
+      bool fast = true,
       bool fmiOnly = false,
       bool throwOnError = true,
       bool allowMissingFMI = false,
@@ -65,25 +65,28 @@ class ByteReader extends DcmReader {
         reUseBD: true);
   }
 
-  // The following Getters and Setters provide the correct [Type].
+  // The following Getters and Setters provide the correct [Type]s
+  // for [rootDS] and [currentDS].
   RootByteDataset get rootDS => _rootDS;
   ByteDataset get currentDS => _currentDS;
   void set currentDS(ByteDataset ds) => _currentDS = ds;
 
-  bool readByteFMI([bool checkPreamble = false]) {
+  bool readFMI([bool checkPreamble = false]) {
     var hadFmi = dcmReadFMI(checkPreamble);
     rootDS.parseInfo = parseInfo;
     return hadFmi;
   }
 
-  /// Reads a [RootDataset] from [this] and returns it. If an error is
-  /// encountered [readRootDataset] will throw an Error is or [null].
-  Dataset readRootByteDataset({bool allowMissingFMI = false}) {
-    readRootDataset(allowMissingFMI: allowMissingFMI);
+  /// Reads a [RootByteDataset] from [this], stores it in [rootDS],
+  /// and returns it.
+  RootByteDataset readRootDataset({bool allowMissingFMI = false}) {
+    dcmReadRootDataset(allowMissingFMI: allowMissingFMI);
     rootDS.parseInfo = parseInfo;
     return rootDS;
   }
 
+  /// Returns a new [ByteElement].
+  // Called from [DcmReader].
   ByteElement makeElementFromBytes(int code, int vrCode, int vfOffset,
           Uint8List vfBytes, int vfLength, bool isEVR,
           [VFFragments fragments]) =>
@@ -91,7 +94,14 @@ class ByteReader extends DcmReader {
           ? new EVRElement.fromBytes(code, vrCode, vfOffset, vfBytes)
           : new IVRElement.fromBytes(code, vrCode, vfOffset, vfBytes);
 
-  //Urgent: fix
+  /// Returns a new [ByteElement].
+  //  Called from [DcmReader].
+  ByteElement makeElementFromByteData(ByteData bd, bool isEVR) =>
+      (isEVR)
+          ? new EVRElement.fromByteData(bd)
+          : new IVRElement.fromByteData(bd);
+
+  //Urgent: flush or fix
   /// Makes a PixelData [Element] from [ByteData]
   /// Note: ByteReader doesn't handel fragments.
   ByteElement makePixelData(int code, int vrCode, int vfOffset,
@@ -99,33 +109,39 @@ class ByteReader extends DcmReader {
           [VFFragments fragments]) =>
       makeElementFromBytes(code, vrCode, vfOffset, vfBytes, vfLength, isEVR);
 
-  TagElement makeTagElementFromBytePixelData(BytePixelData e, bool isEVR) =>
+  //Urgent: flush or fix
+  TagElement makeTagElement(ByteElement e) =>
+      TagElement.makeElementFromBytes(
+          e.code, e.vrCode, e.vfBytes, e.vfLength);
+
+  //Urgent: flush or fix
+  TagElement makeElementFromBytePixelData(BytePixelData e, bool isEVR) =>
       TagElement.makeElementFromBytes(
           e.code, e.vrCode, e.vfBytes, e.vfLength, e.fragments);
 
   /// Returns a new ByteSequence.
-  /// [e] is the complete [ByteData] for the Sequence.
+  /// [e] is the complete [ByteElement] for the Sequence.
   ByteSQ makeSequence(int code, List<ByteItem> items, ByteData e,
       [bool hadULength = false, bool isEVR = true]) {
     //TODO: figure out how to create a ByteSequence with one call.
     ByteSQ sq = (isEVR)
-        ? new EVRSequence.fromByteData(e, currentDS, items, hadULength)
-        : new IVRSequence.fromByteData(e, currentDS, items, hadULength);
+        ? new EVRSQ.fromByteData(e, currentDS, items, hadULength)
+        : new IVRSQ.fromByteData(e, currentDS, items, hadULength);
     for (ByteItem item in items) item.addSQ(sq);
     return sq;
   }
 
   /// Returns a new [ByteItem].
   ByteItem makeItem(ByteData bd, ByteDataset parent,
-          Map<int, ByteElement> elements, int vfLength,
+          Map<int, Element> elements, int vfLength,
           [bool hadULength = false, ByteElement sq]) =>
       new ByteItem.fromMap(bd, parent, elements, vfLength, hadULength, sq);
 
   /// Reads only the File Meta Information ([FMI], if present.
-  static ByteDataset readBytes(Uint8List bytes,
+  static RootByteDataset readBytes(Uint8List bytes,
       {String path = "",
-      async = true,
-      fast = true,
+      bool async = true,
+      bool fast = true,
       bool fmiOnly = false,
       TransferSyntax targetTS}) {
     ByteData bd =
@@ -136,10 +152,10 @@ class ByteReader extends DcmReader {
         fast: fast,
         fmiOnly: fmiOnly,
         targetTS: targetTS);
-    return reader.readRootByteDataset();
+    return reader.dcmReadRootDataset();
   }
 
-  static ByteDataset readFile(File file,
+  static RootByteDataset readFile(File file,
           {bool async: true,
           bool fast = true,
           bool fmiOnly = false,
@@ -170,7 +186,7 @@ class ByteReader extends DcmReader {
     } else {
       throw 'Invalid path or file: $pathOrFile';
     }
-    func(pathOrFile,
+    return func(pathOrFile,
         async: async, fmiOnly: true, fast: fast, targetTS: targetTS);
   }
 }

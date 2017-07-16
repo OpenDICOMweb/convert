@@ -20,12 +20,12 @@ final Logger log =
 void main() {
  // readFile(path0);
 
-  readFiles(badFileList4);
+  readFiles(testPaths);
 }
 
 void readFile(String path) {
   File input = new File(path);
-  RootByteDataset rds = ByteReader.readFile(input) as RootByteDataset;
+  RootTagDataset rds = TagReader.readFile(input);
   if (rds == null) {
     log.error('Null Instance $path');
     return null;
@@ -37,8 +37,8 @@ void readFile(String path) {
 void formatDataset(RootByteDataset rds, [bool includePrivate = true]) {
   var z = new Formatter(maxDepth: 146);
   log.debug(rds.format(z));
-//  for (PrivateGroup pg in rds.privateGroups)
-//    log.debug(pg.info);
+  for (PrivateGroup pg in rds.privateGroups)
+    log.debug(pg.info);
 }
 
 void readFiles(List<String> paths) {

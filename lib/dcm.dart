@@ -4,14 +4,12 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-
 export 'package:core/core.dart';
-export 'package:dcm_convert/src/dcm/old/dcm_byte_reader.dart';
-export 'package:dcm_convert/src/dcm/old/dcm_byte_writer.dart';
 
 export 'src/dcm/byte_reader.dart';
 export 'src/dcm/byte_writer.dart';
-export 'src/dcm/compare_bytes.dart';
-export 'src/dcm/dcm_writer.dart';
+export 'src/dcm/compare_dataset.dart';
+export 'src/dcm/tag_reader.dart';
+export 'src/dcm/tag_writer.dart';
 
 

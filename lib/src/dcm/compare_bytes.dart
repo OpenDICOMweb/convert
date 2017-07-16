@@ -7,7 +7,7 @@
 import 'dart:typed_data';
 
 import 'package:common/ascii.dart';
-import 'package:core/src/dataset/byte_dataset/byte_dataset.dart';
+import 'package:core/src/dataset/byte/byte_dataset.dart';
 import 'package:core/src/dicom_utils.dart';
 import 'package:core/src/element/byte_element/byte_element.dart';
 import 'package:dictionary/dictionary.dart';
@@ -100,7 +100,7 @@ String toStr(Uint8List bytes, int index) {
   return new String.fromCharCodes(line);
 }
 
-bool compareDatasets(ByteDataset ds0, ByteDataset ds1,
+bool compareByteDatasets(ByteDataset ds0, ByteDataset ds1,
     [bool throwOnError = false]) {
   for (ByteElement e0 in ds0.elements) {
     ByteElement e1 = ds1[e0.code];
@@ -141,7 +141,7 @@ bool compareSequences(ByteSQ s0, ByteSQ s1) {
   for (int i = 0; i < s0.items.length; i++) {
     var item0 = s0[i];
     var item1 = s1[i];
-    if (!compareDatasets(item0, item1)) return false;
+    if (!compareByteDatasets(item0, item1)) return false;
   }
   return true;
 }

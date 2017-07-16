@@ -13,7 +13,7 @@ import '../bytebuf/bytebuf.dart';
 
 //TODO: Add type variable for [Element<E>] once [Dataset] supports it.
 /// Encoder for DICOM File Format octet streams (Uint8List)
-/// [JsonEncoder] reads dicom+json SOP Instances and returns a [RootDataset].
+/// [JsonEncoder] reads dicom+json SOP Instances and returns a [RootJSONDataset].
 
 /// An extension to ByteBuf used for encoding JSON.
 ///

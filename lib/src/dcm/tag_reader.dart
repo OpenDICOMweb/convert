@@ -65,29 +65,46 @@ class TagReader extends DcmReader {
         reUseBD: true);
   }
 
+  // The following Getters and Setters provide the correct [Type]s
+  // for [rootDS] and [currentDS].
   RootTagDataset get rootDS => _rootDS;
   TagDataset get currentDS => _currentDS;
   void set currentDS(TagDataset ds) => _currentDS = ds;
 
-  bool readTagFMI([bool checkPreamble = false]) {
+  bool readFMI([bool checkPreamble = false]) {
     var hadFmi = dcmReadFMI(checkPreamble);
     rootDS.parseInfo = parseInfo;
     return hadFmi;
   }
 
-  /// Reads a [RootDataset] from [this] and returns it. If an error is
-  /// encountered [readRootDataset] will throw an Error is or [null].
-  Dataset readRootTagDataset({bool allowMissingFMI = false}) {
-    readRootDataset(allowMissingFMI: allowMissingFMI);
+  /// Reads a [RootTagDataset] from [this], stores it in [rootDS],
+  /// and returns it.
+  RootTagDataset readRootDataset({bool allowMissingFMI = false}) {
+    dcmReadRootDataset(allowMissingFMI: allowMissingFMI);
     rootDS.parseInfo = parseInfo;
+    print('parseInfo: $parseInfo');
     return rootDS;
   }
 
+  /// Returns a new [ByteElement].
+  //  Called from [DcmReader].
   TagElement makeElementFromBytes(int code, int vrCode, int vfOffset,
           Uint8List vfBytes, int vfLength, bool isEVR,
           [VFFragments fragments]) =>
       TagElement.makeElementFromBytes(
           code, vrCode, vfBytes, vfLength, fragments);
+
+  ///
+  TagElement makeElementFromByteData(ByteData bd, bool isEVR) {
+    ByteElement be = ByteElement.makeElementFromByteData(bd, isEVR);
+    return makeTagElement(be);
+  }
+
+  //TODO: decide where to parse Fragments.
+  /// Returns a new [ByteElement].
+  //  Called from [DcmReader].
+  TagElement makeTagElement(ByteElement e, [VFFragments fragments]) =>
+      TagElement.makeElementFromByteElement(e);
 
   /// Returns a new TagSequence.
   /// [vf] is [ByteData] for the complete Value Field of the Sequence.
@@ -101,9 +118,9 @@ class TagReader extends DcmReader {
 
   /// Returns a new [TagItem].
   TagItem makeItem(ByteData bd, TagDataset parent,
-          Map<int, TagElement> elements, int vfLength,
+          Map<int, Element> elements, int vfLength,
           [bool hadULength = false, TagElement sq]) =>
-      new TagItem.fromMap(bd, parent, elements, vfLength, hadULength, sq);
+      new TagItem.fromMap(parent, elements, vfLength, hadULength, sq);
 
   TagElement makePixelData(int code, int vrCode, int vfOffset,
       Uint8List vfBytes, int vfLength, bool isEVR,
@@ -126,10 +143,10 @@ class TagReader extends DcmReader {
 
   // TODO: add Async argument and make it the default
   /// Reads only the File Meta Information ([FMI], if present.
-  static Dataset readBytes(Uint8List bytes,
+  static RootTagDataset readBytes(Uint8List bytes,
       {String path = "",
-      async = true,
-      fast = true,
+      bool async = true,
+      bool fast = true,
       bool fmiOnly = false,
       TransferSyntax targetTS}) {
     ByteData bd =
@@ -140,10 +157,12 @@ class TagReader extends DcmReader {
         fast: fast,
         fmiOnly: fmiOnly,
         targetTS: targetTS);
-    return reader.readRootDataset();
+    var root = reader.dcmReadRootDataset();
+    print(root);
+    return root;
   }
 
-  static RootDataset readFile(File file,
+  static RootTagDataset readFile(File file,
       {async: true,
       fast = true,
       bool fmiOnly = false,
@@ -176,7 +195,7 @@ class TagReader extends DcmReader {
     } else {
       throw 'Invalid path or file: $pathOrFile';
     }
-    func(pathOrFile,
+    return func(pathOrFile,
         async: async, fmiOnly: true, fast: fast, targetTS: targetTS);
   }
 }

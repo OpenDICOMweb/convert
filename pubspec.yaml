@@ -29,6 +29,9 @@ dependencies:
   #    ref: develop
     path: C:/odw/sdk/core
     version: ^0.5.6
+  typed_buffers:
+    path: C:/odw/sdk/typed_data
+    version: ^1.1.3
 
 dev_dependencies:
   benchmark_harness: ^1.0.4

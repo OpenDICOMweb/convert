@@ -212,7 +212,7 @@ FileResult readFileWithResult(File file,
   var start = timer.split;
   var bytes = file.readAsBytesSync();
   var readBD = timer.split;
-  var rds = DcmByteReader.readBytes(bytes,
+  var rds = ByteReader.readBytes(bytes,
       path: file.path, fmiOnly: fmiOnly, targetTS: targetTS, fast: true);
   timer.stop();
   if (rds == null) return null;

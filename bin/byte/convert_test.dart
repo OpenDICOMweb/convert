@@ -5,23 +5,16 @@
 // See the AUTHORS file for other contributors.
 
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:common/common.dart';
+import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:dcm_convert/src/dcm/convert_byte_to_tag.dart';
 import 'package:dictionary/dictionary.dart';
 
-const String path0 = 'C:/odw/test_data/6688/12/0B009D38/0B009D3D/4D4E9A56';
-const String path1 = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
-const String path2 = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
-const String path3 = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368';
-const String path4 = 'C:/odw/test_data/mweb/100 MB Studies';
-
 Logger log = new Logger('convert_test', watermark: Severity.info);
 
 void main() {
-
   for (String path in [path0]) {
     try {
       File f = new File(path);
@@ -41,12 +34,7 @@ void main() {
 
 bool convert(File file, {int reps = 1, bool fmiOnly = false}) {
   log.debug2('Reading: $file');
-  Uint8List bytes0 = file.readAsBytesSync();
-  log.debug('Convert Reading: $file with ${bytes0.lengthInBytes} bytes');
-  if (bytes0 == null) return false;
-
-  RootByteDataset byteRoot =
-      DcmByteReader.readBytes(bytes0, path: file.path, fast: true);
+  RootByteDataset byteRoot = ByteReader.readFile(file, fast: true);
   if (byteRoot == null) return false;
 
   RootTagDataset tRoot = convertByteDSToTagDS(byteRoot);
@@ -97,8 +85,8 @@ bool convert(File file, {int reps = 1, bool fmiOnly = false}) {
     }
     if (be.vr != te.vr) {
       if (be.vr == VR.kUN && be.isPrivate) {
-           log.info('--- ${toDcm(be.code)} was ${be.vr} now ${te.vr}');
-           log.info('     ${te.tag}');
+        log.info('--- ${toDcm(be.code)} was ${be.vr} now ${te.vr}');
+        log.info('     ${te.tag}');
       } else {
         error = true;
         log.error('VR Not Equal be.vr(${be.vr}) != te.vr(${te.vr})');

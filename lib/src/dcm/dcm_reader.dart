@@ -33,7 +33,8 @@ typedef Element ElementMaker<V>(int code, VR<V> vr, int vfLength);
 ///  For example DcmReader does not trim whitespace from strings.
 ///  This is so they can be written out byte for byte as they were
 ///  read. and a byte-wise comparator will find them to be equal.
-/// 2. All String manipulation should be handled by the containing [Element] itself.
+/// 2. All String manipulation should be handled by the containing
+///  [Element] itself.
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
 abstract class DcmReader {
@@ -47,6 +48,8 @@ abstract class DcmReader {
 
   /// The source of the [Uint8List] being read.
   final String path;
+  final bool async;
+  final bool fast;
   final bool fmiOnly;
 
   /// If [true] errors will throw; otherwise, return [null].
@@ -97,6 +100,8 @@ abstract class DcmReader {
   /// Creates a new [DcmReader]  where [_rIndex] = [writeIndex] = 0.
   DcmReader(this.bd,
       {this.path = "",
+      this.async = true,
+      this.fast: true,
       this.fmiOnly = false,
       this.throwOnError = true,
       this.allowMissingFMI = false,
@@ -116,10 +121,8 @@ abstract class DcmReader {
   Dataset get currentDS;
   void set currentDS(Dataset ds);
 
-/*
-  /// Interface to Element constructors.
-  Element makeElement(int code, int vrCode, [List values, bool isEVR = true]);
-*/
+  /// Interface to Element.fromBytes constructors.
+  Element makeElementFromByteData(ByteData bd, bool isEVR);
 
   /// Interface to Element.fromBytes constructors.
   Element makeElementFromBytes(int code, int vrCode, int vfOffset,
@@ -177,25 +180,27 @@ abstract class DcmReader {
 
   bool dcmReadFMI([bool checkPreamble = false]) => _readFMI(checkPreamble);
 
-  /// Reads a [RootDataset] from [this] and returns it. If an error is
-  /// encountered [readRootDataset] will throw an Error is or [null].
-  Dataset readRootDataset({bool allowMissingFMI = false}) {
+  /// Reads a Root [Dataset] from [this] and returns it.
+  /// If an error is encountered and [throwOnError] is [true],
+  /// an Error will be thrown; otherwise, returns [null].
+  Dataset dcmReadRootDataset({bool allowMissingFMI = false}) {
     log.debug('$rbb readRootDataset');
     currentDS = rootDS;
     _hadFmi = _readFMI(true);
     log.debug2('$rmm hadFMI: $_hadFmi');
     if (!allowMissingFMI && !_hadFmi) return null;
 
+    log.debug('$rmm TS: ${rootDS.transferSyntax}');
     log.debug('$rmm targetTS: $targetTS');
-    TransferSyntax ts =
-        (_hadFmi) ? rootDS.transferSyntax : System.defaultTransferSyntax;
-    if (targetTS != null && ts != targetTS) return rootDS;
+   /* TransferSyntax _ts =
+        (_hadFmi) ? rootDS.transferSyntax : System.defaultTransferSyntax;*/
+    if (targetTS != null && _ts != targetTS) return rootDS;
 
-    log.debug('$rmm readRootDataset: TS($ts)}, isExplicitVR: ${rootDS.isEVR}');
-    if (!System.isSupportedTransferSyntax(ts)) {
+    log.debug('$rmm readRootDataset: TS($_ts)}, isExplicitVR: ${rootDS.isEVR}');
+    if (!System.isSupportedTransferSyntax(_ts)) {
       _hadParsingErrors = true;
-      log.debug('$ree readRootDataset: Unsupported TS: $ts');
-      if (throwOnError) throw new InvalidTransferSyntaxError(ts);
+      log.debug('$ree readRootDataset: Unsupported TS: $_ts');
+      if (throwOnError) throw new InvalidTransferSyntaxError(_ts);
       return rootDS;
     }
     _readDataset(rootDS);
@@ -292,7 +297,9 @@ abstract class DcmReader {
       log.debugUp('$ree readFMI Catch: $x');
       rethrow;
     }
+    _hadFmi = true;
     _ts = rootDS.transferSyntax;
+    if (_ts == null) _ts = System.defaultTransferSyntax;
     log.debug('$rmm TS:${_ts}');
     log.debugUp('$ree readFmi: ${_ts}   ${rootDS.info}');
     return true;
@@ -351,35 +358,37 @@ abstract class DcmReader {
 
     log.debugDown('$rbb _readEVR: start($eStart), ${toDcm(code)} $vr');
     int eLength;
+    int vfOffset;
     if (vr.hasShortVF) {
-      eLength = 8 + _readUint16();
+      vfOffset = 8;
+      eLength = vfOffset + _readUint16();
       _rIndex = eStart + eLength;
     } else {
+      vfOffset = 12;
       _skip(2);
       int vfLength = _readUint32();
+      log.debug1('$rmm vfLength: $vfLength, ${toDcm(vfLength)}');
       if (vfLength == kUndefinedLength) {
         int endOfVF = _findEndOfVF(vfLength);
         eLength = endOfVF - eStart;
         _rIndex = endOfVF + 8;
       } else {
-        eLength = 12 + vfLength;
+        eLength = vfOffset + vfLength;
         _rIndex = eStart + eLength;
       }
     }
-
-    var e = _makeElement(eStart, eLength, isEVR: true);
+    var ebd = _makeByteData(eStart, eLength, true);
+    var e = makeElementFromByteData(ebd, true);
     log.debugUp('$ree _readEVR: $e');
     return e;
   }
 
-  // Urgent see if it makes sense to do this.
-  Element _makeElement(int eStart, int eLength, {bool isEVR: true}) {
+  ByteData _makeByteData(int eStart, int eLength, bool isEVR) {
     int endOfVF = eStart + eLength;
     if (endOfVF > endOfBD)
       log.error('$rmm endOfVR($endOfVF) > EOF: $path\n'
-          '    start($eStart) + eLength($eLength) = $endOfVF > $endOfBD');
-    var e = bd.buffer.asByteData(eStart, eLength);
-    return makeElementFromByteData(e, isEVR);
+          '    eStart($eStart) + eLength($eLength) = $endOfVF > $endOfBD');
+    return bd.buffer.asByteData(eStart, eLength);
   }
 
   /// Read an Implicit VR Little Endian Element.
@@ -390,7 +399,7 @@ abstract class DcmReader {
     bool isSequence(int code) {
       //  int delimiter = _peekTagCode();
       if (code == kPixelData) return false;
-      int delimiter = bd.getUint32(_rIndex);
+      int delimiter = bd.getUint32(_rIndex, Endianness.LITTLE_ENDIAN);
       //  if (code == kItem || code == kSequenceDelimitationItem) {
       if (delimiter == kItem32BitLE ||
           delimiter == kSequenceDelimitationItem32BitLE) {
@@ -415,7 +424,7 @@ abstract class DcmReader {
       eLength = 8 + vfLength;
       _rIndex = eStart + eLength;
     }
-    var e = _makeElement(eStart, eLength, isEVR: false);
+    var e = _makeByteData(eStart, eLength, false);
 /* FLush when working
     ByteData bdx = _getElementBD(eStart, eLength);
     var e = new IVRElement.fromByteData(bdx);*/
@@ -431,12 +440,13 @@ abstract class DcmReader {
 
   /// Reads an EVR or IVR Sequence. The _readElementMethod detects Sequences.
   Element _readSequence(int code, int headerLength, bool isEVR) {
-    /// Returns [true] if the [kSequenceDelimitationItem32Bit] delimiter is found.
+    /// Returns [true] if the [kSequenceDelimitationItem32BitLE] delimiter is found.
     bool checkForSequenceDelimiter() =>
         _checkForDelimiter(kSequenceDelimitationItem32BitLE);
 
-    log.debugDown('$rbb readSQ ${toDcm(code)}');
     int vfLength = _readUint32();
+    log.debugDown('$rbb readSQ ${toDcm(code)} '
+        'vfLength: ${toDcm(vfLength)}, $vfLength');
     int vfStart = _rIndex;
     int eStart = _rIndex - headerLength;
     var hadULength = (vfLength == kUndefinedLength);
@@ -445,7 +455,7 @@ abstract class DcmReader {
     // FIX: give this a type when understood.
     List items = [];
     if (hadULength) {
-      //    log.debug1('$rmm SQ${toDcm(code)} Undefined Length');
+      log.debug1('$rmm SQ${toDcm(code)} Undefined Length');
       while (!checkForSequenceDelimiter()) items.add(_readItem(isEVR));
       endOfVF = _rIndex;
       //    log.debug1('$rmm SQ Undefined Length: start($start) endOfVF($endOfVF)');
@@ -467,14 +477,12 @@ abstract class DcmReader {
   /// Returns [true] if the [kItemDelimitationItem32Bit] delimiter is found.
   bool _checkForItemDelimiter() =>
       _checkForDelimiter(kItemDelimitationItem32BitLE);
-  //TODO this can be moved to Dataset_base if we abstract DatasetExplicit
-  // & readElementExplicit
+
   /// Returns an [Item] or Fragment.
   Dataset _readItem(isEVR) {
     int start = _rIndex;
     // int code = _readTagCode();
     int delimiter = _readUint32();
-    print('delimiter: ${toDcm(delimiter)}');
     log.debugDown(
         '$rbb item kItem(${toHex32(kItem32BitLE)}, code ${toHex32(delimiter)}');
     assert(delimiter == kItem32BitLE, 'Invalid Item code: ${toDcm(delimiter)}');
@@ -512,7 +520,7 @@ abstract class DcmReader {
       currentDS = parentDS;
     }
     var itemBD = bd.buffer.asByteData(start, endOfVF - start);
-    var item = makeItem(itemBD, currentDS, elements, vfLength, hadULength);
+    Dataset item = makeItem(itemBD, currentDS, elements, vfLength, hadULength);
     log.debugUp('$ree readItemElements: ${item.length} Elements');
     return item;
   }
@@ -522,7 +530,7 @@ abstract class DcmReader {
   /// otherwise, readIndex does not change
   bool _checkForDelimiter(int target) {
     // int delimiter = _peekTagCode();
-    int delimiter = bd.getUint32(_rIndex);
+    int delimiter = bd.getUint32(_rIndex, Endianness.LITTLE_ENDIAN);
     log.debug('$rmm delimiter(${toHex32(delimiter)}), '
         'target(${toHex32(target)})');
     if (delimiter == target) {
@@ -586,7 +594,7 @@ abstract class DcmReader {
       log.warn('Pixel Data Sequence delimiter has non-zero '
           'value: $code/0x${toHex32(code)}');
     var vfFragments = new VFFragments(fragments);
-    var delimiter = bd.getUint32(_rIndex - 8);
+    var delimiter = bd.getUint32(_rIndex - 8, Endianness.LITTLE_ENDIAN);
     assert(delimiter == kSequenceDelimitationItem32BitLE);
     log.debugUp('$ree readFragements: $vfFragments');
     return vfFragments;
@@ -601,8 +609,8 @@ abstract class DcmReader {
 
   /// Peek at next tag - doesn't move the [_rIndex].
   int _peekTagCode() {
-    int group = bd.getUint16(_rIndex, Endianness.HOST_ENDIAN);
-    int elt = bd.getUint16(_rIndex + 2, Endianness.HOST_ENDIAN);
+    int group = bd.getUint16(_rIndex, Endianness.LITTLE_ENDIAN);
+    int elt = bd.getUint16(_rIndex + 2, Endianness.LITTLE_ENDIAN);
     return (group << 16) + elt;
   }
 

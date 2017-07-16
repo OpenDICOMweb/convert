@@ -22,7 +22,7 @@ RootTagDataset convertByteDSToTagDS(RootByteDataset rootBDS) {
   isEVR = rootBDS.isEVR;
   RootTagDataset rootTDS = new RootTagDataset.fromByteData(rootBDS.bd);
 
-  Iterable<ByteElement> elements = rootBDS.elements;
+  Iterable<Element> elements = rootBDS.elements;
   for (ByteElement e in elements) {
     TagElement te = convertElement(rootTDS, e);
     if (te == null) throw 'null TE';
@@ -47,6 +47,7 @@ TagElement convertElement(TagDataset result, ByteElement e) {
     if (tag.code == kPixelData) {
       log.info('**** Byte Element Pixel Data ${e.info}');
       if (e is BytePixelData) {
+        //
         if (e.isEncapsulated) {
           if (e.vrCode == VR.kUN.code)
             log.warn('Pixel Data vr(${e.vr} -> VR.kOB');
@@ -89,7 +90,7 @@ SQ getSequence(TagDataset result, ByteSQ sq) {
   for (int i = 0; i < sq.items.length; i++) {
     ByteDataset currentBDS = sq.items[i];
     var currentTDS = new TagItem(
-        currentBDS.bd, parentTDS, currentBDS.vfLength, currentBDS.hadULength);
+        parentTDS, currentBDS.vfLength, currentBDS.hadULength, currentBDS.bd);
     for (ByteElement e in currentBDS.elements) {
       TagElement te = convertElement(result, e);
       currentTDS.add(te);

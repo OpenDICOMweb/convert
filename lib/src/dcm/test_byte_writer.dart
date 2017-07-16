@@ -6,7 +6,6 @@
 
 import 'dart:typed_data';
 
-import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
@@ -45,10 +44,10 @@ class TestByteWriter extends ByteWriter {
 
   /// Returns a [Uint8List] containing the encoded [Dataset].
   Uint8List xWriteDataset(ByteDataset ds) {
-    log.debugDown('$wbb writeDataset: isExplicitVR(${ds.isEVR})');
+    log.debugDown('${buf.wbb} writeDataset: isExplicitVR(${ds.isEVR})');
     var writer = new ByteWriter(ds, ds.vfLength);
     var bytes = writer.writeDataset(ds);
-    log.debugUp('$wee end writeDataset: isExplicitVR(${ds.isEVR})');
+    log.debugUp('${buf.wee} end writeDataset: isExplicitVR(${ds.isEVR})');
     return bytes;
   }
 

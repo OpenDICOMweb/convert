@@ -12,6 +12,7 @@ import 'package:core/core.dart';
 import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
+import 'package:dcm_convert/src/dcm/compare_bytes.dart';
 import 'package:dictionary/dictionary.dart';
 import 'package:path/path.dart' as p;
 
@@ -19,17 +20,19 @@ import 'read_utils.dart';
 import 'utils.dart';
 
 final Logger log =
-    new Logger("convert/bin/read_write_files.dart", watermark: Severity.info);
+    new Logger("convert/bin/read_write_files.dart", watermark: Severity.debug2);
 
 void main() {
-  var testFile = test6684_02;
-  var testDir = dir36_4485_6684;
+ // String testFile = test6684_02;
+ // String testDir = dir36_4485_6684;
+  assert(test6684_02 != null);
+  assert(dir36_4485_6684 != null);
 
   // readWritePath(test6684_01, reps: 1, fmiOnly: false);
   // readWriteFileTimed(file, reps: 1, fast: false, fmiOnly: false);
   // readFMI(paths, fmiOnly: true);
-  //  readWriteFiles(paths, fmiOnly: false);
-  readWriteDirectory(dir36_4485_6684, fast: false, throwOnError: true);
+    readWriteFiles([test6684_01], fmiOnly: false);
+  // readWriteDirectory(dir36_4485_6684, fast: false, throwOnError: true);
   //targetTS: TransferSyntax.kImplicitVRLittleEndian);
 }
 
@@ -51,7 +54,7 @@ bool readWritePath(String path, {int reps = 1, bool fmiOnly = false}) {
 bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
   Uint8List bytes0 = inFile.readAsBytesSync();
   ByteReader reader = new ByteReader(bytes0.buffer.asByteData());
-  RootByteDataset rds0 = reader.readRootByteDataset();
+  RootByteDataset rds0 = reader.readRootDataset();
   List<int> elementIndex0 = reader.elementIndex.sublist(0, reader.nthElement);
   log.info(rds0.parseInfo);
   log.info(rds0.info);
@@ -99,7 +102,7 @@ bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
     Uint8List bytes1 = writeTimed(rds0);
     Duration writeDS0 = timer.split;
 
-    //  RootDataset rds1 =
+    //  RootByteDataset rds1 =
     ByteReader.readBytes(bytes1);
     Duration readDS1 = timer.split;
 
@@ -196,7 +199,7 @@ FileResult readWriteFileTiming(File file,
       Uint8List bytes2 = outFile.readAsBytesSync();
       Duration readBD2 = getElapsed();
 
-      RootDataset rds2 = ByteReader.readBytes(bytes1);
+      RootByteDataset rds2 = ByteReader.readBytes(bytes1);
       Duration readDS2 = getElapsed();
 
       if (shouldCompareDatasets) {
@@ -222,7 +225,7 @@ FileResult readWriteFileTiming(File file,
 
 bool _compareDatasets(RootByteDataset rds0, RootByteDataset rds1,
     [bool throwOnError = true]) {
-  var v = compareDatasets(rds0, rds1, throwOnError);
+  var v = compareByteDatasets(rds0, rds1, throwOnError);
   if (!v) {
     log.error('Unequal datasets:/n'
         '  rds0: ${rds0.total}/n'
