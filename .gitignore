@@ -38,3 +38,4 @@ crashlytics-build.properties
 fabric.properties
 /transfer_syntax_map.dart
 
+/pubspec.lock

@@ -8,7 +8,6 @@ import 'dart:typed_data';
 
 import 'package:common/common.dart';
 import 'package:core/core.dart';
-import 'package:dcm_convert/src/dicom_no_tag/dcm_reader.dart';
 import 'package:dictionary/dictionary.dart';
 
 import 'package:dcm_convert/src/dcm/old/dcm_byte_reader.dart';

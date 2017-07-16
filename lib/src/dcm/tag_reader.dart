@@ -176,7 +176,7 @@ class TagReader extends DcmReader {
         targetTS: targetTS);
   }
 
-  static Dataset readPath(String path,
+  static TagDataset readPath(String path,
           {bool async: true,
           bool fast = true,
           bool fmiOnly = false,
