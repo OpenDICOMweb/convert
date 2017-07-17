@@ -66,7 +66,7 @@ class ByteDataBuffer {
 
   // The Writers
 
-  int readInt8(int index) => _bd.getInt8(_indexOK());
+  //int readInt8() => _bd.getInt8(_());
 
   void writeInt8(int value) {
     _maybeGrow();
@@ -146,9 +146,9 @@ class ByteDataBuffer {
   String get wee => '< $_www';
 
   // Internal methods
-  int _indexOK() => (_wIndex >= _bd.lengthInBytes) ? _eobError() : _wIndex;
+//  int _indexOK() => (_wIndex >= _bd.lengthInBytes) ? _eobError() : _wIndex;
 
-  int _eobError() => throw new RangeError.index(_wIndex, this);
+//  int _eobError() => throw new RangeError.index(_wIndex, this);
 
   /// Grow the buffer if the index is at, or beyond, the end of the current
   /// buffer.

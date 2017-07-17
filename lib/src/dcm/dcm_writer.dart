@@ -17,7 +17,7 @@ import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
-import 'byte_data_writer.dart';
+import 'byte_data_buffer.dart';
 
 //TODO: remove log.debug when working
 //TODO: rewrite all comments to reflect current state of code
