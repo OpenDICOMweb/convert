@@ -10,6 +10,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -70,7 +71,7 @@ abstract class DcmWriter {
   final bool reUseBD;
 
   /// The [ByteDataBuffer] buffer being written.
-  final ByteDataBuffer buf;
+  ByteData _bd;
 
   final List<int> elementIndex = new List<int>(2000);
   int nthElement = 0;
@@ -81,7 +82,6 @@ abstract class DcmWriter {
   bool _isEVR;
   TransferSyntax _ts;
   bool _isEncapsulated;
-//  int _wIndex = 0;
 
   int _nElements = 0;
   int _nSequences = 0;
@@ -105,10 +105,11 @@ abstract class DcmWriter {
     this.removeUndefinedLengths = false,
     this.reUseBD = true,
   })
-      : buf = (reUseBD) ? _reuseBD(length) :
-  new ByteDataBuffer((length == null) ? defaultBufferLength : length);
+      : _bd = (reUseBD) ? _reuseBD(length) :
+  new ByteData((length == null) ? defaultBufferLength : length);
 
   // **** Interface:
+
   /// The root Dataset being encoded.
   Dataset get rootDS;
 
@@ -117,7 +118,7 @@ abstract class DcmWriter {
   void set currentDS(Dataset ds) => _currentDS = ds;
 
   /// The current [length] in bytes of [this].
-  int get length => buf.wIndex;
+  int get length => _wIndex;
 
   /// Returns [info] about [this].
   String get info =>
@@ -126,17 +127,17 @@ abstract class DcmWriter {
   /// Write only the FMI, and returns only the bytes that were written.
   Uint8List writeFMI() {
     _writeFMI();
-    return buf.buffer.asUint8List(0, buf.wIndex);
+    return _bd.buffer.asUint8List(0, _wIndex);
   }
 
   /// Writes the [rootDS] [Dataset] to a Uint8List and returns the [Uint8List].
   Uint8List writeRootDataset() {
-    log.debug('${buf.wbb} writeRootDataset: $rootDS');
+    log.debug('$wbb writeRootDataset: $rootDS');
     _currentDS = rootDS;
     _ts = rootDS.transferSyntax;
     _isEncapsulated = rootDS.transferSyntax.isEncapsulated;
     _isEVR = rootDS.isEVR;
-    log.debug('${buf.wmm} TS(${_ts.name}), isEncapsulated($_isEncapsulated)');
+    log.debug('$wmm TS(${_ts.name}), isEncapsulated($_isEncapsulated)');
     if (!allowMissingFMI && !rootDS.hasFMI) {
       log.error('Dataset $rootDS is missing FMI elements');
       return null;
@@ -146,13 +147,13 @@ abstract class DcmWriter {
     // Writes the FMI as normal elements
     // TODO: this does not add missing FMI elements
     _writeDataset(rootDS);
-    log.debug('${buf.wmm} _nElements: $_nElements');
-    log.debug('${buf.wmm} _nSequences: $_nSequences');
-    log.debug('${buf.wmm} _nPrivateElements: $_nPrivateElements');
-    log.debug('${buf.wmm} _nPrivateSequences: $_nPrivateSequences');
-    log.debug('${buf.wmm} writeRootDataset: ${rootDS.info}');
-    log.debug('${buf.wee} Returning ${rootDS.length} elements in ${buf.wIndex} bytes');
-    var bytes = buf.buffer.asUint8List(0, buf.wIndex);
+    log.debug('$wmm _nElements: $_nElements');
+    log.debug('$wmm _nSequences: $_nSequences');
+    log.debug('$wmm _nPrivateElements: $_nPrivateElements');
+    log.debug('$wmm _nPrivateSequences: $_nPrivateSequences');
+    log.debug('$wmm writeRootDataset: ${rootDS.info}');
+    log.debug('$wee Returning ${rootDS.length} elements in ${_wIndex} bytes');
+    var bytes = _bd.buffer.asUint8List(0, _wIndex);
     if (bytes == null || bytes.length < 256)
       throw 'Invalid bytes error: $bytes';
     log.info('wrote ${bytes.length} bytes to "$path"');
@@ -168,16 +169,16 @@ abstract class DcmWriter {
   /// Writes File Meta Information ([Fmi]) to the output.
   void _writeFMI() {
     if (_currentDS != rootDS) log.error('Not rootDS');
-    log.debugDown('${buf.wbb} writeFmi($_currentDS)');
+    log.debugDown('$wbb writeFmi($_currentDS)');
     if (rootDS.parseInfo.hadPrefix || addMissingPrefix) _writePrefix();
     for (Element e in rootDS.elements) {
       while (e.code < 0x00030000) {
         _writeElement(e);
-        log.debug2('${buf.wmm} writeFMI loop: $e');
+        log.debug2('$wmm writeFMI loop: $e');
       }
       break;
     }
-    log.debugUp('${buf.wee} writeFmi end');
+    log.debugUp('$wee writeFmi end');
   }
 
   //TODO: redoc
@@ -185,23 +186,23 @@ abstract class DcmWriter {
   /// then it was all zeros or not.
   void _writePrefix() {
     log.down;
-    log.debug2('${buf.wbb} Writing Prefix');
+    log.debug2('$wbb Writing Prefix');
     var pInfo = rootDS.parseInfo;
     if (pInfo.hadPrefix == false && !addMissingPrefix) {
-      log.debug2('${buf.wmm} not writing prefix');
+      log.debug2('$wmm not writing prefix');
       log.up;
       return;
     }
     if ((pInfo.preamble != null) && !addCleanPrefix) {
-      log.debug2('${buf.wmm} writing existing non-zero prefix: ${pInfo.preamble}');
-      for (int i = 0; i < 128; i++) buf.bd.setUint8(i, pInfo.preamble[i]);
+      log.debug2('$wmm writing existing non-zero prefix: ${pInfo.preamble}');
+      for (int i = 0; i < 128; i++) _bd.setUint8(i, pInfo.preamble[i]);
     } else {
-      log.debug2('${buf.wmm} writing clean prefix');
-      for (int i = 0; i < 128; i++) buf.bd.setUint8(i, 0);
+      log.debug2('$wmm writing clean prefix');
+      for (int i = 0; i < 128; i++) _bd.setUint8(i, 0);
     }
-    buf.skip(128);
-    buf.writeAsciiString('DICM');
-    log.debug2('${buf.wee} Writing Prefix end');
+    _skip(128);
+    _writeAsciiString('DICM');
+    log.debug2('$wee Writing Prefix end');
     log.up;
   }
 
@@ -209,21 +210,21 @@ abstract class DcmWriter {
     assert(ds != null);
     Dataset previousDS = _currentDS;
     _currentDS = ds;
-    log.debugDown('${buf.wbb} writeDataset: $ds isExplicitVR(${ds.isEVR})');
+    log.debugDown('$wbb writeDataset: $ds isExplicitVR(${ds.isEVR})');
     for (Element e in ds.elements) _writeElement(e);
     _currentDS = previousDS;
-    log.debugUp('${buf.wee} end writeDataset');
+    log.debugUp('$wee end writeDataset');
   }
 
   void _writeElement(Element e) {
-    elementIndex[nthElement] = buf.wIndex;
+    elementIndex[nthElement] = _wIndex;
     nthElement++;
-    log.debugDown('${buf.wbb} writing: ${e.info}');
+    log.debugDown('$wbb writing: ${e.info}');
     if (e.isSequence) {
       _writeSequence(e);
     } else {
       _writeHeader(e);
-      buf.writeBytes(e.vfBytes);
+      _writeBytes(e.vfBytes);
     }
     if (e.hadUndefinedLength) {
       assert(kUndefinedLengthElements.contains(e.vrCode));
@@ -231,7 +232,7 @@ abstract class DcmWriter {
     }
     _nElements++;
     if (e.isPrivate) _nPrivateElements++;
-    log.debugUp('${buf.wee} wrote: $e');
+    log.debugUp('$wee wrote: $e');
   }
 
   /// Writes an EVR (short == 8 bytes, long == 12 bytes) or IVR (8 bytes)
@@ -240,48 +241,48 @@ abstract class DcmWriter {
     var length = (e.vfLength == null || removeUndefinedLengths)
         ? e.vfBytes.lengthInBytes
         : e.vfLength;
-    int start = buf.wIndex;
+    int start = _wIndex;
     // Write Tag
     _writeTagCode(e.code);
     if (_isEVR) {
       // Write VR
-      buf.writeUint16(e.vrCode);
+      _writeUint16(e.vrCode);
       if (e.vr.hasShortVF) {
         // Write short EVR VF Length
-        buf.writeUint16(length);
-        assert(buf.wIndex == start + 8);
+        _writeUint16(length);
+        assert(_wIndex == start + 8);
       } else {
         // Write long EVR VF Length
-        buf.writeUint16(0);
-        buf.writeUint32(length);
-        assert(buf.wIndex == start + 12);
+        _writeUint16(0);
+        _writeUint32(length);
+        assert(_wIndex == start + 12);
       }
     } else {
       // Write IVR VF Length
-      buf.writeUint32(length);
-      assert(buf.wIndex == start + 8);
+      _writeUint32(length);
+      assert(_wIndex == start + 8);
     }
   }
 
   void _writeSequence(Element e) {
     assert(e.isSequence);
-    log.debugDown('${buf.wbb} SQ $e');
+    log.debugDown('$wbb SQ $e');
     _writeHeader(e);
     _writeItems(e);
     if (e.hadUndefinedLength) _writeDelimiter(kSequenceDelimitationItem);
     _nSequences++;
     if (e.isPrivate) _nPrivateSequences++;
-    log.debugUp('${buf.wee} SQ');
+    log.debugUp('$wee SQ');
   }
 
   void _writeItems(Element e) {
     var items = e.values;
     for (Dataset item in items) {
-      log.debugDown('${buf.wbb} Writing Item: $item');
+      log.debugDown('$wbb Writing Item: $item');
       _writeDelimiter(kItem, item.vfLength);
       for (Element e in item.elements) _writeElement(e);
       if (item.hadULength) _writeDelimiter(kItemDelimitationItem);
-      log.debugUp('${buf.wee} Wrote Item: $item');
+      log.debugUp('$wee Wrote Item: $item');
     }
   }
 /*  Flush if not needed.
@@ -289,32 +290,32 @@ abstract class DcmWriter {
   _writeFragments(BytePixelData e, bool isEVR) {
     _writeTagCode(e.code);
     if (isEVR) {
-      buf.writeUint16(e.vrCode);
-      buf.writeUint16(0);
+      _writeUint16(e.vrCode);
+      _writeUint16(0);
     }
-    buf.writeUint32(kUndefinedLength);
+    _writeUint32(kUndefinedLength);
     for (Uint8List f in e.fragments.fragments) {
       _writeTagCode(kItem);
-      buf.writeUint32(f.lengthInBytes);
-      buf.writeBytes(f);
+      _writeUint32(f.lengthInBytes);
+      _writeBytes(f);
     }
     _writeDelimiter(kSequenceDelimitationItem);
   }*/
 
   /// Writes the [delimiter] and a zero length field for the [delimiter].
-  /// The [buf.wIndex] is advanced 8 bytes.
+  /// The [_wIndex] is advanced 8 bytes.
   /// Note: There are four [Element]s ([SQ], [OB], [OW], and [UN]) plus
   /// Items that might have an Undefined Length value(0xFFFFFFFF).
   /// if [removeUndefinedLengths] is true this method should not be called.
   void _writeDelimiter(int delimiter, [int lengthInBytes = 0]) {
     assert(removeUndefinedLengths == false);
     _writeTagCode(delimiter);
-    buf.writeUint32(lengthInBytes);
+    _writeUint32(lengthInBytes);
   }
 
   void _writeTagCode(int code) {
-    buf.writeUint16(code >> 16);
-    buf.writeUint16(code & 0xFFFF);
+    _writeUint16(code >> 16);
+    _writeUint16(code & 0xFFFF);
   }
 
   static getDefaultLength(Dataset ds) =>
@@ -345,4 +346,144 @@ abstract class DcmWriter {
     }
     return _reuse;
   }
+
+ // int get length => _bd.lengthInBytes;
+  ByteData get bd => _bd;
+  int _wIndex = 0;
+  ByteBuffer get buffer => _bd.buffer;
+  int get endOfBD => _bd.lengthInBytes;
+  int get wIndex => _wIndex;
+  bool get _isWritable => _wIndex < _bd.lengthInBytes;
+  bool get isWriteable => _isWritable;
+
+  void _skip(int n) {
+    int v = _wIndex + n;
+    _checkRange(v);
+    _wIndex = v;
+  }
+
+  void _checkRange(int v) {
+    int max = _bd.lengthInBytes;
+    if (v < 0 || v >= max) throw new RangeError.range(v, 0, max);
+  }
+
+  // The Writers
+
+/* FLush if not needed
+  /// Writes a byte (Uint8) value to the output [_bd].
+  void _writeUint8(int value) {
+    assert(value >= 0 && value <= 255, 'Value out of range: $value');
+    _maybeGrow(1);
+    _bd.setUint8(_wIndex, value);
+    _wIndex++;
+  }*/
+
+  /// Writes a 16-bit unsigned integer (Uint16) value to the output [_bd].
+  void _writeUint16(int value) {
+    assert(value >= 0 && value <= 0xFFFF, 'Value out of range: $value');
+    _maybeGrow(2);
+    _bd.setUint16(_wIndex, value, Endianness.HOST_ENDIAN);
+    _wIndex += 2;
+  }
+
+  /// Writes a 32-bit unsigned integer (Uint32) value to the output [_bd].
+  void _writeUint32(int value) {
+    assert(value >= 0 && value <= 0xFFFFFFFF, 'Value out if range: $value');
+    _maybeGrow(4);
+    _bd.setUint32(_wIndex, value, Endianness.HOST_ENDIAN);
+    _wIndex += 4;
+  }
+
+  /// Writes [bytes] to the output [_bd].
+  void _writeBytes(Uint8List bytes) => __writeBytes(bytes);
+
+  void __writeBytes(Uint8List bytes) {
+    int length = bytes.length;
+    _maybeGrow(length);
+    for (int i = 0, j = _wIndex; i < length; i++, j++) _bd.setUint8(j, bytes[i]);
+    _wIndex = _wIndex + length;
+  }
+
+  /// Writes [bytes], which contains Code Units to the output [_bd],
+  /// ensuring that an even number of bytes are written, by adding
+  /// a padding character if necessary.
+  void _writeStringBytes(Uint8List bytes, [int padChar = kSpace]) {
+    _writeBytes(bytes);
+    if (bytes.length.isOdd) {
+      _bd.setUint8(_wIndex, padChar);
+      _wIndex++;
+    }
+  }
+
+  /// Writes an [ASCII] [String] to the output [_bd].
+  void _writeAsciiString(String s,
+      [int offset = 0, int limit, int padChar = kSpace]) =>
+      _writeStringBytes(ASCII.encode(s), padChar);
+
+  /// Writes an [UTF8] [String] to the output [_bd].
+  void writeUtf8String(String s, [int offset = 0, int limit]) =>
+      _writeStringBytes(UTF8.encode(s), kSpace);
+
+  /// Ensures that [_bd] is at least [index] + [remaining] long,
+  /// and grows the buffer if necessary, preserving existing data.
+  void ensureRemaining(int index, int remaining) =>
+      ensureCapacity(index + remaining);
+
+  /// Ensures that [_bd] is at least [capacity] long, and grows
+  /// the buffer if necessary, preserving existing data.
+  void ensureCapacity(int capacity) =>
+      (capacity > _bd.lengthInBytes) ? _grow() : null;
+
+  // Internal methods
+
+  /// Grow the buffer if the index is at, or beyond, the end of the current
+  /// buffer.
+  void _maybeGrow([int size = 1]) {
+/*    print('_wIndex: $_wIndex');
+    print('lengthInBytes: ${bd.lengthInBytes}');*/
+    if (_wIndex + size >= _bd.lengthInBytes) _grow();
+  }
+
+  /// Creates a new buffer at least double the size of the current buffer,
+  /// and copies the contents of the current buffer into it.
+  ///
+  /// If [capacity] is null the new buffer will be twice the size of the
+  /// current buffer. If [capacity] is not null, the new buffer will be at
+  /// least that size. It will always have at least have double the
+  /// capacity of the current buffer.
+  void _grow([int capacity]) {
+    print('start _grow: ${_bd.lengthInBytes}');
+    int oldLength = _bd.lengthInBytes;
+    int newLength = oldLength * 2;
+    if (capacity != null && capacity > newLength) newLength = capacity;
+
+    _isValidBufferLength(newLength);
+    if (newLength < oldLength) return;
+    var newBuffer = new ByteData(newLength);
+    for (int i = 0; i < oldLength; i++) newBuffer.setUint8(i, _bd.getUint8(i));
+    _bd = newBuffer;
+    print('end _grow ${_bd.lengthInBytes}');
+  }
+
+  /// The current readIndex as a string.
+  String get www => 'W@$wIndex';
+
+  /// The beginning of reading an [ByteElement] or [ByteItem].
+  String get wbb => '> $www';
+
+  /// In the middle of reading an [ByteElement] or [ByteItem]
+  String get wmm => '| $www';
+
+  /// The end of reading an [ByteElement] or [ByteItem]
+  String get wee => '< $www';
+
+}
+
+const int defaultLength = 16;
+const int k1GB = 1024 * 1024 * 1024;
+
+int _isValidBufferLength(int length, [int maxLength = k1GB]) {
+  print('isValidlength: $length');
+  RangeError.checkValidRange(1, length, maxLength);
+  return length;
 }

@@ -15,10 +15,11 @@ class ByteDataBuffer {
   /// This is always both a List<E> and a TypedData, which we don't have a type
   /// for here. For example, for a `Uint8Buffer`, this is a `Uint8List`.
   ByteData _bd;
-  int _wIndex;
+  final int maxLength;
+  int _wIndex = 0;
 
-  ByteDataBuffer([int length = defaultLength])
-      : this._bd = new ByteData(_checkLength(length));
+  ByteDataBuffer([int length = defaultLength, this.maxLength = k1GB])
+      : this._bd = new ByteData(_isValidBufferLength(length, maxLength));
 
   factory ByteDataBuffer.view(ByteDataBuffer bd, [int start = 0, int end]) {
     if (start < 0 || start >= bd.lengthInBytes)
@@ -29,7 +30,7 @@ class ByteDataBuffer {
         bd.buffer.asByteData(bd.offsetInBytes + start, bd.offsetInBytes + end));
   }
 
-  ByteDataBuffer._(ByteData buffer) : this._bd = buffer;
+  ByteDataBuffer._(ByteData buffer, [this.maxLength = k1GB]) : this._bd = buffer;
 
   // TypedData interface.
 
@@ -69,13 +70,16 @@ class ByteDataBuffer {
   //int readInt8() => _bd.getInt8(_());
 
   void writeInt8(int value) {
+    assert(value >= -128 && value <= 127, 'Value out of range: $value');
     _maybeGrow();
     _bd.setInt8(_wIndex, value);
+    _wIndex++;
   }
 
   /// Writes a byte (Uint8) value to the output [bd].
   void writeUint8(int value) {
     assert(value >= 0 && value <= 255, 'Value out of range: $value');
+    _maybeGrow(1);
     _bd.setUint8(_wIndex, value);
     _wIndex++;
   }
@@ -83,6 +87,7 @@ class ByteDataBuffer {
   /// Writes a 16-bit unsigned integer (Uint16) value to the output [bd].
   void writeUint16(int value) {
     assert(value >= 0 && value <= 0xFFFF, 'Value out of range: $value');
+    _maybeGrow(2);
     _bd.setUint16(_wIndex, value, Endianness.HOST_ENDIAN);
     _wIndex += 2;
   }
@@ -90,6 +95,7 @@ class ByteDataBuffer {
   /// Writes a 32-bit unsigned integer (Uint32) value to the output [bd].
   void writeUint32(int value) {
     assert(value >= 0 && value <= 0xFFFFFFFF, 'Value out if range: $value');
+    _maybeGrow(4);
     _bd.setUint32(_wIndex, value, Endianness.HOST_ENDIAN);
     _wIndex += 4;
   }
@@ -98,9 +104,10 @@ class ByteDataBuffer {
   void writeBytes(Uint8List bytes) => _writeBytes(bytes);
 
   void _writeBytes(Uint8List bytes) {
-    int limit = bytes.length;
-    for (int i = 0, j = _wIndex; i < limit; i++, j++) _bd.setUint8(j, bytes[i]);
-    _wIndex = _wIndex + limit;
+    int length = bytes.length;
+    _maybeGrow(length);
+    for (int i = 0, j = _wIndex; i < length; i++, j++) _bd.setUint8(j, bytes[i]);
+    _wIndex = _wIndex + length;
   }
 
   /// Writes [bytes], which contains Code Units to the output [bd],
@@ -133,27 +140,14 @@ class ByteDataBuffer {
   void ensureCapacity(int capacity) =>
       (capacity > _bd.lengthInBytes) ? _grow() : null;
 
-  // The current [_wIndex] as a string.
-  String get _www => 'W@$_wIndex';
-
-  /// The beginning of writing an [Element] or [Item].
-  String get wbb => '> $_www';
-
-  /// In the middle of writing an [Element] or [Item]
-  String get wmm => '| $_www';
-
-  /// The end of writing an [Element] or [Item]
-  String get wee => '< $_www';
-
   // Internal methods
-//  int _indexOK() => (_wIndex >= _bd.lengthInBytes) ? _eobError() : _wIndex;
-
-//  int _eobError() => throw new RangeError.index(_wIndex, this);
 
   /// Grow the buffer if the index is at, or beyond, the end of the current
   /// buffer.
-  void _maybeGrow() {
-    if (_wIndex >= _bd.lengthInBytes) _grow();
+  void _maybeGrow([int size = 1]) {
+/*    print('_wIndex: $_wIndex');
+    print('lengthInBytes: ${_bd.lengthInBytes}');*/
+    if (_wIndex + size >= _bd.lengthInBytes) _grow();
   }
 
   /// Creates a new buffer at least double the size of the current buffer,
@@ -164,21 +158,26 @@ class ByteDataBuffer {
   /// least that size. It will always have at least have double the
   /// capacity of the current buffer.
   void _grow([int capacity]) {
+    print('start _grow: ${_bd.lengthInBytes}');
     int oldLength = _bd.lengthInBytes;
     int newLength = oldLength * 2;
     if (capacity != null && capacity > newLength) newLength = capacity;
+
+    _isValidBufferLength(newLength);
     if (newLength < oldLength) return;
     var newBuffer = new ByteData(newLength);
     for (int i = 0; i < oldLength; i++) newBuffer.setUint8(i, _bd.getUint8(i));
     _bd = newBuffer;
+    print('end _grow ${_bd.lengthInBytes}');
   }
 }
 
 const int defaultLength = 16;
 const int k1GB = 1024 * 1024 * 1024;
 
-int _checkLength(int length) {
-  if (length == null || length < 1 || length > k1GB)
-    throw new RangeError.range(length, 1, k1GB);
+int _isValidBufferLength(int length, [int maxLength = k1GB]) {
+  print('isValidlength: $length');
+  RangeError.checkValidRange(1, length, maxLength);
   return length;
 }
+

@@ -12,15 +12,17 @@ void main() {
     test("Buffer Growing Test", () {
       int startSize = 1;
       int iterations = 1024 * 1024;
+      print('iterations: $iterations');
       var buf = new ByteDataBuffer(startSize);
+      print('maxLength: ${buf.maxLength}');
       print('length: ${buf.lengthInBytes}');
       expect(buf.lengthInBytes == startSize, true);
-      for (int i = 0; i < iterations; i++) {
+      for (int i = 0; i < iterations - 1; i++) {
         int v = i % 128;
         buf.writeInt8(v);
 
-    //    var x = buf.readInt8();
-    //    expect(x == v, true);
+
+
       }
       print('length: ${buf.lengthInBytes}');
       expect(buf.lengthInBytes == iterations, true);
