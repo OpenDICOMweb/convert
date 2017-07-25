@@ -18,7 +18,7 @@ import 'package:path/path.dart' as p;
 import 'utils.dart';
 
 final Logger log =
-    new Logger("convert/bin/read_write_files.dart", watermark: Severity.config);
+    new Logger("convert/bin/read_write_files1.dart", watermark: Severity.config);
 
 void main() {
   readWriteFileFast(new File(path0), reps: 1, fmiOnly: false);

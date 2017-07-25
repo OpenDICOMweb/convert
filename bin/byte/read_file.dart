@@ -8,13 +8,19 @@ import 'package:common/logger.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 
-final Logger log =
-    new Logger("io/bin/read_files.dart", watermark: Severity.info);
+import 'package:dcm_convert/src/dcm/dcm_reader.dart';
 
+//Urgent: problem files: path22
 void main() {
-  var path = path1;
+  final log = new Logger("io/bin/read_files.dart", watermark: Severity.info);
+  DcmReader.log.watermark = Severity.debug;
+  var path = path20;
   log.config('Byte Reader: $path');
-  RootByteDataset rds0 = ByteReader.readPath(path);
-  log.info('${rds0.parseInfo}');
-  log.info('Bytes Dataset: ${rds0.info}');
+  RootByteDataset rds = ByteReader.readPath(path);
+  if (rds == null) {
+    log.warn('No Data: $path');
+  } else {
+    log.info('${rds.parseInfo.info}');
+    log.info('Bytes Dataset: ${rds.info}');
+  }
 }

@@ -15,8 +15,9 @@ import 'byte_writer.dart';
 /// Note: This class should not be used in production code.
 class TestByteWriter extends ByteWriter {
   /// Creates a new [TestByteWriter].
-  TestByteWriter(RootByteDataset rootDS, int bdLength,
-      {String path = "",
+  TestByteWriter(RootByteDataset rootDS,
+      {int lengthInBytes,
+      String path = "",
       TransferSyntax outputTS,
       bool throwOnError = true,
       bool allowImplicitLittleEndian = true,
@@ -25,7 +26,8 @@ class TestByteWriter extends ByteWriter {
       bool addMissingFMI = false,
       bool removeUndefinedLengths = false,
       bool reUseBD = true})
-      : super(rootDS, bdLength,
+      : super(rootDS,
+            lengthInBytes: lengthInBytes,
             path: path,
             outputTS: outputTS,
             throwOnError: throwOnError,
@@ -45,14 +47,14 @@ class TestByteWriter extends ByteWriter {
   /// Returns a [Uint8List] containing the encoded [Dataset].
   Uint8List xWriteDataset(ByteDataset ds) {
     log.debugDown('$wbb writeDataset: isExplicitVR(${ds.isEVR})');
-    var writer = new ByteWriter(ds, ds.vfLength);
+    var writer = new ByteWriter(ds, lengthInBytes: ds.vfLength);
     var bytes = writer.writeDataset(ds);
     log.debugUp('$wee end writeDataset: isExplicitVR(${ds.isEVR})');
     return bytes;
   }
 
   /// Writes an element to the [currentDS].
-  void xWritePublicElement(ByteElement e) => writeElement(e);
+  void xWritePublicElement(ByteElement e) => xWriteElement(e);
 
 /* Flush or Test if needed.
   // External Interface for testing

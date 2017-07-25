@@ -4,81 +4,52 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the   AUTHORS file for other contributors.
 
+
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:common/common.dart';
-import 'package:core/core.dart';
+import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
+import 'package:dcm_convert/src/dcm/compare_bytes.dart';
+import 'package:dcm_convert/src/dcm/compare_dataset.dart';
 import 'package:dictionary/dictionary.dart';
 
-//import 'package:io/src/test/compare_files.dart';
-String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
-String path1 =
-    'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255'
-    '.393386351.1568457295.17895.5.dcm';
-String path2 =
-    'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original'
-    '/CR.2.16.840.1.114255.393386351.1568457295.48879.7.dcm';
-String path3 =
-    'C:/odw/test_data/sfd/CT/Patient_4_3_phase_abd/1_DICOM_Original'
-    '/IM000002.dcm';
-String path4 =
-    'C:/odw/sdk/io/example/input'
-    '/1.2.840.113696.596650.500.5347264.20120723195848/1.2'
-    '.392.200036.9125.3.3315591109239.64688154694.35921044'
-    '/1.2.392.200036.9125.9.0.252688780.254812416.1536946029.dcm';
-String path5 =
-    'C:/odw/sdk/io/example/input'
-    '/1.2.840.113696.596650.500.5347264.20120723195848'
-    '/2.16.840.1.114255.1870665029.949635505.39523.169'
-    '/2.16.840.1.114255.1870665029.949635505.10220.175.dcm';
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
-final Logger log = new Logger("read_write_file", watermark: Severity.info);
+final Logger log = new Logger("read_write_file", watermark: Severity.debug2);
 
-void main(List<String> args) {
-  File file = new File(path0);
-  log.info('Reading: $file');
-  Uint8List bytes0 = file.readAsBytesSync();
-  log.info('  ${bytes0.length} bytes');
-  ByteDataset bds0 = ByteReader.readBytes(bytes0, path: file.path);
-  log.info('Decoded: $bds0');
-  if (bds0 == null) return null;
-  log.debug(bds0.format(new Formatter(maxDepth: -1)));
-  log.info('${bds0[kFileMetaInformationGroupLength].info}');
-  log.info('${bds0[kFileMetaInformationVersion].info}');
+void main() {
+  var path = path0;
+  log.info('Reading: $path');
+  var inFile = new File(path);
+  var bytes0 = inFile.readAsBytesSync();
+  var rbds0 = TagReader.readPath(path);
+  log.info(': $rbds0');
+  log.info('parseInfo: ${rbds0.parseInfo}');
+  log.debug2('${rbds0[kFileMetaInformationGroupLength].info}');
+  log.debug2('${rbds0[kFileMetaInformationVersion].info}');
+  log.debug1(rbds0.format(new Formatter(maxDepth: -1)));
+
   // Write a File
-  File output = new File(outPath);
-  var bytes = ByteWriter.writeBytes(bds0);
-  output.writeAsBytesSync(bytes);
-
-  log.info('Re-reading: $output');
-  Uint8List bytes1 = output.readAsBytesSync();
-  log.info('read ${bytes1.length} bytes');
-  ByteDataset bds1 = ByteReader.readBytes(bytes1, path: file.path);
-  log.info(bds1);
-  log.debug(bds1.format(new Formatter(maxDepth: -1)));
+  var bytes1 = TagWriter.writePath(rbds0, outPath, overwrite: true);
+  log.info('Re-reading: $outPath');
+  var rbds1 = TagReader.readPath(outPath);
+  log.info(rbds1);
+  log.debug1(rbds1.format(new Formatter(maxDepth: -1)));
 
   // Compare [Dataset]s
-  var comparator = new DatasetComparitor(bds0, bds1);
-  comparator.run;
-  if (comparator.hasDifference) {
-    log.fatal('Result: ${comparator.info}');
+  var same = compareDatasets(rbds0, rbds1);
+  if (same == true) {
+    log.info('Datasets are identical.');
+  } else {
+    log.info('Datasets are different!');
   }
-/*
-    // Compare input and output
-    log.info('Comparing Bytes:');
-    log.down;
-    log.info('Original: ${fn.path}');
-    log.info('Result: ${fnOut.path}');
-    FileCompareResult out = compareFiles(fn.path, fnOut.path, log);
-    if (out == null) {
-        log.info('Files are identical.');
-    } else {
-        log.info('Files are different!');
-        log.fatal('$out');
-    }
-    log.up;
-*/
+
+  //   FileCompareResult out = compareFiles(fn.path, fnOut.path, log);
+  var good = bytesEqual(bytes0, bytes1);
+  if (good == true) {
+    log.info('Files are identical.');
+  } else {
+    log.info('Files are different!');
+  }
 }

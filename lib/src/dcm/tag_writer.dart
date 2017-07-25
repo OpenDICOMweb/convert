@@ -53,11 +53,34 @@ class TagWriter extends DcmWriter {
             removeUndefinedLengths: removeUndefinedLengths,
             reUseBD: reUseBD);
 
+  // The following Getters and Setters provide the correct [Type]s
+  // for [rootDS] and [currentDS].
   /// Returns the [RootTagDataset] being written.
   RootTagDataset get rootDS => _rootDS;
+  TagDataset get currentDS => _currentDS;
+  void set currentDS(TagDataset ds) => _currentDS = ds;
 
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
+
+
+  Uint8List writeFMI(RootTagDataset rds, [bool checkPreamble = false]) {
+    var bytes = dcmWriteFMI();
+  //  rootDS.parseInfo = getParseInfo();
+  //  return (hadFmi) ? _rootDS : null;
+    return bytes;
+  }
+
+  /// Reads a [RootByteDataset] from [this], stores it in [rootDS],
+  /// and returns it.
+  Uint8List writeRootDataset({bool addMissingFMI = false}) {
+    var bytes = dcmWriteRootDataset();
+/*    var parseInfo = getParseInfo();
+    rootDS.parseInfo = parseInfo;
+    return (parseInfo.hadFmi) ? _rootDS : null;*/
+    return bytes;
+  }
+
 
   /// Writes the [RootTagDataset] to a [Uint8List], and returns the [Uint8List].
   static Uint8List writeBytes(RootTagDataset ds,

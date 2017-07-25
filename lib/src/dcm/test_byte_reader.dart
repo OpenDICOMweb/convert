@@ -52,8 +52,8 @@ class TestByteReader extends ByteReader {
   /// Returns [true] if the File Meta Information was present and
   /// read successfully.
   TransferSyntax xReadFmi([bool checkForPrefix = true]) {
-     bool hadFmi = readFMI(checkForPrefix);
-    if (!hadFmi || !rootDS.hasFMI || !rootDS.hasSupportedTransferSyntax) return null;
+    readFMI(checkForPrefix);
+    if (!rootDS.hasFMI || !rootDS.hasSupportedTransferSyntax) return null;
     return rootDS.transferSyntax;
   }
 
@@ -85,19 +85,22 @@ class TestByteReader extends ByteReader {
   /// Reads only the File Meta Information ([FMI], if present.
   static Dataset readBytes(Uint8List bytes, Dataset rootDS,
       {String path = "", bool fmiOnly = false, TransferSyntax targetTS}) {
-    ByteData bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
-    ByteReader reader = new ByteReader(bd, path: path, fmiOnly: fmiOnly, targetTS: targetTS);
+    ByteData bd =
+        bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
+    ByteReader reader =
+        new ByteReader(bd, path: path, fmiOnly: fmiOnly, targetTS: targetTS);
     return reader.readRootDataset();
   }
 
   static RootByteDataset readFile(File file, RootDataset rootDS,
       {bool fmiOnly = false, TransferSyntax targetTS}) {
     Uint8List bytes = file.readAsBytesSync();
-    return readBytes(bytes, rootDS, path: file.path, fmiOnly: fmiOnly, targetTS: targetTS);
+    return readBytes(bytes, rootDS,
+        path: file.path, fmiOnly: fmiOnly, targetTS: targetTS);
   }
 
   /// Reads only the File Meta Information ([FMI], if present.
   static RootByteDataset readFileFmiOnly(File file, RootDataset rootDS,
-      {String path = "", TransferSyntax targetTS}) =>
+          {String path = "", TransferSyntax targetTS}) =>
       readFile(file, rootDS, fmiOnly: true, targetTS: targetTS);
 }

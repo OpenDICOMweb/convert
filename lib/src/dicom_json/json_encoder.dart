@@ -164,7 +164,7 @@ class JsonEncoder extends ByteBuf {
   void writeSequence(Element e, Formatter fmt) {}
 
   /// Note: empty items are represented as empty JSON objects "{}".
-  void writeItem(Item item, Formatter fmt) {}
+  void writeItem(Dataset item, Formatter fmt) {}
 
   /// Write a [PrivateGroup]
   void writePrivateGroup(PrivateGroup group, Formatter fmt) {}

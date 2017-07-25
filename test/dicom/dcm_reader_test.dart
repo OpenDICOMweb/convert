@@ -4,11 +4,9 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-import 'dart:io';
-
 import 'package:common/logger.dart';
 import 'package:core/core.dart';
-import 'package:dcm_convert/src/dcm/old/dcm_byte_reader.dart';
+import 'package:dcm_convert/src/dcm/tag_reader.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -19,21 +17,10 @@ void main() {
   group('description', () {
 
     test("instance ", () {
-  //    Uid uid = new Uid();
-      File script = new File(path0);
-      var bytes = script.readAsBytesSync();
-
-      RootByteDataset rds = DcmByteReader.readBytes(bytes, path: path0);
+      RootTagDataset rds = TagReader.readPath(path0);
       log.debug('${rds.info}');
-      //    Subject subject = new Subject(rds);
-      //    Study stu = new Study(subject, uid, rds);
-      //    Series ser = new Series(stu, uid, rds);
-      //    Instance inst = new Instance(ser, uid, rds);
-      //    Instance inst1 = new Instance(ser, uid, rds);
-      Instance instance = new Instance.fromDataset(rds);
-      log.debug('${instance.info}');
- //     expect(inst == inst1, true);
- //     expect(inst.hashCode == inst1.hashCode, true);
+      Entity entity = activeStudies.entityFromDataset(rds);
+      log.debug('${entity.info}');
     });
     
   });

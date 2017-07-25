@@ -11,30 +11,43 @@ import 'package:common/logger.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 
-final Logger log =
-    new Logger("io/bin/read_files.dart", watermark: Severity.info);
+import 'package:dcm_convert/src/dcm/dcm_reader.dart';
 
+final Logger log =
+    new Logger("io/bin/read_files.dart", watermark: Severity.config);
+
+//Urgent: use badFileList2 - fix indentation
 void main() {
-  for (String path in testPaths) {
-      File f = new File(path);
-      readCheck(f, fmiOnly: false);
+  DcmReader.log.watermark = Severity.info;
+  var paths = testPaths;
+
+  for (int i = 0; i < paths.length; i++) {
+    File f = new File(paths[i]);
+    try {
+      readCheck(f, i, fmiOnly: false);
+    } on ShortFileError catch (e) {
+      log.warn('Short File(${f.lengthSync()} bytes): $f');
+    } catch (e) {
+      log.error(e);
+    }
   }
 }
 
-bool readCheck(File file, {int reps = 1, bool fmiOnly = false}) {
-  log.debug('Reading: $file');
+bool readCheck(File file, int fileNo, {int reps = 1, bool fmiOnly = false}) {
   Uint8List bytes0 = file.readAsBytesSync();
-  log.config('Reading: $file with ${bytes0.lengthInBytes} bytes');
+  log.config('$fileNo: Reading: $file with ${bytes0.lengthInBytes} bytes');
   log.down;
   if (bytes0 == null) return false;
-  RootByteDataset rds0 = ByteReader.readBytes(bytes0, path: file.path, fast: true);
-  print('rds0 root: ${rds0.root}');
-  print('ParseInfo: ${rds0.parseInfo}');
-  if (rds0 == null) return false;
-  log.info('${rds0.parseInfo}');
-  log.info('  Dataset: $rds0');
+  var rds = ByteReader.readBytes(bytes0, path: file.path, fast: true);
+  if (rds == null) {
+    log.warn('---  File not readable');
+  } else {
+    log.info('${rds.parseInfo.info}');
+    log.debug('Bytes Dataset: ${rds.info}');
+  }
+  log.info('---\n');
   log.up;
-  return true;
+  return (rds == null) ? false : true;
 }
 
 //TODO: merge with read_write_files
@@ -46,25 +59,12 @@ bool readWriteCheck(File file, {int reps = 1, bool fmiOnly = false}) {
   if (bytes0 == null) return false;
   RootByteDataset rds0 =
       ByteReader.readBytes(bytes0, path: file.path, fast: true);
-  print('rds0 root: ${rds0.root}');
-  print('ParseInfo: ${rds0.parseInfo}');
+  log.debug('rds0 root: ${rds0.root}');
+  log.debug('ParseInfo: ${rds0.parseInfo}');
   ByteElement e = rds0[0x00020010];
-  print('e: $e');
+  log.debug('e: $e');
   if (rds0 == null) return false;
   log.info('  Original: $rds0');
-
-  /*
-  Uint8List bytes1 = ByteWriter.writeBytes(rds0, fast: true);
-  if (bytes1 == null) return false;
-  if (!bytesEqual(bytes0, bytes1))
-    print('********* Files are not equal!');
-  RootByteDataset rds1 =
-      ByteReader.readBytes(bytes1, path: file.path, fast: true);
-  log.info('      Copy: $rds1');
-  */
   log.up;
-  //return rds0 == rds1;
   return true;
 }
-
-

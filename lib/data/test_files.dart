@@ -10,11 +10,16 @@ const String test6684_02 = 'C:/odw/test_data/36_4485_6684/IM-0001-0001-0002.dcm'
 const String ivrFile = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy/1.2.840'
     '.113619.2.5.1762583153.215519.978957063.101.dcm';
 
-
+// EVR, OW Pixel Data, No Private Data
 const String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
+// EVR, OW Pixel Data
 const String path1 = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
-const String path2 = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
+
+const String path2 = 'C:/odw/test_data/6688/12/0B009D38/0B009D3D/4D4E9A56';
+
 const String path3 = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368';
+
+// Has 202 fragments
 const String path4 = 'C:/odw/test_data/mweb/100 MB Studies'
     '/8963-largefiles/89688';
 
@@ -52,6 +57,7 @@ const String path12 = 'C:/odw/test_data/mweb/Different_Transfer_UIDs'
 
 const String path13 = 'C:/odw/test_data/mweb/Radiologic/2/I00221';
 
+// Has non-zero preamble
 const String path14 = 'C:/odw/sdk/test_tools/test_data/TransferUIDs/1.2.840.10008.1.2.5.dcm';
 
 const String path15 =
@@ -66,18 +72,25 @@ const String path18 =
     '.392.200036.9125.3.3315591109239.64688154694.35921044/1.2.392.200036.9125.9.0.252688780.254812416.1536946029.dcm';
 const String path19 =
     'C:/odw/sdk/io/example/input/1.2.840.113696.596650.500.5347264.20120723195848/2.16.840.1.114255.1870665029.949635505.39523.169/2.16.840.1.114255.1870665029.949635505.10220.175.dcm';
-const String path20 = "C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/CT.2.16"
-    ".840.1.114255.390617858.1794098916.62037.38690.dcm";
-const String path21 = 'C:/odw/test_data/6688/12/0B009D38/0B009D3D/4D4E9A56';
 
-const List<String> paths = const <String>[path0, path1, path2, path3, path4, path5];
+// Duplicate Elements, No Pixel Data
+const String path20 = "C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/"
+    "CT.2.16.840.1.114255.390617858.1794098916.62037.38690.dcm";
+
+// DICOM Directory file
+const String path21 = 'C:/odw/test_data/sfd/MG/DICOMDIR';
+
+const List<String> paths = const <String>[
+  path0, path1, path2, path3, path4, path5 // No reformat
+];
 
 const List<String> testPaths = const <String>[
   path0, path1, path2, path3, path4, path5, path6, path7,
-  path8, path9, path10, path11, path12, path13, path14 // No reformat
+  path8, path9, path10, path11, path12, path13, path14, // No reformat
+  path15, path16, path17, path18, path19, path20, path21
 ];
 
-const List<String> fileList8 = const <String>[
+const List<String> fileList2 = const <String>[
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.128.1.dcm",
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.2.dcm",
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.4.dcm",
@@ -88,7 +101,7 @@ const List<String> fileList8 = const <String>[
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.88.33.dcm",
 ];
 
-const List<String> fileList6 = const <String>[
+const List<String> fileList3 = const <String>[
   "C:/odw/test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original/IM000001.dcm",
   "C:/odw/test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original/IM000002.dcm",
   "C:/odw/test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original/IM000003.dcm",
@@ -212,7 +225,8 @@ const String error12 = 'C:/odw/test_data/sfd/MG/Patient_46/1_DICOM_Original'
 const String error13 = 'C:/odw/test_data/sfd/MG/Patient_48/1_DICOM_Original'
     '/IM000010.dcm';
 
-const String error14 = 'C:/odw/test_data/mweb/TransferUIDs/1.2.840.10008.1.2.4.80.dcm';
+const String error14 = 'C:/odw/test_data/mweb/TransferUIDs'
+    '/1.2.840.10008.1.2.4.80.dcm';
 
 
 //const List<String> error6 = [];
@@ -223,36 +237,41 @@ const List<String> testErrors = const <String>[
   error9, error10, error11, error12, error12, // No Reformat
 ];
 
-const String badFile0 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy/1.2.840.113619"
-    ".2.5.1762583153.215519.978957063.101.dcm";
+const String badFile0 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy"
+    "/1.2.840.113619.2.5.1762583153.215519.978957063.101.dcm";
 
-const String badFile1 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
+const String badFile1 = "C:/odw/test_data/mweb/ASPERA"
+    "/Clean_Pixel_test_data/Sop/1.2"
     ".840.10008.5.1.4.1.1.1.2.1.dcm";
 
-const String badFile2 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
+const String badFile2 = "C:/odw/test_data/mweb/ASPERA"
+    "/Clean_Pixel_test_data/Sop/1.2"
     ".840.10008.5.1.4.1.1.104.2.dcm ";
 
-const String badFile3 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
+const String badFile3 = "C:/odw/test_data/mweb/ASPERA"
+    "/Clean_Pixel_test_data/Sop/1.2"
     ".840.10008.5.1.4.1.1.128.1.dcm";
 
 const String badFile4 =
-    "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm";
+    "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX"
+    "/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%"
+    "/IM-0001-0020.dcm";
 
 const String badFile5 = "C:/odw/test_data/sfd/Peds/Patient_55/1_DICOM_Original"
     "/IM000510.dcm";
 
-const String badFile6 = "C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1"
-    ".2.840.10008.5.1.4.1.1.20.dcm";
+const String badFile6 = "C:/odw/test_data/mweb/Different_SOP_Class_UIDs"
+    "/Anonymized1.2.840.10008.5.1.4.1.1.20.dcm";
 
 const String badFile7 = "C:/odw/test_data/mweb/100 MB Studies/Site 3/Case 1 Ped"
     "/1.2.840.113704.1.111.8916.1202763720.15"
     "/1.2.840.113704.1.111.1608.1202763888.37524.dcm ";
 
-const String badFile8 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy/1.2.840.113619"
-    ".2.5.1762583153.215519.978957063.101.dcm";
+const String badFile8 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy"
+    "/1.2.840.113619.2.5.1762583153.215519.978957063.101.dcm";
 
-const String badFile9 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
-    ".840.10008.5.1.4.1.1.1.2.1.dcm";
+const String badFile9 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data"
+    "/Sop/1.2.840.10008.5.1.4.1.1.1.2.1.dcm";
 
 const String badFile10 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2"
     ".840.10008.5.1.4.1.1.104.2.dcm ";
@@ -265,8 +284,8 @@ const String badFile12 = "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/"
     "A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm";
 
 const List<String> badFileList0 = const [
-  badFile0, badFile1,  badFile2,  badFile3,  badFile4, badFile5, badFile6, badFile7,
-  badFile8, badFile9, badFile10, badFile11, badFile12 // no reformat
+  badFile0, badFile1,  badFile2,  badFile3,  badFile4, badFile5, badFile6,
+  badFile7, badFile8, badFile9, badFile10, badFile11, badFile12 // no reformat
 ];
 
 const List<String> badFileList1 = const <String>[

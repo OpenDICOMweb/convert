@@ -5,70 +5,75 @@
 // See the   AUTHORS file for other contributors.
 
 import 'package:common/common.dart';
-import 'package:core/core.dart';
+import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:dictionary/dictionary.dart';
+import 'package:dcm_convert/src/dcm/compare_bytes.dart';
+import 'package:dcm_convert/src/dcm/compare_dataset.dart';
 
-//import 'package:io/src/test/compare_files.dart';
-String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
-String path1 =
-    'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255'
-    '.393386351.1568457295.17895.5.dcm';
-String path2 =
-    'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original'
-    '/CR.2.16.840.1.114255.393386351.1568457295.48879.7.dcm';
-String path3 =
-    'C:/odw/test_data/sfd/CT/Patient_4_3_phase_abd/1_DICOM_Original'
-    '/IM000002.dcm';
-String path4 =
-    'C:/odw/sdk/io/example/input'
-    '/1.2.840.113696.596650.500.5347264.20120723195848/1.2'
-    '.392.200036.9125.3.3315591109239.64688154694.35921044'
-    '/1.2.392.200036.9125.9.0.252688780.254812416.1536946029.dcm';
-String path5 =
-    'C:/odw/sdk/io/example/input'
-    '/1.2.840.113696.596650.500.5347264.20120723195848'
-    '/2.16.840.1.114255.1870665029.949635505.39523.169'
-    '/2.16.840.1.114255.1870665029.949635505.10220.175.dcm';
+import 'package:dcm_convert/src/dcm/dcm_reader.dart';
+import 'package:dcm_convert/src/dcm/dcm_writer.dart';
+
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
-final Logger log = new Logger("read_write_file", watermark: Severity.debug2);
+final Logger log = new Logger("read_write_file", watermark: Severity.debug);
 
 void main() {
-  String path = path0;
+  var path = path2;
+
+  DcmReader.log.watermark = Severity.debug;
+  DcmWriter.log.watermark = Severity.debug;
+
   log.info('Reading: $path');
-  ByteDataset bds0 = ByteReader.readPath(path);
-  log.info('Decoded: $bds0');
-  log.debug(bds0.format(new Formatter(maxDepth: -1)));
-  log.info('${bds0[kFileMetaInformationGroupLength].info}');
-  log.info('${bds0[kFileMetaInformationVersion].info}');
-  log.info('parseInfo: ${bds0.parseInfo}');
+  var reader0 = new ByteReader.fromPath(path);
+  var rbds0 = reader0.readRootDataset();
+  var bytes0 = reader0.bytes;
+  log.debug('  Read ${bytes0.lengthInBytes} bytes');
+  log.info('  DS0: $rbds0');
+
+  BytePixelData bpd = rbds0[kPixelData];
+  log.info(' VFFragments: ${bpd.fragments}');
+
   // Write a File
-  ByteWriter.writePath(bds0, outPath);
+  var writer = new ByteWriter.toPath(rbds0, outPath);
+  var bytes1 = writer.writeRootDataset();
+  log.debug('  Wrote ${bytes1.length} bytes');
+
   log.info('Re-reading: $outPath');
-  ByteDataset bds1 = ByteReader.readPath(outPath);
-  log.info(bds1);
-  log.debug(bds1.format(new Formatter(maxDepth: -1)));
+  var reader1 = new ByteReader.fromPath(path);
+  var rbds1 = ByteReader.readPath(outPath);
+  log.debug('  Read ${reader1.bd.lengthInBytes} bytes');
+  log.info('  DS1: $rbds1');
+
+  if (rbds0.parseInfo != rbds1.parseInfo) {
+    log.warn('  *** ParseInfo is Different!');
+    log.debug('  ${rbds0.parseInfo}');
+    log.debug('  ${rbds1.parseInfo}');
+    log.debug2(rbds0.format(new Formatter(maxDepth: -1)));
+    log.debug2(rbds1.format(new Formatter(maxDepth: -1)));
+  }
 
   // Compare [Dataset]s
-  var comparator = new DatasetComparitor(bds0, bds1);
-  comparator.run;
-  if (comparator.hasDifference) {
-    log.fatal('Result: ${comparator.info}');
+  var same = reader0.elementList == writer.elementList;
+  if (same == true) {
+    log.info('ElementLists are identical.');
+  } else {
+    log.info('ElementLists are different!');
   }
-/*
-    // Compare input and output
-    log.info('Comparing Bytes:');
-    log.down;
-    log.info('Original: ${fn.path}');
-    log.info('Result: ${fnOut.path}');
-    FileCompareResult out = compareFiles(fn.path, fnOut.path, log);
-    if (out == null) {
-        log.info('Files are identical.');
-    } else {
-        log.info('Files are different!');
-        log.fatal('$out');
-    }
-    log.up;
-*/
+
+  // Compare [Dataset]s
+  same = compareDatasets(rbds0, rbds1, true);
+  if (same == true) {
+    log.info('Datasets are identical.');
+  } else {
+    log.info('Datasets are different!');
+  }
+
+  //   FileCompareResult out = compareFiles(fn.path, fnOut.path, log);
+  same = bytesEqual(bytes0, bytes1, true);
+  if (same == true) {
+    log.info('Files are identical.');
+  } else {
+    log.info('Files are different!');
+  }
 }

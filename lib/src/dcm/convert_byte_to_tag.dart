@@ -33,6 +33,7 @@ RootTagDataset convertByteDSToTagDS(RootByteDataset rootBDS) {
 
 Map<String, TagElement> pcElements = <String, TagElement>{};
 
+//Urgent fix
 TagElement convertElement(TagDataset result, ByteElement e) {
   if (e is ByteSQ) return getSequence(result, e);
   log.debug1(' BE: $e');
@@ -45,23 +46,9 @@ TagElement convertElement(TagDataset result, ByteElement e) {
   TagElement te;
   if (tag is PTag) {
     if (tag.code == kPixelData) {
-      log.info('**** Byte Element Pixel Data ${e.info}');
-      if (e is BytePixelData) {
-        //
-        if (e.isEncapsulated) {
-          if (e.vrCode == VR.kUN.code)
-            log.warn('Pixel Data vr(${e.vr} -> VR.kOB');
-          log.info('**** OB Pixel Data ${e.info}');
-          log.info('**** OB Fragments ${e.fragments.info}');
-          te = OB.parseBytes(tag, e.vfBytes, e.vfLength, e.fragments);
-        } else {
-          if (e.vr == VR.kUN) log.warn('Pixel Data vr(${e.vr} -> VR.kOW');
-          te = OW.parseBytes(tag, e.vfBytes, e.vfLength);
-        }
-      } else {
-        throw 'Invalid Pixel Data VR: ${e.info}';
-      }
-      log.info('**** Tag Pixel Data ${te.info}');
+      BytePixelData pd = e;
+      te = TagElement.makeElementFromBytes(code, vrCode, pd.vfBytes,
+          pd.vfLength, pd.fragments);
     } else {
       te = TagElement.makeElementFromBytes(code, vrCode, e.vfBytes, e.vfLength);
     }

@@ -34,7 +34,7 @@ bool compareUnequalLengths(Uint8List b0, Uint8List b1,
     [bool throwOnError = true]) {
   print('  b0 Length: ${b0.length}');
   print('  b1 Length: ${b1.length}');
-  print('  Differnece: ${(b0.lengthInBytes - b1.lengthInBytes).abs()}');
+  print('  Difference: ${(b0.lengthInBytes - b1.lengthInBytes).abs()}');
   int length = (b0.lengthInBytes < b1.lengthInBytes)
   ? b0.lengthInBytes
   : b1.lengthInBytes;

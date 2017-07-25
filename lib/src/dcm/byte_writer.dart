@@ -22,7 +22,6 @@ import 'dcm_writer.dart';
 /// and then possibly writing it to a [File]. Supports encoding
 /// all LITTLE ENDIAN [TransferSyntax]es.
 class ByteWriter extends DcmWriter {
-
   /// The [RootByteDataset] being written.
   final RootByteDataset _rootDS;
 
@@ -30,8 +29,9 @@ class ByteWriter extends DcmWriter {
   ByteDataset _currentDS;
 
   /// Creates a new [ByteWriter] where [wIndex] = 0.
-  ByteWriter(this._rootDS, int bdLength,
-      {String path = "",
+  ByteWriter(this._rootDS,
+      {int lengthInBytes = DcmWriter.defaultBufferLength,
+      String path = "",
       TransferSyntax outputTS,
       bool throwOnError = true,
       bool allowImplicitLittleEndian = true,
@@ -40,7 +40,7 @@ class ByteWriter extends DcmWriter {
       bool addMissingFMI = false,
       bool removeUndefinedLengths = false,
       bool reUseBD = true})
-      : super(bdLength,
+      : super(lengthInBytes,
             path: path,
             outputTS: outputTS,
             throwOnError: throwOnError,
@@ -51,12 +51,82 @@ class ByteWriter extends DcmWriter {
             removeUndefinedLengths: removeUndefinedLengths,
             reUseBD: reUseBD);
 
-  /// Returns the [RootByteDataset] being written.
+  /// Writes the [RootByteDataset] to a [Uint8List], and then writes the
+  /// [Uint8List] to the [File]. Returns the [Uint8List].
+  factory ByteWriter.toFile(RootByteDataset ds, File file,
+      {int lengthInBytes = DcmWriter.defaultBufferLength,
+      bool overwrite = false,
+      bool fmiOnly = false,
+      fast = true,
+      TransferSyntax targetTS}) {
+    DcmWriter.checkFile(file, overwrite);
+    return new ByteWriter(ds,
+        lengthInBytes: lengthInBytes,
+        path: file.path,
+        reUseBD: fast,
+        outputTS: targetTS);
+  }
+
+  /// Creates a new empty [File] from [path], writes the [RootByteDataset]
+  /// to a [Uint8List], then writes the [Uint8List] to the [File], and
+  /// returns the [Uint8List].
+  factory ByteWriter.toPath(RootByteDataset ds, String path,
+      {int lengthInBytes = DcmWriter.defaultBufferLength,
+      bool overwrite = false,
+      bool fmiOnly = false,
+      fast = false,
+      TransferSyntax targetTS}) {
+    DcmWriter.checkPath(path);
+    return new ByteWriter(ds,
+        lengthInBytes: lengthInBytes,
+        path: path,
+        reUseBD: fast,
+        outputTS: targetTS);
+  }
+
+  // The following Getters and Setters provide the correct [Type]s
+  // for [rootDS] and [currentDS].
+
+  /// Returns the [RootTagDataset] being written.
   RootByteDataset get rootDS => _rootDS;
+
+  ByteDataset get currentDS => _currentDS;
+
+  void set currentDS(ByteDataset ds) => _currentDS = ds;
 
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
+  Uint8List writeFMI([bool checkPreamble = false]) {
+    var bytes = dcmWriteFMI();
+//TODO    rootDS.parseInfo = getParseInfo();
+    return bytes;
+  }
+
+  /// Reads a [RootByteDataset] from [this], stores it in [rootDS],
+  /// and returns it.
+  Uint8List writeRootDataset({bool allowMissingFMI = false}) {
+    var bytes = dcmWriteRootDataset();
+    //TODO:  var parseInfo = getParseInfo();
+    //  rootDS.parseInfo = parseInfo;
+    return bytes;
+  }
+
+  void writeCompressedPixelData(BytePixelData e) {
+    //Urgent write undefined length header
+    if (e.fragments != null) {
+      Uint32List bot = e.fragments.offsets;
+      var bytes = bot.buffer.asUint8List(bot.offsetInBytes, bot.lengthInBytes);
+      // writeItemHeader(bytes.lengthInBytes}
+  //Urgent    writeBytes(ds)
+
+      Uint8List frames = e.fragments.bulkdata;
+      // writeItemHeader(frames.lengthInBytes}
+      //Urgent writeBytes(frames)
+
+      //Urgent write sequence Delimiter
+    }
+  }
   /// Writes the [RootByteDataset] to a [Uint8List], and returns the [Uint8List].
   static Uint8List writeBytes(RootByteDataset ds,
       {int bdLength,
@@ -66,8 +136,11 @@ class ByteWriter extends DcmWriter {
       TransferSyntax outputTS,
       reUseBD = true}) {
     DcmWriter.checkRootDataset(ds);
-    var writer = new ByteWriter(ds, bdLength,
-        path: path, reUseBD: reUseBD, outputTS: outputTS);
+    var writer = new ByteWriter(ds,
+        lengthInBytes: DcmWriter.defaultBufferLength,
+        path: path,
+        reUseBD: reUseBD,
+        outputTS: outputTS);
     return writer.writeRootDataset();
   }
 
@@ -104,7 +177,7 @@ class ByteWriter extends DcmWriter {
         targetTS: targetTS);
   }
 
-  /// Creates a new empty [File] at [path], writes the [RootTagDataset]
+  /// Creates a new empty [File] at [path], writes the [RootByteDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File],
   /// and returns the [Uint8List].
   static Uint8List writeFmi(RootByteDataset ds, String path,

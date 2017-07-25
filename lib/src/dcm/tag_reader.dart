@@ -71,31 +71,32 @@ class TagReader extends DcmReader {
   TagDataset get currentDS => _currentDS;
   void set currentDS(TagDataset ds) => _currentDS = ds;
 
-  bool readFMI([bool checkPreamble = false]) {
+  RootTagDataset readFMI([bool checkPreamble = false]) {
     var hadFmi = dcmReadFMI(checkPreamble);
-    rootDS.parseInfo = parseInfo;
-    return hadFmi;
+    rootDS.parseInfo = getParseInfo();
+    return (hadFmi) ? _rootDS : null;
   }
 
   /// Reads a [RootTagDataset] from [this], stores it in [rootDS],
   /// and returns it.
   RootTagDataset readRootDataset({bool allowMissingFMI = false}) {
     dcmReadRootDataset(allowMissingFMI: allowMissingFMI);
+    var parseInfo = getParseInfo();
     rootDS.parseInfo = parseInfo;
-    print('parseInfo: $parseInfo');
-    return rootDS;
+    return (parseInfo.hadFmi) ? _rootDS : null;
   }
 
   /// Returns a new [ByteElement].
   //  Called from [DcmReader].
   TagElement makeElementFromBytes(int code, int vrCode, int vfOffset,
-          Uint8List vfBytes, int vfLength, bool isEVR,
+          Uint8List vfBytes, int vfLength,
           [VFFragments fragments]) =>
       TagElement.makeElementFromBytes(
           code, vrCode, vfBytes, vfLength, fragments);
 
   ///
-  TagElement makeElementFromByteData(ByteData bd, bool isEVR) {
+  TagElement makeElementFromByteData(ByteData bd,
+      [VFFragments fragments]) {
     ByteElement be = ByteElement.makeElementFromByteData(bd, isEVR);
     return makeTagElement(be);
   }
@@ -109,7 +110,7 @@ class TagReader extends DcmReader {
   /// Returns a new TagSequence.
   /// [vf] is [ByteData] for the complete Value Field of the Sequence.
   SQ makeSequence(int code, List<TagItem> items, ByteData vf,
-      [bool hadULength = false, bool isEVR]) {
+      [bool hadULength = false]) {
     Tag tag = Tag.lookup(code);
     SQ sq = new SQ(tag, items, vf.lengthInBytes, hadULength);
     for (TagItem item in items) item.addSQ(sq);
@@ -117,13 +118,13 @@ class TagReader extends DcmReader {
   }
 
   /// Returns a new [TagItem].
-  TagItem makeItem(ByteData bd, TagDataset parent,
-          Map<int, Element> elements, int vfLength,
+  TagItem makeItem(ByteData bd, TagDataset parent, Map<int, Element> elements,
+          int vfLength,
           [bool hadULength = false, TagElement sq]) =>
       new TagItem.fromMap(parent, elements, vfLength, hadULength, sq);
 
   TagElement makePixelData(int code, int vrCode, int vfOffset,
-      Uint8List vfBytes, int vfLength, bool isEVR,
+      Uint8List vfBytes, int vfLength,
       [VFFragments fragments]) {
     assert(code == kPixelData);
     if (vrCode == VR.kOB.code) {
@@ -157,7 +158,7 @@ class TagReader extends DcmReader {
         fast: fast,
         fmiOnly: fmiOnly,
         targetTS: targetTS);
-    var root = reader.dcmReadRootDataset();
+    var root = reader.readRootDataset();
     print(root);
     return root;
   }
