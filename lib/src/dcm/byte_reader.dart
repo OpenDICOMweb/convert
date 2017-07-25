@@ -30,8 +30,8 @@ class ByteReader extends DcmReader {
       bool allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true})
-      : _rootDS =
-            new RootByteDataset(bd, path: path, vfLength: bd.lengthInBytes),
+      : _rootDS = new RootByteDataset.fromByteData(bd,
+            path: path, vfLength: bd.lengthInBytes),
         super(bd,
             path: path,
             async: async,
@@ -180,10 +180,9 @@ class ByteReader extends DcmReader {
   }
 
   /// Returns a new [ByteItem].
-  ByteItem makeItem(ByteData bd, ByteDataset parent, Map<int, Element> elements,
-          int vfLength,
-          [bool hadULength = false, ByteElement sq]) =>
-      new ByteItem.fromMap(bd, parent, elements, vfLength, hadULength, sq);
+  ByteItem makeItem(ByteData bd, ByteDataset parent, int vfLength,
+          Map<int, Element> map, [Map<int, Element> dupMap]) =>
+      new ByteItem.fromDecoder(bd, parent, vfLength, map, dupMap);
 
   /// Reads only the File Meta Information ([FMI], if present.
   static RootByteDataset readBytes(Uint8List bytes,
@@ -204,7 +203,7 @@ class ByteReader extends DcmReader {
           targetTS: targetTS);
       rds = reader.readRootDataset();
     } on ShortFileError catch (e) {
-      log.warn(e);
+      log.warn('Short File: $e');
     }
     return rds;
   }

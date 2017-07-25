@@ -87,7 +87,9 @@ class FileResult {
   }
 
   String get duplicates =>
-      (rds.duplicates.length == 0) ? "" : "      Duplicates: ${rds.duplicates.length}\n";
+      (rds.duplicates.length == 0)
+          ? ""
+          : "      Duplicates: ${rds.duplicates.length}\n";
 
   String get parseErrors => (rds.parseInfo.hadParsingErrors) ? "No\n" : "Yes\n";
   String get isShortFile => (rds.parseInfo.wasShortFile) ? "" : "      Short file: $isShort\n";

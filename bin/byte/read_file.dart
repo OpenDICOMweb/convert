@@ -10,12 +10,13 @@ import 'package:dcm_convert/dcm.dart';
 
 import 'package:dcm_convert/src/dcm/dcm_reader.dart';
 
-//Urgent: problem files: path22
+//Urgent: problem file: path22
+//Urgent: problem file: ivrFile
 void main() {
   final log = new Logger("io/bin/read_files.dart", watermark: Severity.info);
   DcmReader.log.watermark = Severity.debug;
 
-  var path = path8;
+  var path = badFileList0[4];
 
   log.config('Byte Reader: $path');
   RootByteDataset rds = ByteReader.readPath(path);

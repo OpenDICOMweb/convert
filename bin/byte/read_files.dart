@@ -19,7 +19,7 @@ final Logger log =
 //Urgent: use badFileList2 - fix indentation
 void main() {
   DcmReader.log.watermark = Severity.info;
-  var paths = testPaths;
+  var paths = badFileList0;
 
   for (int i = 0; i < paths.length; i++) {
     File f = new File(paths[i]);
@@ -46,7 +46,7 @@ bool readCheck(File file, int fileNo, {int reps = 1, bool fmiOnly = false}) {
     log.debug('Bytes Dataset: ${rds.info}');
   }
   log.info('---\n');
-  log.up;
+  log.reset;
   return (rds == null) ? false : true;
 }
 
