@@ -23,7 +23,8 @@ Logger log = new Logger("read_a_directory", watermark: Severity.info);
 void main() {
   int fsEntityCount;
 
-  Directory dir = new Directory(dir36_4485_6684);
+  /// *** Change directory name here
+  Directory dir = new Directory(mweb100MB);
 
   List<FileSystemEntity> fList = dir.listSync(recursive: true);
   fsEntityCount = fList.length;

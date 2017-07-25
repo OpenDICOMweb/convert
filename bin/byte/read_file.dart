@@ -14,7 +14,9 @@ import 'package:dcm_convert/src/dcm/dcm_reader.dart';
 void main() {
   final log = new Logger("io/bin/read_files.dart", watermark: Severity.info);
   DcmReader.log.watermark = Severity.debug;
-  var path = path20;
+
+  var path = path8;
+
   log.config('Byte Reader: $path');
   RootByteDataset rds = ByteReader.readPath(path);
   if (rds == null) {
