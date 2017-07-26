@@ -41,3 +41,4 @@ fabric.properties
 /pubspec.lock
 /readFile.log
 /logger.log
+!/bin/byte/errors.log
