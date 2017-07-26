@@ -66,7 +66,8 @@ class ByteReader extends DcmReader {
         allowMissingFMI: allowMissingFMI,
         targetTS: targetTS,
         reUseBD: true);
-  }*/
+  }
+*/
 
   /// Creates a [ByteReader] from the contents of the [file].
   factory ByteReader.fromFile(File file,
@@ -173,8 +174,8 @@ class ByteReader extends DcmReader {
       ByteData bd, List<ByteItem> items, int vfLength, bool isEVR) {
     //TODO: figure out how to create a ByteSequence with one call.
     ByteElement sq = (isEVR)
-        ? new EVRSQ(bd, currentDS, items)
-        : new IVRSQ(bd, currentDS, items);
+        ? new ByteSQ(bd, currentDS, items)
+        : new IVRByteSQ(bd, currentDS, items);
     for (ByteItem item in items) item.addSQ(sq);
     return sq;
   }

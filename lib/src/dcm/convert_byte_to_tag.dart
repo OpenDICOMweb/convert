@@ -76,8 +76,8 @@ SQ getSequence(TagDataset result, ByteSQ sq) {
   var parentTDS = currentTDS;
   for (int i = 0; i < sq.items.length; i++) {
     ByteDataset currentBDS = sq.items[i];
-    var currentTDS = new TagItem(
-        parentTDS, currentBDS.vfLength, currentBDS.hadULength, currentBDS.bd);
+    var currentTDS = new TagItem.fromDecoder(currentBDS.bd,
+        parentTDS, currentBDS.vfLength, currentBDS.map, currentBDS.dupMap);
     for (ByteElement e in currentBDS.elements) {
       TagElement te = convertElement(result, e);
       currentTDS.add(te);
@@ -86,7 +86,7 @@ SQ getSequence(TagDataset result, ByteSQ sq) {
   }
   currentBDS = parentBDS;
   currentTDS = parentTDS;
-  return new SQ(tag, tItems, sq.vfLength, sq.hadULength);
+  return new SQ(tag, tItems, sq.vfLength);
 }
 
 final Map<int, PCTag> pcTags = <int, PCTag>{};

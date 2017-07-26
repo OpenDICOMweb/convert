@@ -13,5 +13,6 @@ export 'src/dcm/compare_dataset.dart';
 export 'src/errors.dart';
 export 'src/dcm/tag_reader.dart';
 export 'src/dcm/tag_writer.dart';
+export 'src/utilities/file_list_reader.dart';
 
 

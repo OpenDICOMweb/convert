@@ -33,10 +33,11 @@ class FileListReader {
     int count = -1;
     RootByteDataset rds;
 
-    for (String path in paths) {
+    for (int i = 0; i < paths.length; i++) {
+      var path = paths[i];
       if (count++ % printEvery == 0)
         log.info('$count good($successCount), bad($failureCount)');
-      log.debug('Reading file: $path ');
+      log.config('Reading file: $i: $path ');
       File f = new File(path);
       try {
         var bytes = f.readAsBytesSync();

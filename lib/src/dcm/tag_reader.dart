@@ -10,6 +10,7 @@ import 'dart:typed_data';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
+import 'package:dcm_convert/dcm.dart';
 import 'dcm_reader.dart';
 
 /// A decoder for Binary DICOM (application/dicom).
@@ -22,6 +23,7 @@ class TagReader extends DcmReader {
   TagReader(ByteData bd,
       {String path = "",
       bool async: true,
+      //TODO: make async work and be the default
       bool fast: true,
       bool fmiOnly = false,
       bool throwOnError = true,
@@ -40,6 +42,7 @@ class TagReader extends DcmReader {
             targetTS: targetTS,
             reUseBD: reUseBD);
 
+/*  Flush at V0.9.0 if not used.
   /// Creates a [Uint8List] with the same length as [list<int>];
   /// and copies the values to the [Uint8List].  Values are truncated
   /// to fit in the [Uint8List] as they are copied.
@@ -63,6 +66,39 @@ class TagReader extends DcmReader {
         allowMissingFMI: allowMissingFMI,
         targetTS: targetTS,
         reUseBD: true);
+  }
+*/
+
+  /// Creates a [ByteReader] from the contents of the [file].
+  factory TagReader.fromFile(File file,
+      {bool async: false,
+        bool fast: true,
+        bool fmiOnly = false,
+        bool throwOnError = false,
+        bool allowMissingFMI = false,
+        TransferSyntax targetTS,
+        bool reUseBD = true}) {
+    Uint8List bytes = file.readAsBytesSync();
+    ByteData bd = bytes.buffer.asByteData();
+    return new TagReader(bd,
+        path: file.path,
+        async: async,
+        fast: fast,
+        fmiOnly: fmiOnly,
+        targetTS: targetTS);
+  }
+
+  /// Creates a [ByteReader] from the contents of the [File] at [path].
+  factory TagReader.fromPath(String path,
+      {bool async: true,
+        bool fast: true,
+        bool fmiOnly = false,
+        bool throwOnError = false,
+        bool allowMissingFMI = false,
+        TransferSyntax targetTS,
+        bool reUseBD = true}) {
+    return new TagReader.fromFile(new File(path),
+        async: async, fast: fast, fmiOnly: fmiOnly, targetTS: targetTS);
   }
 
   // The following Getters and Setters provide the correct [Type]s
@@ -88,18 +124,19 @@ class TagReader extends DcmReader {
 
   /// Returns a new [ByteElement].
   //  Called from [DcmReader].
-  TagElement makeElementFromBytes(int code, int vrCode, int vfOffset,
-          Uint8List vfBytes, int vfLength,
+  TagElement makeElementFromBytes(
+          int code, int vrCode, int vfOffset, Uint8List vfBytes, int vfLength,
           [VFFragments fragments]) =>
       TagElement.makeElementFromBytes(
           code, vrCode, vfBytes, vfLength, fragments);
 
+/* Flush if not used
   ///
-  TagElement makeElementFromByteData(ByteData bd,
-      [VFFragments fragments]) {
+  TagElement makeElementFromByteData(ByteData bd, [VFFragments fragments]) {
     ByteElement be = ByteElement.makeElementFromByteData(bd, isEVR);
     return makeTagElement(be);
   }
+*/
 
   //TODO: decide where to parse Fragments.
   /// Returns a new [ByteElement].
@@ -109,33 +146,30 @@ class TagReader extends DcmReader {
 
   /// Returns a new TagSequence.
   /// [vf] is [ByteData] for the complete Value Field of the Sequence.
-  SQ makeSequence(int code, List<TagItem> items, ByteData vf,
-      [bool hadULength = false]) {
+  SQ makeSequence(ByteData bd, List<TagItem> items, int vfLength, bool isEVR) {
+    int group = bd.getUint16(0);
+    int elt = bd.getUint16(2);
+    int code = (group << 16) & elt;
     Tag tag = Tag.lookup(code);
-    SQ sq = new SQ(tag, items, vf.lengthInBytes, hadULength);
+//    int vfOffset = (isEVR) ? 12 : 8;
+    SQ sq = new SQ(tag, items, vfLength);
     for (TagItem item in items) item.addSQ(sq);
     return sq;
   }
 
   /// Returns a new [TagItem].
-  TagItem makeItem(ByteData bd, TagDataset parent, Map<int, Element> elements,
-          int vfLength,
-          [bool hadULength = false, TagElement sq]) =>
-      new TagItem.fromMap(parent, elements, vfLength, hadULength, sq);
+  TagItem makeItem(ByteData bd, TagDataset parent, int vfLength,
+      Map<int, Element> map, [Map<int,
+      Element> dupMap]) =>
+      new TagItem.fromDecoder(bd, parent,  vfLength, map, dupMap);
 
-  TagElement makePixelData(int code, int vrCode, int vfOffset,
-      Uint8List vfBytes, int vfLength,
+  TagElement makePixelData(
+      int code, int vrCode, int vfOffset, Uint8List vfBytes, int vfLength,
       [VFFragments fragments]) {
     assert(code == kPixelData);
     if (vrCode == VR.kOB.code) {
-      if (vfLength == kUndefinedLength) {
-        VFFragments fragments = readFragments();
         return new OBPixelData(PTag.kPixelData, vfBytes, vfLength, fragments);
-      } else {
-        return new OBPixelData(PTag.kPixelData, vfBytes, vfLength);
-      }
-    } else if (vrCode == VR.kOW.code) {
-      assert(vfLength != kUndefinedLength);
+      } else if (vrCode == VR.kOW.code) {
       return new OW.fromBytes(PTag.kPixelData, vfBytes, vfLength);
     } else {
       throw 'Invalid VR($vrCode) for Pixel Data';

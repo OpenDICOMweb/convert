@@ -19,7 +19,7 @@ final Logger log =
 //Urgent: use badFileList2 - fix indentation
 void main() {
   DcmReader.log.watermark = Severity.info;
-  var paths = badFileList0;
+  var paths = badFileList3;
 
   for (int i = 0; i < paths.length; i++) {
     File f = new File(paths[i]);

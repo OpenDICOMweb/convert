@@ -16,13 +16,13 @@ import 'package:dcm_convert/src/dcm/dcm_writer.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
-final Logger log = new Logger("read_write_file", watermark: Severity.debug);
-
 void main() {
-  var path = path2;
-
+  final Logger log = new Logger("read_write_file", watermark: Severity.debug);
   DcmReader.log.watermark = Severity.debug;
   DcmWriter.log.watermark = Severity.debug;
+
+  // *** Modify this line to read/write a different file
+  var path = path0;
 
   log.info('Reading: $path');
   var reader0 = new ByteReader.fromPath(path);
@@ -32,6 +32,7 @@ void main() {
   log.info('  DS0: $rbds0');
 
   BytePixelData bpd = rbds0[kPixelData];
+  log.debug2('bpd: $bpd');
   log.info(' VFFragments: ${bpd.fragments}');
 
   // Write a File

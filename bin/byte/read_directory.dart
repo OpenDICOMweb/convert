@@ -6,22 +6,25 @@
 
 import 'dart:io';
 
-import 'package:common/logger.dart';
-import 'package:common/timestamp.dart';
+import 'package:common/common.dart';
 import 'package:dcm_convert/data/test_directories.dart';
-import 'package:dcm_convert/src/utilities/file_list_reader.dart';
+import 'package:dcm_convert/dcm.dart';
 import 'package:path/path.dart' as p;
+
+import 'package:dcm_convert/src/dcm/dcm_reader.dart';
 
 String outRoot0 = 'test/output/root0';
 String outRoot1 = 'test/output/root1';
 String outRoot2 = 'test/output/root2';
 String outRoot3 = 'test/output/root3';
-String outRoot4 =  'test/output/root4';
-
-Logger log = new Logger("read_a_directory", watermark: Severity.info);
+String outRoot4 = 'test/output/root4';
 
 void main() {
+  final Logger log = new Logger("read_a_directory", watermark: Severity.info);
   int fsEntityCount;
+
+  DcmReader.log.watermark = Severity.config;
+  FileListReader.log.watermark = Severity.config;
 
   /// *** Change directory name here
   Directory dir = new Directory(mweb100MB);
@@ -41,13 +44,9 @@ void main() {
       }
   }
 
-  var timer = new Stopwatch();
-  log.info('Reading ${files.length} files from ${dir.path}:');
-  var timestamp = new Timestamp('Starting Read ...');
-  timer.start();
-  log.info('   at: $timestamp');
+  var timer = new Timer();
+  log.config('Reading ${files.length} files from ${dir.path}:');
   var reader = new FileListReader(files, fmiOnly: true, printEvery: 100);
   reader.read;
-  timer.stop();
-  log.info('Elapsed time: ${timer.elapsed}');
+  log.config('Elapsed time: ${timer.elapsed}');
 }

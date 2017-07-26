@@ -256,8 +256,10 @@ abstract class DcmReader {
       // *** Keep, but only use for debugging.
       if (throwOnError) rethrow;
     }
-    log.debug('$rmm lastElementCode: $_lastElementCode');
+
     _dsLengthInBytes = _endOfLastValueRead;
+    log.debug('$rmm lastElementRead: $_lastElement');
+    log.debug('$rmm lastElementCode: ${toDcm(_lastElementCode)}');
     log.debug('$rmm dsLengthInBytes: $_dsLengthInBytes');
     log.debug('$rmm nTopLevelElements: ${rootDS.length}');
     log.debug('$rmm nTotalElements: ${rootDS.total}');
@@ -275,7 +277,7 @@ abstract class DcmReader {
       var msg = 'Inconsistent Elements Error: '
           '_nElementsRead($_nElementsRead), rootDS(${rootDS.total})';
       log.error(msg);
-      if (throwOnError) throw msg;
+    //  if (throwOnError) throw msg;
     }
     _rootDSStats();
     return rootDS;
@@ -491,7 +493,7 @@ abstract class DcmReader {
     //  if (_nElementsRead != _dsElements) log.debug('**** Unequal count');
     //  log.debugUp('$ree   ${_nElementsRead}: $e. DS(${_dsElements}) @end');
     log.debug1('$rmm   Read Total: ${_nElementsRead}');
-    log.debugUp('$ree   $e @end');
+    log.debugUp('$ree $_nElementsRead: $e @end');
     return e;
   }
 
@@ -680,8 +682,8 @@ abstract class DcmReader {
     _nElementsRead++;
     var ebd = bd.buffer.asByteData(eStart, eLength);
     var e = (_isEVR)
-        ? new EVRPixelData(ebd, fragments)
-        : new IVRPixelData(ebd, fragments);
+        ? new EVRBytePixelData(ebd, fragments)
+        : new IVRBytePixelData(ebd, fragments);
     _add(e);
     assert(_checkRIndex());
     log.debugUp('$ree   fragments: $fragments @end');
@@ -754,8 +756,8 @@ abstract class DcmReader {
     _nElementsRead++;
     var ebd = bd.buffer.asByteData(eStart, eLength);
     Element sq = (_isEVR)
-        ? new EVRSQ(ebd, currentDS, items)
-        : new IVRSQ(ebd, currentDS, items);
+        ? new EVRByteSQ(ebd, currentDS, items)
+        : new IVRByteSQ(ebd, currentDS, items);
     _add(sq);
     if (Tag.isPrivateCode(code)) _nPrivateSequences++;
     _nSequences++;
@@ -1122,3 +1124,4 @@ abstract class DcmReader {
   String toHadULength(int vfl) =>
       'HadULength(${(vfl == kUndefinedLength) ? "true": "false"})';
 }
+
