@@ -174,7 +174,7 @@ class ByteReader extends DcmReader {
       ByteData bd, List<ByteItem> items, int vfLength, bool isEVR) {
     //TODO: figure out how to create a ByteSequence with one call.
     ByteElement sq = (isEVR)
-        ? new ByteSQ(bd, currentDS, items)
+        ? new EVRByteSQ(bd, currentDS, items)
         : new IVRByteSQ(bd, currentDS, items);
     for (ByteItem item in items) item.addSQ(sq);
     return sq;
