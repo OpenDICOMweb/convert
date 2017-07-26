@@ -16,7 +16,6 @@ import 'dart:typed_data';
 
 import 'package:common/common.dart';
 import 'package:core/core.dart';
-import 'package:dcm_convert/src/errors.dart';
 import 'package:dcm_convert/src/dcm/element_list.dart';
 import 'package:dictionary/dictionary.dart';
 
