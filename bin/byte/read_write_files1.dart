@@ -12,7 +12,6 @@ import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:dcm_convert/src/dcm/compare_bytes.dart';
-import 'package:dcm_convert/src/dcm/compare_dataset.dart';
 import 'package:dictionary/dictionary.dart';
 import 'package:path/path.dart' as p;
 
