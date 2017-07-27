@@ -92,7 +92,7 @@ class TestByteReader extends ByteReader {
     return reader.readRootDataset();
   }
 
-  static RootByteDataset readFile(File file, RootDataset rootDS,
+  static RootByteDataset readFile(File file, RootByteDataset rootDS,
       {bool fmiOnly = false, TransferSyntax targetTS}) {
     Uint8List bytes = file.readAsBytesSync();
     return readBytes(bytes, rootDS,
@@ -100,7 +100,7 @@ class TestByteReader extends ByteReader {
   }
 
   /// Reads only the File Meta Information ([FMI], if present.
-  static RootByteDataset readFileFmiOnly(File file, RootDataset rootDS,
+  static RootByteDataset readFileFmiOnly(File file, RootByteDataset rootDS,
           {String path = "", TransferSyntax targetTS}) =>
       readFile(file, rootDS, fmiOnly: true, targetTS: targetTS);
 }

@@ -26,6 +26,7 @@ void main() {
     try {
       readCheck(f, i, fmiOnly: false);
     } on ShortFileError catch (e) {
+      log.warn('ShortFile: $e');
       log.warn('Short File(${f.lengthSync()} bytes): $f');
     } catch (e) {
       log.error(e);

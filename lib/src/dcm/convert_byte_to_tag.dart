@@ -10,7 +10,7 @@ import 'package:dictionary/dictionary.dart';
 
 Logger log = new Logger('convert', watermark: Severity.info);
 
-typedef Element<K, T, V> Maker<K, T, V>(K id, List<V> values,
+typedef Element<K, V> Maker<K, V>(K id, List<V> values,
     [int vfLength, VFFragments fragments]);
 
 ByteDataset currentBDS;

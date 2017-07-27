@@ -26,7 +26,7 @@ void main() {
 
   log.info('Reading: $path');
   var reader0 = new ByteReader.fromPath(path);
-  var rbds0 = reader0.readRootDataset();
+  RootByteDataset rbds0 = reader0.readRootDataset();
   var bytes0 = reader0.bytes;
   log.debug('  Read ${bytes0.lengthInBytes} bytes');
   log.info('  DS0: $rbds0');

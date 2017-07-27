@@ -262,6 +262,7 @@ abstract class DcmReader {
     log.debug('$rmm lastElementCode: ${toDcm(_lastElementCode)}');
     log.debug('$rmm dsLengthInBytes: $_dsLengthInBytes');
     log.debug('$rmm nTopLevelElements: ${rootDS.length}');
+    log.debug('$rmm _nSequences: $_nSequences');
     log.debug('$rmm nTotalElements: ${rootDS.total}');
     log.debug('$ree ${rootDS.info}');
 
@@ -277,7 +278,7 @@ abstract class DcmReader {
       var msg = 'Inconsistent Elements Error: '
           '_nElementsRead($_nElementsRead), rootDS(${rootDS.total})';
       log.error(msg);
-    //  if (throwOnError) throw msg;
+      //  if (throwOnError) throw msg;
     }
     _rootDSStats();
     return rootDS;
@@ -465,6 +466,7 @@ abstract class DcmReader {
 
     if (code == 0) return _zeroEncountered(code);
     Tag tag = Tag.lookup(code);
+    if (code == 0x7fdf0000) log.warn('(7fdf,0000: $tag');
     log.debug1('$rmm   $tag');
 
     Element e;
@@ -631,10 +633,9 @@ abstract class DcmReader {
           log.warn('$rmm ** VR.kOW with Encapsulated TS: $_ts');
           log.warn('$rmm **   Treating as Unencapsulated');
           _hadParsingErrors = true;
-          e = _readSimpleULength(eStart);
-          //e = _readEncapsulatedPixelData(eStart);
+          e = _readEncapsulatedPixelData(eStart);
         } else {
-          e = _readSimpleULength(eStart);
+          e = _readSimpleULength(code, eStart);
         }
       } else if (_vrCode == VR.kUN.code) {
         if (_ts.isEncapsulated) {
@@ -642,13 +643,13 @@ abstract class DcmReader {
           e = _readEncapsulatedPixelData(eStart);
         } else {
           log.warn('$rmm ** Treating VR.kUN as Unencapsulated');
-          e = _readSimpleULength(eStart);
+          e = _readSimpleULength(code, eStart);
         }
       }
       _pixelDataEnd = _rIndex;
     } else {
       log.debug2('$rmm   Simple ULength element(${toDcm(code)}');
-      e = _readSimpleULength(eStart);
+      e = _readSimpleULength(code, eStart);
     }
     assert(_checkRIndex());
     log.debug2('$ree $e   @end');
@@ -658,34 +659,50 @@ abstract class DcmReader {
 
   /// Read a simple Undefined Length [Element], i.e. not a [Sequence],
   /// and not an encapsulated [kPixelData].
-  Element _readSimpleULength(int eStart) {
+  Element _readSimpleULength(int code, int eStart) {
     log.down;
-    log.debug1('$rbb readSimpleULength eStart($eStart)');
+    log.debug1('$rbb readSimpleULength code(${toDcm(code)}eStart($eStart)');
     int endOfVF = _findEndOfULengthVF();
     int eLength = endOfVF - eStart;
     _rIndex = endOfVF + 8;
-    var e = _makeAndAddElement(eStart, eLength);
+    ByteElement e;
+    if (code == kPixelData) {
+      e = _makePixelData(eStart, eLength);
+    } else {
+      e = _makeAndAddElement(eStart, eLength);
+    }
     log.debug1('$ree   $e @end');
     log.up;
     return e;
   }
 
-  /// Reads an encapsulated (compressed) [kPixelData] [Element].
-  Element _readEncapsulatedPixelData(int eStart) {
-    log.debugDown('$rbb readEncapsulatedPixelData');
-    assert(_vrCode == VR.kOB.code || _vrCode == VR.kUN.code);
-    _pixelDataStart = _rIndex;
-    var fragments = _readFragments();
-    var eLength = _rIndex - eStart;
-    _pixelDataEnd = _rIndex;
-    _beyondPixelData = true;
-    _nElementsRead++;
+  BytePixelData _makePixelData(eStart, eLength, [VFFragments fragments]) {
+    log.debugDown('$rbb _makePixelData: '
+        '$eStart - $eLength = ${eStart + eLength}, $fragments');
     var ebd = bd.buffer.asByteData(eStart, eLength);
     var e = (_isEVR)
         ? new EVRBytePixelData(ebd, fragments)
         : new IVRBytePixelData(ebd, fragments);
     _add(e);
     assert(_checkRIndex());
+    log.debugUp('$ree   fragments: $fragments @end');
+    return e;
+  }
+
+  /// Reads an encapsulated (compressed) [kPixelData] [Element].
+  Element _readEncapsulatedPixelData(int eStart) {
+    log.debugDown('$rbb readEncapsulatedPixelData');
+    assert(_ts.isEncapsulated);
+    assert(_vrCode == VR.kOB.code ||
+        _vrCode == VR.kOW.code ||
+        _vrCode == VR.kUN.code);
+    _pixelDataStart = _rIndex;
+    var fragments = _readFragments();
+    var eLength = _rIndex - eStart;
+    _pixelDataEnd = _rIndex;
+    _beyondPixelData = true;
+    _nElementsRead++;
+    var e = _makePixelData(eStart, eLength, fragments);
     log.debugUp('$ree   fragments: $fragments @end');
     return e;
   }
@@ -1098,16 +1115,18 @@ abstract class DcmReader {
   }
 
   void _rootDSStats() {
-    int total = rootDS.total;
-    int top = rootDS.length;
-    var sqs = _getSequences(rootDS.map);
-    int dupTotal = rootDS.dupTotal;
-    int dupTop = rootDS.duplicates.length;
+    int dsTotal = rootDS.total;
+    int dsTop = rootDS.length;
+    var dsSQs = _getSequences(rootDS.map);
+    int dsDupTotal = rootDS.dupTotal;
+    int dsDupTop = rootDS.duplicates.length;
     var dupSQs = _getSequences(rootDS.dupMap);
     log.debug('$rmm nElementsRead: $_nElementsRead');
-    log.debug('$rmm rootDS Stats: Total($total), Top Level($top), SQs($sqs)');
-    log.debug('$rmm        Dups: Total($dupTotal), Top Level($dupTop), SQs'
-        '($dupSQs)');
+    log.debug('$rmm nSequences $_nSequences');
+    log.debug('$rmm rootDS Stats: Total($dsTotal), '
+        'Top Level($dsTop), SQs(${dsSQs.length})');
+    log.debug('$rmm        Dups: Total($dsDupTotal), '
+        'Top Level($dsDupTop), SQs(${dupSQs.length})');
   }
 
   List<Element> _getSequences(Map map) {
@@ -1124,4 +1143,3 @@ abstract class DcmReader {
   String toHadULength(int vfl) =>
       'HadULength(${(vfl == kUndefinedLength) ? "true": "false"})';
 }
-

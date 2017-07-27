@@ -310,7 +310,7 @@ abstract class DcmWriter {
       } else {
         _writeHeader(e);
         _writeBytes(e.vfBytes);
-        if (e.hadUndefinedLength) {
+        if (e.hadULength) {
           log.debug('$wmm Write SQ delimiter');
           //  log.debug('$wmm vrCode($e.vrCode), ${toHex32(e.vrCode)}');
           assert(kUndefinedLengthElements.contains(e.vrCode));
@@ -362,14 +362,16 @@ abstract class DcmWriter {
     log.debugDown('$wbb SQ $e');
     _writeHeader(e);
     if (e.values.length > 0) _writeItems(e);
-    if (e.hadUndefinedLength) _writeDelimiter(kSequenceDelimitationItem);
+    if (e.hadULength) _writeDelimiter(kSequenceDelimitationItem);
     _nSequences++;
     if (e.isPrivate) _nPrivateSequences++;
     log.debugUp('$wee SQ');
   }
 
-  void _writeItems(Element e) {
-    var items = e.values;
+  void _writeItems(ByteSQ e) {
+    if (!e.isSequence) throw '$e Not Sequence';
+    print('** e: ${e.info}');
+    List<ByteItem> items = e.items;
     for (Dataset item in items) {
       log.debugDown('$wbb Writing Item: $item');
       _writeDelimiter(kItem, item.vfLength);

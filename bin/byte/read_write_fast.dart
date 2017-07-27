@@ -10,21 +10,22 @@ import 'dart:typed_data';
 import 'package:common/logger.dart';
 import 'package:common/timer.dart';
 import 'package:core/core.dart';
-import 'package:dcm_convert/data/test_files.dart';
+//import 'package:dcm_convert/data/test_files.dart';
+import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:dcm_convert/src/dcm/compare_bytes.dart';
 import 'package:path/path.dart' as p;
 
 import 'utils.dart';
 
-final Logger log =
-    new Logger("convert/bin/read_write_files1.dart", watermark: Severity.config);
+final Logger log = new Logger("convert/bin/read_write_files1.dart",
+    watermark: Severity.config);
 
 void main() {
-  readWriteFileFast(new File(path0), reps: 1, fmiOnly: false);
+  //readWriteFileFast(new File(path0), reps: 1, fmiOnly: false);
   // readFMI(paths, fmiOnly: true);
   //  readWriteFiles(paths, fmiOnly: false);
-  // readWriteDirectory(mrStudy, fmiOnly: true);
+  readWriteDirectory(mrStudy, fmiOnly: true);
   //targetTS: TransferSyntax.kImplicitVRLittleEndian);
 }
 
@@ -38,7 +39,6 @@ String fmt(double v) => v.toStringAsFixed(1).padLeft(7, ' ');
 
 List<String> shortFiles = <String>[];
 int shortFileMark = 1024;
-
 
 bool readWriteFileFast(File file, {int reps = 1, bool fmiOnly = false}) {
   log.debug('Reading: $file');
@@ -67,10 +67,8 @@ bool readWriteFileTimed(File file, {int reps = 1, bool fmiOnly = false}) {
   var parse = timer.split;
   if (rds0 == null) return false;
 
-
   var bytes1 = writeTimed(rds0);
   var writeDS = timer.split;
-
 
   if (bytes1 == null) return false;
 
@@ -169,12 +167,12 @@ void readWriteDirectory(String path,
 }
 
 String padNumber(int n, [int width = 6, String padChar = " "]) =>
- '${n.toString().padLeft(width, padChar)}';
+    '${n.toString().padLeft(width, padChar)}';
 
 void currentStats(int count, int good, int bad, Timer timer) {
   var seconds = timer.split.inMicroseconds / 1000;
   var now = timer.elapsed;
   var us = seconds.toStringAsFixed(3).padLeft(6, ' ');
   log.config('${padNumber(count)} ${padNumber(count)} '
-  '${padNumber(count)} $us $now');
+      '${padNumber(count)} $us $now');
 }

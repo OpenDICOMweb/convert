@@ -35,14 +35,14 @@ bool compareDatasets(Dataset ds0, Dataset ds1, [bool throwOnError = false]) {
   }
 }
 
-bool _compareSequences(Element s0, Element s1, [bool throwOnError = false]) {
+bool _compareSequences(Sequence s0, Sequence s1, [bool throwOnError = false]) {
   if (s1.vrCode != VR.kSQ.code) return _notEqual(s0, s1);
   if (s0.code != s1.code ||
       s0.vrCode != s1.vrCode ||
       s0.values.length != s1.values.length) return _notEqual(s0, s1);
   for (int i = 0; i < s0.values.length; i++) {
-    var item0 = s0[i];
-    var item1 = s1[i];
+    Item item0 = s0[i];
+    Item item1 = s1[i];
     if (!compareDatasets(item0, item1)) _notEqual(s0, s1);
   }
   return true;
