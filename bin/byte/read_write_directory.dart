@@ -12,6 +12,8 @@ import 'package:dcm_convert/dcm.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:dcm_convert/src/dcm/dcm_reader.dart';
+import 'package:dcm_convert/src/dcm/dcm_writer.dart';
+import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
 
 String outRoot0 = 'test/output/root0';
 String outRoot1 = 'test/output/root1';
@@ -21,9 +23,11 @@ String outRoot4 = 'test/output/root4';
 
 void main() {
   final Logger log = new Logger("read_a_directory", watermark: Severity.info);
-  int fsEntityCount;
+  int success = 0;
+  int failure = 0;
 
   DcmReader.log.watermark = Severity.config;
+  DcmWriter.log.watermark = Severity.config;
   FileListReader.log.watermark = Severity.config;
 
   /// *** Change directory path name here
@@ -31,24 +35,31 @@ void main() {
   Directory dir = new Directory(path);
 
   List<FileSystemEntity> fList = dir.listSync(recursive: true);
-  fsEntityCount = fList.length;
-  print('List: $fsEntityCount');
+  int fsEntityCount = fList.length;
   log.debug('FSEntity count: $fsEntityCount');
 
   List<String> files = <String>[];
   for (FileSystemEntity fse in fList) {
     if (fse is! File) continue;
-      var path = fse.path;
-      var ext = p.extension(path);
-      if (ext == '.dcm' || ext == "") {
-        log.debug('File: $fse');
-        files.add(fse.path);
-      }
+    var path = fse.path;
+    var ext = p.extension(path);
+    if (ext == '.dcm' || ext == "") {
+      log.debug('File: $fse');
+      files.add(fse.path.replaceAll('\\', '/'));
+    }
   }
 
   var timer = new Timer();
   log.config('Reading ${files.length} files from ${dir.path}:');
-  var reader = new FileListReader(files, fmiOnly: true, printEvery: 100);
-  reader.read;
+  int width = '${files.length}'.length;
+
+  for (int i = 0; i < files.length; i++) {
+    if (byteReadWriteFileChecked(files[i], i, width)) {
+      success++;
+    } else {
+      failure++;
+    }
+  }
+  log.config('Success $success, Failure $failure, Total ${success+failure}');
   log.config('Elapsed time: ${timer.elapsed}');
 }

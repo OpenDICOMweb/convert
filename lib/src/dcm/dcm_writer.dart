@@ -39,7 +39,10 @@ abstract class DcmWriter {
   static final Logger log = new Logger("DcmWriter", watermark: Severity.debug2);
 
   static const int defaultBufferLength = 200 * kMB;
-  static ByteDataBuffer _reuse;
+  static ByteData _reuse;
+
+  // The length of the initial ByteData buffer.
+  final int bufferLength;
 
   /// The target [path] of the [Uint8List] being written.
   final String path;
@@ -93,8 +96,8 @@ abstract class DcmWriter {
   //TODO: Doc
   /// Creates a new [DcmByteWriter].  where [_wIndex] = [writeIndex] = 0.
   DcmWriter(
-    int length, {
     //TODO: make these into WriteParameter structure
+    {this.bufferLength = defaultBufferLength,
     this.path,
     this.file,
     this.outputTS,
@@ -109,10 +112,13 @@ abstract class DcmWriter {
   })
       : _wIndex = 0,
         _bd = (reUseBD)
-            ? _reuseBD(length)
-            : new ByteData((length == null) ? defaultBufferLength : length);
+            ? _reuseBuffer(bufferLength)
+            : new ByteData(
+                (bufferLength == null) ? defaultBufferLength : bufferLength) {
+    assert(_ts != null);
+  }
 
-  /// The [ByteDataBuffer] buffer being written.
+  /// The [ByteData] buffer being written.
   ByteData get bd => _bd;
 
   /// Returns a [Uint8List] view of the [ByteData] buffer at the current time
@@ -130,6 +136,8 @@ abstract class DcmWriter {
   /// The root Dataset being encoded.
   Dataset get rootDS;
 
+  TransferSyntax get ts => rootDS.transferSyntax;
+
   /// The current dataset.  This changes as Sequences and Items are encoded.
   Dataset get currentDS => _currentDS;
 
@@ -146,9 +154,6 @@ abstract class DcmWriter {
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
-  /// Write the [kPixelData] in ][Element] [e].
-  void _writePixelData(Element e);
-
   /// Writes (encodes) only the FMI in the root [Dataset] in 'application/dicom'
   /// media type, writes it to a Uint8List, and returns the [Uint8List].
   Uint8List dcmWriteFMI() {
@@ -161,9 +166,10 @@ abstract class DcmWriter {
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].
   Uint8List dcmWriteRootDataset() {
-    log.debug('$wbb dcmWriteRootDataset: $rootDS');
+    log.debug('$wbb dcmWriteRootDataset: ${rootDS.info}');
     _currentDS = rootDS;
     _ts = rootDS.transferSyntax;
+    if (_ts == null) throw 'no TS';
     _isEVR = rootDS.isEVR;
     log.debug('$wmm TS(${_ts.name}), isEncapsulated(${_ts.isEncapsulated})');
     if (!allowMissingFMI && !rootDS.hasFMI) {
@@ -291,7 +297,7 @@ abstract class DcmWriter {
       log.debugDown('$wbb write e: ${e.info}');
       _writeElement(e);
       int eEnd = _wIndex;
-      log.debugUp('$wbb e: $e: Length: ${eEnd - eStart}');
+      log.debugUp('$wee e: $e: Length: ${eEnd - eStart}');
     }
     _currentDS = previousDS;
     log.debugUp('$wee end writeDataset');
@@ -303,16 +309,13 @@ abstract class DcmWriter {
     if (e.isSequence) {
       _writeSequence(e);
     } else {
-      int vrCode = e.vrCode;
-      if (e.code == kPixelData &&
-          (vrCode == VR.kOB.code || vrCode == VR.kUN.code)) {
-        _writePixelData(e);
+      if (e.code == kPixelData && (rootDS.transferSyntax.isEncapsulated)) {
+        _writeEncapsulatedPixelData(e);
       } else {
         _writeHeader(e);
         _writeBytes(e.vfBytes);
         if (e.hadULength) {
-          log.debug('$wmm Write SQ delimiter');
-          //  log.debug('$wmm vrCode($e.vrCode), ${toHex32(e.vrCode)}');
+          log.debug('$wmm Write SQ ULength delimiter');
           assert(kUndefinedLengthElements.contains(e.vrCode));
           _writeDelimiter(kSequenceDelimitationItem);
         }
@@ -370,7 +373,6 @@ abstract class DcmWriter {
 
   void _writeItems(ByteSQ e) {
     if (!e.isSequence) throw '$e Not Sequence';
-    print('** e: ${e.info}');
     List<ByteItem> items = e.items;
     for (Dataset item in items) {
       log.debugDown('$wbb Writing Item: $item');
@@ -381,20 +383,17 @@ abstract class DcmWriter {
     }
   }
 
-  /// TODO: DOC
-  _writeFragments(BytePixelData e, bool isEVR) {
-    _writeTagCode(e.code);
-    if (isEVR) {
-      _writeUint16(e.vrCode);
-      _writeUint16(0);
-    }
-    _writeUint32(kUndefinedLength);
-    for (Uint8List f in e.fragments.fragments) {
+  /// Write encapsulated (compressed) [kPixelData] from [Element] [e].
+  void _writeEncapsulatedPixelData(BytePixelData e) {
+    log.debug('$wbb EncapsulatedPixelData: $e');
+    _writeHeader(e);
+    for (Uint8List fragment in e.fragments.fragments) {
       _writeTagCode(kItem);
-      _writeUint32(f.lengthInBytes);
-      _writeBytes(f);
+      _writeUint32(fragment.lengthInBytes);
+      _writeBytes(fragment);
     }
     _writeDelimiter(kSequenceDelimitationItem);
+    log.debug('$wee  @end');
   }
 
   /// Writes the [delimiter] and a zero length field for the [delimiter].
@@ -539,10 +538,10 @@ abstract class DcmWriter {
       (ds.vfLength == null) ? DcmWriter.defaultBufferLength : ds.vfLength;
 */
 
-  static ByteDataBuffer _reuseBD([int size = defaultBufferLength]) {
-    if (_reuse == null) return _reuse = new ByteDataBuffer(size);
+  static ByteData _reuseBuffer([int size = defaultBufferLength]) {
+    if (_reuse == null) return _reuse = new ByteData(size);
     if (size > _reuse.lengthInBytes) {
-      _reuse = new ByteDataBuffer(size + 1024);
+      _reuse = new ByteData(size + 1024);
       log.warn('**** DcmWriter creating new Reuse BD of Size: ${_reuse
           .lengthInBytes}');
     }

@@ -74,7 +74,7 @@ class ByteReader extends DcmReader {
       {bool async: false,
       bool fast: true,
       bool fmiOnly = false,
-      bool throwOnError = false,
+      bool throwOnError = true,
       bool allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true}) {
@@ -85,7 +85,10 @@ class ByteReader extends DcmReader {
         async: async,
         fast: fast,
         fmiOnly: fmiOnly,
-        targetTS: targetTS);
+        throwOnError: throwOnError,
+        allowMissingFMI: allowMissingFMI,
+        targetTS: targetTS,
+        reUseBD: reUseBD);
   }
 
   /// Creates a [ByteReader] from the contents of the [File] at [path].
@@ -93,12 +96,18 @@ class ByteReader extends DcmReader {
       {bool async: true,
       bool fast: true,
       bool fmiOnly = false,
-      bool throwOnError = false,
+      bool throwOnError = true,
       bool allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true}) {
     return new ByteReader.fromFile(new File(path),
-        async: async, fast: fast, fmiOnly: fmiOnly, targetTS: targetTS);
+        async: async,
+        fast: fast,
+        fmiOnly: fmiOnly,
+        throwOnError: throwOnError,
+        allowMissingFMI: allowMissingFMI,
+        targetTS: targetTS,
+        reUseBD: reUseBD);
   }
 
   // The following Getters and Setters provide the correct [Type]s
@@ -181,8 +190,9 @@ class ByteReader extends DcmReader {
   }
 
   /// Returns a new [ByteItem].
-  ByteItem makeItem(ByteData bd, ByteDataset parent, int vfLength,
-          Map<int, Element> map, [Map<int, Element> dupMap]) =>
+  ByteItem makeItem(
+          ByteData bd, ByteDataset parent, int vfLength, Map<int, Element> map,
+          [Map<int, Element> dupMap]) =>
       new ByteItem.fromDecoder(bd, parent, vfLength, map, dupMap);
 
   /// Reads only the File Meta Information ([FMI], if present.
@@ -191,7 +201,10 @@ class ByteReader extends DcmReader {
       bool async = true,
       bool fast = true,
       bool fmiOnly = false,
-      TransferSyntax targetTS}) {
+      bool throwOnError = true,
+      allowMissingFMI = false,
+      TransferSyntax targetTS,
+      bool reUseBD = true}) {
     RootByteDataset rds;
     try {
       ByteData bd =
@@ -201,7 +214,10 @@ class ByteReader extends DcmReader {
           async: async,
           fast: fast,
           fmiOnly: fmiOnly,
-          targetTS: targetTS);
+          throwOnError: throwOnError,
+          allowMissingFMI: allowMissingFMI,
+          targetTS: targetTS,
+          reUseBD: reUseBD);
       rds = reader.readRootDataset();
     } on ShortFileError catch (e) {
       log.warn('Short File: $e');
@@ -213,25 +229,44 @@ class ByteReader extends DcmReader {
           {bool async: true,
           bool fast = true,
           bool fmiOnly = false,
-          TransferSyntax targetTS}) =>
+          bool throwOnError = true,
+          bool allowMissingFMI: false,
+          TransferSyntax targetTS,
+          bool reUseBD: true}) =>
       readBytes(file.readAsBytesSync(),
           path: file.path,
           async: async,
           fast: fast,
           fmiOnly: fmiOnly,
-          targetTS: targetTS);
+          throwOnError: throwOnError,
+          allowMissingFMI: allowMissingFMI,
+          targetTS: targetTS,
+          reUseBD: reUseBD);
 
   static ByteDataset readPath(String path,
           {bool async: true,
           bool fast = true,
           bool fmiOnly = false,
-          TransferSyntax targetTS}) =>
+          bool throwOnError = true,
+          allowMissingFMI = false,
+          TransferSyntax targetTS,
+          bool reUseBD = true}) =>
       readFile(new File(path),
-          async: async, fast: fast, fmiOnly: fmiOnly, targetTS: targetTS);
+          async: async,
+          fast: fast,
+          fmiOnly: fmiOnly,
+          throwOnError: throwOnError,
+          allowMissingFMI: allowMissingFMI,
+          targetTS: targetTS);
 
   /// Reads only the File Meta Information ([FMI], if present.
   static ByteDataset readFmiOnly(dynamic pathOrFile,
-      {async = true, fast = true, TransferSyntax targetTS}) {
+      {bool async: true,
+      bool fast = true,
+      bool fmiOnly = false,
+      bool throwOnError = true,
+      TransferSyntax targetTS,
+      bool reUseBD = true}) {
     var func;
     if (pathOrFile is String) {
       func = readPath;
@@ -241,6 +276,12 @@ class ByteReader extends DcmReader {
       throw 'Invalid path or file: $pathOrFile';
     }
     return func(pathOrFile,
-        async: async, fmiOnly: true, fast: fast, targetTS: targetTS);
+        async: async,
+        fast: fast,
+        fmiOnly: true,
+        throwOnError: true,
+        allowMissingFMI: false,
+        targetTS: targetTS,
+        reUseBD: reUseBD);
   }
 }

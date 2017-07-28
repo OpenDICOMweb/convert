@@ -19,7 +19,7 @@ import 'package:dcm_convert/src/dcm/dcm_reader.dart';
 import 'package:dcm_convert/src/dcm/dcm_writer.dart';
 
 import 'read_utils.dart';
-import 'utils.dart';
+import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
 
 final Logger log =
     new Logger("convert/bin/read_write_files1.dart", watermark: Severity.debug2);

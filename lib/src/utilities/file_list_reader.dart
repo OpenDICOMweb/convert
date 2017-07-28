@@ -8,6 +8,7 @@ import 'dart:io';
 
 import 'package:common/logger.dart';
 import 'package:dcm_convert/dcm.dart';
+import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
 
 class FileListReader {
   static final Logger log =
@@ -34,7 +35,7 @@ class FileListReader {
     RootByteDataset rds;
 
     for (int i = 0; i < paths.length; i++) {
-      var path = paths[i];
+      var path = cleanPath(paths[i]);
       if (count++ % printEvery == 0)
         log.info('$count good($successCount), bad($failureCount)');
       log.config('Reading file: $i: $path ');

@@ -16,7 +16,7 @@ const String dir6684 = "C:/odw/test_data/6684";
 const String dir36_4485_6684 = "C:/odw/test_data/36_4485_6684";
 
 
-const String dir6688 = "C:/odw/test_data/6688";
+const String dir6688 = "C:/odw/test_data/6688/";
 const String test6688 = 'C:/odw/test_data/6688/12/0B009D38/0B009D3D';
 
 const String  sfd = "C:/odw/test_data/sfd";

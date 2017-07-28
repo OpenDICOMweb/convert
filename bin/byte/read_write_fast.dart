@@ -16,7 +16,7 @@ import 'package:dcm_convert/dcm.dart';
 import 'package:dcm_convert/src/dcm/compare_bytes.dart';
 import 'package:path/path.dart' as p;
 
-import 'utils.dart';
+import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
 
 final Logger log = new Logger("convert/bin/read_write_files1.dart",
     watermark: Severity.config);

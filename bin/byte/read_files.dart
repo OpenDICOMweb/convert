@@ -12,17 +12,32 @@ import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 
 import 'package:dcm_convert/src/dcm/dcm_reader.dart';
+import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
 
 final Logger log =
     new Logger("io/bin/read_files.dart", watermark: Severity.config);
 
 //Urgent: use badFileList2 - fix indentation
 void main() {
+  print('Read Files');
   DcmReader.log.watermark = Severity.info;
   var paths = testPaths;
 
+  var nFiles = testPaths.length;
+  var width = '$nFiles'.length;
+
   for (int i = 0; i < paths.length; i++) {
+    log.reset;
+
+    var n = getPaddedInt(i, width);
+    var p = cleanPath(paths[i]);
     File f = new File(paths[i]);
+    var nBytes = f.lengthSync();
+    if (nBytes == 0) {
+      log.info('Skipping empty file: $f');
+    }
+    log.config('$n: Reading: $p - $nBytes bytes');
+
     try {
       readCheck(f, i, fmiOnly: false);
     } on ShortFileError catch (e) {
@@ -35,11 +50,8 @@ void main() {
 }
 
 bool readCheck(File file, int fileNo, {int reps = 1, bool fmiOnly = false}) {
-  Uint8List bytes0 = file.readAsBytesSync();
-  log.config('$fileNo: Reading: $file with ${bytes0.lengthInBytes} bytes');
   log.down;
-  if (bytes0 == null) return false;
-  var rds = ByteReader.readBytes(bytes0, path: file.path, fast: true);
+  var rds = ByteReader.readFile(file);
   if (rds == null) {
     log.warn('---  File not readable');
   } else {
@@ -47,7 +59,7 @@ bool readCheck(File file, int fileNo, {int reps = 1, bool fmiOnly = false}) {
     log.debug('Bytes Dataset: ${rds.info}');
   }
   log.info('---\n');
-  log.reset;
+  log.up;
   return (rds == null) ? false : true;
 }
 

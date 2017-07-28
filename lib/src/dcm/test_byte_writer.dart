@@ -16,7 +16,7 @@ import 'byte_writer.dart';
 class TestByteWriter extends ByteWriter {
   /// Creates a new [TestByteWriter].
   TestByteWriter(RootByteDataset rootDS,
-      {int lengthInBytes,
+      {int length,
       String path = "",
       TransferSyntax outputTS,
       bool throwOnError = true,
@@ -27,7 +27,7 @@ class TestByteWriter extends ByteWriter {
       bool removeUndefinedLengths = false,
       bool reUseBD = true})
       : super(rootDS,
-            lengthInBytes: lengthInBytes,
+            bufferLength: length,
             path: path,
             outputTS: outputTS,
             throwOnError: throwOnError,
@@ -47,7 +47,7 @@ class TestByteWriter extends ByteWriter {
   /// Returns a [Uint8List] containing the encoded [Dataset].
   Uint8List xWriteDataset(ByteDataset ds) {
     log.debugDown('$wbb writeDataset: isExplicitVR(${ds.isEVR})');
-    var writer = new ByteWriter(ds, lengthInBytes: ds.vfLength);
+    var writer = new ByteWriter(ds, bufferLength: ds.vfLength);
     var bytes = writer.writeDataset(ds);
     log.debugUp('$wee end writeDataset: isExplicitVR(${ds.isEVR})');
     return bytes;

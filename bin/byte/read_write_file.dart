@@ -6,75 +6,21 @@
 
 import 'package:common/common.dart';
 import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/dcm.dart';
-import 'package:dictionary/dictionary.dart';
-import 'package:dcm_convert/src/dcm/compare_bytes.dart';
-import 'package:dcm_convert/src/dcm/compare_dataset.dart';
 
+//TODO: fix logger so next two import and the DcmReader lines are not necessary
 import 'package:dcm_convert/src/dcm/dcm_reader.dart';
 import 'package:dcm_convert/src/dcm/dcm_writer.dart';
+import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
 void main() {
-  final Logger log = new Logger("read_write_file", watermark: Severity.debug);
-  DcmReader.log.watermark = Severity.debug;
-  DcmWriter.log.watermark = Severity.debug;
+  //TODO: fix logger so next two lines are unnecessary
+  DcmReader.log.watermark = Severity.debug2;
+  DcmWriter.log.watermark = Severity.debug2;
 
-  // *** Modify this line to read/write a different file
-  var path = path0;
+  // *** Modify the [path0] value to read/write a different file
+  var path = 'C:/odw/test_data/6688/12/0B009D38/0B009D3D/4D4E9A56';
 
-  log.info('Reading: $path');
-  var reader0 = new ByteReader.fromPath(path);
-  RootByteDataset rbds0 = reader0.readRootDataset();
-  var bytes0 = reader0.bytes;
-  log.debug('  Read ${bytes0.lengthInBytes} bytes');
-  log.info('  DS0: $rbds0');
-
-  BytePixelData bpd = rbds0[kPixelData];
-  log.debug2('bpd: $bpd');
-  log.info(' VFFragments: ${bpd.fragments}');
-
-  // Write a File
-  var writer = new ByteWriter.toPath(rbds0, outPath);
-  var bytes1 = writer.writeRootDataset();
-  log.debug('  Wrote ${bytes1.length} bytes');
-
-  log.info('Re-reading: $outPath');
-  var reader1 = new ByteReader.fromPath(path);
-  var rbds1 = ByteReader.readPath(outPath);
-  log.debug('  Read ${reader1.bd.lengthInBytes} bytes');
-  log.info('  DS1: $rbds1');
-
-  if (rbds0.parseInfo != rbds1.parseInfo) {
-    log.warn('  *** ParseInfo is Different!');
-    log.debug('  ${rbds0.parseInfo}');
-    log.debug('  ${rbds1.parseInfo}');
-    log.debug2(rbds0.format(new Formatter(maxDepth: -1)));
-    log.debug2(rbds1.format(new Formatter(maxDepth: -1)));
-  }
-
-  // Compare [Dataset]s
-  var same = reader0.elementList == writer.elementList;
-  if (same == true) {
-    log.info('ElementLists are identical.');
-  } else {
-    log.info('ElementLists are different!');
-  }
-
-  // Compare [Dataset]s
-  same = compareDatasets(rbds0, rbds1, true);
-  if (same == true) {
-    log.info('Datasets are identical.');
-  } else {
-    log.info('Datasets are different!');
-  }
-
-  //   FileCompareResult out = compareFiles(fn.path, fnOut.path, log);
-  same = bytesEqual(bytes0, bytes1, true);
-  if (same == true) {
-    log.info('Files are identical.');
-  } else {
-    log.info('Files are different!');
-  }
+  byteReadWriteFileChecked(path);
 }
