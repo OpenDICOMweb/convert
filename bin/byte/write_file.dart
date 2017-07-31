@@ -8,8 +8,8 @@ import 'dart:typed_data';
 
 import 'package:common/common.dart';
 import 'package:core/core.dart';
-import 'package:dcm_convert/src/dcm/old/dcm_byte_writer.dart';
 import 'package:dictionary/dictionary.dart';
+import 'package:dcm_convert/dcm.dart';
 
 final Logger log = new Logger("convert/bin/byte/write_file_list.dart",
     watermark: Severity.info);
@@ -24,7 +24,7 @@ Uint8List writeFile(RootByteDataset rds, String path,
     if (fmiOnly) log.debug('    fmiOnly: $fmiOnly');
 
   //  timer.start();
-    var bytes = DcmByteWriter.writePath(rds, path, fmiOnly: fmiOnly);
+    var bytes = ByteWriter.writePath(rds, path, fmiOnly: fmiOnly);
     timer.stop();
 
     log.debug('  Elapsed time: ${timer.elapsed}');

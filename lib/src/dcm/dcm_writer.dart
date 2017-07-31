@@ -289,7 +289,7 @@ abstract class DcmWriter {
     log.down;
     log.debug2('$wbb Writing Prefix');
     var pInfo = rootDS.parseInfo;
-    log.debug('hadPrefix(${pInfo.hadPrefix}, doAddMissingFMI(${encoding
+    log.debug('hadPrefix(${pInfo.hadPrefix}), doAddMissingFMI(${encoding
         .doAddMissingFMI})');
     assert(pInfo.hadPrefix == false || !encoding.doAddMissingFMI);
     if (pInfo.preambleWasZeros || encoding.doCleanPreamble) {

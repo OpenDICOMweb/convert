@@ -511,7 +511,7 @@ abstract class DcmReader {
     }
     //Debug: Why doesn't this assertion work?
     //   assert(_nElementsRead == rootDS.total + rootDS.dupTotal);
-    log.debug2(stats);
+  //  log.debug2(stats);
     log.debugUp('$ree $_nElementsRead: $e @end');
     return e;
   }

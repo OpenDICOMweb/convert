@@ -26,5 +26,5 @@ void main() {
  // '.20120723195848/2.16.840.1.114255.1870665029.949635505.39523.169/2.16.840'
  // '.1.114255.1870665029.949635505.10220.175.dcm';
   var path = 'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm';
-  byteReadWriteFileChecked(testPaths[0]);
+  byteReadWriteFileChecked(path);
 }
