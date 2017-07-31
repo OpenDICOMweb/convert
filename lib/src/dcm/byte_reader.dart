@@ -31,7 +31,7 @@ class ByteReader extends DcmReader {
       TransferSyntax targetTS,
       bool reUseBD = true})
       : _rootDS = new RootByteDataset.fromByteData(bd,
-            path: path, vfLength: bd.lengthInBytes),
+            vfLength: bd.lengthInBytes),
         super(bd,
             path: path,
             async: async,
@@ -118,7 +118,7 @@ class ByteReader extends DcmReader {
 
   RootByteDataset readFMI([bool checkPreamble = false]) {
     bool hadFmi = dcmReadFMI(checkPreamble);
-    rootDS.parseInfo = getParseInfo();
+    _rootDS.parseInfo = getParseInfo();
     return (hadFmi) ? _rootDS : null;
   }
 
@@ -127,10 +127,10 @@ class ByteReader extends DcmReader {
   RootByteDataset readRootDataset({bool allowMissingFMI = false}) {
     try {
       dcmReadRootDataset(allowMissingFMI: allowMissingFMI);
-      var parseInfo = getParseInfo();
-      rootDS.parseInfo = parseInfo;
+      _rootDS.parseInfo = getParseInfo();
+      log.debug('rootDS: $rootDS');
+      log.debug('RootDS.TS: ${rootDS.transferSyntax}');
       log.debug('elementList(${elementList.length})');
-      //    log.debug2('Elements: $elementList');
     } on ShortFileError catch (e) {
       log.error(e);
       return null;
@@ -168,7 +168,8 @@ class ByteReader extends DcmReader {
 
   //Urgent: flush or fix
   TagElement makeTagElement(ByteElement e) =>
-      TagElement.makeElementFromBytes(e.code, e.vrCode, e.vfBytes, e.vfLength);
+      TagElement.makeElementFromBytes(e.code, e.vrCode, e.vfLength, e
+          .vfBytes);
 
 /*
   //Urgent: flush or fix

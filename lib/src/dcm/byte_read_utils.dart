@@ -16,10 +16,13 @@ import 'package:dictionary/dictionary.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
+//TODO: remove or make part of function
 final Logger _log =
-    new Logger("io/bin/read_files.dart", watermark: Severity.info);
+    new Logger("io/bin/read_files.dart", watermark: Severity.debug2);
 
 final Formatter format = new Formatter();
+
+int getFieldWidth(int total) => '$total'.length;
 
 String getPaddedInt(int n, int width) =>
     (n == null) ? "" : '${"$n".padLeft(width)}';
@@ -28,70 +31,88 @@ String cleanPath(String path) => path.replaceAll('\\', '/');
 
 bool byteReadWriteFileChecked(String fPath,
     [int fileNumber, int width = 5, bool throwOnError = true]) {
-
-  log.reset;
+  _log.reset;
   var n = getPaddedInt(fileNumber, width);
+  var pad = "".padRight(width);
   fPath = cleanPath(fPath);
-  log.config('$n: Reading: $fPath');
+  _log.config('$n: Reading: $fPath');
 
   File f = new File(fPath);
   try {
     var reader0 = new ByteReader.fromFile(f);
-    var rds0 = reader0.readRootDataset();
+    RootByteDataset rds0 = reader0.readRootDataset();
     var bytes0 = reader0.bytes;
-    log.debug('  Read ${bytes0.lengthInBytes} bytes');
-    log.info('  DS0: $rds0');
+    _log.debug('$pad  Read ${bytes0.lengthInBytes} bytes');
+    _log.debug1('$pad    DS0: ${rds0.info}');
+    _log.debug1('$pad    TS String: ${rds0.transferSyntaxString}');
+    _log.debug1('$pad    TS: ${rds0.transferSyntax}');
+    _log.debug1('$pad    ${rds0.parseInfo.info}');
 
-    BytePixelData bpd = rds0[kPixelData];
-    log.debug2('bpd: $bpd');
-    log.info(' VFFragments: ${bpd.fragments}');
-
+    ByteElement e = rds0[kPixelData];
+    if (e == null) {
+      log.warn('$pad ** Pixel Data Element not present');
+    } else {
+      _log.debug1('$pad  bpd: ${e.info}');
+      BytePixelData bpd = e;
+      _log.debug1('$pad  bpd: ${bpd.info}');
+      _log.debug2('$pad  bpd: $bpd');
+      _log.debug1('$pad  VFFragments: ${bpd.fragments}');
+    }
     // Write a File
     var writer = new ByteWriter.toPath(rds0, outPath);
     var bytes1 = writer.writeRootDataset();
-    log.debug('  Wrote ${bytes1.length} bytes');
+    _log.debug('$pad    Wrote ${bytes1.length} bytes');
 
-    log.info('Re-reading: $outPath');
-    var reader1 = new ByteReader.fromPath(fPath);
+    _log.debug('Re-reading: $outPath');
+    var reader1 = new ByteReader.fromPath(outPath);
     var rds1 = reader1.readRootDataset();
     //   RootByteDataset rds1 = ByteReader.readPath(outPath);
-    log.debug('  Read ${reader1.bd.lengthInBytes} bytes');
-    log.info('  DS1: $rds1');
+    _log.debug('$pad Read ${reader1.bd.lengthInBytes} bytes');
+    _log.debug1('$pad DS1: $rds1');
 
+    if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
     if (rds0.parseInfo != rds1.parseInfo) {
-      log.warn('  *** ParseInfo is Different!');
-      log.debug('  ${rds0.parseInfo}');
-      log.debug('  ${rds1.parseInfo}');
-      log.debug2(rds0.format(new Formatter(maxDepth: -1)));
-      log.debug2(rds1.format(new Formatter(maxDepth: -1)));
+      _log.warn('$pad ** ParseInfo is Different!');
+      _log.debug1('$pad rds0: ${rds0.parseInfo.info}');
+      _log.debug1('$pad rds1: ${rds1.parseInfo.info}');
+      _log.debug2(rds0.format(new Formatter(maxDepth: -1)));
+      _log.debug2(rds1.format(new Formatter(maxDepth: -1)));
     }
 
-    // Compare [Dataset]s
-    if (reader0.elementList == writer.elementList) {
-      log.info('ElementLists are identical.');
-    } else {
-      log.info('ElementLists are different!');
+    // If duplicates are present the [ElementList]s will not be equal.
+    if (!rds0.hasDuplicates) {
+      // Compare [ElementList]s
+      if (reader0.elementList == writer.elementList) {
+        _log.debug('$pad ElementLists are identical.');
+      } else {
+        _log.warn('$pad ElementLists are different!');
+      }
     }
 
-    // Compare [Dataset]s
-    if (rds0 == rds1) {
-      log.info('Datasets are identical.');
+    // Compare [Dataset]s - only compares the elements in dataset.map.
+    var same = (rds0 == rds1);
+    if (same) {
+      _log.debug('$pad Datasets are identical.');
     } else {
-      log.info('Datasets are different!');
+      _log.warn('$pad Datasets are different!');
     }
 
-    //   FileCompareResult out = compareFiles(fn.path, fnOut.path, log);
-    var same = bytesEqual(bytes0, bytes1, true);
-    if (same == true) {
-      log.info('Files are identical.');
-    } else {
-      log.info('Files are different!');
+    // If duplicates are present the [ElementList]s will not be equal.
+    if (!rds0.hasDuplicates) {
+      //  Compare the data byte for byte
+      var same = bytesEqual(bytes0, bytes1, true);
+      if (same == true) {
+        _log.debug('$pad Files bytes are identical.');
+      } else {
+        _log.warn('$pad Files bytes are different!');
+      }
     }
+    if (same) log.info('$pad Success!');
     return same;
   } on ShortFileError {
-    log.warn('Short File(${f.lengthSync()} bytes): $f');
+    _log.warn('$pad ** Short File(${f.lengthSync()} bytes): $f');
   } catch (e) {
-    log.error(e);
+    _log.error(e);
     if (throwOnError) rethrow;
   }
   return false;

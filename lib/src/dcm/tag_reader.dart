@@ -22,6 +22,7 @@ class TagReader extends DcmReader {
   /// Creates a new [TagReader].
   TagReader(ByteData bd,
       {String path = "",
+        int vfLength,
       bool async: true,
       //TODO: make async work and be the default
       bool fast: true,
@@ -31,7 +32,7 @@ class TagReader extends DcmReader {
       TransferSyntax targetTS,
       bool reUseBD = true})
       : _rootDS =
-            new RootTagDataset(bd: bd, path: path, vfLength: bd.lengthInBytes),
+            new RootTagDataset.fromByteData(bd, vfLength: vfLength),
         super(bd,
             path: path,
             async: async,
@@ -128,7 +129,7 @@ class TagReader extends DcmReader {
           int code, int vrCode, int vfOffset, Uint8List vfBytes, int vfLength,
           [VFFragments fragments]) =>
       TagElement.makeElementFromBytes(
-          code, vrCode, vfBytes, vfLength, fragments);
+          code, vrCode,  vfLength, vfBytes, fragments);
 
 /* Flush if not used
   ///

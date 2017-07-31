@@ -15,6 +15,8 @@ class ElementList {
 
   ElementList();
 
+  // Enhancement: before release remove debugging.
+  // Note: this does not compare elements!
   bool operator ==(Object other) {
     bool result = true;
 
@@ -28,13 +30,17 @@ class ElementList {
       int len = (length > other.length) ? other.length : length;
       for (int i = 0; i < len; i++) {
         if (starts[i] != other.starts[i] || ends[i] != other.ends[i]) {
-          result = false;
-          log.debug('$i: ${starts[i]} other: ${other.starts[i]}');
-          log.debug('$i: ${ends[i]} other: ${other.ends[i]}');
-          log.debug('$i: ${elements[i]} other: ${other.elements[i]}');
+          int end = (len < i + 10) ? len : i + 10;
+          for(int j = i; j < end; j++) {
+            result = false;
+            log.debug('$i: ${starts[i]} other: ${other.starts[i]}');
+            log.debug('$i: ${ends[i]} other: ${other.ends[i]}');
+            log.debug('$i: ${elements[i]} other: ${other.elements[i]}');
+            return false;
+          }
         }
       }
-      log.debug('ElementList equal: $result');
+  //    log.debug('ElementList equal: $result');
       return result;
     }
     return false;

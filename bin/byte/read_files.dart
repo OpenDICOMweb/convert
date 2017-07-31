@@ -18,6 +18,7 @@ final Logger log =
     new Logger("io/bin/read_files.dart", watermark: Severity.config);
 
 //Urgent: use badFileList2 - fix indentation
+
 void main() {
   print('Read Files');
   DcmReader.log.watermark = Severity.info;

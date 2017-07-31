@@ -14,6 +14,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
+import 'package:dcm_convert/dcm.dart';
 import 'package:dictionary/dictionary.dart';
 
 import 'dcm_writer.dart';
@@ -39,18 +40,15 @@ class TagWriter extends DcmWriter {
       bool allowMissingFMI = false,
       bool addMissingFMI = false,
       bool removeUndefinedLengths = false,
-      bool reUseBD = true})
-      : super(
+      bool reUseBD = true,
+      EncodingParameters encoding})
+      : super(_rootDS,
             bufferLength: bufferLength,
             path: path,
             outputTS: outputTS,
             throwOnError: throwOnError,
-            allowImplicitLittleEndian: allowImplicitLittleEndian,
-            addMissingPrefix: addMissingPrefix,
-            allowMissingFMI: allowMissingFMI,
-            addMissingFMI: addMissingFMI,
-            removeUndefinedLengths: removeUndefinedLengths,
-            reUseBD: reUseBD) {
+            reUseBD: reUseBD,
+            encoding: encoding) {
     assert(_rootDS.transferSyntax != null);
   }
 

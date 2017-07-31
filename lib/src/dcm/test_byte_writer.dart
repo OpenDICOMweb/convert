@@ -7,6 +7,7 @@
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
+import 'package:dcm_convert/dcm.dart';
 import 'package:dictionary/dictionary.dart';
 
 import 'byte_writer.dart';
@@ -20,23 +21,15 @@ class TestByteWriter extends ByteWriter {
       String path = "",
       TransferSyntax outputTS,
       bool throwOnError = true,
-      bool allowImplicitLittleEndian = true,
-      bool addMissingPrefix = false,
-      bool allowMissingFMI = false,
-      bool addMissingFMI = false,
-      bool removeUndefinedLengths = false,
-      bool reUseBD = true})
+      bool reUseBD = true,
+      EncodingParameters encoding})
       : super(rootDS,
             bufferLength: length,
             path: path,
             outputTS: outputTS,
             throwOnError: throwOnError,
-            allowImplicitLittleEndian: allowImplicitLittleEndian,
-            addMissingPrefix: addMissingPrefix,
-            allowMissingFMI: allowMissingFMI,
-            addMissingFMI: addMissingFMI,
-            removeUndefinedLengths: removeUndefinedLengths,
-            reUseBD: reUseBD);
+            reUseBD: reUseBD,
+            encoding: encoding);
 
   /// Returns a [Uint8List] containing the encoded FMI.
   Uint8List xWriteFmi(ByteDataset rds) {

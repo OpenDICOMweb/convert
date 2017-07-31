@@ -10,9 +10,10 @@ import 'package:common/logger.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
 
+
 class FileListReader {
   static final Logger log =
-      new Logger("read_a_directory", watermark: Severity.info);
+      new Logger("read_a_directory", watermark: Severity.error);
   List<String> paths;
   bool fmiOnly;
   bool throwOnError;
@@ -33,16 +34,22 @@ class FileListReader {
   List<String> get read {
     int count = -1;
     RootByteDataset rds;
+    int fileNoWidth = getFieldWidth(paths.length);
 
     for (int i = 0; i < paths.length; i++) {
       var path = cleanPath(paths[i]);
-      if (count++ % printEvery == 0)
-        log.info('$count good($successCount), bad($failureCount)');
-      log.config('Reading file: $i: $path ');
-      File f = new File(path);
+      if (count++ % printEvery == 0) {
+        var n = getPaddedInt(count, fileNoWidth);
+        print('$n good($successCount), bad($failureCount)');
+      }
+
+      log.info('$i Reading: $path ');
+      //Urgent add switch
+   //   File f = new File(path);
       try {
-        var bytes = f.readAsBytesSync();
-        rds = ByteReader.readBytes(bytes, path: path, fmiOnly: fmiOnly);
+        var bytes = byteReadWriteFileChecked(path);
+   //     var bytes = f.readAsBytesSync();
+   //     rds = ByteReader.readBytes(bytes, path: path, fmiOnly: fmiOnly);
         log.info('${rds.parseInfo}');
         log.info('  Dataset: $rds');
         if (rds == null) {

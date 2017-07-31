@@ -16,7 +16,7 @@ import 'dart:typed_data';
 
 import 'package:common/common.dart';
 import 'package:core/core.dart';
-import 'package:dcm_convert/src/dcm/element_list.dart';
+import 'package:dcm_convert/dcm.dart';
 import 'package:dictionary/dictionary.dart';
 
 import 'byte_data_buffer.dart';
@@ -38,45 +38,37 @@ import 'byte_data_buffer.dart';
 abstract class DcmWriter {
   static final Logger log = new Logger("DcmWriter", watermark: Severity.debug2);
 
+  /// The default [ByteData] buffer length, if none is provided.
   static const int defaultBufferLength = 200 * kMB;
+
+  /// If [reUseBD] is [true] the [ByteData] buffer is stored here.
   static ByteData _reuse;
 
-  // The length of the initial ByteData buffer.
-  final int bufferLength;
-
-  /// The target [path] of the [Uint8List] being written.
+  /// The target output [path] for the encoded data. [file] has
+  /// precedence over [path].
   final String path;
 
-  /// The target [file] of the [Uint8List] being written.
+  /// The target output [file] for the encoded data. [file] has
+  /// precedence over [path].
   final File file;
 
-  /// The [TransferSyntax] for the output.
-  final TransferSyntax outputTS;
+  /// The [TransferSyntax] for the encoded output. If [null]
+  /// the output will have the same [TransferSyntax] as the Root
+  /// [Dataset]. If the [TransferSyntax] of the Root [Dataset] is
+  /// [null] then it defaults to [Explicit VR Little Endian].
+  final TransferSyntax targetTS;
 
-  /// If [true] errors will throw; otherwise, return [null].
+  /// If [true] errors will throw; otherwise, they return [null].
+  /// The default is [true].
   final bool throwOnError;
 
-  /// if [true] [Dataset]s will be allowed to be written in IVRLE.
-  final bool allowImplicitLittleEndian;
-
-  //TODO: are this and addMissingFMI both necessary.
-  /// If [true], a DICOM File Prefix (PS3.10) will be written even
-  /// if it wasn't present when the [Dataset] was decoded (parsed).
-  final bool addMissingPrefix;
-
-  final bool addCleanPrefix;
-
-  final bool allowMissingFMI;
-
-  /// If [true], a DICOM File Meta Information (PS3.10) will be written
-  /// even if it wasn't present when the [Dataset] was decoded (parsed).
-  final bool addMissingFMI;
-
-  final bool removeUndefinedLengths;
+  // The length of the initial output ByteData buffer.
+  final int bufferLength;
 
   final bool reUseBD;
 
-  //Fix: make this work
+  final EncodingParameters encoding;
+
   final ElementList elementList = new ElementList();
 
   /// The current dataset.  This changes as Sequences are written.
@@ -91,31 +83,31 @@ abstract class DcmWriter {
   int _nPrivateElements = 0;
   int _nPrivateSequences = 0;
 
-  //*** Constructors ***
-
-  //TODO: Doc
-  /// Creates a new [DcmByteWriter].  where [_wIndex] = [writeIndex] = 0.
-  DcmWriter(
-    //TODO: make these into WriteParameter structure
-    {this.bufferLength = defaultBufferLength,
-    this.path,
-    this.file,
-    this.outputTS,
-    this.throwOnError = true,
-    this.allowImplicitLittleEndian = true,
-    this.addMissingPrefix = false,
-    this.addCleanPrefix = false,
-    this.allowMissingFMI = false,
-    this.addMissingFMI = false,
-    this.removeUndefinedLengths = false,
-    this.reUseBD = true,
-  })
-      : _wIndex = 0,
+  /// Creates a new [DcmByteWriter], where [_wIndex] = [writeIndex] = 0.
+  DcmWriter(Dataset rootDS,
+      {this.path,
+      this.file,
+      TransferSyntax outputTS,
+      this.throwOnError = true,
+      this.bufferLength = defaultBufferLength,
+      this.reUseBD = true,
+      this.encoding = EncodingParameters.kNoChange})
+      : targetTS = getOutputTS(rootDS, outputTS),
+        _wIndex = 0,
         _bd = (reUseBD)
             ? _reuseBuffer(bufferLength)
             : new ByteData(
-                (bufferLength == null) ? defaultBufferLength : bufferLength) {
-    assert(_ts != null);
+                (bufferLength == null) ? defaultBufferLength : bufferLength);
+
+  /// Returns the [targetTS] for the encoded output.
+  static TransferSyntax getOutputTS(Dataset rootDS, TransferSyntax outputTS) {
+    if (outputTS == null) {
+      return (rootDS.transferSyntax == null)
+          ? System.defaultTransferSyntax
+          : rootDS.transferSyntax;
+    } else {
+      return outputTS;
+    }
   }
 
   /// The [ByteData] buffer being written.
@@ -166,20 +158,18 @@ abstract class DcmWriter {
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].
   Uint8List dcmWriteRootDataset() {
+    //TODO: handle doSeparateBulkdata
     log.debug('$wbb dcmWriteRootDataset: ${rootDS.info}');
     _currentDS = rootDS;
-    _ts = rootDS.transferSyntax;
+    _ts = (targetTS == null) ? rootDS.transferSyntax : targetTS;
     if (_ts == null) throw 'no TS';
-    _isEVR = rootDS.isEVR;
-    log.debug('$wmm TS(${_ts.name}), isEncapsulated(${_ts.isEncapsulated})');
-    if (!allowMissingFMI && !rootDS.hasFMI) {
-      log.error('Dataset $rootDS is missing FMI elements');
-      return null;
-    }
 
-    if (rootDS.parseInfo.hadPrefix || addMissingPrefix) _writePrefix();
-    // Writes the FMI as normal elements
-    // TODO: this does not add missing FMI elements
+    log.debug('$wmm TS(${_ts.name}), isEncapsulated(${_ts.isEncapsulated})');
+    //TODO: figure out the correct way to writeFMI
+    // _writeFMI();
+    _writePrefix();
+
+    _isEVR = rootDS.isEVR;
     _writeDataset(rootDS);
     log.debug('$wmm _nElements: $_nElements');
     log.debug('$wmm _nSequences: $_nSequences');
@@ -246,39 +236,70 @@ abstract class DcmWriter {
 
   // **** Private methods
 
-  /// Writes File Meta Information ([Fmi]) to the output.
-  void _writeFMI() {
+  /// Writes File Meta Information ([FMI]) to the output.
+  /// _Note_: FMI is always Explicit Little Endian
+  bool _writeFMI() {
+    //  if (encoding.doUpdateFMI) return writeODWFMI();
     if (_currentDS != rootDS) log.error('Not rootDS');
-    log.debugDown('$wbb writeFmi($_currentDS)');
-    if (rootDS.parseInfo.hadPrefix || addMissingPrefix) _writePrefix();
+    log.debugDown('$wbb writeFMI($_currentDS)');
+
+    var hasFMI = rootDS.hasFMI;
+    // Check to see if we should write FMI if missing
+    if (!hasFMI && encoding.allowMissingFMI) {
+      log.error('Dataset $rootDS is missing FMI elements');
+      return false;
+    } else if (encoding.doUpdateFMI && (!hasFMI && encoding.doAddMissingFMI)) {
+      log.debug('$wmm writing new ODW FMI');
+      _writeODWFMI();
+    } else {
+      assert(hasFMI);
+      log.debug('$wmm writing existing FMI');
+      _writeExistingFMI();
+    }
+    _isEVR = rootDS.isEVR;
+    log.debugUp('$wee writeFMI @end');
+    return true;
+  }
+
+  void _writeExistingFMI() {
+    log.debugDown('$wbb write existing FMI($_currentDS)');
+    _isEVR = true;
+    _writePrefix();
     for (Element e in rootDS.elements) {
-      while (e.code < 0x00030000) {
+      log.debug2('$wmm writeFMI: $e');
+      if (e.code < 0x00030000) {
         _writeElement(e);
         log.debug2('$wmm writeFMI loop: $e');
+      } else {
+        break;
       }
-      break;
     }
-    log.debugUp('$wee writeFmi end');
+    log.debugUp('$wee write existing FMI @end');
+  }
+
+  /// Writes a new Open DICOMweb FMI.
+  void _writeODWFMI() {
+    //Urgent finish
   }
 
   //TODO: redoc
-  /// If the Root [Dataset] was parsed and had a prefix,
-  /// then it was all zeros or not.
+  /// Writes a DICOM Preamble and Prefix (see PS3.10) as the
+  /// beginning of the encoding.
   void _writePrefix() {
     log.down;
     log.debug2('$wbb Writing Prefix');
     var pInfo = rootDS.parseInfo;
-    if (pInfo.hadPrefix == false && !addMissingPrefix) {
-      log.debug2('$wmm not writing prefix');
-      log.up;
-      return;
-    }
-    if ((pInfo.preamble != null) && !addCleanPrefix) {
-      log.debug2('$wmm writing existing non-zero prefix: ${pInfo.preamble}');
-      for (int i = 0; i < 128; i++) _bd.setUint8(i, pInfo.preamble[i]);
-    } else {
-      log.debug2('$wmm writing clean prefix');
+    log.debug('hadPrefix(${pInfo.hadPrefix}, doAddMissingFMI(${encoding
+        .doAddMissingFMI})');
+    assert(pInfo.hadPrefix == false || !encoding.doAddMissingFMI);
+    if (pInfo.preambleWasZeros || encoding.doCleanPreamble) {
+      log.debug2('$wmm writing clean Preamble');
       for (int i = 0; i < 128; i++) _bd.setUint8(i, 0);
+    } else {
+      assert(pInfo.preamble != null && !encoding.doCleanPreamble);
+
+      log.debug2('$wmm writing existing non-zero Preamble: ${pInfo.preamble}');
+      for (int i = 0; i < 128; i++) _bd.setUint8(i, pInfo.preamble[i]);
     }
     _skip(128);
     _writeAsciiString('DICM');
@@ -309,16 +330,10 @@ abstract class DcmWriter {
     if (e.isSequence) {
       _writeSequence(e);
     } else {
-      if (e.code == kPixelData && (rootDS.transferSyntax.isEncapsulated)) {
-        _writeEncapsulatedPixelData(e);
+      if (e.code == kPixelData) {
+        _writePixelData(e);
       } else {
-        _writeHeader(e);
-        _writeBytes(e.vfBytes);
-        if (e.hadULength) {
-          log.debug('$wmm Write SQ ULength delimiter');
-          assert(kUndefinedLengthElements.contains(e.vrCode));
-          _writeDelimiter(kSequenceDelimitationItem);
-        }
+        _writeSimpleElement(e);
       }
     }
     elementList.add(eStart, _wIndex, e);
@@ -327,12 +342,25 @@ abstract class DcmWriter {
     log.debugUp('$wee wrote: $e');
   }
 
+  // Simple, i.e. not a sequence or Pixel Data.
+  void _writeSimpleElement(Element e) {
+    //TODO: handle replacing undefined lengths
+    //TODO: doFixPaddingErrors
+    _writeHeader(e);
+    _writeBytes(e.vfBytes);
+    if (e.hadULength) {
+      log.debug('$wmm Write SQ ULength delimiter');
+      assert(kUndefinedLengthVRCodes.contains(e.vrCode));
+      _writeDelimiter(kSequenceDelimitationItem);
+    }
+  }
+
   /// Writes an EVR (short == 8 bytes, long == 12 bytes) or IVR (8 bytes)
   /// header.
   void _writeHeader(Element e) {
-    log.debugDown('$wbb writeHeader EVR: $_isEVR '
+    log.debugDown('$wbb writeHeader ${_isEVR ? "EVR" : "IVR"} '
         'e.vfLength: ${e.vfLength}, ${toHex(e.vfLength, 8)}');
-    var length = (e.vfLength == null || removeUndefinedLengths)
+    var length = (e.vfLength == null || encoding.doConvertUndefinedLengths)
         ? e.vfBytes.lengthInBytes
         : e.vfLength;
     log.debug('$wmm length: $length');
@@ -362,6 +390,7 @@ abstract class DcmWriter {
 
   void _writeSequence(Element e) {
     assert(e.isSequence);
+    //TODO: handle replacing undefined lengths
     log.debugDown('$wbb SQ $e');
     _writeHeader(e);
     if (e.values.length > 0) _writeItems(e);
@@ -373,6 +402,7 @@ abstract class DcmWriter {
 
   void _writeItems(ByteSQ e) {
     if (!e.isSequence) throw '$e Not Sequence';
+    //TODO: handle replacing undefined lengths
     List<ByteItem> items = e.items;
     for (Dataset item in items) {
       log.debugDown('$wbb Writing Item: $item');
@@ -384,16 +414,22 @@ abstract class DcmWriter {
   }
 
   /// Write encapsulated (compressed) [kPixelData] from [Element] [e].
-  void _writeEncapsulatedPixelData(BytePixelData e) {
-    log.debug('$wbb EncapsulatedPixelData: $e');
-    _writeHeader(e);
-    for (Uint8List fragment in e.fragments.fragments) {
-      _writeTagCode(kItem);
-      _writeUint32(fragment.lengthInBytes);
-      _writeBytes(fragment);
+  void _writePixelData(BytePixelData e) {
+    log.debug('$wbb PixelData: $e');
+    //TODO: handle replacing undefined lengths
+    //TODO: handle doRemoveFragments
+    if (e.fragments != null) {
+      _writeHeader(e);
+      for (Uint8List fragment in e.fragments.fragments) {
+        _writeTagCode(kItem);
+        _writeUint32(fragment.lengthInBytes);
+        _writeBytes(fragment);
+      }
+      _writeDelimiter(kSequenceDelimitationItem);
+      log.debug('$wee  @end');
+    } else {
+      _writeSimpleElement(e);
     }
-    _writeDelimiter(kSequenceDelimitationItem);
-    log.debug('$wee  @end');
   }
 
   /// Writes the [delimiter] and a zero length field for the [delimiter].
@@ -402,7 +438,8 @@ abstract class DcmWriter {
   /// Items that might have an Undefined Length value(0xFFFFFFFF).
   /// if [removeUndefinedLengths] is true this method should not be called.
   void _writeDelimiter(int delimiter, [int lengthInBytes = 0]) {
-    assert(removeUndefinedLengths == false);
+    //TODO: handle doRemoveNoZeroDelimiterLengths
+    assert(encoding.doConvertUndefinedLengths == false);
     _writeTagCode(delimiter);
     _writeUint32(lengthInBytes);
   }
@@ -426,8 +463,8 @@ abstract class DcmWriter {
   /// Moves the [_wIndex] forward [n] bytes, or backward if [n] is negative.
   void _skip(int n) {
     int v = _wIndex + n;
-    // TODO: comment out next line when fully debugged.
-    _checkRange(v);
+    // Note: keep next line for debugging
+    // _checkRange(v);
     _wIndex = v;
   }
 
@@ -478,6 +515,7 @@ abstract class DcmWriter {
   /// ensuring that an even number of bytes are written, by adding
   /// a padding character if necessary.
   void _writeStringBytes(Uint8List bytes, [int padChar = kSpace]) {
+    //TODO: doFixPaddingErrors
     _writeBytes(bytes);
     if (bytes.length.isOdd) {
       _bd.setUint8(_wIndex, padChar);
@@ -485,6 +523,7 @@ abstract class DcmWriter {
     }
   }
 
+  //TODO: doFixPaddingErrors
   /// Writes an [ASCII] [String] to the output [_bd].
   void _writeAsciiString(String s,
           [int offset = 0, int limit, int padChar = kSpace]) =>
@@ -532,11 +571,6 @@ abstract class DcmWriter {
     _bd = newBuffer;
     log.debugUp('end _grow ${_bd.lengthInBytes}');
   }
-
-/* Flush if not needed
-  static _getDefaultLength(Dataset ds) =>
-      (ds.vfLength == null) ? DcmWriter.defaultBufferLength : ds.vfLength;
-*/
 
   static ByteData _reuseBuffer([int size = defaultBufferLength]) {
     if (_reuse == null) return _reuse = new ByteData(size);

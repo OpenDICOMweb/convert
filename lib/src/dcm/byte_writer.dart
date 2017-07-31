@@ -16,6 +16,7 @@ import 'dart:typed_data';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
+import 'package:dcm_convert/src/encoding_parameters.dart';
 import 'dcm_writer.dart';
 
 /// A [class] for writing a [RootByteDataset] to a [Uint8List],
@@ -32,25 +33,18 @@ class ByteWriter extends DcmWriter {
   ByteWriter(this._rootDS,
       {int bufferLength,
       String path = "",
+        File file,
       TransferSyntax outputTS,
       bool throwOnError = true,
-      bool allowImplicitLittleEndian = true,
-      bool addMissingPrefix = false,
-      bool allowMissingFMI = false,
-      bool addMissingFMI = false,
-      bool removeUndefinedLengths = false,
-      bool reUseBD = true})
-      : super(
+      bool reUseBD = true,
+        EncodingParameters encoding = EncodingParameters.kNoChange})
+      : super(_rootDS,
             bufferLength: bufferLength,
             path: path,
             outputTS: outputTS,
             throwOnError: throwOnError,
-            allowImplicitLittleEndian: allowImplicitLittleEndian,
-            addMissingPrefix: addMissingPrefix,
-            allowMissingFMI: allowMissingFMI,
-            addMissingFMI: addMissingFMI,
-            removeUndefinedLengths: removeUndefinedLengths,
-            reUseBD: reUseBD);
+            reUseBD: reUseBD,
+  encoding: encoding);
 
   /// Writes the [RootByteDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
