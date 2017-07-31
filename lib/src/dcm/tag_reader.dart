@@ -194,7 +194,7 @@ class TagReader extends DcmReader {
         fmiOnly: fmiOnly,
         targetTS: targetTS);
     var root = reader.readRootDataset();
-    print(root);
+    log.debug(root);
     return root;
   }
 

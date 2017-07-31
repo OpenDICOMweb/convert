@@ -82,6 +82,8 @@ abstract class DcmReader {
   final bool elementListEnabled = true;
   final ElementList elementList = new ElementList();
 
+  ByteData bdRead;
+
   // ParseInfo values
   bool _isEVR;
   int _nElementsRead = 0;
@@ -112,6 +114,7 @@ abstract class DcmReader {
   Element _lastElementRead;
   int _endOfLastValueRead;
   bool _beyondPixelData = false;
+  bool _endOfDataError = false;
 
   /// The index where the last element in the root [Dataset] ended.
   int _dsLengthInBytes;
@@ -169,7 +172,7 @@ abstract class DcmReader {
   Map<int, Element> currentMap;
   Map<int, Element> currentDupMap;
   Uint8List get bytes =>
-      bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes);
+      bdRead.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes);
 
   /// Interface to Item constructor.
   Dataset makeItem(
@@ -245,57 +248,54 @@ abstract class DcmReader {
       return rootDS;
     }
 
-    Element e;
     log.debug('$rmm _isEVR: $_isEVR');
     try {
       // Flush when working e = _readDataset(rootDS);
       currentDS = rootDS;
       log.debug1('$rbb readDataset: isExplicitVR(${_isEVR})');
       while (_hasRemaining(8)) readElement();
-      _dsLengthInBytes = _rIndex;
       log.debug1('$ree end readDataset: isExplicitVR(${_isEVR})');
-      return rootDS;
+      assert(currentDS == rootDS);
     } on EndOfDataError {
       log.info('$_rrr EndOfDataError');
-      _dsLengthInBytes = _endOfLastValueRead;
-      return rootDS;
+      _endOfDataError = true;
     } on ShortFileError {
       rethrow;
     } on RangeError catch (ex) {
-      log.error('$ex');
-      //    _showNext(_rIndex);
-      log.error('$_rrr endOfLastValueRead: $_endOfLastValueRead');
-      log.error('$_rrr last value read: ${toDcm(_lastElementCode)}');
-      log.error('$_rrr last element read: $e');
-      _dsLengthInBytes = _endOfLastValueRead;
+      log.error('$ex\n $stats');
       if (_beyondPixelData) log.info('$_rrr Beyond Pixel Data');
       // Keep: *** Keep, but only use for debugging.
       if (throwOnError) rethrow;
-      return rootDS;
     } catch (ex) {
-      log.error('$_rrr $ex');
-      log.error('$_rrr endOfLastValueRead: $_endOfLastValueRead');
-      if (_beyondPixelData) return rootDS;
-      _dsLengthInBytes = _endOfLastValueRead;
+      log.error('$_rrr $ex\n $stats');
       // *** Keep, but only use for debugging.
       if (throwOnError) rethrow;
+    } finally {
+      bdRead = bd.buffer.asByteData(0, _endOfLastValueRead);
+      assert(_rIndex == _endOfLastValueRead);
+      _bytesUnread = _bdLength - _rIndex;
+      _hadTrailingBytes = _bytesUnread > 0;
+      _hadTrailingZeros = _checkAllZeros(_endOfLastValueRead, _bdLength);
+      _dsLengthInBytes = _endOfLastValueRead;
+      assert(_dsLengthInBytes == bdRead.lengthInBytes);
     }
-    _dsLengthInBytes = _endOfLastValueRead;
 
     log.debug1(stats);
-    if (_rIndex != _bdLength) {
-      log.warn('** End of Data with _rIndex($_rIndex) != _bdLength'
-          '($_bdLength) '
-          '$_rrr');
+    if (_rIndex != bdRead.lengthInBytes) {
+      log.warn('** End of Data with _rIndex($_rIndex) != bdRead.length'
+          '(${bdRead.lengthInBytes}) $_rrr');
       _dsLengthInBytes = _rIndex;
       _endOfLastValueRead = _rIndex;
-      _hadTrailingBytes = true;
+      _hadTrailingBytes = (bdRead.lengthInBytes != bd.lengthInBytes);
       _hadTrailingZeros = _checkAllZeros(_rIndex, _bdLength);
     }
 
-    if (_nElementsRead != (rootDS.total + rootDS.dupTotal)) {
+    print('elements: ${rootDS.elements.length}');
+    print('duplicates: ${rootDS.duplicates.length}');
+    int rootDSTotal = rootDS.total + rootDS.dupTotal;
+    if (_nElementsRead != rootDSTotal) {
       var msg = '** Inconsistent Elements Error: '
-          '_nElementsRead($_nElementsRead), rootDS(${rootDS.total})';
+          '_nElementsRead($_nElementsRead), rootDS(${rootDSTotal}) $rootDS';
       log.error(msg);
       if (throwOnError) throw msg;
     }
@@ -500,13 +500,13 @@ abstract class DcmReader {
       e = _readDefinedLength(code, eStart, vfLength);
     }
     _nElementsRead++;
+    _endOfLastValueRead = _rIndex;
     if (elementListEnabled) elementList.add(eStart, _rIndex, e);
-    //TODO: use this everywhere
+    //Enhancement: only gather statistics when statisticsEnables is true
     if (statisticsEnabled) {
       // Statistics
       _lastTopLevelElementRead = e;
       _lastElementCode = code;
-      _endOfLastValueRead = _rIndex;
       if ((code >> 16).isOdd) _nPrivateElementsRead++;
     }
     //Debug: Why doesn't this assertion work?
@@ -1134,22 +1134,13 @@ abstract class DcmReader {
   /// Returns [true] if there are only trailing zeros at the end of the
   /// Object being parsed.
   Element _zeroEncountered(int code) {
-    print('_rIndex: $_rIndex');
-    _skip(-4);
-    print('_rIndex: $_rIndex');
- //   _endOfLastValueRead = _rIndex - 4;
     log.warn(
         '**    Zero encountered: beyondPixelData: $_beyondPixelData $_rrr');
-    print('beyondPixelData: $_beyondPixelData');
-    _hadTrailingBytes = true;
-    _dsLengthInBytes = _rIndex;
-    _hadTrailingZeros = _checkAllZeros(_rIndex, _bdLength);
-    _bytesUnread = _bdLength - _rIndex;
-    print('Bytes Unread: $_bytesUnread');
+
     //TODO: make these work later
     //if (!_hadTrailingZeros) _printTrailingData(_rIndex, 256);
     //if (!_hadTrailingZeros) print(_showNext(_rIndex));
-    print(_showNext(_rIndex));
+   // print(_showNext(_rIndex));
     throw new EndOfDataError('Zero encountered after '
         'PixelData @$_dsLengthInBytes');
 
@@ -1259,6 +1250,8 @@ lastTopLevelElementRead: $_lastTopLevelElementRead
         lastElementCode: ${toDcm(_lastElementCode)}
         bdLengthInBytes: ${bd.lengthInBytes}
         dsLengthInBytes: $_dsLengthInBytes
+         endOfDataError: $_endOfDataError
+           bytesUnread: $_bytesUnread
             rootDSTotal: ${rootDS.total}
          rootDSTopLevel: ${rootDS.length}
         rootDSSequences: $dsSQs

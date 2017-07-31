@@ -18,7 +18,7 @@ String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
 //TODO: remove or make part of function
 final Logger _log =
-    new Logger("io/bin/read_files.dart", watermark: Severity.debug2);
+    new Logger("io/bin/read_files.dart", watermark: Severity.warn);
 
 final Formatter format = new Formatter();
 
@@ -100,7 +100,7 @@ bool byteReadWriteFileChecked(String fPath,
     // If duplicates are present the [ElementList]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
-      var same = bytesEqual(bytes0, bytes1, true);
+      var same = bytesEqual(bytes0, bytes1);
       if (same == true) {
         _log.debug('$pad Files bytes are identical.');
       } else {

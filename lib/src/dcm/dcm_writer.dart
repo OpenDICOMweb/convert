@@ -313,9 +313,13 @@ abstract class DcmWriter {
     _currentDS = ds;
     log.debugDown('$wbb writeDataset: $ds isExplicitVR(${ds.isEVR})');
 
+    _isEVR = true;
     for (Element e in ds.elements) {
       int eStart = _wIndex;
       log.debugDown('$wbb write e: ${e.info}');
+      //TODO: figure out how to move this outside loop.
+      //  should fmi be a separate map in the rootDS?
+      if (e.code > 0x30000) _isEVR = rootDS.isEVR;
       _writeElement(e);
       int eEnd = _wIndex;
       log.debugUp('$wee e: $e: Length: ${eEnd - eStart}');
@@ -468,10 +472,12 @@ abstract class DcmWriter {
     _wIndex = v;
   }
 
+/* Keep for debugging
   void _checkRange(int v) {
     int max = _bd.lengthInBytes;
     if (v < 0 || v >= max) throw new RangeError.range(v, 0, max);
   }
+*/
 
   // The Writers
 

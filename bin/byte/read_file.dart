@@ -12,7 +12,7 @@ import 'package:dcm_convert/src/dcm/dcm_reader.dart';
 
 //Urgent: bug with path20
 void main() {
-  final log = new Logger("io/bin/read_files.dart", watermark: Severity.info);
+  final log = new Logger("io/bin/read_files.dart", watermark: Severity.debug);
   DcmReader.log.watermark = Severity.debug1;
 
 //  var path = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';

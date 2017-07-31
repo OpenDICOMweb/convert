@@ -32,12 +32,9 @@ bool bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError = false]) {
 
 bool compareUnequalLengths(Uint8List b0, Uint8List b1,
     [bool throwOnError = true]) {
-  print('  b0 Length: ${b0.length}');
-  print('  b1 Length: ${b1.length}');
-  print('  Difference: ${(b0.lengthInBytes - b1.lengthInBytes).abs()}');
   int length = (b0.lengthInBytes < b1.lengthInBytes)
-  ? b0.lengthInBytes
-  : b1.lengthInBytes;
+      ? b0.lengthInBytes
+      : b1.lengthInBytes;
   for (int i = 0; i < length; i++) {
     if (b0[i] != b1[i]) {
       print('  diff @$i');
@@ -112,8 +109,6 @@ bool compareByteDatasets(ByteDataset ds0, ByteDataset ds1,
           e0.vrCode != e1.vrCode ||
           e0.vfLength != e1.vfLength ||
           e0.vfBytes.length != e1.vfBytes.length) {
-//        print('e0: ${e0.info}');
-//        print('e1: ${e1.info}');
         if (throwOnError) {
           throw 'ds0 != ds1';
         } else {

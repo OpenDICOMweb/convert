@@ -134,7 +134,10 @@ class ByteReader extends DcmReader {
     } on ShortFileError catch (e) {
       log.error(e);
       return null;
+    } on EndOfDataError catch (e) {
+      log.error(e);
     }
+    _rootDS.bd = bdRead;
     return _rootDS;
   }
 

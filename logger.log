@@ -1,3 +1,1 @@
-Error: NoSuchMethodError: The getter 'hasShortVF' was called on null.
-Receiver: null
-Tried calling: hasShortVF - 
+Warning:    ** Pixel Data Element not present - 

@@ -241,7 +241,7 @@ bool _compareDatasets(RootByteDataset rds0, RootByteDataset rds1,
 }
 
 bool _bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError]) {
-  var v = bytesEqual(b0, b1, true);
+  var v = bytesEqual(b0, b1);
   if (!v) {
     log.error('Unequal datasets:/n'
         '  Bytes0: $b0/n'
