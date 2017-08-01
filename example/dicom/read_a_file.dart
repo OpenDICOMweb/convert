@@ -7,10 +7,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:common/format.dart';
-import 'package:common/logger.dart';
+import 'package:common/common.dart';
 import 'package:core/core.dart';
-import 'package:dcm_convert/convert.dart';
+import 'package:dcm_convert/src/dicom_no_tag/dcm_reader.dart';
+
 
 String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
 String path1 =
@@ -30,10 +30,10 @@ String outPath = 'C:/odw/sdk/io/example/output/out.dcm';
 
 
 void main(List<String> args) {
-  final log = new Logger("read_file", watermark: Severity.debug);
+  final log = new Logger("read_file", watermark: Severity.warn);
   File file = new File(path0);
   Uint8List bytes = file.readAsBytesSync();
-  Instance instance = DcmDecoder.decode(new DSSource(bytes, file.path));
+  Instance instance = DcmReader.readBytes(bytes, path: file.path);
   log.debug('Instance: $instance');
   log.debug('Dataset length: ${instance.dataset.length} elements');
   log.debug(instance.format(new Formatter(maxDepth: 146)));

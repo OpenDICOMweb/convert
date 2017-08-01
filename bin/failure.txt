@@ -1,3 +1,0 @@
-
-Fail: C:/odw/test_data\mweb\100 MB Studies\Site 3\Case 1 Ped\1.2.840.113704.7.1.1.1172.1202764207.242\1.2.840.113704.7.1.1.1172.1202764210.446.dcm [Info]
-Fail: C:/odw/test_data\mweb\100 MB Studies\Site 3\Case 1 Ped\1.2.840.113704.1.111.8916.1202763720.15\1.2.840.113704.1.111.1608.1202763888.37525.dcm [Info]

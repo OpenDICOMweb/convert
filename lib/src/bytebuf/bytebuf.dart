@@ -72,8 +72,8 @@ class ByteBuf {
 
   ByteBuf._(this._bytes, this._readIndex, this._writeIndex);
 
-  ByteBuf.reader(Uint8List bytes, [int offset = 0, int lengthInBytes])
-      : _bytes = _getByteView(bytes, offset, lengthInBytes, lengthInBytes),
+  ByteBuf.reader(Uint8List bytes, [int index = 0, int lengthInBytes])
+      : _bytes = _getByteView(bytes, index, lengthInBytes, lengthInBytes),
         _readIndex = 0 {
     _writeIndex = _bytes.lengthInBytes;
     _bd = _bytes.buffer.asByteData();
@@ -101,8 +101,8 @@ class ByteBuf {
   }
 
   //TODO: is _writeIndex correct
-  ByteBuf.view(ByteBuf buf, [int offset = 0, int lengthInBytes])
-      : _bytes = _getByteView(buf._bytes, offset, lengthInBytes) {
+  ByteBuf.view(ByteBuf buf, [int index = 0, int lengthInBytes])
+      : _bytes = _getByteView(buf._bytes, index, lengthInBytes) {
     _readIndex = 0;
     _writeIndex = _bytes.lengthInBytes;
     _bd = _bytes.buffer.asByteData();
@@ -112,12 +112,12 @@ class ByteBuf {
 
   /// Creates a new [ByteBuf] that is a view of [this].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
-  ByteBuf readView(int offset, int lengthInBytes) =>
-      _getBufView(_bytes, offset, lengthInBytes, lengthInBytes);
+  ByteBuf readView(int index, int lengthInBytes) =>
+      _getBufView(_bytes, index, lengthInBytes, lengthInBytes);
 
   /// Creates a new [ByteBuf] that is a view of [this].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
-  ByteBuf writeView(int offset, int lengthInBytes) =>
+  ByteBuf writeView(int index, int lengthInBytes) =>
       _getBufView(_bytes, 0, 0, lengthInBytes);
 
   /// Creates a new [ByteBuf] that is a [sublist] of [this].  The underlying
@@ -147,6 +147,7 @@ class ByteBuf {
 
   /// Returns the length of the underlying [Uint8List].
   int get lengthInBytes => _bytes.lengthInBytes;
+
 
   /// Sets the [readIndex] to [index].  If [index] is not valid a [RangeError] is thrown.
   ByteBuf _setReadIndex(int index) {
@@ -275,8 +276,8 @@ class ByteBuf {
   /// Returns [true] if there are [lengthInBytes] available to read, false otherwise.
   bool hasReadable(int lengthInBytes) => readCapacity >= lengthInBytes;
 
-  /// Returns [true] if there are [numBytes] available to write, false otherwise.
-  bool hasWritable(int lengthInBytes) => writeCapacity >= lengthInBytes;
+  /// Returns [true] if there are [nBytes] available to write, false otherwise.
+  bool hasWritable(int nBytes) => writeCapacity >= nBytes;
   //*** Buffer Management Methods ***
 
   /// _Deprecated: use [hasReadable] instead._
@@ -347,10 +348,10 @@ class ByteBuf {
   //*** Read Methods ***
 
   /// Returns the number of zeros read.
-  int getZeros(int offset, int length) {
+  int getZeros(int index, int length) {
     int count = 0;
     for (int i = 0; i < length; i++) {
-      var val = getUint8(offset);
+      var val = getUint8(index);
       if (val != 0) return count - 1;
     }
     return 0;
@@ -364,11 +365,11 @@ class ByteBuf {
     return v;
   }
 
-  ///Returns a [bool] value.  [bools]s are encoded as a single byte
+  ///Returns a [bool] value.  [bool]s are encoded as a single byte
   ///where 0 is false and any other value is true.
   bool getBoolean(int index) => getUint8(index) != 0;
 
-  /// Reads a [bool] value.  [bools]s are encoded as a single byte
+  /// Reads a [bool] value.  [bool]s are encoded as a single byte
   /// where 0 is false and any other value is true,
   /// and advances the [readIndex] by 1.
   bool readBoolean() => readUint8() != 0;
@@ -468,7 +469,7 @@ class ByteBuf {
     return _getUint8List(index, lengthInBytes);
   }
 
-  /// Reads and Returns an [UintList] of unsigned 8-bit integers,
+  /// Reads and Returns an [Uint8List] of unsigned 8-bit integers,
   /// and advances the [readIndex] by the number of byte read.
   Uint8List readUint8List(int lengthInBytes) {
     Uint8List list = getUint8List(_readIndex, lengthInBytes);
@@ -1019,7 +1020,7 @@ class ByteBuf {
     return s;
   }
 
-  /// Returns a [Uint] by decoding the bytes from [offset]
+  /// Returns an unsigned [int] by decoding the bytes from [index]
   /// to [length] as a UTF-8 string.
   Uint8List getStringBytes(int index, int length) {
     _checkReadIndex(index, length);
@@ -1033,7 +1034,7 @@ class ByteBuf {
   /// A canonical value for empty (zero length) StringBytes.
   static final _emptyStringBytes = new Uint8List(0);
 
-  /// Returns a [String] by decoding the bytes from [offset]
+  /// Returns a [String] by decoding the bytes from [index]
   /// to [length] as a UTF-8 string.
   Uint8List getStringBytesView(int index, int length) {
     if (length == 0) return _emptyStringBytes;
@@ -1053,7 +1054,7 @@ class ByteBuf {
   final List<String> emptyStringList = const <String>[];
 
   /// Returns an [List] of [String] by decoding the bytes from [index]
-  /// to [length] as a UTF-8 string, and then uses [delimeter] to
+  /// to [length] as a UTF-8 string, and then uses [delimiter] to
   /// separated the [String] into a [List].
   List<String> getStringList(int index, int length, [String delimiter = r"\"]) {
     if (length == 0) return emptyStringList;
@@ -1526,7 +1527,7 @@ class ByteBuf {
 
   //*** Index moving operations
 
-  /// Moves the [readIndex] backward in the [readable] part of [this].
+  /// Moves the [readIndex] backward in the readable part of [this].
   ByteBuf unreadBytes(int length) {
     _checkReadIndex(_readIndex, -length);
     _readIndex -= length;
@@ -1540,7 +1541,7 @@ class ByteBuf {
     return this;
   }
 
-  /// Moves the [writeIndex] backward in the [writable] part of [this] [ByteBuf].
+  /// Moves the [writeIndex] backward in the writable part of [this] [ByteBuf].
   ByteBuf unWriteBytes(int length) {
     _checkWriteIndex(_writeIndex, -length);
     _writeIndex -= length;
@@ -1629,7 +1630,7 @@ class ByteBuf {
   """;
 
   @override
-  String toString() => 'ByteBuf (rdIdx: $_readIndex, wrIdx: '
+  String toString() => '$runtimeType: (rdIdx: $_readIndex, wrIdx: '
       '$_writeIndex, cap: $lengthInBytes, maxCap: $lengthInBytes)';
 
   /// Checks that the [readIndex] is valid;
@@ -1640,7 +1641,7 @@ class ByteBuf {
   }
 
   /// Checks that the [readIndex] is valid;
-  bool _checkReadIndexAligned(int index, int length, elementSize) {
+  bool _checkReadIndexAligned(int index, int length, int elementSize) {
     if ((index + (length * elementSize)) > writeIndex)
       _readIndexOutOfBounds(index, lengthInBytes);
     int remainder = (index % elementSize);
@@ -1648,7 +1649,7 @@ class ByteBuf {
   }
 
   /// Checks that the [writeIndex] is valid;
-  void _checkWriteIndex(int index, lengthInBytes) {
+  void _checkWriteIndex(int index, int lengthInBytes) {
     if (((index < _writeIndex) ||
         (index + lengthInBytes) > _bytes.lengthInBytes))
       _writeIndexOutOfBounds(index + lengthInBytes);
@@ -1664,7 +1665,7 @@ class ByteBuf {
     }
   }
 
-  /// Checks that there are at least [minimumWritableableBytes] available.
+  /// Checks that there are at least [minimumWritableBytes] available.
   void _checkWritableBytes(int minimumWritableBytes) {
     if ((_writeIndex + minimumWritableBytes) > lengthInBytes) {
       var s =
@@ -1677,7 +1678,7 @@ class ByteBuf {
   //*** Error Methods ***
 
   //TODO: make this two different methods
-  void _readIndexOutOfBounds(int index, lengthInBytes) {
+  void _readIndexOutOfBounds(int index, int lengthInBytes) {
     String s =
         "Read Index Out Of Bounds: read($_readIndex) <= index($index) "
         "< write($_writeIndex) lengthInBytes($lengthInBytes";
@@ -1696,9 +1697,9 @@ class ByteBuf {
 //**** Auxiliary Functions
 
 Uint8List _copyBytes(Uint8List bytes,
-    [int offset = 0, int lengthInBytes, maxCapacity = kGB]) {
+    [int index = 0, int lengthInBytes, int maxCapacity = 1 * kGB]) {
   lengthInBytes = _validateLengthIB(bytes.length, lengthInBytes, maxCapacity);
-  return bytes.sublist(offset, lengthInBytes);
+  return bytes.sublist(index, lengthInBytes);
 }
 
 Uint8List _getBytes([int lengthInBytes = kKB]) {

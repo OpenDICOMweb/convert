@@ -16,7 +16,7 @@ dependencies:
   #    ref: develop
     path: C:/odw/sdk/common
     version: ^0.5.6
-  crypto: ^2.0.1
+#  crypto: ^2.0.1
   dictionary:
   #  git:
   #    url: https://github.com/OpenDICOMweb/dictionary.git

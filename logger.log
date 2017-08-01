@@ -1,6 +1,1 @@
-Debug: Instance(1.2.840.113680.1.103.52250.918259725.772259.1.1): 64 elements
-  SOPClass: 1.2.840.10008.5.1.4.1.1.6.1
-  Series(1.2.840.113680.1.103.52250.918259725.772259.1): 0 Instances
-  Study(1.2.840.113680.1.103.52250.918259725.772259): 0 Series
-  Subject(2.25.0ff3705e-ad85-4ede-aedd-d6dfc5a66bca): 0 Studies
-   - 
+Warning:        ** Duplicates Present in rds0 - 

@@ -4,11 +4,7 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-export 'package:core/core.dart';
+export 'dicom.dart';
+//export 'dicom_json.dart';
 
-export 'src/dicom/dcm_decoder.dart';
-export 'src/dicom/dcm_encoder.dart';
-export 'src/dicom/dcm_reader.dart';
-export 'src/dicom/dcm_writer.dart';
-export 'src/dicom_json/json_decoder.dart';
-export 'src/dicom_json/json_encoder.dart';
+

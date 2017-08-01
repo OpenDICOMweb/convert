@@ -6,9 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:common/constants.dart';
-import 'package:common/logger.dart';
-import 'package:common/number.dart';
+import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:path/path.dart' as path;
 
@@ -19,7 +17,7 @@ import 'dcm_writer.dart';
 /// Encoder for DICOM File Format octet streams (Uint8List)
 /// [DcmEncoder] reads DICOM SOP Instances and returns a [Dataset].
 /// TODO: finish doc
-class DcmEncoder extends DcmWriter {
+class DcmEncoder extends DcmTagWriter {
   //TODO: make the buffer grow and shrink adaptively.
   static const int defaultLengthInBytes = 10 * kMB;
   static final Logger log = new Logger("DcmEncoder", watermark: Severity.debug);
@@ -79,16 +77,16 @@ class DcmEncoder extends DcmWriter {
 
   static Uint8List encode(Entity entity) {
     log.debug('DcmEncoder.encode: $entity');
-    int lengthIB = entity.dataset.source.lengthInBytes;
+    int lengthIB = entity.dataset.lengthInBytes;
     log.debug('DcmDecoder.endode: length($lengthIB)');
     var encoder = new DcmEncoder(lengthInBytes: lengthIB);
     log.debug('Encoder: $encoder');
     return encoder.encodeEntity(entity);
   }
 
-  static Uint8List encodeDataset(RootDataset rds) {
+  static Uint8List encodeDataset(RootTDataset rds) {
     log.debug('DcmEncoder.encodeDataset: $rds');
-    int lengthIB = rds.source.lengthInBytes;
+    int lengthIB = rds.lengthInBytes;
     log.debug('DcmDecoder.endodeDataset: length($lengthIB)');
     var encoder = new DcmEncoder(lengthInBytes: lengthIB);
     log.debug('Encoder: $encoder');

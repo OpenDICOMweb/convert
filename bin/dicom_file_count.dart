@@ -8,13 +8,7 @@ import 'dart:io';
 
 import 'package:common/logger.dart';
 import 'package:path/path.dart' as p;
-//import 'package:args/args.dart';
 
-
-// Fix or remove
-//ArgParser getParser() {
-
-//}
 
 String inRoot0 = "C:/odw/test_data/sfd/CR";
 String inRoot1 = "C:/odw/test_data/sfd/CR_and_RF";

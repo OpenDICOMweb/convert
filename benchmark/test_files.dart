@@ -7,6 +7,9 @@
 List<String> benchmark0 = <String>[
 
 ];
+
+String mrStudy0 = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy'
+    '/1.2.840.113619.2.5.1762583153.215519.978957063.101.dcm';
 String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
 String path1 =
     'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255'

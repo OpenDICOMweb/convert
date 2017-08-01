@@ -8,14 +8,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:benchmark_harness/benchmark_harness.dart';
-import 'package:dcm_convert/src/dicom_no_tag/dcm_reader.dart';
-import 'package:dcm_convert/timer.dart';
+import 'package:common/timer.dart';
+import 'package:dcm_convert/src/dcm/old/dcm_byte_reader.dart';
 
 import 'test_files.dart';
 // Import BenchmarkBase class.
-
-
-
 
 Timer timer;
 Duration time;
@@ -63,7 +60,7 @@ void readFileTest(File inFile, {int reps = 1, bool fmiOnly = false}) {
 
   var timer = new Timer();
   for (int i = 0; i < reps; i++) {
-    DcmReader.readBytes(bytes0);
+    DcmByteReader.readBytes(bytes0);
   }
   timer.stop();
   print('readFileTest Time: ${timer.elapsed}');

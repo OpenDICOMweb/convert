@@ -8,17 +8,14 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:benchmark_harness/benchmark_harness.dart';
-import 'package:dcm_convert/src/dicom_no_tag/compare_bytes.dart';
-import 'package:dcm_convert/src/dicom_no_tag/dcm_reader.dart';
-import 'package:dcm_convert/src/dicom_no_tag/dcm_writer.dart';
-import 'package:dcm_convert/src/dicom_no_tag/old/dataset.dart';
-import 'package:dcm_convert/timer.dart';
+import 'package:common/timer.dart';
+import 'package:core/core.dart';
+import 'package:dcm_convert/src/dcm/compare_bytes.dart';
+import 'package:dcm_convert/src/dcm/old/dcm_byte_reader.dart';
+import 'package:dcm_convert/src/dcm/old/dcm_byte_writer.dart';
 
 import 'test_files.dart';
 // Import BenchmarkBase class.
-
-
-
 
 Timer timer;
 Duration time;
@@ -64,13 +61,13 @@ void main() {
 
 bool writeFileTest(File inFile, {int reps = 1, bool fmiOnly = false}) {
   Uint8List bytes0 = inFile.readAsBytesSync();
-  RootDataset rds0 = DcmReader.readBytes(bytes0);
-  Uint8List bytes1 = DcmWriter.rootDataset(rds0, fast: true, path: "");
+  RootByteDataset rds0 = DcmByteReader.readBytes(bytes0);
+  Uint8List bytes1 = DcmByteWriter.writeBytes(rds0, fast: true, path: "");
   if (!bytesEqual(bytes0, bytes1)) throw "Error in DcmWrite";
 
   var timer = new Timer();
   for (int i = 0; i < reps; i++) {
-    DcmWriter.rootDataset(rds0, fast: true, path: "");
+    DcmByteWriter.writeBytes(rds0, fast: true, path: "");
   }
 
   print('writeFileTest Time: ${timer.elapsed}');
