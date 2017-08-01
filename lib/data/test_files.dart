@@ -15,7 +15,7 @@ const String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
 // EVR, OW Pixel Data
 const String path1 = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
 
-const String path2 = 'C:/odw/test_data/6688/12/0B009D38/0B009D3D/4D4E9A56';
+//const String path2 = 'C:/odw/test_data/6688/12/0B009D38/0B009D3D/4D4E9A56';
 
 const String path3 = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368';
 
@@ -81,11 +81,15 @@ const String path20 = "C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/"
 const String path21 = 'C:/odw/test_data/sfd/MG/DICOMDIR';
 
 const List<String> paths = const <String>[
-  path0, path1, path2, path3, path4, path5 // No reformat
+  path0, path1,
+  //path2,
+  path3, path4, path5 // No reformat
 ];
 
 const List<String> testPaths = const <String>[
-  path0, path1, path2, path3, path4, path5, path6, path7,
+  path0, path1,
+  //path2,
+  path3, path4, path5, path6, path7,
   path8, path9, path10, path11, path12, path13, path14, // No reformat
   path15, path16, path17, path18, path19, path20, path21
 ];
@@ -227,6 +231,9 @@ const String error13 = 'C:/odw/test_data/sfd/MG/Patient_48/1_DICOM_Original'
 
 const String error14 = 'C:/odw/test_data/mweb/TransferUIDs'
     '/1.2.840.10008.1.2.4.80.dcm';
+
+const String error15 = 'C:/odw/test_data/sfd/XA_Neuro_IR/Patient_49/'
+    '1_DICOM_Original/IM000002.dcm';
 
 
 //const List<String> error6 = [];

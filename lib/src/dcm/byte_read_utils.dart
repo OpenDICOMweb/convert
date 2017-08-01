@@ -7,9 +7,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:common/format.dart';
-import 'package:common/logger.dart';
-import 'package:common/timestamp.dart';
+import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:dictionary/dictionary.dart';
@@ -18,19 +16,15 @@ String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
 //TODO: remove or make part of function
 final Logger _log =
-    new Logger("io/bin/read_files.dart", watermark: Severity.warn);
+    new Logger("io/bin/read_files.dart", watermark: Severity.error);
 
 final Formatter format = new Formatter();
 
-int getFieldWidth(int total) => '$total'.length;
-
-String getPaddedInt(int n, int width) =>
-    (n == null) ? "" : '${"$n".padLeft(width)}';
-
-String cleanPath(String path) => path.replaceAll('\\', '/');
-
 bool byteReadWriteFileChecked(String fPath,
-    [int fileNumber, int width = 5, bool throwOnError = true]) {
+    [int fileNumber,
+    int width = 5,
+    bool throwOnError = true,
+    bool fast = true]) {
   _log.reset;
   var n = getPaddedInt(fileNumber, width);
   var pad = "".padRight(width);
@@ -42,29 +36,44 @@ bool byteReadWriteFileChecked(String fPath,
     var reader0 = new ByteReader.fromFile(f);
     RootByteDataset rds0 = reader0.readRootDataset();
     var bytes0 = reader0.bytes;
-    _log.debug('$pad  Read ${bytes0.lengthInBytes} bytes');
-    _log.debug1('$pad    DS0: ${rds0.info}');
-    _log.debug1('$pad    TS String: ${rds0.transferSyntaxString}');
-    _log.debug1('$pad    TS: ${rds0.transferSyntax}');
-    _log.debug1('$pad    ${rds0.parseInfo.info}');
+    _log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
+$pad    DS0: ${rds0.info}'
+$pad    TS String: ${rds0.transferSyntaxString}
+$pad    TS: ${rds0.transferSyntax}
+$pad    ${rds0.parseInfo.info}''');
 
     ByteElement e = rds0[kPixelData];
     if (e == null) {
-      log.warn('$pad ** Pixel Data Element not present');
+      _log.warn('$pad ** Pixel Data Element not present');
     } else {
-      _log.debug1('$pad  bpd: ${e.info}');
       BytePixelData bpd = e;
-      _log.debug1('$pad  bpd: ${bpd.info}');
-      _log.debug2('$pad  bpd: $bpd');
-      _log.debug1('$pad  VFFragments: ${bpd.fragments}');
+      _log.debug1('$pad  bpd: ${e.info}');
     }
-    // Write a File
-    var writer = new ByteWriter.toPath(rds0, outPath);
-    var bytes1 = writer.writeRootDataset();
-    _log.debug('$pad    Wrote ${bytes1.length} bytes');
 
-    _log.debug('Re-reading: $outPath');
-    var reader1 = new ByteReader.fromPath(outPath);
+    // Write the Root Dataset
+    ByteWriter writer;
+    if (fast) {
+      // Just write bytes not file
+      writer = new ByteWriter(rds0);
+    } else {
+      writer = new ByteWriter.toPath(rds0, outPath);
+    }
+    Uint8List bytes1 = writer.writeRootDataset();
+    _log.debug('$pad    Encoded ${bytes1.length} bytes');
+
+    if (!fast) {
+      _log.debug('Re-reading: ${bytes1.length} bytes');
+    } else {
+      _log.debug('Re-reading: ${bytes1.length} bytes from $outPath');
+    }
+    ByteReader reader1;
+    if (fast) {
+      // Just read bytes not file
+      reader1 = new ByteReader(
+          bytes1.buffer.asByteData(bytes1.offsetInBytes, bytes1.lengthInBytes));
+    } else {
+      reader1 = new ByteReader.fromPath(outPath);
+    }
     var rds1 = reader1.readRootDataset();
     //   RootByteDataset rds1 = ByteReader.readPath(outPath);
     _log.debug('$pad Read ${reader1.bd.lengthInBytes} bytes');

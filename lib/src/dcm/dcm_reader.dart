@@ -9,8 +9,7 @@ import 'dart:typed_data';
 
 import 'package:common/common.dart';
 import 'package:core/core.dart';
-import 'package:dcm_convert/src/errors.dart';
-import 'package:dcm_convert/src/dcm/element_list.dart';
+import 'package:dcm_convert/dcm.dart';
 import 'package:dictionary/dictionary.dart';
 
 //TODO: redoc to reflect current state of code
@@ -63,9 +62,7 @@ abstract class DcmReader {
   /// Only read the file if it has the same [TransferSyntax] as [targetTS].
   final TransferSyntax targetTS;
 
-  //Urgent: add to byte_reader and tag_reader
-  /// If [true] [Element]s will be checked for valid VR by looking up Tag.
-  final bool doCheckVR;
+
 
   //Urgent: todo make this a parameter
   /// If [true] any EVR [Element]s will be checked for being Sequences.
@@ -76,6 +73,8 @@ abstract class DcmReader {
 
   /// If [true] the [ByteData] buffer ([bd] will be reused.
   final bool reUseBD;
+
+  final DecodingParameters decoding;
 
   // **** stats and debugging
   final bool statisticsEnabled = true;
@@ -119,8 +118,6 @@ abstract class DcmReader {
   /// The index where the last element in the root [Dataset] ended.
   int _dsLengthInBytes;
 
-  /// The length of the [ByteData] being read.
-  final int _bdLength;
   bool _wasShortFile = false;
   bool _hadTrailingBytes = false;
   bool _hadTrailingZeros = false;
@@ -131,7 +128,6 @@ abstract class DcmReader {
 
   // *** Constructors ***
 
-  //TODO: Doc
   /// Creates a new [DcmReader]  where [_rIndex] = [writeIndex] = 0.
   DcmReader(this.bd,
       {this.path = "",
@@ -145,10 +141,9 @@ abstract class DcmReader {
       this.doConvertUndefinedVR = false,
       this.reUseBD = true,
       this.checkForUNSequence = false,
-      this.doCheckVR = true})
-      : _bdLength = bd.lengthInBytes,
-        _wasShortFile = bd.lengthInBytes < shortFileThreshold {
-    log.debug('ByteData length: $_bdLength');
+      this.decoding = DecodingParameters.kNoChange})
+      : _wasShortFile = bd.lengthInBytes < shortFileThreshold {
+    log.debug('ByteData length: ${bd.lengthInBytes}');
     _warnIfShortFile();
   }
 
@@ -156,12 +151,12 @@ abstract class DcmReader {
 
   Dataset get rootDS;
 
-  bool get _isReadable => _rIndex < _bdLength;
+  bool get _isReadable => _rIndex < bd.lengthInBytes;
 
   /// External interface for testing.
   bool get isReadable => _isReadable;
 
-  bool _hasRemaining(int n) => (_rIndex + n) <= _bdLength;
+  bool _hasRemaining(int n) => (_rIndex + n) <= bd.lengthInBytes;
 
   bool hasRemaining(int n) => _hasRemaining(n);
 
@@ -172,7 +167,7 @@ abstract class DcmReader {
   Map<int, Element> currentMap;
   Map<int, Element> currentDupMap;
   Uint8List get bytes =>
-      bdRead.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes);
+      bdRead.buffer.asUint8List(bdRead.offsetInBytes, bdRead.lengthInBytes);
 
   /// Interface to Item constructor.
   Dataset makeItem(
@@ -215,7 +210,7 @@ abstract class DcmReader {
         _lastElementCode,
         _endOfLastValueRead,
         _dsLengthInBytes,
-        _bdLength,
+        bd.lengthInBytes,
         shortFileThreshold,
         _wasShortFile,
         _hadTrailingBytes,
@@ -250,7 +245,6 @@ abstract class DcmReader {
 
     log.debug('$rmm _isEVR: $_isEVR');
     try {
-      // Flush when working e = _readDataset(rootDS);
       currentDS = rootDS;
       log.debug1('$rbb readDataset: isExplicitVR(${_isEVR})');
       while (_hasRemaining(8)) readElement();
@@ -273,9 +267,9 @@ abstract class DcmReader {
     } finally {
       bdRead = bd.buffer.asByteData(0, _endOfLastValueRead);
       assert(_rIndex == _endOfLastValueRead);
-      _bytesUnread = _bdLength - _rIndex;
+      _bytesUnread = bd.lengthInBytes - _rIndex;
       _hadTrailingBytes = _bytesUnread > 0;
-      _hadTrailingZeros = _checkAllZeros(_endOfLastValueRead, _bdLength);
+      _hadTrailingZeros = _checkAllZeros(_endOfLastValueRead, bd.lengthInBytes);
       _dsLengthInBytes = _endOfLastValueRead;
       assert(_dsLengthInBytes == bdRead.lengthInBytes);
     }
@@ -287,11 +281,10 @@ abstract class DcmReader {
       _dsLengthInBytes = _rIndex;
       _endOfLastValueRead = _rIndex;
       _hadTrailingBytes = (bdRead.lengthInBytes != bd.lengthInBytes);
-      _hadTrailingZeros = _checkAllZeros(_rIndex, _bdLength);
+      if (_hadTrailingBytes)
+        _hadTrailingZeros = _checkAllZeros(_rIndex, bd.lengthInBytes);
     }
 
-    print('elements: ${rootDS.elements.length}');
-    print('duplicates: ${rootDS.duplicates.length}');
     int rootDSTotal = rootDS.total + rootDS.dupTotal;
     if (_nElementsRead != rootDSTotal) {
       var msg = '** Inconsistent Elements Error: '
@@ -301,16 +294,6 @@ abstract class DcmReader {
     }
     return rootDS;
   }
-
-/* Flush if not needed by V0.9.0
- /// Reads only the File Meta Information ([FMI], if present.
-  static RootDataset xReadDataset(Uint8List bytes,
-      {String path = "", TransferSyntax targetTS}) {
-    ByteData bd =
-    bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
-    DcmReader reader = new DcmReader(bd, path: path, targetTS: targetTS);
-    return reader.xReadDataset();
-  }*/
 
   /// External Interface for testing.
   Element readElement() => _readElement();
@@ -333,7 +316,8 @@ abstract class DcmReader {
       msg += 'Attempt to read DICOM Prefix at ByteData[$_rIndex]\n';
     if (_hadPrefix != null)
       msg += 'Attempt to re-read DICOM Preamble and Prefix.\n';
-    if (_bdLength <= 132) msg += 'ByteData length($_bdLength) < 132';
+    if (bd.lengthInBytes <= 132)
+      msg += 'ByteData length(${bd.lengthInBytes}) < 132';
     if (msg.length > 0) {
       log.error(msg);
       return false;
@@ -414,63 +398,10 @@ abstract class DcmReader {
     return true;
   }
 
-/* Flush when working
-  //TODO: move to dcmReadRootDataset
-  /// Reads a [Dataset] and returns the last [Element] read.
-  Element _readDataset(Dataset ds) {
-    Dataset parent = currentDS;
-    currentDS = ds;
-    log.debug2('$rbb readDataset: isExplicitVR(${_isEVR})');
-    Element e;
-    while (_hasRemaining(8)) {
-      e = _readElement();
-    }
-    currentDS = parent;
-    log.debug2('$ree end readDataset: isExplicitVR(${_isEVR})');
-    return e;
-  }
-*/
-
   /// [true] if the source [ByteData] have been read.
   bool get wasRead => _hadPrefix != null;
 
-/* Flush when working
-  Element _readElement() {
-    int eStart = _rIndex;
-    Element e;
-    int code = _readTagCode();
-    log.debugDown('$rbb ${toDcm(code)} _readElement');
-    if (code == 0) {
-      _endOfLastValueRead = _rIndex - 4;
-      log.warn('$_rrr zero encountered');
-      if (_beyondPixelData) {
-        _dsLengthInBytes = _rIndex - 4;
-        throw new EndOfDataError('Zero encountered after '
-            'PixelData @$_dsLengthInBytes');
-      }
-      _zeroEncountered(code);
-    } else if (code == kPixelData) {
-      _pixelDataStart = _rIndex;
-      //e = (_isEVR) ? _readEVR(code) : _readIVR(code);
-      _readEncapsulatedPixelData(code);
-      _beyondPixelData = true;
-      _pixelDataEnd = _rIndex;
-      _endOfLastValueRead = _rIndex;
-      log.debug('$rmm readPixelData: $_pixelDataStart - $_pixelDataEnd');
-    } else {
-      if (Tag.isGroupLengthCode(code)) _hadGroupLengths = true;
-      e = (_isEVR) ? _readEVR(code) : _readIVR(code);
-    }
-    // Statistics
-    _nElements++;
-    if (Tag.isPrivateCode(code)) _nPrivateElements++;
-    _endOfLastValueRead = _rIndex;
-    elementList.add(eStart, _rIndex, e);
-    _lastElementCode = e.code;
-    log.debugUp('$ree ${_nElements}: ${e.info} _readElement');
-    return e;
-  }*/
-
+  /// Returns a [String] indicating whether VR is Explicit or Implicit.
   String get _evrString => (_isEVR) ? 'EVR' : 'IVR';
 
   /// All [Elements are read by this method.
@@ -479,7 +410,7 @@ abstract class DcmReader {
     int code = _readTagCode();
     log.debugDown('$rbb readElement${toDcm(code)} $_evrString ');
     if (code == 0) {
-      _skip(-4);  // undo readTagCode
+      _skip(-4); // undo readTagCode
       _zeroEncountered(code);
       log.debugUp('$ree Zero encountered');
       return null;
@@ -492,26 +423,23 @@ abstract class DcmReader {
       (vfLength)})');
 
     Element e;
-   if (code == kPixelData) {
+    if (code == kPixelData) {
       e = _readPixelData(eStart, vfLength);
     } else if (vfLength == kUndefinedLength) {
       e = _readULength(code, eStart, vfLength);
     } else {
       e = _readDefinedLength(code, eStart, vfLength);
     }
-    _nElementsRead++;
-    _endOfLastValueRead = _rIndex;
-    if (elementListEnabled) elementList.add(eStart, _rIndex, e);
     //Enhancement: only gather statistics when statisticsEnables is true
+    // Statistics
     if (statisticsEnabled) {
-      // Statistics
+      _nElementsRead++;
+      _endOfLastValueRead = _rIndex;
+      if (elementListEnabled) elementList.add(eStart, _rIndex, e);
       _lastTopLevelElementRead = e;
       _lastElementCode = code;
       if ((code >> 16).isOdd) _nPrivateElementsRead++;
     }
-    //Debug: Why doesn't this assertion work?
-    //   assert(_nElementsRead == rootDS.total + rootDS.dupTotal);
-  //  log.debug2(stats);
     log.debugUp('$ree $_nElementsRead: $e @end');
     return e;
   }
@@ -546,8 +474,10 @@ abstract class DcmReader {
   }
 
   // The current VR code and VR.
+  int _code;
   int _vrCode;
   VR _vr;
+  int _vfLength;
   ElementMaker _maker;
 
   int _readEVRHdr(int code, int eStart) {
@@ -558,26 +488,25 @@ abstract class DcmReader {
       log.warn('**    vr is Null: _vrCode(${toHex16(_vrCode)}) $_rrr');
       _showNext(_rIndex - 4);
     }
-    if (doCheckVR) _checkVR(code, _vrCode);
-    int vfLength;
+    if (decoding.doCheckVR) _checkVR(code, _vrCode);
+
     if (_vr.hasShortVF) {
       log.debug2('$rmm readEVRHdr Short VR');
-      vfLength = _readUint16();
+      _vfLength = _readUint16();
       _maker = ShortEVR.maker;
     } else {
       log.debug2('$rmm readEVRHdr Long VR');
       _skip(2);
-      vfLength = _readUint32();
+      _vfLength = _readUint32();
       _maker = LongEVR.maker;
     }
     assert(_checkRIndex());
-    return vfLength;
+    return _vfLength;
   }
 
   //TODO: add VR.kSSUS, etc. to dictionary
-  //Urgent finish
   /// checks that code & vrCode are
-  void _checkVR(int code, int vrCode) {
+  void _checkVR(int code, int vrCode, [bool warnOnUN = false]) {
     var tag = Tag.lookup(code);
     if (tag == null) {
       log.warn('$pad **    Unknown Tag Code(${toDcm(code)}) $_rrr');
@@ -586,7 +515,7 @@ abstract class DcmReader {
       log.warn('$pad **    ${toDcm(code)} VR.kUN($vrCode) '
           'should be ${tag.vr} $_rrr');
     } else if (vrCode != VR.kUN.code && tag.vr.code == VR.kUN.code) {
-      if (code != kPixelData) {
+      if (code != kPixelData && warnOnUN == true) {
         if (tag is PDTag && tag is! PDTagKnown) {
           log.info('$pad ${toDcm(code)} VR.kUN: Unknown Private Data');
         } else if (tag is PCTag && tag is! PCTagKnown) {
@@ -611,10 +540,10 @@ abstract class DcmReader {
       _vr = VR.kUN;
       _vrCode = VR.kUN.code;
     }
-    int vfLength = _readUint32();
+    _vfLength = _readUint32();
     _maker = IVR.maker;
     assert(_checkRIndex());
-    return vfLength;
+    return _vfLength;
   }
 
   // Read an [Element] with a defined length.
@@ -737,10 +666,6 @@ abstract class DcmReader {
       var eLength = _rIndex - eStart;
       e = _makePixelData(eStart, eLength);
     }
-    //     e = _readSimpleULength(code, eStart, vfLength);
-//    } else {
-//      e = _readSimpleDLength(code, eStart, vfLength);
-    //   }
     _beyondPixelData = true;
     _pixelDataEnd = _rIndex;
     log.debugUp('$ree   $e @end');
@@ -751,11 +676,6 @@ abstract class DcmReader {
   Element _readFragmentedPixelData(int eStart, int vfLength) {
     log.debugDown('$rbb readFragmentedPixelData vfLength($vfLength, '
         '${toHex32(vfLength)}');
-/*    assert(_vrCode == VR.kOB.code ||
-        _vrCode == VR.kOW.code ||
-        _vrCode == VR.kUN.code);
-    _pixelDataStart = _rIndex;
-    _pixelDataVR = VR.lookup(_vrCode);*/
     if (_vrCode != VR.kOB.code && _vrCode != VR.kUN.code) {
       VR vr = VR.lookup(_vrCode);
       log.warn('**    Invalid VR($vr) for Encapsulated TS: $_ts $_rrr');
@@ -763,8 +683,6 @@ abstract class DcmReader {
     }
     var fragments = _readFragments();
     var eLength = _rIndex - eStart;
-/*    _pixelDataEnd = _rIndex;
-    _beyondPixelData = true;*/
     var e = _makePixelData(eStart, eLength, fragments);
     log.debugUp('$ree   fragments: $fragments @end');
     return e;
@@ -772,9 +690,7 @@ abstract class DcmReader {
 
   VFFragments _readFragments() {
     log.debugDown('$rbb readFragements');
-    // rIndex at first kItem delimiter
     var fragments = <Uint8List>[];
-    // int code = _readTagCode();
     int code = _readUint32();
     int fragNumber = 0;
     do {
@@ -795,8 +711,6 @@ abstract class DcmReader {
       log.warn('**    Pixel Data Sequence delimiter has non-zero '
           'value: $code/0x${toHex32(code)} $_rrr');
     var vfFragments = new VFFragments(fragments);
-    var delimiter = _getUint32(_rIndex - 8);
-    assert(delimiter == kSequenceDelimitationItem32BitLE);
     log.debugUp('$ree   $vfFragments @end');
     return vfFragments;
   }
@@ -1084,7 +998,7 @@ abstract class DcmReader {
   int _skip(int n) {
     assert(_rIndex.isEven);
     int index = _rIndex + n;
-    _rIndex = RangeError.checkValidRange(0, index, _bdLength);
+    _rIndex = RangeError.checkValidRange(0, index, bd.lengthInBytes);
     return _rIndex;
   }
 
@@ -1092,9 +1006,9 @@ abstract class DcmReader {
 
   void _warnIfShortFile() {
     if (_wasShortFile) {
-      var s = 'Short file error: length(${_bdLength}) $path';
+      var s = 'Short file error: length(${bd.lengthInBytes}) $path';
       log.warn('**    $s $_rrr');
-      if (throwOnError) throw new ShortFileError('Length($_bdLength) $path');
+      if (throwOnError) throw new ShortFileError('Length($bd.lengthInBytes) $path');
     }
   }
 
@@ -1114,8 +1028,7 @@ abstract class DcmReader {
   String get pad => "".padRight('$_rrr'.length);
 
   bool _checkAllZeros(int start, int end) {
-    for (int i = start; i < end; i++)
-      if (_getUint8(i) != 0) return false;
+    for (int i = start; i < end; i++) if (_getUint8(i) != 0) return false;
     return true;
   }
 
@@ -1131,49 +1044,29 @@ abstract class DcmReader {
     }
   }
 
+  bool _doLog = true;
+
+  String get _XCode => '${toDcm(_code)}';
+  String get _XvrCode => 'vrCode(${toHex16(_vrCode)})';
+  String get _XvfLength => 'vfLength(${toHex32(_vfLength)})';
+
+  _start(String name, [int code, int start]) {
+    if (!_doLog) return;
+    log.debugDown('$rbb $name${toDcm(code)} $_evrString ');
+  }
+
+  _end(String name, Element e, [String msg]) {
+    if (!_doLog) return;
+    log.debugUp('$ree $_nElementsRead: $e @end');
+  }
+
+  //Enhancement: make this method do more diagnosis.
   /// Returns [true] if there are only trailing zeros at the end of the
   /// Object being parsed.
   Element _zeroEncountered(int code) {
-    log.warn(
-        '**    Zero encountered: beyondPixelData: $_beyondPixelData $_rrr');
-
-    //TODO: make these work later
-    //if (!_hadTrailingZeros) _printTrailingData(_rIndex, 256);
-    //if (!_hadTrailingZeros) print(_showNext(_rIndex));
-   // print(_showNext(_rIndex));
-    throw new EndOfDataError('Zero encountered after '
-        'PixelData @$_dsLengthInBytes');
-
-
-/* TODO: make this work better
-    _hadTrailingBytes = true;
-    int mark = _rIndex - 4;
-    log.warn('Zero code($code) encountered @$mark');
-    if (_checkAllZeros(_rIndex, _bdLength)) {
-      _hadTrailingZeros = true;
-      log.warn('Returning from reading zeros from @$mark to @$_rIndex '
-          'in "$path" $_rrr');
-      return null;
-    }
-
-    while (_isReadable) {
-      int v = _readUint32();
-      if (v != 0) {
-        _rIndex = mark - 8;
-        while (_isReadable && _rIndex < (mark + 40)) {
-          int tag = _peekTagCode();
-          int val = _readUint32();
-          var s = val.toString().padLeft(8, "0");
-          log.debug('$rmm ${toDcm(tag)} $s');
-        }
-        _hadParsingErrors = true;
-        if (throwOnError) throw "bad code ${toDcm(code)}";
-        return null;
-      }
-    }
-*/
-
-
+    var msg = (_beyondPixelData) ? 'after kPixelData' : 'before kPixelData';
+    log.warn('**    Zero encountered $msg $_rrr');
+    throw new EndOfDataError('Zero encountered $msg $_rrr');
   }
 
   // Issue:

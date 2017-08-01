@@ -15,9 +15,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
-
-import 'package:dcm_convert/src/encoding_parameters.dart';
-import 'dcm_writer.dart';
+import 'package:dcm_convert/dcm.dart';
 
 /// A [class] for writing a [RootByteDataset] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
@@ -31,20 +29,20 @@ class ByteWriter extends DcmWriter {
 
   /// Creates a new [ByteWriter] where [wIndex] = 0.
   ByteWriter(this._rootDS,
-      {int bufferLength,
+      {int bufferLength = DcmWriter.defaultBufferLength,
       String path = "",
-        File file,
+      File file,
       TransferSyntax outputTS,
       bool throwOnError = true,
       bool reUseBD = true,
-        EncodingParameters encoding = EncodingParameters.kNoChange})
+      EncodingParameters encoding = EncodingParameters.kNoChange})
       : super(_rootDS,
             bufferLength: bufferLength,
             path: path,
             outputTS: outputTS,
             throwOnError: throwOnError,
             reUseBD: reUseBD,
-  encoding: encoding);
+            encoding: encoding);
 
   /// Writes the [RootByteDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
@@ -54,7 +52,7 @@ class ByteWriter extends DcmWriter {
       bool fmiOnly = false,
       fast = true,
       TransferSyntax targetTS}) {
-    DcmWriter.checkFile(file, overwrite);
+    checkFile(file, overwrite);
     return new ByteWriter(ds,
         bufferLength: bufferLength,
         path: file.path,
@@ -71,7 +69,7 @@ class ByteWriter extends DcmWriter {
       bool fmiOnly = false,
       fast = false,
       TransferSyntax targetTS}) {
-    DcmWriter.checkPath(path);
+    checkPath(path);
     return new ByteWriter(ds,
         bufferLength: bufferLength,
         path: path,
@@ -107,7 +105,7 @@ class ByteWriter extends DcmWriter {
       bool fast: true,
       TransferSyntax outputTS,
       reUseBD = true}) {
-    DcmWriter.checkRootDataset(ds);
+    checkRootDataset(ds);
     var writer = new ByteWriter(ds,
         bufferLength: bufferLength,
         path: path,
@@ -124,7 +122,7 @@ class ByteWriter extends DcmWriter {
       bool fmiOnly = false,
       fast = true,
       TransferSyntax targetTS}) {
-    DcmWriter.checkFile(file, overwrite);
+    checkFile(file, overwrite);
     var bytes = writeBytes(ds,
         bufferLength: bufferLength,
         path: file.path,
@@ -143,7 +141,7 @@ class ByteWriter extends DcmWriter {
       bool fmiOnly = false,
       fast = false,
       TransferSyntax targetTS}) {
-    DcmWriter.checkPath(path);
+    checkPath(path);
     return writeFile(ds, new File(path),
         bufferLength: bufferLength,
         overwrite: overwrite,
@@ -160,7 +158,7 @@ class ByteWriter extends DcmWriter {
       bool overwrite = false,
       fast = false,
       TransferSyntax targetTS}) {
-    DcmWriter.checkPath(path);
+    checkPath(path);
     return writeFile(ds, new File(path),
         bufferLength: bufferLength,
         overwrite: overwrite,

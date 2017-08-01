@@ -6,8 +6,8 @@
 
 import 'package:dictionary/dictionary.dart';
 
-//Urgent: test
-class EncodingParameters {
+//Urgent: Test
+class DecodingParameters {
   /// if [true] [Dataset]s will be allowed to be encoded in IVRLE.
   /// The default is [false].
   final bool allowImplicitLittleEndian;
@@ -17,6 +17,7 @@ class EncodingParameters {
 
   /// If [true] [Element]s will be checked for valid VR by looking up Tag.
   final bool doCheckVR;
+
   /// If [true], ODW FMI (with clean preamble) will be added or replaced,
   /// undefined lengths will be removed, if RootDS is in Implicit VR it
   /// will be converted to Explicit VR, all fragments will be removed.
@@ -25,7 +26,7 @@ class EncodingParameters {
   /// If [true], a DICOM File Prefix (PS3.10) will be written, and
   /// DICOM File Meta Information (PS3.10) will be written
   /// even if it wasn't present when the [Dataset] was decoded (parsed).
-  final bool doAddMissingFMI;
+ final bool doAddMissingFMI;
 
   /// If [true] write ODW FMI into encoded output.
   final bool doUpdateFMI;
@@ -53,7 +54,7 @@ class EncodingParameters {
   /// to [bulkdata].
   final int bulkdataThreshold;
 
-  const EncodingParameters({
+  const DecodingParameters({
     this.allowImplicitLittleEndian = true,
     this.allowMissingFMI = true,
     this.doCheckVR = true,
@@ -70,9 +71,9 @@ class EncodingParameters {
 
   });
 
-  static const kNoChange = const EncodingParameters();
+  static const kNoChange = const DecodingParameters();
 
-  static const kCanonical = const EncodingParameters(
+  static const kCanonical = const DecodingParameters(
       allowImplicitLittleEndian: false,
       allowMissingFMI: false,
       doCheckVR: true,
@@ -87,7 +88,7 @@ class EncodingParameters {
       doRemoveNoZeroDelimiterLengths: true,
       doFixPaddingErrors: true);
 
-  static const kCanonicalWithBulkdata = const EncodingParameters(
+  static const kCanonicalWithBulkdata = const DecodingParameters(
       allowImplicitLittleEndian: false,
       allowMissingFMI: false,
       doCheckVR: true,

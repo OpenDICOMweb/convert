@@ -236,17 +236,18 @@ class ByteReader extends DcmReader {
           bool throwOnError = true,
           bool allowMissingFMI: false,
           TransferSyntax targetTS,
-          bool reUseBD: true}) =>
-      readBytes(file.readAsBytesSync(),
-          path: file.path,
-          async: async,
-          fast: fast,
-          fmiOnly: fmiOnly,
-          throwOnError: throwOnError,
-          allowMissingFMI: allowMissingFMI,
-          targetTS: targetTS,
-          reUseBD: reUseBD);
-
+          bool reUseBD: true}) {
+    checkFile(file);
+    return readBytes(file.readAsBytesSync(),
+        path: file.path,
+        async: async,
+        fast: fast,
+        fmiOnly: fmiOnly,
+        throwOnError: throwOnError,
+        allowMissingFMI: allowMissingFMI,
+        targetTS: targetTS,
+        reUseBD: reUseBD);
+  }
   static ByteDataset readPath(String path,
           {bool async: true,
           bool fast = true,
@@ -254,15 +255,16 @@ class ByteReader extends DcmReader {
           bool throwOnError = true,
           allowMissingFMI = false,
           TransferSyntax targetTS,
-          bool reUseBD = true}) =>
-      readFile(new File(path),
-          async: async,
-          fast: fast,
-          fmiOnly: fmiOnly,
-          throwOnError: throwOnError,
-          allowMissingFMI: allowMissingFMI,
-          targetTS: targetTS);
-
+          bool reUseBD = true}) {
+    checkPath(path);
+    return readFile(new File(path),
+        async: async,
+        fast: fast,
+        fmiOnly: fmiOnly,
+        throwOnError: throwOnError,
+        allowMissingFMI: allowMissingFMI,
+        targetTS: targetTS);
+  }
   /// Reads only the File Meta Information ([FMI], if present.
   static ByteDataset readFmiOnly(dynamic pathOrFile,
       {bool async: true,

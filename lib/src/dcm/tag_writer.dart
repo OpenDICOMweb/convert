@@ -60,7 +60,7 @@ class TagWriter extends DcmWriter {
       bool fmiOnly = false,
       fast = true,
       TransferSyntax targetTS}) {
-    DcmWriter.checkFile(file, overwrite);
+    checkFile(file, overwrite);
     return new TagWriter(ds,
         bufferLength: bufferLength,
         path: file.path,
@@ -77,7 +77,7 @@ class TagWriter extends DcmWriter {
       bool fmiOnly = false,
       fast = false,
       TransferSyntax targetTS}) {
-    DcmWriter.checkPath(path);
+    checkPath(path);
     return new TagWriter(ds,
         bufferLength: bufferLength,
         path: path,
@@ -113,7 +113,7 @@ class TagWriter extends DcmWriter {
       bool fast: true,
       TransferSyntax outputTS,
       reUseBD = true}) {
-    DcmWriter.checkRootDataset(ds);
+    checkRootDataset(ds);
     var writer = new TagWriter(ds,
         bufferLength: bufferLength,
         path: path,
@@ -130,7 +130,7 @@ class TagWriter extends DcmWriter {
       bool fmiOnly = false,
       fast = true,
       TransferSyntax targetTS}) {
-    DcmWriter.checkFile(file, overwrite);
+    checkFile(file, overwrite);
     var bytes = writeBytes(ds,
         bufferLength: bufferLength,
         path: file.path,
@@ -149,7 +149,7 @@ class TagWriter extends DcmWriter {
       bool fmiOnly = false,
       fast = false,
       TransferSyntax targetTS}) {
-    DcmWriter.checkPath(path);
+    checkPath(path);
     return writeFile(ds, new File(path),
         bufferLength: bufferLength,
         overwrite: overwrite,
@@ -166,7 +166,7 @@ class TagWriter extends DcmWriter {
       bool overwrite = false,
       fast = false,
       TransferSyntax targetTS}) {
-    DcmWriter.checkPath(path);
+    checkPath(path);
     return writeFile(ds, new File(path),
         bufferLength: bufferLength,
         overwrite: overwrite,

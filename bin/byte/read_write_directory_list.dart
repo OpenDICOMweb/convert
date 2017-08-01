@@ -15,8 +15,6 @@ import 'package:dcm_convert/src/dcm/dcm_reader.dart';
 import 'package:dcm_convert/src/dcm/dcm_writer.dart';
 import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
 
-import 'timing_harness.dart';
-
 var dir0 =
     'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/';
 String outRoot0 = 'test/output/root0';
@@ -30,8 +28,12 @@ String outRoot4 = 'test/output/root4';
 // 2. reportIncrement
 void main() {
   final Logger log = new Logger("read_a_directory", watermark: Severity.error);
+  int success = 0;
+  int failure = 0;
+
   DcmReader.log.watermark = Severity.error;
   DcmWriter.log.watermark = Severity.error;
+
   FileListReader.log.watermark = Severity.error;
 
   //TODO: modify so that it reads one directory at a time and recursively
@@ -39,11 +41,10 @@ void main() {
   //TODO: add asyn argument and async I/O to handle multiple files at the same
   // time.
   /// *** Change directory path name here
-
+  int reportEveryNFiles = 100;
   String path = sfdMG;
   Directory dir = new Directory(path);
 
-  //TODO: replaced with directory utilities sync, and async
   List<FileSystemEntity> fList = dir.listSync(recursive: true);
   int fsEntityCount = fList.length;
   log.debug('FSEntity count: $fsEntityCount');
@@ -59,15 +60,33 @@ void main() {
     }
   }
 
-  TimingHarness harness =
-      new TimingHarness(files.length, doPrint: true, interval: 10, from: path);
+  Uri program = Platform.script;
+  DateTime startTime = new DateTime.now();
+  print('$program');
+  print('Reading ${files.length} files from ${dir.path}:');
+  print('Started at $startTime');
 
-  harness.startReport;
+  int width = '${files.length}'.length;
+
+  var timer = new Timer();
   for (int i = 0; i < files.length; i++) {
-    var good =
-        byteReadWriteFileChecked(files[i], i, harness.widthOfTotal, true, true);
-    harness.report(good, files[i]);
+    if (i % reportEveryNFiles == 0) {
+      var n = '$i'.padLeft(width);
+      print('$n: ${timer.split} ${files[i]}');
+    }
+    if (byteReadWriteFileChecked(files[i], i, width, true, true)) {
+      success++;
+    } else {
+      failure++;
+    }
   }
+  timer.stop();
 
-  harness.endReport;
+  DateTime endTime = new DateTime.now();
+  Duration totalElapsed = endTime.difference(startTime);
+  print('Ended at $endTime');
+  print('Total Elapsed: $totalElapsed (wall clock');
+  print('Timer.elapsed: ${timer.elapsed}');
+  print('Success $success, Failure $failure, Total ${success+failure}');
+
 }

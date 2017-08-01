@@ -89,7 +89,7 @@ abstract class DcmWriter {
       this.file,
       TransferSyntax outputTS,
       this.throwOnError = true,
-      this.bufferLength = defaultBufferLength,
+      this.bufferLength,
       this.reUseBD = true,
       this.encoding = EncodingParameters.kNoChange})
       : targetTS = getOutputTS(rootDS, outputTS),
@@ -112,6 +112,7 @@ abstract class DcmWriter {
 
   /// The [ByteData] buffer being written.
   ByteData get bd => _bd;
+
 
   /// Returns a [Uint8List] view of the [ByteData] buffer at the current time
   Uint8List get bytes => _bd.buffer.asUint8List(0, _wIndex);
@@ -177,20 +178,22 @@ abstract class DcmWriter {
     log.debug('$wmm _nPrivateSequences: $_nPrivateSequences');
     log.debug('$wmm writeRootDataset: ${rootDS.info}');
     log.debug('$wee Returning ${rootDS.length} elements in ${_wIndex} bytes');
-    var bytes = _bd.buffer.asUint8List(0, _wIndex);
-    if (bytes == null || bytes.length < 256)
-      throw 'Invalid bytes error: $bytes';
-    log.debug('wrote ${bytes.length} bytes to "$path"');
-    _writeFileOrPath(bytes);
-    return bytes;
+    var encoding = _bd.buffer.asUint8List(0, _wIndex);
+    if (encoding == null || encoding.length < 256)
+      throw 'Invalid bytes error: $encoding';
+    _writeFileOrPath(encoding);
+    return encoding;
   }
 
   //TODO: make this work for [async] == [true] and make that the default.
   /// Writes [bytes] to [file] if it is not [null]; otherwise, writes to
   /// [path] if it is not null. If both are [null] nothing is written.
   void _writeFileOrPath(Uint8List bytes) {
-    var f = (file == null && path != null) ? new File(path) : file;
-    if (f != null) f.writeAsBytesSync(bytes);
+    var f = (file == null && path != "") ? new File(path) : file;
+    if (f != null) {
+      f.writeAsBytesSync(bytes);
+      log.debug('Wrote ${bytes.length} bytes to "$path"');
+    }
   }
 
   /// Writes a [Dataset] to the buffer.
@@ -213,26 +216,6 @@ abstract class DcmWriter {
   /// The end of reading an [ByteElement] or [ByteItem]
   String get wee => '< $www';
 
-  // **** Public static methods
-
-  /// Checks that [dataset] is not empty.
-  static checkRootDataset(Dataset dataset) {
-    if (dataset == null || dataset.length == 0)
-      throw new ArgumentError('Empty ' 'Empty Dataset: $dataset');
-  }
-
-  /// Checks that [file] is not empty.
-  static checkFile(File file, bool overwrite) {
-    if (file == null) throw new ArgumentError('null File');
-    if (file.existsSync() && !overwrite)
-      throw new ArgumentError('$file already exists');
-  }
-
-  /// Checks that [path] is not empty.
-  static checkPath(String path) {
-    if (path == null || path == "")
-      throw new ArgumentError('Empty path: $path');
-  }
 
   // **** Private methods
 
@@ -552,8 +535,6 @@ abstract class DcmWriter {
   /// Grow the buffer if the index is at, or beyond, the end of the current
   /// buffer.
   void _maybeGrow([int size = 1]) {
-/*    print('_wIndex: $_wIndex');
-    print('lengthInBytes: ${bd.lengthInBytes}');*/
     if (_wIndex + size >= _bd.lengthInBytes) _grow();
   }
 
