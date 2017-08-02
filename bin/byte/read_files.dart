@@ -11,17 +11,14 @@ import 'package:common/logger.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 
-import 'package:dcm_convert/src/dcm/dcm_reader.dart';
-import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
-
 final Logger log =
-    new Logger("io/bin/read_files.dart", watermark: Severity.config);
+    new Logger("io/bin/read_files.dart", Level.config);
 
 //Urgent: use badFileList2 - fix indentation
 
 void main() {
   print('Read Files');
-  DcmReader.log.watermark = Severity.info;
+  DcmReader.log.level = Level.info;
   var paths = testPaths;
 
   var nFiles = testPaths.length;
@@ -51,7 +48,6 @@ void main() {
 }
 
 bool readCheck(File file, int fileNo, {int reps = 1, bool fmiOnly = false}) {
-  log.down;
   var rds = ByteReader.readFile(file);
   if (rds == null) {
     log.warn('---  File not readable');
@@ -60,7 +56,6 @@ bool readCheck(File file, int fileNo, {int reps = 1, bool fmiOnly = false}) {
     log.debug('Bytes Dataset: ${rds.info}');
   }
   log.info('---\n');
-  log.up;
   return (rds == null) ? false : true;
 }
 
@@ -68,8 +63,8 @@ bool readCheck(File file, int fileNo, {int reps = 1, bool fmiOnly = false}) {
 bool readWriteCheck(File file, {int reps = 1, bool fmiOnly = false}) {
   log.debug('Reading: $file');
   Uint8List bytes0 = file.readAsBytesSync();
-  log.config('Reading: $file with ${bytes0.lengthInBytes} bytes');
-  log.down;
+  log.config('Reading: $file with ${bytes0.lengthInBytes} bytes', 1);
+
   if (bytes0 == null) return false;
   RootByteDataset rds0 =
       ByteReader.readBytes(bytes0, path: file.path, fast: true);
@@ -78,7 +73,6 @@ bool readWriteCheck(File file, {int reps = 1, bool fmiOnly = false}) {
   ByteElement e = rds0[0x00020010];
   log.debug('e: $e');
   if (rds0 == null) return false;
-  log.info('  Original: $rds0');
-  log.up;
+  log.info('  Original: $rds0', -1);
   return true;
 }

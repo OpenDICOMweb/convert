@@ -8,7 +8,7 @@ import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 
-Logger log = new Logger('convert', watermark: Severity.info);
+Logger log = new Logger('convert', Level.info);
 
 typedef Element<K, V> Maker<K, V>(K id, List<V> values,
     [int vfLength, VFFragments fragments]);

@@ -27,14 +27,14 @@ String outRoot4 = 'test/output/root4';
 // 1. dirname
 // 2. reportIncrement
 void main() {
-  final Logger log = new Logger("read_a_directory", watermark: Severity.error);
+  final Logger log = new Logger("read_a_directory", Level. error);
   int success = 0;
   int failure = 0;
 
-  DcmReader.log.watermark = Severity.error;
-  DcmWriter.log.watermark = Severity.error;
+  DcmReader.log.level = Level.error;
+  DcmWriter.log.level = Level.error;
 
-  FileListReader.log.watermark = Severity.error;
+  FileListReader.log.level = Level.error;
 
   //TODO: modify so that it reads one directory at a time and recursively
   // walks the tree.

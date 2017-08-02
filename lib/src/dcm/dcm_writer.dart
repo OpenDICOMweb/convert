@@ -36,7 +36,7 @@ import 'byte_data_buffer.dart';
 // There are four [Element]s that might have an Undefined Length value
 // (0xFFFFFFFF), [SQ], [OB], [OW], [UN].
 abstract class DcmWriter {
-  static final Logger log = new Logger("DcmWriter", watermark: Severity.debug2);
+  static final Logger log = new Logger("DcmWriter", Level.debug2);
 
   /// The default [ByteData] buffer length, if none is provided.
   static const int defaultBufferLength = 200 * kMB;
@@ -224,7 +224,7 @@ abstract class DcmWriter {
   bool _writeFMI() {
     //  if (encoding.doUpdateFMI) return writeODWFMI();
     if (_currentDS != rootDS) log.error('Not rootDS');
-    log.debugDown('$wbb writeFMI($_currentDS)');
+    log.debug('$wbb writeFMI($_currentDS)', 1);
 
     var hasFMI = rootDS.hasFMI;
     // Check to see if we should write FMI if missing
@@ -240,12 +240,12 @@ abstract class DcmWriter {
       _writeExistingFMI();
     }
     _isEVR = rootDS.isEVR;
-    log.debugUp('$wee writeFMI @end');
+    log.debug('$wee writeFMI @end', -1);
     return true;
   }
 
   void _writeExistingFMI() {
-    log.debugDown('$wbb write existing FMI($_currentDS)');
+    log.debug('$wbb write existing FMI($_currentDS)', 1);
     _isEVR = true;
     _writePrefix();
     for (Element e in rootDS.elements) {
@@ -257,7 +257,7 @@ abstract class DcmWriter {
         break;
       }
     }
-    log.debugUp('$wee write existing FMI @end');
+    log.debug('$wee write existing FMI @end', -1);
   }
 
   /// Writes a new Open DICOMweb FMI.
@@ -269,8 +269,7 @@ abstract class DcmWriter {
   /// Writes a DICOM Preamble and Prefix (see PS3.10) as the
   /// beginning of the encoding.
   void _writePrefix() {
-    log.down;
-    log.debug2('$wbb Writing Prefix');
+    log.debug2('$wbb Writing Prefix', 1);
     var pInfo = rootDS.parseInfo;
     log.debug('hadPrefix(${pInfo.hadPrefix}), doAddMissingFMI(${encoding
         .doAddMissingFMI})');
@@ -286,34 +285,33 @@ abstract class DcmWriter {
     }
     _skip(128);
     _writeAsciiString('DICM');
-    log.debug2('$wee Writing Prefix end');
-    log.up;
+    log.debug2('$wee Writing Prefix end', -1);
   }
 
   void _writeDataset(Dataset ds) {
     assert(ds != null);
     Dataset previousDS = _currentDS;
     _currentDS = ds;
-    log.debugDown('$wbb writeDataset: $ds isExplicitVR(${ds.isEVR})');
+    log.debug('$wbb writeDataset: $ds isExplicitVR(${ds.isEVR})', 1);
 
     _isEVR = true;
     for (Element e in ds.elements) {
       int eStart = _wIndex;
-      log.debugDown('$wbb write e: ${e.info}');
+      log.debug('$wbb write e: ${e.info}', 1);
       //TODO: figure out how to move this outside loop.
       //  should fmi be a separate map in the rootDS?
       if (e.code > 0x30000) _isEVR = rootDS.isEVR;
       _writeElement(e);
       int eEnd = _wIndex;
-      log.debugUp('$wee e: $e: Length: ${eEnd - eStart}');
+      log.debug('$wee e: $e: Length: ${eEnd - eStart}', -1);
     }
     _currentDS = previousDS;
-    log.debugUp('$wee end writeDataset');
+    log.debug('$wee end writeDataset', -1);
   }
 
   void _writeElement(Element e) {
     int eStart = _wIndex;
-    log.debugDown('$wbb writing: ${e.info}');
+    log.debug('$wbb writing: ${e.info}', 1);
     if (e.isSequence) {
       _writeSequence(e);
     } else {
@@ -326,7 +324,7 @@ abstract class DcmWriter {
     elementList.add(eStart, _wIndex, e);
     _nElements++;
     if (e.isPrivate) _nPrivateElements++;
-    log.debugUp('$wee wrote: $e');
+    log.debug('$wee wrote: $e', -1);
   }
 
   // Simple, i.e. not a sequence or Pixel Data.
@@ -345,8 +343,8 @@ abstract class DcmWriter {
   /// Writes an EVR (short == 8 bytes, long == 12 bytes) or IVR (8 bytes)
   /// header.
   void _writeHeader(Element e) {
-    log.debugDown('$wbb writeHeader ${_isEVR ? "EVR" : "IVR"} '
-        'e.vfLength: ${e.vfLength}, ${toHex(e.vfLength, 8)}');
+    log.debug('$wbb writeHeader ${_isEVR ? "EVR" : "IVR"} '
+        'e.vfLength: ${e.vfLength}, ${toHex(e.vfLength, 8)}', 1);
     var length = (e.vfLength == null || encoding.doConvertUndefinedLengths)
         ? e.vfBytes.lengthInBytes
         : e.vfLength;
@@ -372,19 +370,19 @@ abstract class DcmWriter {
       _writeUint32(length);
       assert(_wIndex == start + 8);
     }
-    log.debugUp('$wee writeHeader');
+    log.debug('$wee writeHeader', -1);
   }
 
   void _writeSequence(Element e) {
     assert(e.isSequence);
     //TODO: handle replacing undefined lengths
-    log.debugDown('$wbb SQ $e');
+    log.debug('$wbb SQ $e', 1);
     _writeHeader(e);
     if (e.values.length > 0) _writeItems(e);
     if (e.hadULength) _writeDelimiter(kSequenceDelimitationItem);
     _nSequences++;
     if (e.isPrivate) _nPrivateSequences++;
-    log.debugUp('$wee SQ');
+    log.debug('$wee SQ', -1);
   }
 
   void _writeItems(ByteSQ e) {
@@ -392,11 +390,11 @@ abstract class DcmWriter {
     //TODO: handle replacing undefined lengths
     List<ByteItem> items = e.items;
     for (Dataset item in items) {
-      log.debugDown('$wbb Writing Item: $item');
+      log.debug('$wbb Writing Item: $item', 1);
       _writeDelimiter(kItem, item.vfLength);
       for (Element e in item.elements) _writeElement(e);
       if (item.hadULength) _writeDelimiter(kItemDelimitationItem);
-      log.debugUp('$wee Wrote Item: $item');
+      log.debug('$wee Wrote Item: $item', -1);
     }
   }
 
@@ -546,7 +544,7 @@ abstract class DcmWriter {
   /// least that size. It will always have at least have double the
   /// capacity of the current buffer.
   void _grow([int capacity]) {
-    log.debugDown('start _grow: ${_bd.lengthInBytes}');
+    log.debug('start _grow: ${_bd.lengthInBytes}', 1);
     int oldLength = _bd.lengthInBytes;
     int newLength = oldLength * 2;
     if (capacity != null && capacity > newLength) newLength = capacity;
@@ -556,7 +554,7 @@ abstract class DcmWriter {
     var newBuffer = new ByteData(newLength);
     for (int i = 0; i < oldLength; i++) newBuffer.setUint8(i, _bd.getUint8(i));
     _bd = newBuffer;
-    log.debugUp('end _grow ${_bd.lengthInBytes}');
+    log.debug('end _grow ${_bd.lengthInBytes}', -1);
   }
 
   static ByteData _reuseBuffer([int size = defaultBufferLength]) {

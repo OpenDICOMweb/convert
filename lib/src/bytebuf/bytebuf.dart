@@ -50,7 +50,7 @@ class ByteBuf {
   static const Endianness endianness = Endianness.LITTLE_ENDIAN;
 
   //TODO: Make the argument an optional arg to contructor
-  static final Logger log = new Logger('ByteBuf', watermark: Severity.config);
+  static final Logger log = new Logger('ByteBuf', Level.config);
 
   /// The complete buffer from 0 to [_bytes].[lengthInBytes].
   final Uint8List _bytes;

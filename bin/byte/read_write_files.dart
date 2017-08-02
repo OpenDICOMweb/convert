@@ -16,8 +16,8 @@ String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
 void main() {
   //TODO: fix logger so next two lines are unnecessary
-  DcmReader.log.watermark = Severity.info;
-  DcmWriter.log.watermark = Severity.info;
+  DcmReader.log.level = Level.info;
+  DcmWriter.log.level = Level.info;
 
   // *** Modify [paths] value to read/write a different file
   List<String> paths = <String>[];

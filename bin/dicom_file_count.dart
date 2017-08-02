@@ -24,7 +24,7 @@ String outRoot2 = 'test/output/root2';
 String outRoot3 = 'test/output/root3';
 String outRoot4 = 'test/output/root4';
 
-Logger log = new Logger("read_a_directory", watermark: Severity.info);
+Logger log = new Logger("read_a_directory", Level.info);
 
 void main() {
 

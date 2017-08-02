@@ -13,7 +13,7 @@ import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
 
 class FileListReader {
   static final Logger log =
-      new Logger("read_a_directory", watermark: Severity.error);
+      new Logger("read_a_directory", Level.error);
   List<String> paths;
   bool fmiOnly;
   bool throwOnError;

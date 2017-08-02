@@ -19,7 +19,7 @@ import 'package:path/path.dart' as p;
 import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
 
 final Logger log = new Logger("convert/bin/read_write_files1.dart",
-    watermark: Severity.config);
+    Level.config);
 
 void main() {
   //readWriteFileFast(new File(path0), reps: 1, fmiOnly: false);

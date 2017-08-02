@@ -15,7 +15,7 @@ import 'package:dcm_convert/src/utilities/file_list_reader.dart';
 
 
 final Logger log =
-    new Logger("io/bin/read_files.dart", watermark: Severity.info);
+    new Logger("io/bin/read_files.dart", Level.info);
 
 void main() {
  // readFile(path0);
@@ -31,7 +31,7 @@ void readFile(String path) {
     return null;
   }
   log.info('readFile: ${rds.info}');
-  // if (log.watermark == Severity.debug) formatDataset(rds);
+  // if (log.level == Level.debug) formatDataset(rds);
 }
 
 void formatDataset(RootByteDataset rds, [bool includePrivate = true]) {

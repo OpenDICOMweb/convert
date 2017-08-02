@@ -33,7 +33,7 @@ String hologic = 'C:/odw/test_data/mweb/Hologic';
 String badDir0 = "C:/odw/test_data/mweb/100 MB Studies/MRStudy";
 String badDir1 = "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop";
 
-Logger log = new Logger("read_a_directory", watermark: Severity.info);
+Logger log = new Logger("read_a_directory", Level.info);
 
 void main() {
   int fsEntityCount;

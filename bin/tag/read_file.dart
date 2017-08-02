@@ -8,7 +8,7 @@ import 'package:common/logger.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 
-final Logger log = new Logger("io/bin/read_files.dart", watermark: Severity.info);
+final Logger log = new Logger("io/bin/read_files.dart", Level.info);
 
 void main() {
   var path = path1; //test6684_02;

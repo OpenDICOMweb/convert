@@ -11,9 +11,6 @@ import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:dcm_convert/src/dcm/dcm_reader.dart';
-import 'package:dcm_convert/src/dcm/dcm_writer.dart';
-
 String outRoot0 = 'test/output/root0';
 String outRoot1 = 'test/output/root1';
 String outRoot2 = 'test/output/root2';
@@ -21,12 +18,12 @@ String outRoot3 = 'test/output/root3';
 String outRoot4 = 'test/output/root4';
 
 void main() {
-  final Logger log = new Logger("read_a_directory", watermark: Severity.error);
+  final Logger log = new Logger("read_a_directory", Level.error);
   int fsEntityCount;
 
-  DcmReader.log.watermark = Severity.error;
-  DcmWriter.log.watermark = Severity.error;
-  FileListReader.log.watermark = Severity.error;
+  log.level = Level.error;
+  DcmWriter.log.level = Level.error;
+  FileListReader.log.level = Level.error;
 
   /// *** Change directory path name here
   String path = dir6688;

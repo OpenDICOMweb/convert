@@ -12,8 +12,7 @@ import 'package:test/test.dart';
 void main() {
   String path0 =
       'C:/odw/sdk/test_tools/test_data/TransferUIDs/1.2.840.10008.1.2.5.dcm';
-  final Logger log = new Logger('dcm_reader_test.dart', watermark: Severity
-      .debug);
+  final Logger log = new Logger('dcm_reader_test.dart', Level.debug);
   group('description', () {
 
     test("instance ", () {

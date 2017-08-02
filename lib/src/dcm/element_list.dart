@@ -8,7 +8,7 @@ import 'package:common/logger.dart';
 import 'package:core/core.dart';
 
 class ElementList {
-  static final log = new Logger('ElementList', watermark: Severity.debug);
+  static final log = new Logger('ElementList', Level.debug);
   List<int> starts = <int>[];
   List<int> ends = <int>[];
   List<Element> elements = <Element>[];

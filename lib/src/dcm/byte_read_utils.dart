@@ -16,7 +16,7 @@ String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
 //TODO: remove or make part of function
 final Logger _log =
-    new Logger("io/bin/read_files.dart", watermark: Severity.error);
+    new Logger("io/bin/read_files.dart", Level.error);
 
 final Formatter format = new Formatter();
 
@@ -130,9 +130,9 @@ $pad    ${rds0.parseInfo.info}''');
 RootByteDataset readFileTimed(File file,
     {bool fmiOnly = false,
     TransferSyntax targetTS,
-    Severity logLevel: Severity.warn,
+    Level level = Level.warn,
     bool printDS: false}) {
-  _log.watermark = logLevel;
+  _log.level = level;
   var path = file.path;
   var timer = new Stopwatch();
   var timestamp = new Timestamp();

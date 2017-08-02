@@ -237,7 +237,7 @@ class ByteReader extends DcmReader {
           bool allowMissingFMI: false,
           TransferSyntax targetTS,
           bool reUseBD: true}) {
-    checkFile(file);
+// Fix   checkFile(file);
     return readBytes(file.readAsBytesSync(),
         path: file.path,
         async: async,
@@ -256,7 +256,7 @@ class ByteReader extends DcmReader {
           allowMissingFMI = false,
           TransferSyntax targetTS,
           bool reUseBD = true}) {
-    checkPath(path);
+//Fix    checkPath(path);
     return readFile(new File(path),
         async: async,
         fast: fast,

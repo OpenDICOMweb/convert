@@ -39,10 +39,10 @@ class TestByteWriter extends ByteWriter {
 
   /// Returns a [Uint8List] containing the encoded [Dataset].
   Uint8List xWriteDataset(ByteDataset ds) {
-    log.debugDown('$wbb writeDataset: isExplicitVR(${ds.isEVR})');
+    log.debug('$wbb writeDataset: isExplicitVR(${ds.isEVR})', 1);
     var writer = new ByteWriter(ds, bufferLength: ds.vfLength);
     var bytes = writer.writeDataset(ds);
-    log.debugUp('$wee end writeDataset: isExplicitVR(${ds.isEVR})');
+    log.debug('$wee end writeDataset: isExplicitVR(${ds.isEVR})', -1);
     return bytes;
   }
 

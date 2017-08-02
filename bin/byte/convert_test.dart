@@ -14,10 +14,10 @@ import 'package:dictionary/dictionary.dart';
 
 import 'package:dcm_convert/src/dcm/dcm_reader.dart';
 
-Logger _log = new Logger('convert_test', watermark: Severity.debug1);
+Logger _log = new Logger('convert_test', Level.debug1);
 
 void main() {
-  DcmReader.log.watermark = Severity.debug1;
+  DcmReader.log.level = Level.debug1;
   print('Dart Version: ${Platform.version}');
   print('${Platform.script}');
 
@@ -64,8 +64,8 @@ bool convert(File file, {int reps = 1, bool fmiOnly = false}) {
 
   if (bRoot.parent != tRoot.parent) {
     _log.error('Parents Not equal');
-    _log.warn('  rds0.parent: ${bRoot.parent}');
-    _log.warn('  rds1.parent: ${tRoot.parent}');
+    _log.warn0('  rds0.parent: ${bRoot.parent}');
+    _log.warn0('  rds1.parent: ${tRoot.parent}');
   }
   if (bRoot.hadULength != tRoot.hadULength) {
     _log.error('hadULength Not equal');

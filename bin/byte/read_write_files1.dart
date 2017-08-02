@@ -22,11 +22,11 @@ import 'read_utils.dart';
 import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
 
 final Logger log =
-    new Logger("convert/bin/read_write_files1.dart", watermark: Severity.debug2);
+    new Logger("convert/bin/read_write_files1.dart", Level.debug2);
 
 void main() {
-  DcmReader.log.watermark = Severity.info;
-  DcmWriter.log.watermark = Severity.info;
+  DcmReader.log.level = Level.info;
+  DcmWriter.log.level = Level.info;
  // String testFile = test6684_02;
  // String testDir = dir36_4485_6684;
   assert(test6684_02 != null);

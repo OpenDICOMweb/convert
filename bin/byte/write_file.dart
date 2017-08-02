@@ -11,27 +11,24 @@ import 'package:core/core.dart';
 import 'package:dictionary/dictionary.dart';
 import 'package:dcm_convert/dcm.dart';
 
-final Logger log = new Logger("convert/bin/byte/write_file_list.dart",
-    watermark: Severity.info);
+final Logger log =
+    new Logger("convert/bin/byte/write_file_list.dart", Level.info);
 
 Uint8List writeFile(RootByteDataset rds, String path,
     {bool fmiOnly = false, TransferSyntax outputTS}) {
-    var timer = new Timer();
-    var total = rds.total;
-    log.debug('writing ${rds.runtimeType} to "$path"\n'
-        '    with $total Elements\n'
-        '    at: ${timer.lastStart} ...');
-    if (fmiOnly) log.debug('    fmiOnly: $fmiOnly');
+  var timer = new Timer();
+  var total = rds.total;
+  log.debug('writing ${rds.runtimeType} to "$path"\n'
+      '    with $total Elements\n'
+      '    at: ${timer.lastStart} ...');
+  if (fmiOnly) log.debug('    fmiOnly: $fmiOnly');
 
   //  timer.start();
-    var bytes = ByteWriter.writePath(rds, path, fmiOnly: fmiOnly);
-    timer.stop();
+  var bytes = ByteWriter.writePath(rds, path, fmiOnly: fmiOnly);
+  timer.stop();
 
-    log.debug('  Elapsed time: ${timer.elapsed}');
-    int msPerElement = (timer.elapsedMicroseconds ~/ total) ~/ 1000;
-    log.debug('  $msPerElement ms per Element: ');
-    return bytes;
+  log.debug('  Elapsed time: ${timer.elapsed}');
+  int msPerElement = (timer.elapsedMicroseconds ~/ total) ~/ 1000;
+  log.debug('  $msPerElement ms per Element: ');
+  return bytes;
 }
-
-
-
