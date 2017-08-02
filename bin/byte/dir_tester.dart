@@ -12,6 +12,7 @@ import 'package:common/common.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:dictionary/dictionary.dart';
 
+import 'package:dcm_convert/data/test_files.dart';
 import 'job_reporter.dart';
 
 var dir0 =
@@ -25,8 +26,8 @@ String outRoot4 = 'test/output/root4';
 //TODO: modify so that it takes the following arguments
 // 1. dirname
 // 2. reportIncrement
-void main()  {
-  List<String> args = ["C:/odw/test_data/sfd/MG", 'd'];
+void main() {
+  List<String> args = ["C:/odw/test_data/mweb/ASPERA/DICOM files only", 'd'];
   var parser = getParser();
 
   var dirName = args[0];
@@ -35,19 +36,18 @@ void main()  {
     stderr.write('Error: $dirName does not exist');
     exit(-1);
   }
- // var results = parser.parse(args.sublist(1));
+  // var results = parser.parse(args.sublist(1));
 //  print('parser: $results');
 
- // var mode = results['mode'];
+  // var mode = results['mode'];
 //  print('mode: $mode');
 
   //  var Level = Level.lookup(mode);
-  DcmReader.log.level = Level.debug;
-  DcmWriter.log.level = Level.info;
-  FileListReader.log.level = Level.info;
+  DcmReader.log.level = Level.warn0;
+  DcmWriter.log.level = Level.warn0;
+//  FileListReader.log.level = Level.info;
 
-  JobRunner.job(dir, doReadWriteReadByteFile,
-      interval: 10, level: Level.info);
+  JobRunner.job(dir, doRWRByteFile, level: Level.warn0);
 }
 
 String logFileName;
@@ -60,53 +60,68 @@ ArgParser getParser() => new ArgParser()
       help: 'The logging mode - defaults to info')
   ..addOption('mode',
       abbr: 'm',
-      allowed: ['error', 'config', 'info', 'debug', 'debug1', 'debug2', 'debug'
-          '3'],
+      allowed: [
+        'error',
+        'config',
+        'info',
+        'debug',
+        'debug1',
+        'debug2',
+        'debug'
+            '3'
+      ],
       defaultsTo: 'info',
       help: 'The logging mode - defaults to info')
-  ..addOption('outDir', abbr: 'o',
-      defaultsTo: '<inputDir>/output/',
-      help: 'The output directory')
-  ..addOption('results', abbr: 'r',
-      defaultsTo: './results.txt',
-      help: 'The results file')
-  ..addFlag('silent', abbr: 's',
+  ..addOption('outDir',
+      abbr: 'o', defaultsTo: '<inputDir>/output/', help: 'The output directory')
+  ..addOption('results',
+      abbr: 'r', defaultsTo: './results.txt', help: 'The results file')
+  ..addFlag('silent',
+      abbr: 's',
       defaultsTo: false,
       callback: (silent) => mode = 'error',
       help: 'Silent mode - mode is set to "error"')
-  ..addFlag('config', abbr: 'c',
+  ..addFlag('config',
+      abbr: 'c',
       defaultsTo: false,
       callback: (config) => mode = 'config',
       help: 'mode is set to "config"')
-  ..addFlag('info', abbr: 'i',
+  ..addFlag('info',
+      abbr: 'i',
       defaultsTo: false,
       callback: (info) => mode = 'info',
       help: 'mode is set to "info"')
-  ..addFlag('debug', abbr: 'd',
+  ..addFlag('debug',
+      abbr: 'd',
       defaultsTo: false,
-      callback: (debug) => mode = 'debug' ,
+      callback: (debug) => mode = 'debug',
       help: 'mode is set to "debug"')
-  ..addFlag('verbose', abbr: 'v',
+  ..addFlag('verbose',
+      abbr: 'v',
       defaultsTo: false,
-      callback: (verbose) => mode = 'debug3' ,
+      callback: (verbose) => mode = 'debug3',
       help: 'mode is set to "debug"');
 
-
-
-final Logger log = new Logger("doFile", Level.error);
-
-bool doReadWriteReadByteFile(File f,
-    [bool throwOnError = true, bool fast = true]) {
+bool doRWRByteFile(File f, [bool throwOnError = false, bool fast = true]) {
+  final Logger log = new Logger("doRWRByteFile", Level.warn0);
+  log.level = Level.error;
+  //TODO: improve output
+//  var n = getPaddedInt(fileNumber, width);
+  var pad = "".padRight(5);
 
   try {
     var reader0 = new ByteReader.fromFile(f);
     RootByteDataset rds0 = reader0.readRootDataset();
+    //TODO: improve next two errors
+    if (rds0 == null) throw  'Bad File: $f';
+    if (rds0.parseInfo == null) throw 'Bad File - No ParseInfo: $f';
     var bytes0 = reader0.buffer;
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS String: ${rds0.transferSyntaxString}
-$pad    TS: ${rds0.transferSyntax}
-$pad    ${rds0.parseInfo.info}''');
+$pad    TS: ${rds0.transferSyntax}''');
+    if (rds0.parseInfo != null)
+      log.debug('$pad    ${rds0.parseInfo.info}');
 
 // TODO: move into dataset.warnings.
     ByteElement e = rds0[kPixelData];

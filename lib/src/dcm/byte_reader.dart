@@ -136,6 +136,8 @@ class ByteReader extends DcmReader {
       return null;
     } on EndOfDataError catch (e) {
       log.error(e);
+    } on InvalidTransferSyntaxError catch (e) {
+      log.error(e);
     }
     _rootDS.bd = bdRead;
     return _rootDS;

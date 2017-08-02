@@ -240,7 +240,7 @@ abstract class DcmReader extends DcmConverterBase {
 
     if (!System.isSupportedTransferSyntax(_ts)) {
       _hadParsingErrors = true;
-      log.debug('$ree Unsupported TS: $_ts @end');
+      log.error('$ree Unsupported TS: $_ts @end');
       if (throwOnError) throw new InvalidTransferSyntaxError(_ts);
       return rootDS;
     }

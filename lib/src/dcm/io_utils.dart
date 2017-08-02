@@ -50,8 +50,6 @@ String getOutputPath(String inPath,
   return path.absolute(dir, '$base.$ext');
 }
 
-typedef F = void Function(File e, [int level]);
-
 Directory toDirectory(name, [bool mustExist = true]) {
   Directory dir;
   if (name is Directory) {
@@ -66,7 +64,10 @@ Directory toDirectory(name, [bool mustExist = true]) {
   return dir;
 }
 
-Future<int> walkDirectory(Directory dir, F f, [int level = 0]) async {
+typedef Runner = void Function(File e, [int level]);
+
+/// Walks a [Directory] recursively and applies [runner] to each [File].
+Future<int> walkDirectory(Directory dir, Runner f, [int level = 0]) async {
   Stream<FileSystemEntity> eList =
       dir.list(recursive: false, followLinks: true);
 
@@ -83,6 +84,33 @@ Future<int> walkDirectory(Directory dir, F f, [int level = 0]) async {
   }
   return count;
 }
+
+/// Walks a [List] of [String], [File], List<String>, or List<File>, and
+/// applies [runner] to each one asynchronously.
+Future<int> walkPathList(List paths, Runner runner, [int level = 0]) async {
+  int count = 0;
+  for (var entry in paths) {
+    if (entry is List) {
+      count += await walkPathList(entry, runner, level++);
+    } else if (entry is String){
+      File f = new File(entry);
+      runFile(entry, runner);
+    } else if (entry is File) {
+      runFile(entry, runner);
+      count++;
+    } else {
+      stderr.write('Warning: $entry is not a File or Directory');
+    }
+  }
+  return count;
+}
+
+Future<Null> runFile(dynamic file, Runner runner, [int level = 0]) async {
+  if (file is String) file = new File(file);
+  if (file is! File) throw 'Bad File: $file';
+  await new Future(() => runner(file, level));
+}
+
 
 /// Returns the number of [Files] in a [Directory]
 int fileCount(Directory d, {List<String> extensions, bool recursive: true}) {
