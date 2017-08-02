@@ -46,9 +46,9 @@ class JobReporter {
     return (_count % interval == 0) ? report : "";
   }
 
-  Level get Level => _log.level;
+  Level get level => _log.level;
 
-  void set Level(Level s) => _log.level = s;
+  void set level(Level level) => _log.level = level;
 
   String get _from => (from == null) ? "" : "from $from";
 

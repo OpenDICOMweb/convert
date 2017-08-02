@@ -35,7 +35,7 @@ void main()  {
     stderr.write('Error: $dirName does not exist');
     exit(-1);
   }
-  var results = parser.parse(args.sublist(1));
+ // var results = parser.parse(args.sublist(1));
 //  print('parser: $results');
 
  // var mode = results['mode'];
