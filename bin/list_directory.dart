@@ -9,7 +9,7 @@ import 'dart:io';
 import 'package:dcm_convert/src/dcm/io_utils.dart';
 
 main() async {
-  var dir = new Directory('C:/odw/test_data/sfd/Peds');
+  var dir = new Directory('C:/odw/test_data/sfd/MR');
   var stat = await dir.stat();
   var length = dir.listSync(recursive: true).length;
   print(stat);

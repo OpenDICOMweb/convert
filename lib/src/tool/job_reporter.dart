@@ -4,18 +4,17 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:async' hide Timer;
 import 'dart:io';
 
 import 'package:common/common.dart';
-
-import 'package:dcm_convert/src/dcm/io_utils.dart';
 
 /// A class used to monitor the status of a job.
 class JobReporter {
   final int total;
   final String from;
-  final int interval;
+  final int shortInterval;
+  //Urgent: add long interval
+  int longInterval;
   final Timer timer;
   final bool doPrint;
   final Logger logger;
@@ -34,18 +33,21 @@ class JobReporter {
 
   JobReporter(this.total,
       {this.from,
-      int interval,
+      int short,
+        int long,
       this.doPrint = true,
       this.logger,
       this.doReportFailure = true})
       //Urgent: figure out how to calculate interval.
-      : this.interval = (interval == null) ? total ~/ 50 : interval,
+      : this.shortInterval = (short == null) ? total ~/ 50 : short,
         this.logIt = (logger != null),
-        this.timer = new Timer(start: false);
+        this.timer = new Timer(start: false) {
+    this.longInterval = (long == null) ?  50 * shortInterval : long;
+  }
 
   String operator +(int v) {
     _count++;
-    return (_count % interval == 0) ? report : "";
+    return (_count % shortInterval == 0) ? report : "";
   }
 
   Level get level => _log.level;
@@ -66,7 +68,7 @@ class JobReporter {
 
   int get failure => _failure;
 
-  bool get check => (_count % interval == 0) ? true : false;
+  bool get check => (_count % shortInterval == 0) ? true : false;
 
   /// Starts the clock and returns a useful message
   String get startReport {
@@ -120,55 +122,4 @@ Total ${_success+_failure}''';
 
 const dcmExtensions = const <String>["dcm", ""];
 
-class JobRunner {
-  Directory directory;
-  List files;
-  bool Function(File f) doFile;
-  JobReporter reporter;
-  //TODO: figure out the best way to handle this.
-  bool throwOnError;
 
-  JobRunner(this.directory, this.doFile,
-      {int interval, Logger logger, this.throwOnError = true})
-      : reporter = new JobReporter(fileCount(directory),
-            from: directory.path, interval: interval);
-
-  JobRunner.list(this.files, this.doFile,
-      {int interval, Logger logger, this.throwOnError = true})
-      : reporter =
-            new JobReporter(files.length, from: 'FileList', interval: interval);
-
-  Future<Null> run() async {
-    reporter.startReport;
-    await walkDirectory(directory, runFile);
-    reporter.endReport;
-  }
-
-  Future<Null> runList() async {
-    reporter.startReport;
-    await walkPathList(files, runFile);
-    reporter.endReport;
-  }
-
-  String runFile(File f, [int indent]) =>
-      reporter.report(doFile(f), cleanPath(f.path));
-
-  static void job(Directory dir, bool Function(File f) doFile,
-      {int interval, Level level = Level.info, bool throwOnError = true}) {
-    var program = Platform.script.toFilePath();
-    final Logger log = new Logger(program, level);
-    var job = new JobRunner(dir, doFile, interval: interval, logger: log);
-    stdout.writeln('Running: $program');
-    job.run();
-  }
-
-  static void fileList(List<String> files, bool Function(File f) doFile,
-      {int interval, Level level = Level.debug, bool throwOnError = true}) {
-    var program = Platform.script.toFilePath();
-    final Logger log = new Logger(program, level);
-    var job =
-        new JobRunner.list(files, doFile, interval: interval, logger: log);
-    stdout.writeln('Running: $program');
-    job.runList();
-  }
-}

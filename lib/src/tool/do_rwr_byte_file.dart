@@ -1,106 +1,15 @@
 // Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
-// Original author: Jim Philbin <jfphilbin@gmail.edu> -
+// Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:args/args.dart';
 import 'package:common/common.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:dictionary/dictionary.dart';
-
-import 'package:dcm_convert/data/test_files.dart';
-import 'job_reporter.dart';
-
-var dir0 =
-    'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/';
-String outRoot0 = 'test/output/root0';
-String outRoot1 = 'test/output/root1';
-String outRoot2 = 'test/output/root2';
-String outRoot3 = 'test/output/root3';
-String outRoot4 = 'test/output/root4';
-
-//TODO: modify so that it takes the following arguments
-// 1. dirname
-// 2. reportIncrement
-void main() {
-  List<String> args = ["C:/odw/test_data/mweb/ASPERA/DICOM files only", 'd'];
-  var parser = getParser();
-
-  var dirName = args[0];
-  var dir = toDirectory(dirName);
-  if (dir == null) {
-    stderr.write('Error: $dirName does not exist');
-    exit(-1);
-  }
-  // var results = parser.parse(args.sublist(1));
-//  print('parser: $results');
-
-  // var mode = results['mode'];
-//  print('mode: $mode');
-
-  //  var Level = Level.lookup(mode);
-  DcmReader.log.level = Level.warn0;
-  DcmWriter.log.level = Level.warn0;
-//  FileListReader.log.level = Level.info;
-
-  JobRunner.job(dir, doRWRByteFile, level: Level.warn0);
-}
-
-String logFileName;
-String mode;
-ArgParser getParser() => new ArgParser()
-  ..addOption('logFile',
-      abbr: 'f',
-      defaultsTo: '<program>.log',
-      callback: (logFile) => logFileName = logFile,
-      help: 'The logging mode - defaults to info')
-  ..addOption('mode',
-      abbr: 'm',
-      allowed: [
-        'error',
-        'config',
-        'info',
-        'debug',
-        'debug1',
-        'debug2',
-        'debug'
-            '3'
-      ],
-      defaultsTo: 'info',
-      help: 'The logging mode - defaults to info')
-  ..addOption('outDir',
-      abbr: 'o', defaultsTo: '<inputDir>/output/', help: 'The output directory')
-  ..addOption('results',
-      abbr: 'r', defaultsTo: './results.txt', help: 'The results file')
-  ..addFlag('silent',
-      abbr: 's',
-      defaultsTo: false,
-      callback: (silent) => mode = 'error',
-      help: 'Silent mode - mode is set to "error"')
-  ..addFlag('config',
-      abbr: 'c',
-      defaultsTo: false,
-      callback: (config) => mode = 'config',
-      help: 'mode is set to "config"')
-  ..addFlag('info',
-      abbr: 'i',
-      defaultsTo: false,
-      callback: (info) => mode = 'info',
-      help: 'mode is set to "info"')
-  ..addFlag('debug',
-      abbr: 'd',
-      defaultsTo: false,
-      callback: (debug) => mode = 'debug',
-      help: 'mode is set to "debug"')
-  ..addFlag('verbose',
-      abbr: 'v',
-      defaultsTo: false,
-      callback: (verbose) => mode = 'debug3',
-      help: 'mode is set to "debug"');
 
 bool doRWRByteFile(File f, [bool throwOnError = false, bool fast = true]) {
   final Logger log = new Logger("doRWRByteFile", Level.warn0);
