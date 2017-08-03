@@ -94,7 +94,7 @@ Future<int> walkPathList(List paths, Runner runner, [int level = 0]) async {
       count += await walkPathList(entry, runner, level++);
     } else if (entry is String){
       File f = new File(entry);
-      runFile(entry, runner);
+      runFile(f, runner);
     } else if (entry is File) {
       runFile(entry, runner);
       count++;

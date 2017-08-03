@@ -12,7 +12,7 @@ void main() {
 
   const List<String> args0 = const <String> ['foo/bar -o foo/bar/output/ -d'];
 
-  ArgResults results = JobArgs.parse(args0);
+  JobArgs results = JobArgs.parse(args0);
   group('Tag Job ArgParser', () {
 
 

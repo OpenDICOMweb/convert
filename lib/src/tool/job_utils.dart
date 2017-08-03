@@ -4,10 +4,3 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-import 'dart:io';
-import 'job_args.dart';
-
-// Show a help message
-void showHelp(msg) {
-
-}

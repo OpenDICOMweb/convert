@@ -24,7 +24,7 @@ void main(List<String> args) {
   JobArgs jobArgs;
 
   /// The help message
-  String showHelp() {
+  void showHelp() {
     var msg = '''
 Usage: dirTest <input-directory> [<options>]
 
@@ -43,30 +43,30 @@ ${jobArgs.parser.usage}
     exit(0);
   }
 
-    jobArgs = new JobArgs(args);
+  jobArgs = new JobArgs(args);
 
-    print(jobArgs.info);
+  print(jobArgs.info);
 
-    if (jobArgs.showHelp) showHelp();
+  if (jobArgs.showHelp) showHelp();
 
-    // Get target directory and validate it.
-    var dirName = args[0];
-    var dir = toDirectory(dirName);
-    if (dir == null) {
-      if (dirName[0] == '-') {
-        stderr.write('Error: Missing directory argument - "$dir"');
-      } else {
-        stderr.write('Error: $dirName does not exist');
-      }
-      exit(-1);
+  // Get target directory and validate it.
+  var dirName = args[0];
+  var dir = toDirectory(dirName);
+  if (dir == null) {
+    if (dirName[0] == '-') {
+      stderr.write('Error: Missing directory argument - "$dir"');
+    } else {
+      stderr.write('Error: $dirName does not exist');
     }
-
-    //Urgent fix logger
-    DcmReader.log.level = jobArgs.baseLevel;
-    DcmWriter.log.level = jobArgs.baseLevel;
-
-
-    JobRunner.job(dir, doRWRByteFile,
-        interval: jobArgs.shortMsgEvery, level: jobArgs.baseLevel);
+    exit(-1);
   }
+
+  //Urgent fix logger
+  DcmReader.log.level = jobArgs.baseLevel;
+  DcmWriter.log.level = jobArgs.baseLevel;
+
+
+  JobRunner.job(dir, doRWRByteFile,
+      interval: jobArgs.shortMsgEvery, level: jobArgs.baseLevel);
 }
+

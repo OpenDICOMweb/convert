@@ -25,7 +25,7 @@ const shortFileThreshold = 1024;
 abstract class DcmConverterBase {
   //TODO: remove log.debug when working
   /// The [Logger] for this
-  static final Logger _log = new Logger("DcmReader", Level.debug1);
+  static final Logger log = new Logger("DcmConverterBase", Level.debug1);
 
   //Logger get log => _log;
 
