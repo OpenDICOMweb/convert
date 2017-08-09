@@ -23,10 +23,10 @@ void main() {
 
   // *** Modify [paths] value to read/write a different file
   List<String> paths = <String>[];
-  paths.addAll(testPaths);
- // paths.addAll(testErrors);
+  //paths.addAll(testPaths);
+  //paths.addAll(testErrors);
  // paths. addAll(testData);
- // paths.addAll(fileList2);
+  paths.addAll(fileList2);
  // paths.addAll(fileList3);
 
 

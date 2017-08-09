@@ -185,9 +185,6 @@ const String error0 = 'C:/odw/test_data/mweb/ASPERA'
 const String error1 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs'
     '/Anonymized1.2.840.10008.5.1.4.1.1.20.dcm';
 
-// File with only 132 Bytes
-const String error2 = 'C:/odw/test_data/mweb/Radiologic/2/I00221';
-
 // Laurel Bridge can open either.
 const String error3 = 'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX'
     '/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)'
@@ -240,7 +237,9 @@ const String error15 = 'C:/odw/test_data/sfd/XA_Neuro_IR/Patient_49/'
 //const List<String> error6 = [];
 
 const List<String> testErrors = const <String>[
-  error0, error1, error2, error3, error4, error5, error6, error7, error8,
+  error0, error1,
+  //error2,
+  error3, error4, error5, error6, error7, error8,
   error9, error10, error11, error12, error12, // No Reformat
 ];
 

@@ -17,7 +17,7 @@ void main() {
   DcmWriter.log.level = Level.debug2;
 
   // *** Modify the [path0] value to read/write a different file
-  var path = error11;
+  var path = fileList2[0];
 
   byteReadWriteFileChecked(path, 1, 5, true, true);
 }

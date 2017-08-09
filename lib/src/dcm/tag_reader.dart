@@ -130,7 +130,10 @@ class TagReader extends DcmReader {
       throw new UnimplementedError();
 
   // Interface
-  String show(ByteElement e) => e.info;
+  String show(ByteElement e) => (e == null) ? 'Element e = null' : e.info;
+
+  String showItem(ByteItem item) =>
+      (item == null) ? 'Item item = null' : item.info;
 
   /// Returns a new [TagItem].
   //  Interface DcmReader.
