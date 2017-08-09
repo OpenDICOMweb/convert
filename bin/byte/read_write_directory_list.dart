@@ -27,7 +27,7 @@ String outRoot4 = 'test/output/root4';
 // 1. dirname
 // 2. reportIncrement
 void main() {
-  final Logger log = new Logger("read_a_directory", Level. error);
+  final Logger log = new Logger("read_a_directory");
   int success = 0;
   int failure = 0;
 

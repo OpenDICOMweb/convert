@@ -47,8 +47,6 @@ ${jobArgs.parser.usage}
 
   jobArgs = new JobArgs(args);
 
-  //print(jobArgs.info);
-
   if (jobArgs.showHelp) showHelp();
 
   // Get target directory and validate it.
@@ -69,7 +67,6 @@ ${jobArgs.parser.usage}
     exit(-1);
   }
 
-  //Urgent fix logger
   DcmReader.log.level = jobArgs.baseLevel;
   DcmWriter.log.level = jobArgs.baseLevel;
 

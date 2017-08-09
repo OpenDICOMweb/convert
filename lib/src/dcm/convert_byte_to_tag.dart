@@ -74,15 +74,14 @@ TagElement convertElement(ByteElement be) {
   }
 
   TagElement te;
-  if (be is SQ) {
-    te = convertSQ(be as SQ);
+  if (be.isSequence) {
+    te = convertSQ(be);
   } else if (tag is PTag) {
     if (tag.code == kPixelData) {
       te = ByteReader.makeTagPixelData(be);
       log.info('PixelData\n  $be\n  $te');
     } else {
-      te = TagElement.makeElementFromBytes(
-          code, vrCode, be.vfLength, be.vfBytes);
+      te = be.tagElementFromBytes;
     }
   } else if (tag is PCTag) {
     if (be.vr != VR.kLO)
@@ -110,7 +109,9 @@ TagElement convertElement(ByteElement be) {
   return te;
 }
 
-SQ convertSQ(SQ sq) {
+SQ convertSQ(Element e) {
+  assert(e.isSequence);
+  SequenceMixin sq = e as SequenceMixin;
   var tItems = new List<TagItem>(sq.items.length);
   var parentBDS = currentBDS;
   var parentTDS = currentTDS;

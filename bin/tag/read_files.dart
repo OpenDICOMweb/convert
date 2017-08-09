@@ -20,7 +20,7 @@ final Logger log =
 void main() {
  // readFile(path0);
 
-  readFiles(testPaths);
+  readFiles(testPaths0);
 }
 
 void readFile(String path) {

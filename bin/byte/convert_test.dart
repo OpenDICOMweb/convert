@@ -37,8 +37,12 @@ ${jobArgs.parser.usage}
     exit(0);
   }
 
-  Logger log = new Logger('convert_test', Level.info);
-  print('log level: ${log.level}');
+  jobArgs = new JobArgs(args);
+
+/*  final Logger log = new Logger('convert_test', Level.info);
+  print('log level: ${log.level}');*/
+
+  if (jobArgs.showHelp) showHelp();
 
 /* Urgent: move to io_utils with wrapper.
   Logger.root.onRecord.listen((LogRecord rec) {
@@ -46,12 +50,18 @@ ${jobArgs.parser.usage}
   });
 */
 
+  DcmReader.log.level = jobArgs.baseLevel;
+  DcmWriter.log.level = jobArgs.baseLevel;
+
   print('Dart Version: ${Platform.version}');
   print('${Platform.script}');
   print('Logger Root Level: ${log.rootLevel} Log Level: ${log.level}');
 
+  // Short circuiting args for testing
+  var pathList = [path0];
+
   RootTagDataset rds;
-  for (String path in [path0]) {
+  for (String path in pathList) {
     try {
       rds = convertFile(path, fmiOnly: false);
     } catch (e) {
@@ -84,10 +94,10 @@ RootTagDataset convertFile(dynamic file, {int reps = 1, bool fmiOnly = false}) {
   log.info('Byte DS: ${bRoot.summary}');
   log.info(' Tag DS: ${tRoot.summary}');
   // write out converted dataset and compare the bytes
-  //Urgent: make this work
+  // Urgent: make this work
   // Uint8List bytes1 = DcmWriter.writeBytes(rds1, reUseBD: true);
-//  if (bytes1 == null) return false;
-//  bytesEqual(bytes0, bytes1);
+  //  if (bytes1 == null) return false;
+  //  bytesEqual(bytes0, bytes1);
 
   if (bRoot.parent != tRoot.parent) {
     log.error('Parents Not equal');

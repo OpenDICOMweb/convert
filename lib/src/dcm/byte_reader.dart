@@ -225,15 +225,17 @@ class ByteReader extends DcmReader {
 
   static TagElement makeTagPixelData(ByteElement e) {
     assert(e.code == kPixelData);
-    if (e is OBPixelData)
+    print('makePixelData: ${e.info}');
+    if (e.vr == VR.kOB)
       return new OBPixelData.fromBytes(
           e.tag, e.vfBytes, e.vfLength, e.fragments);
-    if (e is OW)
-      return new OBPixelData.fromBytes(
+    if (e.vr == VR.kOW)
+      return new OWPixelData.fromBytes(
           e.tag, e.vfBytes, e.vfLength, e.fragments);
-    if (e is UN == VR.kUN.code)
+    if (e.vr == VR.kOB)
       return new UNPixelData.fromBytes(
           e.tag, e.vfBytes, e.vfLength, e.fragments);
+    print('makePixelData: ${e.info}');
     return invalidVRError(e.vr, 'TagReader.makePixelData');
   }
 
