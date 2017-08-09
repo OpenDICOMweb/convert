@@ -19,9 +19,9 @@ final Logger log =
 void main() {
   print('Read Files');
   DcmReader.log.level = Level.info;
-  var paths = testPaths;
+  var paths = testPaths0;
 
-  var nFiles = testPaths.length;
+  var nFiles = testPaths0.length;
   var width = '$nFiles'.length;
 
   for (int i = 0; i < paths.length; i++) {

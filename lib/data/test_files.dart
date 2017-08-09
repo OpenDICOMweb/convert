@@ -86,7 +86,7 @@ const List<String> paths = const <String>[
   path3, path4, path5 // No reformat
 ];
 
-const List<String> testPaths = const <String>[
+const List<String> testPaths0 = const <String>[
   path0, path1,
   //path2,
   path3, path4, path5, path6, path7,
@@ -94,7 +94,7 @@ const List<String> testPaths = const <String>[
   path15, path16, path17, path18, path19, path20, path21
 ];
 
-const List<String> fileList2 = const <String>[
+const List<String> testPaths1 = const <String>[
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.128.1.dcm",
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.2.dcm",
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.4.dcm",
@@ -105,7 +105,7 @@ const List<String> fileList2 = const <String>[
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.88.33.dcm",
 ];
 
-const List<String> fileList3 = const <String>[
+const List<String> testPaths2 = const <String>[
   "C:/odw/test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original/IM000001.dcm",
   "C:/odw/test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original/IM000002.dcm",
   "C:/odw/test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original/IM000003.dcm",

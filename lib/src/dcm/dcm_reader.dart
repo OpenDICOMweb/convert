@@ -564,6 +564,7 @@ abstract class DcmReader extends DcmConverterBase {
     } else {
       _vr = VR.kUN;
       _vrCode = VR.kUN.code;
+      _vrIndex = VR.kUN.index;
     }
     _vfLength = _readUint32();
     //   _maker = IVR.maker;
@@ -664,7 +665,7 @@ abstract class DcmReader extends DcmConverterBase {
         _vrCode == VR.kUN.code);
     _pixelDataStart = _rIndex;
     _pixelDataVR = VR.lookup(_vrCode);
-    log.debug('$rbb readPixelData', 1);
+    log.debug('$rbb $_vr $_vrIndex readPixelData', 1);
     Element e;
     int item = _getUint32(_rIndex);
     log.debug2('$rmm   item($item, ${toHex32(item)}');
@@ -736,7 +737,7 @@ abstract class DcmReader extends DcmConverterBase {
 
   Element _makePixelData(eStart, eLength, [VFFragments fragments]) {
     log.debug(
-        '$rbb _makePixelData: '
+        '$rbb _makePixelData: $_vr '
         '$eStart - $eLength = ${eStart + eLength}, $fragments',
         1);
     var ebd = bd.buffer.asByteData(eStart, eLength);

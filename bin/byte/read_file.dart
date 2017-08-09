@@ -15,7 +15,7 @@ void main() {
   final log = new Logger("io/bin/read_files.dart",Level.debug);
   DcmReader.log.level = Level.debug2;
 
-  var path = fileList2[0];
+  var path = testPaths1[1];
 
   log.config('Byte Reader: $path');
   RootByteDataset rds = ByteReader.readPath(path);

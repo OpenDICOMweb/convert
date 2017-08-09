@@ -35,7 +35,7 @@ void main() {
   // readWritePath(test6684_01, reps: 1, fmiOnly: false);
   // readWriteFileTimed(file, reps: 1, fast: false, fmiOnly: false);
   // readFMI(paths, fmiOnly: true);
-    readWriteFiles(testPaths, fmiOnly: false);
+    readWriteFiles(testPaths0, fmiOnly: false);
   // readWriteDirectory(dir36_4485_6684, fast: false, throwOnError: true);
   //targetTS: TransferSyntaxUid.kImplicitVRLittleEndian);
 }
