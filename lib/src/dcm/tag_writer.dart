@@ -21,7 +21,7 @@ import 'dcm_writer.dart';
 
 /// A [class] for writing a [RootTagDataset] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
-/// all LITTLE ENDIAN [TransferSyntax]es.
+/// all LITTLE ENDIAN [TransferSyntaxUid]es.
 class TagWriter extends DcmWriter {
   /// The root [RootTagDataset] being written.
   final RootTagDataset _rootDS;
@@ -33,7 +33,7 @@ class TagWriter extends DcmWriter {
   TagWriter(this._rootDS,
       {int bufferLength,
       String path = "",
-      TransferSyntax outputTS,
+      TransferSyntaxUid outputTS,
       bool throwOnError = true,
       bool allowImplicitLittleEndian = true,
       bool addMissingPrefix = false,
@@ -59,7 +59,7 @@ class TagWriter extends DcmWriter {
       bool overwrite = false,
       bool fmiOnly = false,
       fast = true,
-      TransferSyntax targetTS}) {
+      TransferSyntaxUid targetTS}) {
     checkFile(file, overwrite);
     return new TagWriter(ds,
         bufferLength: bufferLength,
@@ -76,7 +76,7 @@ class TagWriter extends DcmWriter {
       bool overwrite = false,
       bool fmiOnly = false,
       fast = false,
-      TransferSyntax targetTS}) {
+      TransferSyntaxUid targetTS}) {
     checkPath(path);
     return new TagWriter(ds,
         bufferLength: bufferLength,
@@ -111,7 +111,7 @@ class TagWriter extends DcmWriter {
       String path = "",
       bool fmiOnly: false,
       bool fast: true,
-      TransferSyntax outputTS,
+      TransferSyntaxUid outputTS,
       reUseBD = true}) {
     checkRootDataset(ds);
     var writer = new TagWriter(ds,
@@ -129,7 +129,7 @@ class TagWriter extends DcmWriter {
       bool overwrite = false,
       bool fmiOnly = false,
       fast = true,
-      TransferSyntax targetTS}) {
+      TransferSyntaxUid targetTS}) {
     checkFile(file, overwrite);
     var bytes = writeBytes(ds,
         bufferLength: bufferLength,
@@ -148,7 +148,7 @@ class TagWriter extends DcmWriter {
       bool overwrite = false,
       bool fmiOnly = false,
       fast = false,
-      TransferSyntax targetTS}) {
+      TransferSyntaxUid targetTS}) {
     checkPath(path);
     return writeFile(ds, new File(path),
         bufferLength: bufferLength,
@@ -165,7 +165,7 @@ class TagWriter extends DcmWriter {
       {int bufferLength,
       bool overwrite = false,
       fast = false,
-      TransferSyntax targetTS}) {
+      TransferSyntaxUid targetTS}) {
     checkPath(path);
     return writeFile(ds, new File(path),
         bufferLength: bufferLength,

@@ -7,9 +7,8 @@
 import 'dart:typed_data';
 
 import 'package:common/ascii.dart';
-import 'package:core/src/dataset/byte/byte_dataset.dart';
+import 'package:core/byte_dataset.dart';
 import 'package:core/src/dicom_utils.dart';
-import 'package:core/src/element/byte_element/byte_element.dart';
 import 'package:dictionary/dictionary.dart';
 
 /// TODO DOC
@@ -103,7 +102,8 @@ bool compareByteDatasets(ByteDataset ds0, ByteDataset ds1,
     ByteElement e1 = ds1[e0.code];
     if (e0.vrCode == VR.kSQ.code) {
       if (e1.vrCode != VR.kSQ.code) return false;
-      if (!compareSequences(e0, e1)) return false;
+      if (!compareSequences(e0 as SequenceMixin, e1 as SequenceMixin)) return
+        false;
     } else {
       if (e0.code != e1.code ||
           e0.vrCode != e1.vrCode ||
@@ -129,7 +129,7 @@ bool compareByteDatasets(ByteDataset ds0, ByteDataset ds1,
   return true;
 }
 
-bool compareSequences(ByteSQ s0, ByteSQ s1) {
+bool compareSequences(SequenceMixin s0, SequenceMixin s1) {
   if (s0.code != s1.code ||
       s0.vrCode != s1.vrCode ||
       s0.items.length != s1.items.length) return false;

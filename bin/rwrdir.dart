@@ -18,6 +18,8 @@ import 'package:dcm_convert/tools.dart';
 // TODO: print out the version numbers of the different packages.
 //TODO: better doc
 
+const defaultDirectory = 'C:/odw/test_data/sfd/MG';
+
 /// A program for doing read/write/read testing on DICOM files.
 void main(List<String> args) {
   /// The processed arguments for this program.
@@ -26,7 +28,7 @@ void main(List<String> args) {
   /// The help message
   void showHelp() {
     var msg = '''
-Usage: dirTest <input-directory> [<options>]
+Usage: rwrdir <input-directory> [<options>]
 
 For each application/dicom file in the <directory> tree:
   1. Decodes (reads) the data in a byte array (file) into a Root Dataset [0]
@@ -45,12 +47,18 @@ ${jobArgs.parser.usage}
 
   jobArgs = new JobArgs(args);
 
-  print(jobArgs.info);
+  //print(jobArgs.info);
 
   if (jobArgs.showHelp) showHelp();
 
   // Get target directory and validate it.
-  var dirName = args[0];
+  var dirName;
+  if (args.length == 0) {
+    stderr.write('No Directory name supplied - defaulting to C:/odw/test_data');
+    dirName = 'C:/odw/test_data';
+  } else {
+    dirName = args[0];
+  }
   var dir = toDirectory(dirName);
   if (dir == null) {
     if (dirName[0] == '-') {
@@ -65,8 +73,6 @@ ${jobArgs.parser.usage}
   DcmReader.log.level = jobArgs.baseLevel;
   DcmWriter.log.level = jobArgs.baseLevel;
 
-
   JobRunner.job(dir, doRWRByteFile,
       interval: jobArgs.shortMsgEvery, level: jobArgs.baseLevel);
 }
-

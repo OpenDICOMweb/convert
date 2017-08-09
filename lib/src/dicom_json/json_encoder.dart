@@ -73,7 +73,7 @@ class JsonEncoder extends ByteBuf {
   void writeInstance(Instance instance, Formatter fmt) {
     writeString('[\n');
     fmt.down;
-    writeDataset(instance.dataset, fmt);
+    writeDataset(instance.rds, fmt);
     fmt.up;
     writeString('\n]\n');
   }

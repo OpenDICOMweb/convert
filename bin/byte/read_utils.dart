@@ -65,13 +65,13 @@ class FileResult {
   File file;
   RootByteDataset rds;
   bool fmiOnly;
-  TransferSyntax targetTS;
+  TransferSyntaxUid targetTS;
   FileTiming times;
   bool hasProblem;
 
   String path;
   int length;
-  TransferSyntax ts;
+  TransferSyntaxUid ts;
   bool hasDuplicates;
   int duplicateCount;
   bool isShort;
@@ -120,7 +120,7 @@ class ResultSet {
   List<File> files;
   bool fmiOnly;
   int shortFileThreshold;
-  TransferSyntax targetTS;
+  TransferSyntaxUid targetTS;
   int unReadable;
 
   List<FileResult> successes = [];
@@ -209,7 +209,7 @@ Test ResultSet for $type
 }
 
 FileResult readFileWithResult(File file,
-    {bool fmiOnly = false, TransferSyntax targetTS, bool timing: true}) {
+    {bool fmiOnly = false, TransferSyntaxUid targetTS, bool timing: true}) {
   Timer timer = new Timer();
   var start = timer.split;
   var bytes = file.readAsBytesSync();
@@ -226,7 +226,7 @@ FileResult readFileWithResult(File file,
 ResultSet readDirectorySync(String path,
     {bool fmiOnly = false,
     int shortFileThreshold = 1024,
-    TransferSyntax targetTS,
+    TransferSyntaxUid targetTS,
     bool timing = true,
     int printEvery = 100,
     bool throwOnError = false,
@@ -240,7 +240,7 @@ ResultSet readDirectorySync(String path,
 Future<ResultSet> readDirectoryAsync(String path,
     {bool fmiOnly = false,
     int shortFileThreshold = 1024,
-    TransferSyntax targetTS,
+    TransferSyntaxUid targetTS,
     bool timing = true,
     int printEvery = 100,
     bool throwOnError = false,
@@ -268,7 +268,7 @@ Future<ResultSet> readDirectoryAsync(String path,
 ResultSet readFileList(List<File> files,
     {bool fmiOnly = false,
     int shortFileThreshold = 1024,
-    TransferSyntax targetTS,
+    TransferSyntaxUid targetTS,
     bool timing = true,
     int printEvery = 100,
     bool throwOnError = false,

@@ -26,7 +26,7 @@ import 'byte_data_buffer.dart';
 
 /// A library for encoding [Dataset]s in the DICOM File Format.
 ///
-/// Supports encoding all LITTLE ENDIAN [TransferSyntax]es.
+/// Supports encoding all LITTLE ENDIAN [TransferSyntaxUid]es.
 /// Does not support BIG ENDIAN which is retired.
 ///
 /// _Notes_:
@@ -52,11 +52,11 @@ abstract class DcmWriter {
   /// precedence over [path].
   final File file;
 
-  /// The [TransferSyntax] for the encoded output. If [null]
-  /// the output will have the same [TransferSyntax] as the Root
-  /// [Dataset]. If the [TransferSyntax] of the Root [Dataset] is
+  /// The [TransferSyntaxUid] for the encoded output. If [null]
+  /// the output will have the same [TransferSyntaxUid] as the Root
+  /// [Dataset]. If the [TransferSyntaxUid] of the Root [Dataset] is
   /// [null] then it defaults to [Explicit VR Little Endian].
-  final TransferSyntax targetTS;
+  final TransferSyntaxUid targetTS;
 
   /// If [true] errors will throw; otherwise, they return [null].
   /// The default is [true].
@@ -76,7 +76,7 @@ abstract class DcmWriter {
 
   /// Return [true] if input is Explicit VR, [false] if Implicit VR.
   bool _isEVR;
-  TransferSyntax _ts;
+  TransferSyntaxUid _ts;
 
   int _nElements = 0;
   int _nSequences = 0;
@@ -87,7 +87,7 @@ abstract class DcmWriter {
   DcmWriter(Dataset rootDS,
       {this.path,
       this.file,
-      TransferSyntax outputTS,
+      TransferSyntaxUid outputTS,
       this.throwOnError = true,
       this.bufferLength,
       this.reUseBD = true,
@@ -100,7 +100,7 @@ abstract class DcmWriter {
                 (bufferLength == null) ? defaultBufferLength : bufferLength);
 
   /// Returns the [targetTS] for the encoded output.
-  static TransferSyntax getOutputTS(Dataset rootDS, TransferSyntax outputTS) {
+  static TransferSyntaxUid getOutputTS(Dataset rootDS, TransferSyntaxUid outputTS) {
     if (outputTS == null) {
       return (rootDS.transferSyntax == null)
           ? System.defaultTransferSyntax
@@ -129,7 +129,7 @@ abstract class DcmWriter {
   /// The root Dataset being encoded.
   Dataset get rootDS;
 
-  TransferSyntax get ts => rootDS.transferSyntax;
+  TransferSyntaxUid get ts => rootDS.transferSyntax;
 
   /// The current dataset.  This changes as Sequences and Items are encoded.
   Dataset get currentDS => _currentDS;
@@ -297,7 +297,7 @@ abstract class DcmWriter {
     _isEVR = true;
     for (Element e in ds.elements) {
       int eStart = _wIndex;
-      log.debug('$wbb write e: ${e.info}', 1);
+      log.debug('$wbb write e: $e', 1);
       //TODO: figure out how to move this outside loop.
       //  should fmi be a separate map in the rootDS?
       if (e.code > 0x30000) _isEVR = rootDS.isEVR;
@@ -311,7 +311,7 @@ abstract class DcmWriter {
 
   void _writeElement(Element e) {
     int eStart = _wIndex;
-    log.debug('$wbb writing: ${e.info}', 1);
+    log.debug('$wbb writing: $e', 1);
     if (e.isSequence) {
       _writeSequence(e);
     } else {
@@ -357,7 +357,7 @@ abstract class DcmWriter {
       _writeUint16(e.vrCode);
       if (e.vr.hasShortVF) {
         // Write short EVR VF Length
-        _writeUint16(length);
+        _writeUint16(e.vfLength);
         assert(_wIndex == start + 8);
       } else {
         // Write long EVR VF Length
@@ -378,17 +378,19 @@ abstract class DcmWriter {
     //TODO: handle replacing undefined lengths
     log.debug('$wbb SQ $e', 1);
     _writeHeader(e);
-    if (e.values.length > 0) _writeItems(e);
+    var sq = e as SequenceMixin;
+    if (sq.items.length > 0) _writeItems(e);
     if (e.hadULength) _writeDelimiter(kSequenceDelimitationItem);
     _nSequences++;
     if (e.isPrivate) _nPrivateSequences++;
     log.debug('$wee SQ', -1);
   }
 
-  void _writeItems(ByteSQ e) {
+  void _writeItems(Element e) {
     if (!e.isSequence) throw '$e Not Sequence';
     //TODO: handle replacing undefined lengths
-    List<ByteItem> items = e.items;
+    var sq = e as SequenceMixin;
+    List<ByteItem> items = sq.items;
     for (Dataset item in items) {
       log.debug('$wbb Writing Item: $item', 1);
       _writeDelimiter(kItem, item.vfLength);
@@ -399,13 +401,14 @@ abstract class DcmWriter {
   }
 
   /// Write encapsulated (compressed) [kPixelData] from [Element] [e].
-  void _writePixelData(BytePixelData e) {
+  void _writePixelData(Element e) {
     log.debug('$wbb PixelData: $e');
     //TODO: handle replacing undefined lengths
     //TODO: handle doRemoveFragments
-    if (e.fragments != null) {
+    PixelDataMixin pd = e as PixelDataMixin;
+    if (pd.fragments != null) {
       _writeHeader(e);
-      for (Uint8List fragment in e.fragments.fragments) {
+      for (Uint8List fragment in pd.fragments.fragments) {
         _writeTagCode(kItem);
         _writeUint32(fragment.lengthInBytes);
         _writeBytes(fragment);
@@ -491,7 +494,7 @@ abstract class DcmWriter {
   void _writeBytes(Uint8List bytes) => __writeBytes(bytes);
 
   void __writeBytes(Uint8List bytes) {
-    int length = bytes.length;
+    int length = bytes.lengthInBytes;
     _maybeGrow(length);
     for (int i = 0, j = _wIndex; i < length; i++, j++)
       _bd.setUint8(j, bytes[i]);

@@ -5,6 +5,7 @@
 // See the   AUTHORS file for other contributors.
 
 import 'package:common/common.dart';
+import 'package:core/system.dart';
 import 'package:dcm_convert/data/test_files.dart';
 //import 'package:dcm_convert/data/test_directories.dart';
 
@@ -18,14 +19,15 @@ void main() {
   //TODO: fix logger so next two lines are unnecessary
   DcmReader.log.level = Level.info;
   DcmWriter.log.level = Level.info;
+  log.level = Level.info;
 
   // *** Modify [paths] value to read/write a different file
   List<String> paths = <String>[];
   paths.addAll(testPaths);
-  paths.addAll(testErrors);
+ // paths.addAll(testErrors);
  // paths. addAll(testData);
-  paths.addAll(fileList2);
-  paths.addAll(fileList3);
+ // paths.addAll(fileList2);
+ // paths.addAll(fileList3);
 
 
   for (int i = 0; i < paths.length; i++) {

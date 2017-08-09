@@ -19,7 +19,7 @@ RootTDataset convert(RootByteDataset byteDS) {
   TElement convertElement(ByteElement e) {
     int code = e.code;
     if (Tag.isPublicCode(code)) {
-      Tag tag = PTag.lookupCode(e.code, e.vr, true);
+      Tag tag = PTag.lookupByCodeCode(e.code, e.vr, true);
       if (e is ByteSQ) {
         return convertSequence(tag, e));
       } else  {

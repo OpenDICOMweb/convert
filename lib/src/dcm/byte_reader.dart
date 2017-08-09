@@ -7,7 +7,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:core/core.dart';
+import 'package:common/common.dart';
+import 'package:core/byte_dataset.dart';
 import 'package:dictionary/dictionary.dart';
 
 import 'package:dcm_convert/dcm.dart';
@@ -16,6 +17,7 @@ import 'dcm_reader.dart';
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootByteDataset].
 class ByteReader extends DcmReader {
+  static final Logger log = new Logger('DcmReader.ByteReader');
   final RootByteDataset _rootDS;
   ByteDataset _currentDS;
 
@@ -28,10 +30,10 @@ class ByteReader extends DcmReader {
       bool fmiOnly = false,
       bool throwOnError = true,
       bool allowMissingFMI = false,
-      TransferSyntax targetTS,
+      TransferSyntaxUid targetTS,
       bool reUseBD = true})
-      : _rootDS = new RootByteDataset.fromByteData(bd,
-            vfLength: bd.lengthInBytes),
+      : _rootDS =
+            new RootByteDataset.fromByteData(bd, vfLength: bd.lengthInBytes),
         super(bd,
             path: path,
             async: async,
@@ -53,7 +55,7 @@ class ByteReader extends DcmReader {
       bool fmiOnly = false,
       bool throwOnError = false,
       bool allowMissingFMI = false,
-      TransferSyntax targetTS,
+      TransferSyntaxUid targetTS,
       bool reUseBD = true}) {
     Uint8List bytes = new Uint8List.fromList(list);
     ByteData bd = bytes.buffer.asByteData();
@@ -76,7 +78,7 @@ class ByteReader extends DcmReader {
       bool fmiOnly = false,
       bool throwOnError = true,
       bool allowMissingFMI = false,
-      TransferSyntax targetTS,
+      TransferSyntaxUid targetTS,
       bool reUseBD = true}) {
     Uint8List bytes = file.readAsBytesSync();
     ByteData bd = bytes.buffer.asByteData();
@@ -98,7 +100,7 @@ class ByteReader extends DcmReader {
       bool fmiOnly = false,
       bool throwOnError = true,
       bool allowMissingFMI = false,
-      TransferSyntax targetTS,
+      TransferSyntaxUid targetTS,
       bool reUseBD = true}) {
     return new ByteReader.fromFile(new File(path),
         async: async,
@@ -143,6 +145,23 @@ class ByteReader extends DcmReader {
     return _rootDS;
   }
 
+  void debugStart(Object o, String msg) {
+    log.debug('$rbb $o $msg');
+  }
+
+  void debug(Object o, Level level) {
+    log.debug('$rmm $o');
+  }
+
+  void debugEnd(Object o, Level level) {
+    log.debug('$rbb $o');
+  }
+
+  // Interface
+  String show(ByteElement e) => (e == null) ? 'Element e = null' : e.info;
+
+  String showItem(ByteItem item) =>
+      (item == null) ? 'Item item = null' : item.info;
 /*
   /// Returns a new [ByteElement].
   // Called from [DcmReader].
@@ -172,25 +191,23 @@ class ByteReader extends DcmReader {
 */
 
   //Urgent: flush or fix
-  TagElement makeTagElement(ByteElement e) =>
-      TagElement.makeElementFromBytes(e.code, e.vrCode, e.vfLength, e
-          .vfBytes);
+  ByteElement makeElement(int vrIndex, ByteData bd) =>
+      (isEVR) ? EVR.makeElement(vrIndex, bd) : IVR.makeElement(vrIndex, bd);
 
-/*
-  //Urgent: flush or fix
-  TagElement makeElementFromBytePixelData(Element e, bool isEVR) =>
-      TagElement.makeElementFromBytes(
-          e.code, e.vrCode, e.vfBytes, e.vfLength, e.fragments);
-*/
+  ByteElement makePixelData(int vrIndex, ByteData bd,
+          [VFFragments fragments]) =>
+      (isEVR)
+          ? EVR.makePixelData(vrIndex, bd, fragments)
+          : IVR.makePixelData(vrIndex, bd, fragments);
 
   /// Returns a new ByteSequence.
   /// [bd] is the complete [ByteElement] for the Sequence.
-  ByteElement makeSequence(
-      ByteData bd, List<ByteItem> items, int vfLength, bool isEVR) {
+  ByteElement makeSQ(ByteData bd, ByteDataset parent, List<ByteItem> items,
+      int vfLength, bool isEVR) {
     //TODO: figure out how to create a ByteSequence with one call.
     ByteElement sq = (isEVR)
-        ? new EVRByteSQ(bd, currentDS, items)
-        : new IVRByteSQ(bd, currentDS, items);
+        ? EVR.makeSQ(bd, currentDS, items)
+        : IVR.makeSQ(bd, currentDS, items);
     for (ByteItem item in items) item.addSQ(sq);
     return sq;
   }
@@ -201,6 +218,25 @@ class ByteReader extends DcmReader {
           [Map<int, Element> dupMap]) =>
       new ByteItem.fromDecoder(bd, parent, vfLength, map, dupMap);
 
+  //Urgent: flush or fix
+  static TagElement makeTagElement(ByteElement e) =>
+      TagElement.makeElementFromBytes(
+          e.code, e.vrCode, e.vfLength, e.vfBytes, e.fragments);
+
+  static TagElement makeTagPixelData(ByteElement e) {
+    assert(e.code == kPixelData);
+    if (e is OBPixelData)
+      return new OBPixelData.fromBytes(
+          e.tag, e.vfBytes, e.vfLength, e.fragments);
+    if (e is OW)
+      return new OBPixelData.fromBytes(
+          e.tag, e.vfBytes, e.vfLength, e.fragments);
+    if (e is UN == VR.kUN.code)
+      return new UNPixelData.fromBytes(
+          e.tag, e.vfBytes, e.vfLength, e.fragments);
+    return invalidVRError(e.vr, 'TagReader.makePixelData');
+  }
+
   /// Reads only the File Meta Information ([FMI], if present.
   static RootByteDataset readBytes(Uint8List bytes,
       {String path = "",
@@ -209,7 +245,7 @@ class ByteReader extends DcmReader {
       bool fmiOnly = false,
       bool throwOnError = true,
       allowMissingFMI = false,
-      TransferSyntax targetTS,
+      TransferSyntaxUid targetTS,
       bool reUseBD = true}) {
     RootByteDataset rds;
     try {
@@ -232,13 +268,13 @@ class ByteReader extends DcmReader {
   }
 
   static RootByteDataset readFile(File file,
-          {bool async: true,
-          bool fast = true,
-          bool fmiOnly = false,
-          bool throwOnError = true,
-          bool allowMissingFMI: false,
-          TransferSyntax targetTS,
-          bool reUseBD: true}) {
+      {bool async: true,
+      bool fast = true,
+      bool fmiOnly = false,
+      bool throwOnError = true,
+      bool allowMissingFMI: false,
+      TransferSyntaxUid targetTS,
+      bool reUseBD: true}) {
 // Fix   checkFile(file);
     return readBytes(file.readAsBytesSync(),
         path: file.path,
@@ -250,14 +286,15 @@ class ByteReader extends DcmReader {
         targetTS: targetTS,
         reUseBD: reUseBD);
   }
+
   static ByteDataset readPath(String path,
-          {bool async: true,
-          bool fast = true,
-          bool fmiOnly = false,
-          bool throwOnError = true,
-          allowMissingFMI = false,
-          TransferSyntax targetTS,
-          bool reUseBD = true}) {
+      {bool async: true,
+      bool fast = true,
+      bool fmiOnly = false,
+      bool throwOnError = true,
+      allowMissingFMI = false,
+      TransferSyntaxUid targetTS,
+      bool reUseBD = true}) {
 //Fix    checkPath(path);
     return readFile(new File(path),
         async: async,
@@ -267,13 +304,14 @@ class ByteReader extends DcmReader {
         allowMissingFMI: allowMissingFMI,
         targetTS: targetTS);
   }
+
   /// Reads only the File Meta Information ([FMI], if present.
   static ByteDataset readFmiOnly(dynamic pathOrFile,
       {bool async: true,
       bool fast = true,
       bool fmiOnly = false,
       bool throwOnError = true,
-      TransferSyntax targetTS,
+      TransferSyntaxUid targetTS,
       bool reUseBD = true}) {
     var func;
     if (pathOrFile is String) {

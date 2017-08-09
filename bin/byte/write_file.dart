@@ -15,7 +15,7 @@ final Logger log =
     new Logger("convert/bin/byte/write_file_list.dart", Level.info);
 
 Uint8List writeFile(RootByteDataset rds, String path,
-    {bool fmiOnly = false, TransferSyntax outputTS}) {
+    {bool fmiOnly = false, TransferSyntaxUid outputTS}) {
   var timer = new Timer();
   var total = rds.total;
   log.debug('writing ${rds.runtimeType} to "$path"\n'

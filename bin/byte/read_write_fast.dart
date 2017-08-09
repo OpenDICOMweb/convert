@@ -26,7 +26,7 @@ void main() {
   // readFMI(paths, fmiOnly: true);
   //  readWriteFiles(paths, fmiOnly: false);
   readWriteDirectory(mrStudy, fmiOnly: true);
-  //targetTS: TransferSyntax.kImplicitVRLittleEndian);
+  //targetTS: TransferSyntaxUid.kImplicitVRLittleEndian);
 }
 
 final String _tempDir = Directory.systemTemp.path;

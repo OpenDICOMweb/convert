@@ -37,8 +37,8 @@ $pad    TS: ${rds0.transferSyntax}''');
     if (e == null) {
       log.warn('$pad ** Pixel Data Element not present');
     } else {
-      BytePixelData bpd = e;
-      log.debug1('$pad  bpd: ${bpd.info}');
+
+      log.debug1('$pad  e: ${e.info}');
     }
 
     // Write the Root Dataset

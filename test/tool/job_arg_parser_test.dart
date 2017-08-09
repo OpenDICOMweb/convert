@@ -4,7 +4,6 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-import 'package:args/args.dart';
 import 'package:dcm_convert/tools.dart';
 import 'package:test/test.dart';
 

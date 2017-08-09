@@ -13,9 +13,9 @@ import 'package:dcm_convert/src/dcm/dcm_reader.dart';
 //Urgent: bug with path20
 void main() {
   final log = new Logger("io/bin/read_files.dart",Level.debug);
-  DcmReader.log.level = Level.debug1;
+  DcmReader.log.level = Level.debug2;
 
-  var path = testPaths[0];
+  var path = path4;
 
   log.config('Byte Reader: $path');
   RootByteDataset rds = ByteReader.readPath(path);
@@ -23,6 +23,6 @@ void main() {
     log.warn('No Data: $path');
   } else {
     log.info('${rds.parseInfo.info}');
-    log.info('Bytes Dataset: ${rds.info}');
+    log.info('Bytes Dataset: ${rds.summary}');
   }
 }

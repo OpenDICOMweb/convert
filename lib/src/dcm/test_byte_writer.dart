@@ -19,7 +19,7 @@ class TestByteWriter extends ByteWriter {
   TestByteWriter(RootByteDataset rootDS,
       {int length,
       String path = "",
-      TransferSyntax outputTS,
+      TransferSyntaxUid outputTS,
       bool throwOnError = true,
       bool reUseBD = true,
       EncodingParameters encoding})

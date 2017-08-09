@@ -39,7 +39,7 @@ typedef Element PixelDataMaker<V>(
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
 abstract class DcmReader extends DcmConverterBase {
-  static final Logger log = new Logger("read_a_directory", Level.debug);
+  static final Logger log = new Logger("DcmReader");
 
   /// The [ByteData] being read.
   final ByteData bd;
@@ -58,10 +58,8 @@ abstract class DcmReader extends DcmConverterBase {
   /// If [true], then duplicate [Element]s will be stored.
   final bool allowDuplicates;
 
-  /// Only read the file if it has the same [TransferSyntax] as [targetTS].
-  final TransferSyntax targetTS;
-
-
+  /// Only read the file if it has the same [TransferSyntaxUid] as [targetTS].
+  final TransferSyntaxUid targetTS;
 
   //Urgent: todo make this a parameter
   /// If [true] any EVR [Element]s will be checked for being Sequences.
@@ -81,6 +79,7 @@ abstract class DcmReader extends DcmConverterBase {
   final ElementList elementList = new ElementList();
 
   ByteData bdRead;
+  final List<String> exceptions = <String>[];
 
   // ParseInfo values
   bool _isEVR;
@@ -103,7 +102,7 @@ abstract class DcmReader extends DcmConverterBase {
   int _nonZeroDelimiterLengths = 0;
   int _nOddLengthValueFields = 0;
 
-  TransferSyntax _ts;
+  TransferSyntaxUid _ts;
   VR _pixelDataVR;
   int _pixelDataStart;
   int _pixelDataEnd;
@@ -143,8 +142,32 @@ abstract class DcmReader extends DcmConverterBase {
       this.decoding = DecodingParameters.kNoChange})
       : _wasShortFile = bd.lengthInBytes < shortFileThreshold {
     log.debug('ByteData length: ${bd.lengthInBytes}');
-    _warnIfShortFile();
+    if (_wasShortFile) {
+      var s = 'Short file error: length(${bd.lengthInBytes}) $path';
+      _warn('$s $_rrr');
+      if (throwOnError)
+        throw new ShortFileError('Length($bd.lengthInBytes) $path');
+    }
   }
+
+  Element makeElement(_vrIndex, ByteData bd);
+
+  Element makePixelData(_vrIndex, ByteData bd, VFFragments fragments);
+
+  /// Interface for logging
+  String show(Element e);
+
+  /// Interface for logging
+  String showItem(ByteItem item);
+
+  /// Interface to Item constructor.
+  Dataset makeItem(
+      ByteData bd, Dataset parent, int vfLength, Map<int, Element> map,
+      [Map<int, Element> dupMap]);
+
+  /// Interface to Sequence constructor.
+  Element makeSQ(
+      ByteData bd, Dataset parent, List items, int vfLength, bool isEVR);
 
   bool get isEVR => _isEVR;
 
@@ -170,14 +193,6 @@ abstract class DcmReader extends DcmConverterBase {
 
   Uint8List get bytes =>
       bdRead.buffer.asUint8List(bdRead.offsetInBytes, bdRead.lengthInBytes);
-
-  /// Interface to Item constructor.
-  Dataset makeItem(
-      ByteData bd, Dataset parent, int vfLength, Map<int, Element> map,
-      [Map<int, Element> dupMap]);
-
-  /// Interface to Sequence constructor.
-  Element makeSequence(ByteData bd, List items, int vfLength, bool isEVR);
 
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${currentDS.info}';
@@ -216,7 +231,8 @@ abstract class DcmReader extends DcmConverterBase {
         shortFileThreshold,
         _wasShortFile,
         _hadTrailingBytes,
-        _hadTrailingZeros);
+        _hadTrailingZeros,
+        exceptions);
   }
 
   bool dcmReadFMI([bool checkPreamble = false]) {
@@ -240,7 +256,7 @@ abstract class DcmReader extends DcmConverterBase {
 
     if (!System.isSupportedTransferSyntax(_ts)) {
       _hadParsingErrors = true;
-      log.error('$ree Unsupported TS: $_ts @end');
+      _error('$ree Unsupported TS: $_ts @end');
       if (throwOnError) throw new InvalidTransferSyntaxError(_ts);
       return rootDS;
     }
@@ -251,24 +267,25 @@ abstract class DcmReader extends DcmConverterBase {
       log.debug1('$rbb readDataset: isExplicitVR(${_isEVR})');
       while (_hasRemaining(8)) readElement();
       log.debug1('$ree end readDataset: isExplicitVR(${_isEVR})');
-      assert(currentDS == rootDS);
+      assert(identical(currentDS, rootDS));
     } on EndOfDataError {
       log.info('$_rrr EndOfDataError');
       _endOfDataError = true;
     } on ShortFileError {
       rethrow;
     } on RangeError catch (ex) {
-      log.error('$ex\n $stats');
+      _error('$ex\n $stats');
       if (_beyondPixelData) log.info('$_rrr Beyond Pixel Data');
       // Keep: *** Keep, but only use for debugging.
       if (throwOnError) rethrow;
     } catch (ex) {
-      log.error('$_rrr $ex\n $stats');
+      _error('$_rrr $ex\n $stats');
       // *** Keep, but only use for debugging.
       if (throwOnError) rethrow;
     } finally {
       bdRead = bd.buffer.asByteData(0, _endOfLastValueRead);
-      assert(_rIndex == _endOfLastValueRead);
+//      assert(_rIndex == _endOfLastValueRead,
+//          '_rIndex($_rIndex), _endOfLastValueRead($_endOfLastValueRead)');
       _bytesUnread = bd.lengthInBytes - _rIndex;
       _hadTrailingBytes = _bytesUnread > 0;
       _hadTrailingZeros = _checkAllZeros(_endOfLastValueRead, bd.lengthInBytes);
@@ -278,7 +295,7 @@ abstract class DcmReader extends DcmConverterBase {
 
     log.debug1(stats);
     if (_rIndex != bdRead.lengthInBytes) {
-      log.warn('** End of Data with _rIndex($_rIndex) != bdRead.length'
+      _warn('End of Data with _rIndex($_rIndex) != bdRead.length'
           '(${bdRead.lengthInBytes}) $_rrr');
       _dsLengthInBytes = _rIndex;
       _endOfLastValueRead = _rIndex;
@@ -289,9 +306,11 @@ abstract class DcmReader extends DcmConverterBase {
 
     int rootDSTotal = rootDS.total + rootDS.dupTotal;
     if (_nElementsRead != rootDSTotal) {
-      var msg = '** Inconsistent Elements Error: '
-          '_nElementsRead($_nElementsRead), rootDS(${rootDSTotal}) $rootDS';
-      log.error(msg);
+      var msg = 'Inconsistent Elements Error: '
+          '_nElementsRead($_nElementsRead), rootDS.total(${rootDS.total}) '
+          'rootDS.dupTotal(${rootDS.dupTotal})  '
+          '= ${rootDS.total + rootDS.dupTotal}';
+      _error(msg);
       if (throwOnError) throw msg;
     }
     return rootDS;
@@ -321,7 +340,7 @@ abstract class DcmReader extends DcmConverterBase {
     if (bd.lengthInBytes <= 132)
       msg += 'ByteData length(${bd.lengthInBytes}) < 132';
     if (msg.length > 0) {
-      log.error(msg);
+      _error(msg);
       return false;
     }
     if (checkPreamble) {
@@ -336,7 +355,7 @@ abstract class DcmReader extends DcmConverterBase {
     bool v = (prefix == "DICM") ? true : false;
     _hadPrefix = v;
     if (v == false) {
-      log.warn('**    No DICOM Prefix present @$_rrr');
+      _warn('No DICOM Prefix present @$_rrr');
       _skip(-132);
     }
     return v;
@@ -365,26 +384,28 @@ abstract class DcmReader extends DcmConverterBase {
           break;
         } else {
           Element e = _readElement();
-          log.debug2('$rmm $e');
+          log.debug2('$rmm ${show(e)}');
         }
       }
     } on InvalidTransferSyntaxError catch (x) {
       _hadParsingErrors = true;
-      log.warn('Failed to read FMI: "$path"\nException: $x\n $_rrr');
-      log.warn('  File length: ${bd.lengthInBytes}\n$ree readFMI catch: $x');
+      _warn('Failed to read FMI: "$path"\nException: $x\n $_rrr');
+      _warn('  File length: ${bd.lengthInBytes}\n$ree readFMI catch: $x');
       _rIndex = 0;
       log.debug('$ree readFMI Invalid TS catch: $x', -1);
       rethrow;
     } catch (x) {
       if (code == 0) _zeroEncountered(code);
       _hadParsingErrors = true;
-      log.error('Failed to read FMI: "$path"\nException: $x\n'
+      _error('Failed to read FMI: "$path"\nException: $x\n'
           'File length: ${bd.lengthInBytes}\n$ree readFMI catch: $x');
       _rIndex = eStart;
       log.debug('$ree readFMI Catch: $x', -1);
       rethrow;
     }
-    if (!isReadable) throw new EndOfDataError('_readFMI');
+    if (!isReadable) {
+      throw new EndOfDataError('_readFMI');
+    }
     _hadFmi = true;
     log.debug2('$rmm hadFMI: $_hadFmi');
 
@@ -430,8 +451,9 @@ abstract class DcmReader extends DcmConverterBase {
     } else if (vfLength == kUndefinedLength) {
       e = _readULength(code, eStart, vfLength);
     } else {
-      e = _readDefinedLength(code, eStart, vfLength);
+      e = _readDLength(code, eStart, vfLength);
     }
+
     //Enhancement: only gather statistics when statisticsEnables is true
     // Statistics
     if (statisticsEnabled) {
@@ -442,7 +464,7 @@ abstract class DcmReader extends DcmConverterBase {
       _lastElementCode = code;
       if ((code >> 16).isOdd) _nPrivateElementsRead++;
     }
-    log.debug('$ree $_nElementsRead: $e @end', -1);
+    log.debug('$ree $_nElementsRead: ${show(e)} @end', -1);
     return e;
   }
 
@@ -463,7 +485,7 @@ abstract class DcmReader extends DcmConverterBase {
       // Urgent: add check for valid values with switch
       currentMap[eNew.key] = eNew;
     } else if (allowDuplicates && v != null) {
-      log.warn('**    Duplicate Element: $eNew dups $v $_rrr');
+      _warn('Duplicate Element: current($v) duplicat(${show(eNew)}) $_rrr');
       if (v.vr != VR.kUN) {
         currentDupMap[eNew.key] = eNew;
       } else {
@@ -476,18 +498,19 @@ abstract class DcmReader extends DcmConverterBase {
   }
 
   // The current VR code and VR.
-  int _code;
+//  int _code;
   int _vrCode;
+  int _vrIndex;
   VR _vr;
   int _vfLength;
-  ElementMaker _maker;
 
   int _readEVRHdr(int code, int eStart) {
     _vrCode = _readUint16();
     _vr = VR.lookup(_vrCode);
+    _vrIndex = _vr.index;
     log.debug2('$rmm readEVRHdr vrCode(${toHex16(_vrCode)}) $_vr');
     if (_vr == null) {
-      log.warn('**    vr is Null: _vrCode(${toHex16(_vrCode)}) $_rrr');
+      _warn('VR is Null: _vrCode(${toHex16(_vrCode)}) $_rrr');
       _showNext(_rIndex - 4);
     }
     if (decoding.doCheckVR) _checkVR(code, _vrCode);
@@ -495,12 +518,12 @@ abstract class DcmReader extends DcmConverterBase {
     if (_vr.hasShortVF) {
       log.debug2('$rmm readEVRHdr Short VR');
       _vfLength = _readUint16();
-      _maker = ShortEVR.maker;
+//      _maker = ShortEVR.maker;
     } else {
       log.debug2('$rmm readEVRHdr Long VR');
       _skip(2);
       _vfLength = _readUint32();
-      _maker = LongEVR.maker;
+//      _maker = LongEVR.maker;
     }
     assert(_checkRIndex());
     return _vfLength;
@@ -509,13 +532,12 @@ abstract class DcmReader extends DcmConverterBase {
   //TODO: add VR.kSSUS, etc. to dictionary
   /// checks that code & vrCode are
   void _checkVR(int code, int vrCode, [bool warnOnUN = false]) {
-    var tag = Tag.lookup(code);
+    var tag = Tag.lookupByCode(code);
     if (tag == null) {
-      log.warn('$pad **    Unknown Tag Code(${toDcm(code)}) $_rrr');
+      _warn('Unknown Tag Code(${toDcm(code)}) $_rrr');
     } else if (vrCode == VR.kUN.code && tag.vr != VR.kUN) {
       //Enhancement remove PTags with VR.kUN and add multi-values VRs
-      log.warn('$pad **    ${toDcm(code)} VR.kUN($vrCode) '
-          'should be ${tag.vr} $_rrr');
+      _warn('${toDcm(code)} VR.kUN($vrCode) should be ${tag.vr} $_rrr');
     } else if (vrCode != VR.kUN.code && tag.vr.code == VR.kUN.code) {
       if (code != kPixelData && warnOnUN == true) {
         if (tag is PDTag && tag is! PDTagKnown) {
@@ -528,49 +550,42 @@ abstract class DcmReader extends DcmConverterBase {
       }
     } else if (vrCode != VR.kUN.code && vrCode != tag.vr.code) {
       var vr0 = VR.lookup(vrCode);
-      log.warn('$pad **    ${toDcm(code)} Wrong VR $vr0($vrCode) '
+      _warn('${toDcm(code)} Wrong VR $vr0($vrCode) '
           'should be ${tag.vr} $_rrr');
     }
   }
 
   int _readIVRHdr(int code, int eStart) {
     if (doConvertUndefinedVR) {
-      Tag tag = Tag.lookup(code);
+      Tag tag = Tag.lookupByCode(code);
       _vr = (tag == null) ? VR.kUN : tag.vr;
       _vrCode = _vr.code;
+      _vrIndex = _vr.index;
     } else {
       _vr = VR.kUN;
       _vrCode = VR.kUN.code;
     }
     _vfLength = _readUint32();
-    _maker = IVR.maker;
+    //   _maker = IVR.maker;
     assert(_checkRIndex());
     return _vfLength;
   }
 
   // Read an [Element] with a defined length.
-  Element _readDefinedLength(int code, int eStart, int vfLength) {
+  Element _readDLength(int code, int eStart, int vfLength) {
     log.debug2('$rmm   readDLength: ${toDcm(code)} s:$eStart vfl: $vfLength');
     Element e;
-    if (vfLength == 0) {
-      log.debug2('$rmm     DLength Empty Element');
-      e = _makeAndAddElement(eStart, _rIndex - eStart);
-    } else if (_isSequence(code, _vrCode)) {
+    if (_isSequence(code, _vrCode)) {
       log.debug2('$rmm     DLength Sequence');
       e = _readDSQ(code, eStart, vfLength);
-/*    } else if (code == kPixelData) {
-      e = _readPixelData(code, eStart, vfLength);*/
-/*      _pixelDataStart = _rIndex;
-      _pixelDataVR = VR.lookup(_vrCode);
-      log.debug2('$rmm     DLength Pixel Data');
-      e = _readSimpleDLength(code, eStart, vfLength);
-      _beyondPixelData = true;
-      _pixelDataEnd = _rIndex;*/
+    } else if (vfLength == 0) {
+      log.debug2('$rmm     DLength Empty Element');
+      e = _makeAndAddElement(eStart, _rIndex - eStart);
     } else {
       log.debug2('$rmm     Simple DLength ');
       e = _readSimpleDLength(code, eStart, vfLength);
     }
-    log.debug2('$rmm     $e @end');
+    log.debug2('$rmm     ${show(e)} @end');
     assert(_checkRIndex());
     return e;
   }
@@ -589,14 +604,14 @@ abstract class DcmReader extends DcmConverterBase {
     } else {*/
     e = _makeAndAddElement(eStart, eLength);
     //   }
-    log.debug1('$ree   $e @end');
+    log.debug1('$ree   ${show(e)} @end');
     log.up;
     return e;
   }
 
   Element _makeAndAddElement(eStart, eLength) {
     var ebd = bd.buffer.asByteData(eStart, eLength);
-    var e = _maker(ebd);
+    var e = makeElement(_vrIndex, ebd);
     _add(e);
     return e;
   }
@@ -618,7 +633,7 @@ abstract class DcmReader extends DcmConverterBase {
       e = _readSimpleULength(code, eStart, vfLength);
     }
     assert(_checkRIndex());
-    log.debug2('$ree $e   @end');
+    log.debug2('$ree ${show(e)}   @end');
     log.up;
     return e;
   }
@@ -638,19 +653,19 @@ abstract class DcmReader extends DcmConverterBase {
     } else {*/
     e = _makeAndAddElement(eStart, eLength);
     //   }
-    log.debug1('$ree   $e @end');
+    log.debug1('$ree   ${show(e)} @end');
     log.up;
     return e;
   }
 
-  BytePixelData _readPixelData(int eStart, int vfLength) {
+  Element _readPixelData(int eStart, int vfLength) {
     assert(_vrCode == VR.kOB.code ||
         _vrCode == VR.kOW.code ||
         _vrCode == VR.kUN.code);
     _pixelDataStart = _rIndex;
     _pixelDataVR = VR.lookup(_vrCode);
     log.debug('$rbb readPixelData', 1);
-    BytePixelData e;
+    Element e;
     int item = _getUint32(_rIndex);
     log.debug2('$rmm   item($item, ${toHex32(item)}');
     if (item == kItem32BitLE) {
@@ -670,17 +685,19 @@ abstract class DcmReader extends DcmConverterBase {
     }
     _beyondPixelData = true;
     _pixelDataEnd = _rIndex;
-    log.debug('$ree   $e @end', -1);
+    log.debug('$ree   ${show(e)} @end', -1);
     return e;
   }
 
   /// Reads an encapsulated (compressed) [kPixelData] [Element].
   Element _readFragmentedPixelData(int eStart, int vfLength) {
-    log.debug('$rbb readFragmentedPixelData vfLength($vfLength, '
-        '${toHex32(vfLength)}', 1);
+    log.debug(
+        '$rbb readFragmentedPixelData vfLength($vfLength, '
+        '${toHex32(vfLength)}',
+        1);
     if (_vrCode != VR.kOB.code && _vrCode != VR.kUN.code) {
       VR vr = VR.lookup(_vrCode);
-      log.warn('**    Invalid VR($vr) for Encapsulated TS: $_ts $_rrr');
+      _warn('Invalid VR($vr) for Encapsulated TS: $_ts $_rrr');
       _hadParsingErrors = true;
     }
     var fragments = _readFragments();
@@ -710,20 +727,20 @@ abstract class DcmReader extends DcmConverterBase {
     // Read the Sequence Delimitation Item length field.
     int vfLength = _readUint32();
     if (vfLength != 0)
-      log.warn('**    Pixel Data Sequence delimiter has non-zero '
+      _warn('Pixel Data Sequence delimiter has non-zero '
           'value: $code/0x${toHex32(code)} $_rrr');
     var vfFragments = new VFFragments(fragments);
     log.debug('$ree   $vfFragments @end', -1);
     return vfFragments;
   }
 
-  BytePixelData _makePixelData(eStart, eLength, [VFFragments fragments]) {
-    log.debug('$rbb _makePixelData: '
-        '$eStart - $eLength = ${eStart + eLength}, $fragments', 1);
+  Element _makePixelData(eStart, eLength, [VFFragments fragments]) {
+    log.debug(
+        '$rbb _makePixelData: '
+        '$eStart - $eLength = ${eStart + eLength}, $fragments',
+        1);
     var ebd = bd.buffer.asByteData(eStart, eLength);
-    var e = (_isEVR)
-        ? new EVRBytePixelData(ebd, fragments)
-        : new IVRBytePixelData(ebd, fragments);
+    var e = makePixelData(_vrIndex, ebd, fragments);
     _add(e);
     assert(_checkRIndex());
     log.debug('$ree   fragments: $fragments @end', -1);
@@ -798,7 +815,7 @@ abstract class DcmReader extends DcmConverterBase {
     }
     var sq = _makeSQ(code, eStart, items);
     _nUSequencesRead++;
-    log.debug('$ree  $sq ${items.length} items readDS@ @end', -1);
+    log.debug('$ree  ${show(sq)} ${items.length} items readDS@ @end', -1);
     return sq;
   }
 
@@ -807,12 +824,10 @@ abstract class DcmReader extends DcmConverterBase {
     // Keep, but only use for debugging.
     //_showNext(_rIndex);
     int eLength = _rIndex - eStart;
-    log.debug1('$rmm   eLength($eLength), readDLengthSQ');
+    log.debug1('$rmm   eLength($eLength), makeSQ');
 
     var ebd = bd.buffer.asByteData(eStart, eLength);
-    Element sq = (_isEVR)
-        ? new EVRByteSQ(ebd, currentDS, items)
-        : new IVRByteSQ(ebd, currentDS, items);
+    Element sq = makeSQ(ebd, currentDS, items, _vfLength, _isEVR);
     _add(sq);
     if (Tag.isPrivateCode(code)) _nPrivateSequencesRead++;
     _nSequencesRead++;
@@ -832,7 +847,7 @@ abstract class DcmReader extends DcmConverterBase {
   bool _checkRIndex() {
     if (_rIndex.isOdd) {
       var msg = 'Odd Lenth Value Field at @$_rIndex - incrementing';
-      log.warn('**    $msg $_rrr');
+      _warn('$msg $_rrr');
       _skip(1);
       _nOddLengthValueFields++;
       if (throwOnError) throw msg;
@@ -856,8 +871,10 @@ abstract class DcmReader extends DcmConverterBase {
     int vfLength = _readUint32();
 
     String actual = toHex32(delimiter);
-    log.debug('$rbb readItem kItem($kItem), actual($actual) '
-        '${toVFLength(vfLength)}', 1);
+    log.debug(
+        '$rbb readItem kItem($kItem), actual($actual) '
+        '${toVFLength(vfLength)}',
+        1);
     log.debug1('$rmm   ${toHadULength(vfLength)}');
 
     // Save parent [Dataset], and make [item] is new parent [Dataset].
@@ -869,7 +886,6 @@ abstract class DcmReader extends DcmConverterBase {
     currentMap = map;
     currentDupMap = dupMap;
 
-    Dataset item;
     int itemEnd;
     try {
       if (vfLength == kUndefinedLength) {
@@ -883,7 +899,7 @@ abstract class DcmReader extends DcmConverterBase {
         itemEnd = _rIndex + vfLength;
         log.debug2('$rmm   Fixed Item length: itemEnd($itemEnd)');
         while (_rIndex < itemEnd) {
-          // _add(_readElement());
+          //_add(_readElement());
           _lastElementRead = _readElement();
         }
       }
@@ -893,7 +909,7 @@ abstract class DcmReader extends DcmConverterBase {
       rethrow;
     } catch (e) {
       _hadParsingErrors = true;
-      log.error(e);
+      _error(e);
       log.reset;
       rethrow;
     } finally {
@@ -906,9 +922,9 @@ abstract class DcmReader extends DcmConverterBase {
       //  _showNext(_rIndex);
     }
     var ibd = bd.buffer.asByteData(itemStart, itemEnd - itemStart);
-    item = makeItem(ibd, currentDS, vfLength, map, dupMap);
+    var item = makeItem(ibd, currentDS, vfLength, map, dupMap);
     _nItemsRead++;
-    log.debug('$ree   $item @end', -1);
+    log.debug('$ree   ${showItem(item)} @end', -1);
     return item;
   }
 
@@ -930,7 +946,7 @@ abstract class DcmReader extends DcmConverterBase {
 
   void _delimiterLengthWarning(int dLength) {
     _nonZeroDelimiterLengths++;
-    log.warn('**    Encountered non-zero delimiter length($dLength) $_rrr');
+    _warn('Encountered non-zero delimiter length($dLength) $_rrr');
   }
 
   /// Reads the [kUndefinedLength] Value Field until the
@@ -944,7 +960,9 @@ abstract class DcmReader extends DcmConverterBase {
       if (_readUint16() != kSequenceDelimiterLast16Bits) continue;
       break;
     }
-    if (!_isReadable) throw new EndOfDataError("_findEndOfVF");
+    if (!_isReadable) {
+      throw new EndOfDataError("_findEndOfVF");
+    }
     int delimiterLength = _readUint32();
     if (delimiterLength != 0) _delimiterLengthWarning(delimiterLength);
     int endOfVF = _rIndex - 8;
@@ -1002,15 +1020,19 @@ abstract class DcmReader extends DcmConverterBase {
     return _rIndex;
   }
 
-//  String _readUtf8String(int length) => UTF8.decode(_readChars(length));
-
-  void _warnIfShortFile() {
-    if (_wasShortFile) {
-      var s = 'Short file error: length(${bd.lengthInBytes}) $path';
-      log.warn('**    $s $_rrr');
-      if (throwOnError) throw new ShortFileError('Length($bd.lengthInBytes) $path');
-    }
+  void _warn(String msg) {
+    var s = '**   $msg $_rrr';
+    exceptions.add(s);
+    log.warn(s);
   }
+
+  void _error(String msg) {
+    var s = '**** $msg $_rrr';
+    exceptions.add(s);
+    log.error(s);
+  }
+
+//  String _readUtf8String(int length) => UTF8.decode(_readChars(length));
 
   // **** these next four are utilities for logger
   /// The current readIndex as a string.
@@ -1032,6 +1054,7 @@ abstract class DcmReader extends DcmConverterBase {
     return true;
   }
 
+/* Enhancement:
   void _printTrailingData(int start, int length) {
     for (int i = start; i < start + length; i += 4) {
       var x = _getUint16(i);
@@ -1043,12 +1066,16 @@ abstract class DcmReader extends DcmConverterBase {
       print('@$i: 16($x, $xx) | $y, $yy) 32($z, $zz)');
     }
   }
+*/
 
+/*  Enhancement: Flush if not needed
   bool _doLog = true;
+
 
   String get _XCode => '${toDcm(_code)}';
   String get _XvrCode => 'vrCode(${toHex16(_vrCode)})';
   String get _XvfLength => 'vfLength(${toHex32(_vfLength)})';
+
 
   _start(String name, [int code, int start]) {
     if (!_doLog) return;
@@ -1059,13 +1086,14 @@ abstract class DcmReader extends DcmConverterBase {
     if (!_doLog) return;
     log.debug('$ree $_nElementsRead: $e @end', -1);
   }
+*/
 
   //Enhancement: make this method do more diagnosis.
   /// Returns [true] if there are only trailing zeros at the end of the
   /// Object being parsed.
   Element _zeroEncountered(int code) {
     var msg = (_beyondPixelData) ? 'after kPixelData' : 'before kPixelData';
-    log.warn('**    Zero encountered $msg $_rrr');
+    _warn('Zero encountered $msg $_rrr');
     throw new EndOfDataError('Zero encountered $msg $_rrr');
   }
 
@@ -1119,7 +1147,7 @@ abstract class DcmReader extends DcmConverterBase {
   void _showIVR(int start) {
     if (_hasRemaining(8)) {
       int code = _getCode(start);
-      Tag tag = Tag.lookup(code);
+      Tag tag = Tag.lookupByCode(code);
       if (tag != null) log.debug(tag);
       int vfLength = _getUint16(start + 4);
       log.debug('$rmm **** IVR: ${toDcm(code)} vfLength: $vfLength');

@@ -42,12 +42,8 @@ class FileListReader {
       }
 
       log.info('$i Reading: $path ');
-      //Urgent add switch
-   //   File f = new File(path);
       try {
-        var bytes = byteReadWriteFileChecked(path);
-   //     var bytes = f.readAsBytesSync();
-   //     rds = ByteReader.readBytes(bytes, path: path, fmiOnly: fmiOnly);
+        byteReadWriteFileChecked(path);
         log.info('${rds.parseInfo}');
         log.info('  Dataset: $rds');
         if (rds == null) {

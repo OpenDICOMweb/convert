@@ -37,7 +37,7 @@ void main() {
   // readFMI(paths, fmiOnly: true);
     readWriteFiles(testPaths, fmiOnly: false);
   // readWriteDirectory(dir36_4485_6684, fast: false, throwOnError: true);
-  //targetTS: TransferSyntax.kImplicitVRLittleEndian);
+  //targetTS: TransferSyntaxUid.kImplicitVRLittleEndian);
 }
 
 void readWriteFiles(List<String> paths, {bool fmiOnly = false}) {
@@ -136,7 +136,7 @@ FileResult readWritePathTiming(String path, {int reps = 1, bool fmiOnly = false}
 
 FileResult readWriteFileTiming(File file,
     {bool fmiOnly = false,
-    TransferSyntax targetTS,
+    TransferSyntaxUid targetTS,
     bool throwOnError = false,
     bool writeOutputFile = false,
     bool shouldCompareDatasets = true}) {

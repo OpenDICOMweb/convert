@@ -42,7 +42,6 @@ final String separator = pathContext.separator;
 // Urgent: move to IO and make work for reading one place and writing another
 String getOutputPath(String inPath,
     {String outDir, String outBase, String outExt}) {
-  var inDir = (path.dirname(inPath));
   var dir = path.dirname(path.current);
   var base = path.basenameWithoutExtension(inPath);
   var ext = (outExt == null) ? path.extension(inPath) : outExt;
@@ -50,7 +49,7 @@ String getOutputPath(String inPath,
   return path.absolute(dir, '$base.$ext');
 }
 
-Directory toDirectory(name, [bool mustExist = true]) {
+Directory toDirectory(name, {bool mustExist = true}) {
   Directory dir;
   if (name is Directory) {
     dir = name;
@@ -62,6 +61,20 @@ Directory toDirectory(name, [bool mustExist = true]) {
   }
   if (mustExist && !dir.existsSync()) return null;
   return dir;
+}
+
+File toFile(name, {bool mustExist = true}) {
+  File file;
+  if (name is File) {
+    file = name;
+  } else if (name is String) {
+    file = new File(name);
+  } else {
+    stderr.write('Invalid Directory name: $name');
+    return null;
+  }
+  if (mustExist && !file.existsSync()) return null;
+  return file;
 }
 
 typedef Runner = void Function(File e, [int level]);
