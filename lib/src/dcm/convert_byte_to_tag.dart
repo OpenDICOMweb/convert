@@ -10,6 +10,7 @@ import 'package:core/element.dart';
 import 'package:tag/tag.dart';
 import 'package:core/tag_dataset.dart';
 import 'package:core/tag_element.dart';
+import 'package:string/string.dart';
 import 'package:system/system.dart';
 
 import 'package:dcm_convert/src/dcm/byte_reader.dart';

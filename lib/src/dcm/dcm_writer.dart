@@ -14,11 +14,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:logger/logger.dart';
 import 'package:string/ascii.dart';
-import 'package:system/system.dart';
 import 'package:core/core.dart';
 import 'package:dcm_convert/dcm.dart';
+import 'package:logger/logger.dart';
+import 'package:string/string.dart';
+import 'package:system/system.dart';
+
 
 import 'byte_data_buffer.dart';
 

@@ -6,6 +6,7 @@
 
 import 'dart:io';
 
+import 'package:string/string.dart';
 import 'package:system/system.dart';
 import 'package:tag/vr.dart';
 
