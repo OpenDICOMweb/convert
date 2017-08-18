@@ -8,14 +8,13 @@ import 'dart:async' hide Timer;
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:common/common.dart';
 import 'package:common/timer.dart';
+import 'package:logger/logger.dart';
 import 'package:core/core.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:dictionary/dictionary.dart';
 import 'package:path/path.dart' as p;
+import 'package:system/system.dart';
 
-final Logger log = new Logger("convert/bin/byte/read_utils.dart", Level.warn);
 
 final Formatter format = new Formatter();
 

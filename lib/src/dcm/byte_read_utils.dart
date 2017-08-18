@@ -7,10 +7,11 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:common/common.dart';
+import 'package:common/timestamp.dart';
+import 'package:system/system.dart';
 import 'package:core/core.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:dictionary/dictionary.dart';
+
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
@@ -112,7 +113,7 @@ $pad    ${rds0.parseInfo.info}''');
         log.warn('$pad Files bytes are different!');
       }
     }
-    if (same) log.info('$pad Success!');
+    if (same) log.info0('$pad Success!');
     return same;
   } on ShortFileError {
     log.warn('$pad ** Short File(${f.lengthSync()} bytes): $f');

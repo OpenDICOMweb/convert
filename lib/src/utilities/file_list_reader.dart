@@ -4,7 +4,7 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:common/logger.dart';
+import 'package:logger/logger.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
 
@@ -41,11 +41,11 @@ class FileListReader {
         print('$n good($successCount), bad($failureCount)');
       }
 
-      log.info('$i Reading: $path ');
+      log.info0('$i Reading: $path ');
       try {
         byteReadWriteFileChecked(path);
-        log.info('${rds.parseInfo}');
-        log.info('  Dataset: $rds');
+        log.info0('${rds.parseInfo}');
+        log.info0('  Dataset: $rds');
         if (rds == null) {
           failures.add('"$path "');
         } else {
@@ -53,31 +53,31 @@ class FileListReader {
           successful.add('"$path "');
         }
       } on InvalidTransferSyntaxError catch (e) {
-        log.info(e);
+        log.info0(e);
         log.reset;
         badTransferSyntax.add(path);
       } catch (e) {
-        log.info('Fail: $path ');
+        log.info0('Fail: $path ');
         log.reset;
         failures.add('"$path "');
-        //   log.info('failures: ${failure.length}');
+        //   log.info0('failures: ${failure.length}');
         if (throwOnError) throw 'Failed: $path ';
         continue;
       }
       log.reset;
     }
 
-    log.info('Files: $length');
-    log.info('Success: $successCount');
-    log.info('Failure: $failureCount');
-    log.info('Bad TS : $badTSCount');
-    log.info('Total: ${successCount + failureCount + badTSCount}');
+    log.info0('Files: $length');
+    log.info0('Success: $successCount');
+    log.info0('Failure: $failureCount');
+    log.info0('Bad TS : $badTSCount');
+    log.info0('Total: ${successCount + failureCount + badTSCount}');
 //  var good = success.join(',  \n');
     var bad = failures.join(',  \n');
     var badTS = badTransferSyntax.join(',  \n');
-//  log.info('Good Files: [\n$good,\n]\n');
-    log.info('bad Files($failureCount): [\n$bad,\n]\n');
-    log.info('bad TS Files($badTSCount): [\n$badTS,\n]\n');
+//  log.info0('Good Files: [\n$good,\n]\n');
+    log.info0('bad Files($failureCount): [\n$bad,\n]\n');
+    log.info0('bad TS Files($badTSCount): [\n$badTS,\n]\n');
 
     return failures;
   }

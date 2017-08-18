@@ -8,6 +8,7 @@ import 'dart:io';
 
 import 'package:dcm_convert/dcm.dart';
 import 'package:dcm_convert/tools.dart';
+import 'package:system/system.dart';
 
 //TODO: improve performance
 //TODO: On error write the log file to dir/output/name.log where name if path
@@ -67,8 +68,10 @@ ${jobArgs.parser.usage}
     exit(-1);
   }
 
-  DcmReader.log.level = jobArgs.baseLevel;
-  DcmWriter.log.level = jobArgs.baseLevel;
+  System.log.level = jobArgs.baseLevel;
+
+  // Short circuit arguments for testing
+  // dir = new Directory('C:/odw/test_data');
 
   JobRunner.job(dir, doRWRByteFile,
       interval: jobArgs.shortMsgEvery, level: jobArgs.baseLevel);

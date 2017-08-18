@@ -6,13 +6,9 @@
 
 import 'dart:typed_data';
 
-import 'package:common/common.dart';
-import 'package:core/core.dart';
-import 'package:dictionary/dictionary.dart';
+import 'package:common/timer.dart';
 import 'package:dcm_convert/dcm.dart';
-
-final Logger log =
-    new Logger("convert/bin/byte/write_file_list.dart", Level.info);
+import 'package:system/system.dart';
 
 Uint8List writeFile(RootByteDataset rds, String path,
     {bool fmiOnly = false, TransferSyntaxUid outputTS}) {

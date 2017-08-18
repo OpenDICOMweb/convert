@@ -6,10 +6,11 @@
 
 import 'dart:io';
 
-import 'package:common/common.dart';
+import 'package:common/timer.dart';
 import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:path/path.dart' as p;
+import 'package:system/system.dart';
 
 String outRoot0 = 'test/output/root0';
 String outRoot1 = 'test/output/root1';
@@ -18,7 +19,6 @@ String outRoot3 = 'test/output/root3';
 String outRoot4 = 'test/output/root4';
 
 void main() {
-  final Logger log = new Logger("read_a_directory", Level.error);
   int fsEntityCount;
 
   log.level = Level.error;

@@ -6,16 +6,10 @@
 
 import 'dart:io';
 
-import 'package:common/common.dart';
-import 'package:core/core.dart';
+import 'package:system/system.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:dcm_convert/src/utilities/file_list_reader.dart';
-
-
-
-final Logger log =
-    new Logger("io/bin/read_files.dart", Level.info);
 
 void main() {
  // readFile(path0);
@@ -30,7 +24,7 @@ void readFile(String path) {
     log.error('Null Instance $path');
     return null;
   }
-  log.info('readFile: ${rds.info}');
+  log.info0('readFile: ${rds.info}');
   // if (log.level == Level.debug) formatDataset(rds);
 }
 
@@ -42,7 +36,7 @@ void formatDataset(RootByteDataset rds, [bool includePrivate = true]) {
 }
 
 void readFiles(List<String> paths) {
-  log.info('Reading $paths Files:');
+  log.info0('Reading $paths Files:');
   var reader = new FileListReader(paths);
   reader.read;
 }
@@ -60,7 +54,7 @@ RootByteDataset _readFile(File file) {
     log.debug(e);
     return null;
   } catch(e) {
-    log.info('Failed read Dataset, now trying FMI');
+    log.info0('Failed read Dataset, now trying FMI');
     rds = ByteReader.readBytes(bytes, path: file.path, fmiOnly: true);
   }
   return rds;

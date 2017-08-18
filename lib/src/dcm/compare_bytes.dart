@@ -6,10 +6,10 @@
 
 import 'dart:typed_data';
 
-import 'package:common/ascii.dart';
 import 'package:core/byte_dataset.dart';
-import 'package:core/src/dicom_utils.dart';
-import 'package:dictionary/dictionary.dart';
+import 'package:core/byte_element.dart';
+import 'package:string/string.dart';
+import 'package:tag/tag.dart';
 
 /// TODO DOC
 bool bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError = false]) {

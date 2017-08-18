@@ -6,13 +6,12 @@
 
 import 'dart:io';
 
-import 'package:common/common.dart';
+import 'package:common/timer.dart';
 import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:path/path.dart' as p;
+import 'package:system/system.dart';
 
-import 'package:dcm_convert/src/dcm/dcm_reader.dart';
-import 'package:dcm_convert/src/dcm/dcm_writer.dart';
 import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
 
 var dir0 =
@@ -27,12 +26,10 @@ String outRoot4 = 'test/output/root4';
 // 1. dirname
 // 2. reportIncrement
 void main() {
-  final Logger log = new Logger("read_a_directory");
   int success = 0;
   int failure = 0;
 
-  DcmReader.log.level = Level.error;
-  DcmWriter.log.level = Level.error;
+  System.log.level = Level.error;
 
   FileListReader.log.level = Level.error;
 

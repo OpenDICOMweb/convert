@@ -6,7 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:common/format.dart';
+import 'package:logger/logger.dart';
 import 'package:core/core.dart';
 
 import '../bytebuf/bytebuf.dart';

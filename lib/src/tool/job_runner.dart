@@ -7,7 +7,7 @@
 import 'dart:async' hide Timer;
 import 'dart:io';
 
-import 'package:common/common.dart';
+import 'package:logger/logger.dart';
 
 import 'package:dcm_convert/src/dcm/io_utils.dart';
 import 'job_reporter.dart';
@@ -17,6 +17,7 @@ class JobRunner {
   List files;
   bool Function(File f) doFile;
   JobReporter reporter;
+  List<String> failures = <String>[];
   //TODO: figure out the best way to handle this.
   bool throwOnError;
 
@@ -42,8 +43,20 @@ class JobRunner {
     reporter.endReport;
   }
 
-  String runFile(File f, [int indent]) =>
-      reporter.report(doFile(f), cleanPath(f.path));
+  String runFile(File f, [int indent]) {
+    var path = cleanPath(f.path);
+    bool success;
+    try {
+      success = doFile(f);
+      if (!success) failures.add(path);
+    } catch (e) {
+      print(e);
+      print('In File: $path');
+      if (throwOnError) rethrow;
+    }
+    return reporter.report(success, path);
+  }
+
 
   static void job(Directory dir, bool Function(File f) doFile,
       {int interval, Level level = Level.info, bool throwOnError = true}) {

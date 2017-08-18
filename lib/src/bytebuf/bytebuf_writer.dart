@@ -7,8 +7,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:common/common.dart';
-
 import 'bytebuf_reader.dart';
 
 //const int kMB = 1024 * 1024;

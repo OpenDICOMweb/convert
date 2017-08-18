@@ -11,24 +11,26 @@ environment:
 
 dependencies:
   common:
-  #  git:
-  #    url: https://github.com/OpenDICOMweb/common.git
-  #    ref: develop
     path: C:/odw/sdk/common
-    version: ^0.5.6
-#  crypto: ^2.0.1
-  dictionary:
-  #  git:
-  #    url: https://github.com/OpenDICOMweb/dictionary.git
-  #    ref: develop
-    path: C:/odw/sdk/dictionary
-    version: ^0.5.6
+    version: ^0.6.0
   core:
-  #  git:
-  #    url: https://github.com/OpenDICOMweb/core.git
-  #    ref: develop
     path: C:/odw/sdk/core
-    version: ^0.5.6
+    version: ^0.6.0
+  logger:
+    path: C:/odw/sdk/logger
+    version: ^0.6.1
+  subject:
+    path: C:/odw/sdk/subject
+    version: ^0.6.1
+  system:
+    path: C:/odw/sdk/system
+    version: ^0.6.0
+  tag:
+    path: C:/odw/sdk/tag
+    version: ^0.6.1
+  uid:
+      path: C:/odw/sdk/uid
+      version: ^0.6.1
 
 dev_dependencies:
   benchmark_harness: ^1.0.4

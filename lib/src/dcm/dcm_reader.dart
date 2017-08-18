@@ -7,10 +7,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:common/logger.dart';
-import 'package:core/core.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:dictionary/dictionary.dart';
+import 'package:system/system.dart';
+import 'package:tag/tag.dart';
+import 'package:uid/uid.dart';
 
 import 'dcm_converter.dart';
 
@@ -39,8 +39,6 @@ typedef Element PixelDataMaker<V>(
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
 abstract class DcmReader extends DcmConverterBase {
-  static final Logger log = new Logger("DcmReader");
-
   /// The [ByteData] being read.
   final ByteData bd;
 
@@ -254,7 +252,7 @@ abstract class DcmReader extends DcmConverterBase {
     if (!allowMissingFMI && !_hadFmi) return null;
     if (targetTS != null && _ts != targetTS) return rootDS;
 
-    if (!System.isSupportedTransferSyntax(_ts)) {
+    if (!system.isSupportedTransferSyntax(_ts)) {
       _hadParsingErrors = true;
       _error('$ree Unsupported TS: $_ts @end');
       if (throwOnError) throw new InvalidTransferSyntaxError(_ts);
@@ -269,13 +267,13 @@ abstract class DcmReader extends DcmConverterBase {
       log.debug1('$ree end readDataset: isExplicitVR(${_isEVR})');
       assert(identical(currentDS, rootDS));
     } on EndOfDataError {
-      log.info('$_rrr EndOfDataError');
+      log.info0('$_rrr EndOfDataError');
       _endOfDataError = true;
     } on ShortFileError {
       rethrow;
     } on RangeError catch (ex) {
       _error('$ex\n $stats');
-      if (_beyondPixelData) log.info('$_rrr Beyond Pixel Data');
+      if (_beyondPixelData) log.info0('$_rrr Beyond Pixel Data');
       // Keep: *** Keep, but only use for debugging.
       if (throwOnError) rethrow;
     } catch (ex) {
@@ -411,7 +409,7 @@ abstract class DcmReader extends DcmConverterBase {
 
     // Get TS or if not present use default
     _ts = rootDS.transferSyntax;
-    if (_ts == null) _ts = System.defaultTransferSyntax;
+    if (_ts == null) _ts = system.defaultTransferSyntax;
     _isEVR = !_ts.isImplicitLittleEndian;
 
     log.debug1('$rmm isExplicitVR: $_isEVR');
@@ -541,11 +539,11 @@ abstract class DcmReader extends DcmConverterBase {
     } else if (vrCode != VR.kUN.code && tag.vr.code == VR.kUN.code) {
       if (code != kPixelData && warnOnUN == true) {
         if (tag is PDTag && tag is! PDTagKnown) {
-          log.info('$pad ${toDcm(code)} VR.kUN: Unknown Private Data');
+          log.info0('$pad ${toDcm(code)} VR.kUN: Unknown Private Data');
         } else if (tag is PCTag && tag is! PCTagKnown) {
-          log.info('$pad ${toDcm(code)} VR.kUN: Unknown Private Creator $tag');
+          log.info0('$pad ${toDcm(code)} VR.kUN: Unknown Private Creator $tag');
         } else {
-          log.info('$pad ${toDcm(code)} VR.kUN: $tag');
+          log.info0('$pad ${toDcm(code)} VR.kUN: $tag');
         }
       }
     } else if (vrCode != VR.kUN.code && vrCode != tag.vr.code) {

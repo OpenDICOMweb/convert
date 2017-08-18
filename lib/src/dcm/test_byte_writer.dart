@@ -6,9 +6,8 @@
 
 import 'dart:typed_data';
 
-import 'package:core/core.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:dictionary/dictionary.dart';
+import 'package:system/system.dart';
 
 import 'byte_writer.dart';
 

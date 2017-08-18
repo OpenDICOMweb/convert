@@ -7,12 +7,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:common/common.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:dictionary/dictionary.dart';
+import 'package:system/system.dart';
 
 bool doRWRByteFile(File f, [bool throwOnError = false, bool fast = true]) {
-  final Logger log = new Logger("doRWRByteFile", Level.warn0);
   log.level = Level.error;
   //TODO: improve output
 //  var n = getPaddedInt(fileNumber, width);
@@ -107,7 +105,7 @@ $pad    TS: ${rds0.transferSyntax}''');
         log.warn('$pad Files bytes are different!');
       }
     }
-    if (same) log.info('$pad Success!');
+    if (same) log.info0('$pad Success!');
     return same;
   } on ShortFileError {
     log.warn('$pad ** Short File(${f.lengthSync()} bytes): $f');

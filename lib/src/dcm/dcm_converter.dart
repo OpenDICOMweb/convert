@@ -6,9 +6,8 @@
 
 import 'dart:typed_data';
 
-import 'package:common/logger.dart';
 import 'package:core/core.dart';
-import 'package:dictionary/dictionary.dart';
+
 
 /// The type of the different Value Field readers.  Each [VFReader]
 /// reads the Value Field for a particular Value Representation.
@@ -23,12 +22,6 @@ typedef Element PixelDataMaker<V>(
 const shortFileThreshold = 1024;
 
 abstract class DcmConverterBase {
-  //TODO: remove log.debug when working
-  /// The [Logger] for this
-  static final Logger log = new Logger("DcmConverterBase", Level.debug1);
-
-  //Logger get log => _log;
-
   /// The [ByteData] being read.
   ByteData get bd;
 

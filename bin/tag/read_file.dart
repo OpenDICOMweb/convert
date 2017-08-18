@@ -4,7 +4,7 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the   AUTHORS file for other contributors.
 
-import 'package:common/logger.dart';
+import 'package:logger/logger.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 
@@ -12,9 +12,9 @@ final Logger log = new Logger("io/bin/read_files.dart", Level.info);
 
 void main() {
   var path = path1; //test6684_02;
-  log.info('TagReader: $path');
+  log.info0('TagReader: $path');
   RootTagDataset rds0 = TagReader.readPath(path);
-  log.info('${rds0.parseInfo}');
-  log.info('TagDataset: ${rds0.info}');
+  log.info0('${rds0.parseInfo}');
+  log.info0('TagDataset: ${rds0.info}');
 }
 

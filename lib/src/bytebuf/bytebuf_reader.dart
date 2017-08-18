@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:common/common.dart';
+
 
 // TODO:
 //  * Finish documentation
@@ -30,8 +30,8 @@ import 'package:common/common.dart';
 /// [ByteBufReader] is always equal to the length of the underlying [Uint8List].
 //TODO: finish description
 
-//const int kMB = 1024 * 1024;
-//const int kGB = 1024 * 1024 * 1024;
+const int kMB = 1024 * 1024;
+const int kGB = 1024 * 1024 * 1024;
 
 /// A skeletal implementation of a buffer.
 

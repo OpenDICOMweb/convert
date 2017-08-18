@@ -4,8 +4,6 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See /[package]/AUTHORS file for other contributors.
 
-import 'package:dictionary/dictionary.dart';
-
 //Urgent: test
 class EncodingParameters {
   /// if [true] [Dataset]s will be allowed to be encoded in IVRLE.

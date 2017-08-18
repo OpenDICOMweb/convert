@@ -6,21 +6,22 @@
 
 export 'package:core/core.dart';
 
-export 'src/errors.dart';
-export 'src/dcm/byte_reader.dart';
-export 'src/dcm/byte_writer.dart';
-export 'src/dcm/compare_bytes.dart';
+export 'package:dcm_convert/src/dcm/byte_reader.dart';
+export 'package:dcm_convert/src/dcm/byte_writer.dart';
+export 'package:dcm_convert/src/dcm/compare_bytes.dart';
+export 'package:dcm_convert/src/dcm/convert_byte_to_tag.dart';
 export 'package:dcm_convert/src/dcm/dcm_reader.dart';
 export 'package:dcm_convert/src/dcm/dcm_writer.dart';
 export 'package:dcm_convert/src/dcm/byte_read_utils.dart';
 export 'package:dcm_convert/src/dcm/io_utils.dart';
-export 'src/errors.dart';
+export 'package:dcm_convert/src/errors.dart';
+
 //export 'src/input_parameters';
-export 'src/decoding_parameters.dart';
-export 'src/encoding_parameters.dart';
-export 'src/dcm/element_list.dart';
-export 'src/dcm/tag_reader.dart';
-export 'src/dcm/tag_writer.dart';
-export 'src/utilities/file_list_reader.dart';
+export 'package:dcm_convert/src/decoding_parameters.dart';
+export 'package:dcm_convert/src/encoding_parameters.dart';
+export 'package:dcm_convert/src/dcm/element_list.dart';
+export 'package:dcm_convert/src/dcm/tag_reader.dart';
+export 'package:dcm_convert/src/dcm/tag_writer.dart';
+export 'package:dcm_convert/src/utilities/file_list_reader.dart';
 
 

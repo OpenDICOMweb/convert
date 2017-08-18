@@ -6,8 +6,8 @@
 
 import 'dart:io';
 
-import 'package:common/common.dart';
-
+import 'package:common/timer.dart';
+import 'package:system/system.dart';
 /// A class used to monitor the status of a job.
 class JobReporter {
   final int total;
@@ -17,11 +17,10 @@ class JobReporter {
   int longInterval;
   final Timer timer;
   final bool doPrint;
-  final Logger logger;
+  final Logger log;
   final bool logIt;
   final bool doReportFailure;
 
-  Logger _log;
   DateTime _startTime;
   DateTime _endTime;
   Duration _totalElapsed;
@@ -36,11 +35,11 @@ class JobReporter {
       int short,
         int long,
       this.doPrint = true,
-      this.logger,
+      this.logIt = true,
       this.doReportFailure = true})
       //Urgent: figure out how to calculate interval.
       : this.shortInterval = (short == null) ? total ~/ 50 : short,
-        this.logIt = (logger != null),
+        this.log = (logIt) ? new Logger('JobReporter') : null,
         this.timer = new Timer(start: false) {
     this.longInterval = (long == null) ?  50 * shortInterval : long;
   }
@@ -50,9 +49,9 @@ class JobReporter {
     return (_count % shortInterval == 0) ? report : "";
   }
 
-  Level get level => _log.level;
+  Level get level => log.level;
 
-  void set level(Level level) => _log.level = level;
+  void set level(Level level) => log.level = level;
 
   String get _from => (from == null) ? "" : "from $from";
 
@@ -85,6 +84,7 @@ class JobReporter {
     return maybePrint(_endMsg);
   }
 
+  //TODO: need a better name for this
   String report(bool wasSuccessful, String name, [bool force = false]) {
     _count++;
     if (wasSuccessful) {
@@ -104,8 +104,11 @@ class JobReporter {
   }
 
   String maybePrint(String msg) {
-    if (doPrint) stdout.writeln(msg);
-    if (logIt) logger.info(msg);
+    if (logIt) {
+      log.info0(msg);
+    } else {
+      if (doPrint) stdout.writeln(msg);
+    }
     return msg;
   }
 
