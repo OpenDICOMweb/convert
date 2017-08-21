@@ -4,18 +4,15 @@ version: 0.5.6
 description: A package for encoding/decoding DICOM binary, json, ...
 author: Jim Philbin <jfphilbin@gmail.com>
 
-homepage: https://github.com/OpenDICOMweb/convert.git
+homepage: https://github.com/OpenDICOMweb/convert
 
 environment:
   sdk: ^1.24.2
 
 dependencies:
-  common:
-    path: C:/odw/sdk/common
-    version: ^0.6.0
   core:
     path: C:/odw/sdk/core
-    version: ^0.6.0
+    version: ^0.6.1
   logger:
     path: C:/odw/sdk/logger
     version: ^0.6.1
@@ -24,13 +21,14 @@ dependencies:
     version: ^0.6.1
   system:
     path: C:/odw/sdk/system
-    version: ^0.6.0
+    version: ^0.6.1
   tag:
     path: C:/odw/sdk/tag
     version: ^0.6.1
   uid:
-      path: C:/odw/sdk/uid
-      version: ^0.6.1
+    path: C:/odw/sdk/uid
+    version: ^0.6.1
+
 
 dev_dependencies:
   benchmark_harness: ^1.0.4

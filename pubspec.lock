@@ -31,12 +31,30 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.15.2+11"
+  base:
+    description:
+      path: "C:/odw/sdk/base"
+      relative: false
+    source: path
+    version: "0.6.2"
   benchmark_harness:
     description:
       name: benchmark_harness
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.4"
+  bignum:
+    description:
+      name: bignum
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.0"
+  binary:
+    description:
+      name: binary
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.3"
   boolean_selector:
     description:
       name: boolean_selector
@@ -67,12 +85,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.14.3"
-  common:
-    description:
-      path: "C:/odw/sdk/common"
-      relative: false
-    source: path
-    version: "0.6.0"
   convert:
     description:
       name: convert
@@ -84,7 +96,7 @@ packages:
       path: "C:/odw/sdk/core"
       relative: false
     source: path
-    version: "0.6.0"
+    version: "0.6.1"
   crypto:
     description:
       name: crypto
@@ -103,6 +115,12 @@ packages:
       relative: false
     source: path
     version: "0.6.1"
+  fixnum:
+    description:
+      name: fixnum
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.10.6"
   front_end:
     description:
       name: front_end
@@ -121,12 +139,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.8.0+3"
-  hash:
-    description:
-      path: "C:/odw/sdk/hash"
-      relative: false
-    source: path
-    version: "0.6.1"
   html:
     description:
       name: html
@@ -211,6 +223,12 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.4.0"
+  number:
+    description:
+      path: "C:/odw/sdk/number"
+      relative: false
+    source: path
+    version: "0.6.1"
   package_config:
     description:
       name: package_config
@@ -349,6 +367,12 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.12.24+2"
+  timing:
+    description:
+      path: "C:/odw/sdk/timing"
+      relative: false
+    source: path
+    version: "0.6.1"
   typed_data:
     description:
       name: typed_data

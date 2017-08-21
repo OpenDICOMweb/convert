@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:common/number.dart';
+import 'package:number/number.dart';
 import 'package:string/ascii.dart';
 import 'package:system/system.dart';
 

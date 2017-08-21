@@ -6,7 +6,7 @@
 
 import 'dart:io';
 
-import 'package:common/timer.dart';
+import 'package:timing/timer.dart';
 import 'package:system/system.dart';
 /// A class used to monitor the status of a job.
 class JobReporter {

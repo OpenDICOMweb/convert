@@ -7,6 +7,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:system/system.dart';
+
 import 'bytebuf_reader.dart';
 
 //const int kMB = 1024 * 1024;
@@ -14,8 +16,8 @@ import 'bytebuf_reader.dart';
 
 class ByteBufWriter extends ByteBufReader {
   static const int defaultLengthInBytes = 1024;
-  static const int defaultMaxCapacity = 1 * kMB;
-  static const int maxMaxCapacity = 2 * kGB;
+  static const int defaultMaxCapacity = 1 * k1MB;
+  static const int maxMaxCapacity = 2 * k1GB;
   static const Endianness endianness = Endianness.LITTLE_ENDIAN;
 
   Uint8List _bytes;

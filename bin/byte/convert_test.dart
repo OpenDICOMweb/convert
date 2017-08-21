@@ -6,7 +6,6 @@
 
 import 'dart:io';
 
-import 'package:string/string.dart';
 import 'package:system/system.dart';
 import 'package:tag/vr.dart';
 
@@ -128,7 +127,7 @@ RootTagDataset convertFile(dynamic file, {int reps = 1, bool fmiOnly = false}) {
     }
     if (be.vr != te.vr) {
       if (be.vr == VR.kUN && be.isPrivate) {
-        log.info0('--- ${toDcm(be.code)} was ${be.vr} now ${te.vr}');
+        log.info0('--- ${dcm(be.code)} was ${be.vr} now ${te.vr}');
         log.info0('     ${te.tag}');
       } else {
         error = true;
@@ -137,7 +136,7 @@ RootTagDataset convertFile(dynamic file, {int reps = 1, bool fmiOnly = false}) {
     }
     if (be.length != te.length) {
       if (be.vr == VR.kUN) {
-        log.info0('--- ${toDcm(be.code)} was ${be.values.length} '
+        log.info0('--- ${dcm(be.code)} was ${be.values.length} '
             'now ${te.values.length}');
       } else {
         error = true;

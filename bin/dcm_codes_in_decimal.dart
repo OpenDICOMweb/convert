@@ -4,7 +4,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:common/number.dart';
+import 'package:number/number.dart';
 import 'package:system/system.dart';
 
 void main(List<String> args) {

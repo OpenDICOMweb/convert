@@ -62,14 +62,7 @@ class JobArgs {
   showHelp: $showHelp
   ''';
 
-  bool parseInt(String s) {
-    if (s == null) {
-      shortMsgEvery = null;
-    } else {
-      int v = int.parse(s, onError: (s) => -1);
-    }
-    return true;
-  }
+  int parseInt(String s) => int.parse(s, onError: (s) => 100);
 
   ArgParser getParser() => new ArgParser()
     ..addOption('logFile',

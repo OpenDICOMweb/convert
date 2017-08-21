@@ -6,7 +6,7 @@
 
 import 'dart:io';
 
-import 'package:common/timer.dart';
+import 'package:timing/timer.dart';
 import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:path/path.dart' as p;

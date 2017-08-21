@@ -8,7 +8,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:logger/logger.dart';
-import 'package:common/timer.dart';
+import 'package:timing/timer.dart';
 import 'package:core/core.dart';
 //import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/data/test_directories.dart';

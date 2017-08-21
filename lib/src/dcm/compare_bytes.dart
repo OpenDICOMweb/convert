@@ -6,6 +6,7 @@
 
 import 'dart:typed_data';
 
+import 'package:base/base.dart';
 import 'package:core/byte_dataset.dart';
 import 'package:core/byte_element.dart';
 import 'package:string/string.dart';
@@ -75,8 +76,8 @@ void printLine(int line, Uint8List b0, Uint8List b1, [int pos]) {
 
   var v0 = bd0.getUint32(line);
   var v1 = bd1.getUint32(line);
-  var dcm0 = toDcm(v0);
-  var dcm1 = toDcm(v1);
+  var dcm0 = dcm(v0);
+  var dcm1 = dcm(v1);
   var dec0 = toDec32(v0);
   var dec1 = toDec32(v1);
   var s0 = toStr(b0, line);

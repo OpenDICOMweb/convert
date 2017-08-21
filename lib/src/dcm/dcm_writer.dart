@@ -14,11 +14,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:string/ascii.dart';
 import 'package:core/core.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:logger/logger.dart';
-import 'package:string/string.dart';
 import 'package:system/system.dart';
 
 
@@ -42,7 +40,7 @@ abstract class DcmWriter {
   static final Logger log = new Logger("DcmWriter", Level.debug2);
 
   /// The default [ByteData] buffer length, if none is provided.
-  static const int defaultBufferLength = 200 * kMB;
+  static const int defaultBufferLength = 200 * k1MB;
 
   /// If [reUseBD] is [true] the [ByteData] buffer is stored here.
   static ByteData _reuse;
@@ -347,7 +345,7 @@ abstract class DcmWriter {
   /// header.
   void _writeHeader(Element e) {
     log.debug('$wbb writeHeader ${_isEVR ? "EVR" : "IVR"} '
-        'e.vfLength: ${e.vfLength}, ${toHex(e.vfLength, 8)}', 1);
+        'e.vfLength: ${e.vfLength}, ${hex(e.vfLength)}', 1);
     var length = (e.vfLength == null || encoding.doConvertUndefinedLengths)
         ? e.vfBytes.lengthInBytes
         : e.vfLength;

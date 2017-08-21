@@ -7,7 +7,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:common/timer.dart';
+import 'package:timing/timer.dart';
 import 'package:path/path.dart' as p;
 import 'package:system/system.dart';
 

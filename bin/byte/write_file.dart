@@ -6,7 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:common/timer.dart';
+import 'package:timing/timer.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/system.dart';
 
