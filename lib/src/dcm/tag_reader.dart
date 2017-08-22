@@ -124,7 +124,10 @@ class TagReader extends DcmReader {
     return (parseInfo.hadFmi) ? _rootDS : null;
   }
 
-  Element makeElement(_vrIndex, ByteData bd) => throw new UnimplementedError();
+  Element makeElement(_vrIndex, ByteData bd) {
+    throw new UnimplementedError();
+  }
+
 
   Element makePixelData(_vrIndex, ByteData bd, VFFragments fragments) =>
       throw new UnimplementedError();
