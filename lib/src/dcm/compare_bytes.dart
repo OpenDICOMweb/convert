@@ -9,7 +9,6 @@ import 'dart:typed_data';
 import 'package:base/base.dart';
 import 'package:core/byte_dataset.dart';
 import 'package:core/byte_element.dart';
-import 'package:string/string.dart';
 import 'package:tag/tag.dart';
 
 /// TODO DOC

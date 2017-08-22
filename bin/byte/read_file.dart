@@ -15,6 +15,8 @@ void main() {
   var path = pathx;
 
   log.config('Byte Reader: $path');
+  log.config('System: $System');
+  log.config('system: $system');
   RootByteDataset rds = ByteReader.readPath(path);
   if (rds == null) {
     log.warn('No Data: $path');

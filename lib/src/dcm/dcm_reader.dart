@@ -252,7 +252,7 @@ abstract class DcmReader extends DcmConverterBase {
     if (!allowMissingFMI && !_hadFmi) return null;
     if (targetTS != null && _ts != targetTS) return rootDS;
 
-    if (!system.isSupportedTransferSyntax(_ts.asString)) {
+    if (!System.isSupportedTransferSyntax(_ts.asString)) {
       _hadParsingErrors = true;
       _error('$ree Unsupported TS: $_ts @end');
       if (throwOnError) throw new InvalidTransferSyntaxError(_ts);
