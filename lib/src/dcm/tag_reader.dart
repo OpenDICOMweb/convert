@@ -109,8 +109,8 @@ class TagReader extends DcmReader {
 
   void set currentDS(TagDataset ds) => _currentDS = ds;
 
-  RootTagDataset readFMI([bool checkPreamble = false]) {
-    var hadFmi = dcmReadFMI(checkPreamble);
+  RootTagDataset readFMI({bool checkPreamble = false}) {
+    var hadFmi = dcmReadFMI(checkPreamble: checkPreamble);
     rootDS.parseInfo = getParseInfo();
     return (hadFmi) ? _rootDS : null;
   }

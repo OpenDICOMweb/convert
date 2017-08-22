@@ -109,9 +109,9 @@ class ByteReader extends DcmReader {
           allowMissingPrefix: allowMissingPrefix);
       if (rds == null) return null;
       _rootDS.parseInfo = getParseInfo();
-      //  log.debug('rootDS: $rootDS');
-      //  log.debug('RootDS.TS: ${rootDS.transferSyntax}');
-      //  log.debug('elementList(${elementList.length})');
+      log.debug('rootDS: $rootDS');
+      log.debug('RootDS.TS: ${rootDS.transferSyntax}');
+      log.debug('elementList(${elementList.length})');
     } on ShortFileError catch (e) {
       log.error(e);
       return null;
@@ -125,15 +125,15 @@ class ByteReader extends DcmReader {
   }
 
   void debugStart(Object o, String msg) {
-    //  log.debug('$rbb $o $msg');
+    log.debug('$rbb $o $msg');
   }
 
   void debug(Object o, Level level) {
-    //  log.debug('$rmm $o');
+    log.debug('$rmm $o');
   }
 
   void debugEnd(Object o, Level level) {
-    //  log.debug('$rbb $o');
+    log.debug('$rbb $o');
   }
 
   // Interface

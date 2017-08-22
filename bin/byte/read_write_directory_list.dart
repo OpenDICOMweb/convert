@@ -31,8 +31,6 @@ void main() {
 
   System.log.level = Level.error;
 
-  FileListReader.log.level = Level.error;
-
   //TODO: modify so that it reads one directory at a time and recursively
   // walks the tree.
   //TODO: add asyn argument and async I/O to handle multiple files at the same

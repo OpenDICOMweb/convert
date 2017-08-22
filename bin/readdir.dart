@@ -31,16 +31,11 @@ void main(List<String> args) {
   /// The help message
   void showHelp() {
     var msg = '''
-Usage: rwrdir <input-directory> [<options>]
+Usage: readdir <input-directory> [<options>]
 
-For each application/dicom file in the <directory> tree:
-  1. Decodes (reads) the data in a byte array (file) into a Root Dataset [0]
-  2. Encodes (writes) the Root Dataset into a new byte array
-  3. Decodes (reads) the new bytes array (file) into a new Root Dataset [1]
-  4. It than compares the ElementLists, Datasets, and bytes arrays to 
-    determine whether the writter and re-read Dataset and bytes are equivalent
-    to the original byte array that was read in step 1.
-    
+Tries to read each each file in the <directory> tree. If successful, infomation
+about the Dataset contained in the file is printed.
+  
 Options:
 ${jobArgs.parser.usage}
 ''';
@@ -74,9 +69,10 @@ ${jobArgs.parser.usage}
   System.log.level = jobArgs.baseLevel;
 
   // Short circuit arguments for testing
-  dir = new Directory(sfdMR);
-  jobArgs.shortMsgEvery = 250;
+  dir = new Directory(dir6688);
+  jobArgs.shortMsgEvery = 10000;
+  System.log.level = Level.error;
 
-  JobRunner.job(dir, doRWRByteFile,
+  JobRunner.job(dir, doReadByteFile,
       interval: jobArgs.shortMsgEvery, level: jobArgs.baseLevel);
 }

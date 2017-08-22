@@ -50,8 +50,9 @@ class TestByteReader extends ByteReader {
 
   /// Returns [true] if the File Meta Information was present and
   /// read successfully.
-  TransferSyntaxUid xReadFmi([bool checkForPrefix = true]) {
-    readFMI(checkForPrefix);
+  TransferSyntaxUid xReadFmi(
+      {bool checkPreamble = true, bool allowMissingPrefix = false}) {
+    readFMI(checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
     if (!rootDS.hasFMI || !rootDS.hasSupportedTransferSyntax) return null;
     return rootDS.transferSyntax;
   }

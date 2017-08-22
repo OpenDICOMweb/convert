@@ -16,7 +16,6 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:logger/logger.dart';
 import 'package:system/system.dart';
 
 
@@ -37,7 +36,8 @@ import 'byte_data_buffer.dart';
 // There are four [Element]s that might have an Undefined Length value
 // (0xFFFFFFFF), [SQ], [OB], [OW], [UN].
 abstract class DcmWriter {
-  static final Logger log = new Logger("DcmWriter", Level.debug2);
+  //flush
+//  static final Logger log = new Logger("DcmWriter", Level.debug2);
 
   /// The default [ByteData] buffer length, if none is provided.
   static const int defaultBufferLength = 200 * k1MB;
@@ -104,7 +104,7 @@ abstract class DcmWriter {
   static TransferSyntaxUid getOutputTS(Dataset rootDS, TransferSyntaxUid outputTS) {
     if (outputTS == null) {
       return (rootDS.transferSyntax == null)
-          ? system.defaultTransferSyntax
+          ? System.defaultTransferSyntax
           : rootDS.transferSyntax;
     } else {
       return outputTS;

@@ -15,7 +15,7 @@ const String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
 // EVR, OW Pixel Data
 const String path1 = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
 
-//const String path2 = 'C:/odw/test_data/6688/12/0B009D38/0B009D3D/4D4E9A56';
+const String path2 = 'C:/odw/test_data/6688/12/0B009D38/0B009D3D/4D4E9A56';
 
 const String path3 = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368';
 
@@ -64,14 +64,18 @@ const String path15 =
     'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255'
     '.393386351.1568457295.17895.5.dcm';
 const String path16 =
-    'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original/CR.2.16.840.1.114255.393386351.1568457295.48879.7.dcm';
+    'C:/odw/test_data/sfd/CR/PID_MINT10/1_DICOM_Original/'
+    'CR.2.16.840.1.114255.393386351.1568457295.48879.7.dcm';
 const String path17 =
     'C:/odw/test_data/sfd/CT/Patient_4_3_phase_abd/1_DICOM_Original/IM000002.dcm';
 const String path18 =
     'C:/odw/sdk/io/example/input/1.2.840.113696.596650.500.5347264.20120723195848/1.2'
-    '.392.200036.9125.3.3315591109239.64688154694.35921044/1.2.392.200036.9125.9.0.252688780.254812416.1536946029.dcm';
+    '.392.200036.9125.3.3315591109239.64688154694.35921044/'
+    '1.2.392.200036.9125.9.0.252688780.254812416.1536946029.dcm';
 const String path19 =
-    'C:/odw/sdk/io/example/input/1.2.840.113696.596650.500.5347264.20120723195848/2.16.840.1.114255.1870665029.949635505.39523.169/2.16.840.1.114255.1870665029.949635505.10220.175.dcm';
+    'C:/odw/sdk/io/example/input/1.2.840.113696.596650.500.5347264.20120723195848/'
+    '2.16.840.1.114255.1870665029.949635505.39523.169/'
+    '2.16.840.1.114255.1870665029.949635505.10220.175.dcm';
 
 // Duplicate Elements, No Pixel Data
 const String path20 = "C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/"
@@ -79,6 +83,8 @@ const String path20 = "C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/"
 
 // DICOM Directory file
 const String path21 = 'C:/odw/test_data/sfd/MG/DICOMDIR';
+
+const String path22 = 'C:/odw/test_data/sfd/MR/Patient_20_-_FMRI_brain/1_DICOM_Original.tz';
 
 const List<String> paths = const <String>[
   path0, path1,
@@ -128,24 +134,42 @@ const List<String> testPaths2 = const <String>[
   "C:/odw/test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original/IM000021.dcm",
   "C:/odw/test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original/IM000022.dcm",
   "C:/odw/test_data/sfd/CR_and_RF/Patient_25_UGI_and_SBFT/1_DICOM_Original/IM000023.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000001.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000002.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000003.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000004.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000006.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000007.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000008.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000009.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000010.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000011.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000012.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000013.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000014.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000015.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000016.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000017.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000018.dcm",
-  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/IM000019.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000001.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000002.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000003.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000004.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000006.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000007.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000008.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000009.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000010.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000011.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000012.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000013.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000014.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000015.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000016.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000017.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000018.dcm",
+  "C:/odw/test_data/sfd/CR_and_RF/Patient_27_enema_-_ilioanal_anastomosis/1_DICOM_Original/"
+      "IM000019.dcm",
   "C:/odw/test_data/sfd/CR_and_RF/Patient_31_Skeletal_survey/1_DICOM_Original/IM000002.dcm",
   "C:/odw/test_data/sfd/CR_and_RF/Patient_31_Skeletal_survey/1_DICOM_Original/IM000003.dcm",
   "C:/odw/test_data/sfd/CR_and_RF/Patient_31_Skeletal_survey/1_DICOM_Original/IM000004.dcm",
@@ -295,17 +319,23 @@ const List<String> badFileList0 = const [
 ];
 
 const List<String> badFileList1 = const <String>[
-  "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm",
+  "C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/"
+      "A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm",
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.1.2.1.dcm",
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.128.dcm",
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.6.2.dcm",
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.88.67.dcm",
   "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.9.1.2.dcm",
-  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.1.2.1.dcm",
-  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.128.dcm",
-  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.6.2.dcm",
-  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.88.67.dcm",
-  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.9.1.2.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/"
+      "Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.1.2.1.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/"
+      "Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.128.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/"
+      "Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.6.2.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/"
+      "Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.88.67.dcm",
+  "C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/"
+      "Sop (user 349383158)/1.2.840.10008.5.1.4.1.1.9.1.2.dcm",
   "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0001.dcm",
   "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0002.dcm",
   "C:/odw/test_data/mweb/COMUNIX_2/IM-0001-0003.dcm",

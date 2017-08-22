@@ -13,29 +13,30 @@ import 'package:system/system.dart';
 bool doRWRByteFile(File f, [bool throwOnError = false, bool fast = true]) {
   log.level = Level.error;
   //TODO: improve output
-//  var n = getPaddedInt(fileNumber, width);
+  //  var n = getPaddedInt(fileNumber, width);
   var pad = "".padRight(5);
 
   try {
     var reader0 = new ByteReader.fromFile(f);
     RootByteDataset rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
-    if (rds0 == null) throw  'Bad File: $f';
+    if (rds0 == null) {
+      log.info0('Bad File: ${f.path}');
+      return false;
+    }
     if (rds0.parseInfo == null) throw 'Bad File - No ParseInfo: $f';
     var bytes0 = reader0.buffer;
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS String: ${rds0.transferSyntaxString}
 $pad    TS: ${rds0.transferSyntax}''');
-    if (rds0.parseInfo != null)
-      log.debug('$pad    ${rds0.parseInfo.info}');
+    if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.info}');
 
-// TODO: move into dataset.warnings.
+    // TODO: move into dataset.warnings.
     ByteElement e = rds0[kPixelData];
     if (e == null) {
       log.warn('$pad ** Pixel Data Element not present');
     } else {
-
       log.debug1('$pad  e: ${e.info}');
     }
 
@@ -58,7 +59,8 @@ $pad    TS: ${rds0.transferSyntax}''');
     ByteReader reader1;
     if (fast) {
       // Just read bytes not file
-      reader1 = new ByteReader(
+      reader1 =
+      new ByteReader(
           bytes1.buffer.asByteData(bytes1.offsetInBytes, bytes1.lengthInBytes));
     } else {
       reader1 = new ByteReader.fromPath(outPath);
@@ -112,6 +114,7 @@ $pad    TS: ${rds0.transferSyntax}''');
   } catch (e) {
     log.error(e);
     if (throwOnError) rethrow;
+    return false;
   }
   return false;
 }

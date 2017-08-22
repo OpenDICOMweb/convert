@@ -4,14 +4,10 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:logger/logger.dart';
+import 'package:system/system.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
-
 
 class FileListReader {
-  static final Logger log =
-      new Logger("read_a_directory", Level.error);
   List<String> paths;
   bool fmiOnly;
   bool throwOnError;
@@ -34,6 +30,8 @@ class FileListReader {
     RootByteDataset rds;
     int fileNoWidth = getFieldWidth(paths.length);
 
+    bool success;
+
     for (int i = 0; i < paths.length; i++) {
       var path = cleanPath(paths[i]);
       if (count++ % printEvery == 0) {
@@ -43,10 +41,10 @@ class FileListReader {
 
       log.info0('$i Reading: $path ');
       try {
-        byteReadWriteFileChecked(path, i);
-        log.info0('${rds.parseInfo}');
-        log.info0('  Dataset: $rds');
-        if (rds == null) {
+        success = byteReadWriteFileChecked(path, i);
+//        log.info0('${rds.parseInfo}');
+//        log.info0('  Dataset: $rds');
+        if (success == false) {
           failures.add('"$path "');
         } else {
           log.debug('Dataset: ${rds.info}');

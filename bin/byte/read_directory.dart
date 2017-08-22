@@ -20,10 +20,7 @@ String outRoot4 = 'test/output/root4';
 
 void main() {
   int fsEntityCount;
-
   log.level = Level.error;
-  DcmWriter.log.level = Level.error;
-  FileListReader.log.level = Level.error;
 
   /// *** Change directory path name here
   String path = dir6688;

@@ -4,6 +4,7 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
+export 'package:dcm_convert/src/tool/do_read_byte_file.dart';
 export 'package:dcm_convert/src/tool/do_rwr_byte_file.dart';
 export 'package:dcm_convert/src/tool/job_args.dart';
 export 'package:dcm_convert/src/tool/job_reporter.dart';

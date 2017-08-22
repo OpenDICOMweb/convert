@@ -22,7 +22,8 @@ bool byteReadWriteFileChecked(String fPath,
     int width = 5,
     bool throwOnError = true,
     bool fast = true]) {
-  final Logger log = new Logger("byteReadWriteFileChecked");
+//  final Logger log = new Logger("byteReadWriteFileChecked");
+  bool success = true;
   var n = getPaddedInt(fileNumber, width);
   var pad = "".padRight(width);
   fPath = cleanPath(fPath);
@@ -100,6 +101,7 @@ $pad    ${rds0.parseInfo.info}''');
     if (same) {
       log.debug('$pad Datasets are identical.');
     } else {
+      success = false;
       log.warn('$pad Datasets are different!');
     }
 
@@ -110,18 +112,18 @@ $pad    ${rds0.parseInfo.info}''');
       if (same == true) {
         log.debug('$pad Files bytes are identical.');
       } else {
+        success = false;
         log.warn('$pad Files bytes are different!');
       }
     }
     if (same) log.info1('$pad Success!');
-    return same;
   } on ShortFileError {
     log.warn('$pad ** Short File(${f.lengthSync()} bytes): $f');
   } catch (e) {
     log.error(e);
     if (throwOnError) rethrow;
   }
-  return false;
+  return success;
 }
 
 RootByteDataset readFileTimed(File file,

@@ -8,6 +8,7 @@ import 'dart:io';
 
 import 'package:timing/timer.dart';
 import 'package:system/system.dart';
+
 /// A class used to monitor the status of a job.
 class JobReporter {
   final int total;
@@ -20,6 +21,7 @@ class JobReporter {
   final Logger log;
   final bool logIt;
   final bool doReportFailure;
+  final List<String> failuresList = <String>[];
 
   DateTime _startTime;
   DateTime _endTime;
@@ -33,15 +35,15 @@ class JobReporter {
   JobReporter(this.total,
       {this.from,
       int short,
-        int long,
+      int long,
       this.doPrint = true,
-      this.logIt = true,
+      this.logIt = false,
       this.doReportFailure = true})
       //Urgent: figure out how to calculate interval.
       : this.shortInterval = (short == null) ? total ~/ 50 : short,
         this.log = (logIt) ? new Logger('JobReporter') : null,
         this.timer = new Timer(start: false) {
-    this.longInterval = (long == null) ?  50 * shortInterval : long;
+    this.longInterval = (long == null) ? 50 * shortInterval : long;
   }
 
   String operator +(int v) {
@@ -96,6 +98,7 @@ class JobReporter {
       }
     } else if (!wasSuccessful && doReportFailure) {
       _failure++;
+      failuresList.add(name);
       var n = '$_count'.padLeft(countWidth);
       var msg = '$n: ${timer.split} ** Failure $name';
       return maybePrint(msg);
@@ -104,25 +107,32 @@ class JobReporter {
   }
 
   String maybePrint(String msg) {
-    if (logIt) {
-      log.info0(msg);
-    } else {
-      if (doPrint) stdout.writeln(msg);
-    }
+    if (logIt) log.info0(msg);
+    if (doPrint) stdout.writeln(msg);
     return msg;
   }
 
-  String get _startMsg => '''Reading $total files '$_from'
-Started at $startTime\n''';
+  String get failures {
+    var out = "Failures($_failure):";
+    for (String s in failuresList)
+      out += '  $s\n';
+    return out;
+  }
 
-  String get _endMsg => '''\n\nEnded at $_endTime
-Total Elapsed: $_totalElapsed (wall clock)
-Timer.elapsed: ${timer.elapsed}');
-Success $_success, 
-Failure $_failure, 
-Total ${_success+_failure}''';
+  String get _startMsg => '''Reading $total files '$_from'
+Started at $startTime''';
+
+  String get _endMsg => '''\n
+           Start at: $startTime
+           Ended at: $_endTime
+   Total wall clock: $_totalElapsed
+            Success: $_success
+            Failure: $_failure
+              Total: ${_success + _failure}
+Timer total elapsed: ${timer.elapsed}
+      Timer average: ${timer.average(total)}
+$failures
+''';
 }
 
 const dcmExtensions = const <String>["dcm", ""];
-
-
