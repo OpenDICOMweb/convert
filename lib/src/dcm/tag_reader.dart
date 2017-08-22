@@ -7,10 +7,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:core/core.dart';
-import 'package:dictionary/dictionary.dart';
-
 import 'package:dcm_convert/dcm.dart';
+import 'package:system/system.dart';
+import 'package:tag/tag.dart';
+
 import 'dcm_reader.dart';
 
 /// A decoder for Binary DICOM (application/dicom).
@@ -142,7 +142,7 @@ class TagReader extends DcmReader {
       [Map<int, TagElement> dupMap]) =>
       new TagItem.fromDecoder(bd, parent, vfLength, map, dupMap);
 
-  /// Returns a new [ByteElement].
+/*  /// Returns a new [ByteElement].
   //  Called from [DcmReader].
   TagElement makeElementFromBytes(
           int code, int vrCode, int vfOffset, Uint8List vfBytes, int vfLength,
@@ -155,6 +155,7 @@ class TagReader extends DcmReader {
   //  Called from [DcmReader].
   TagElement makeTagElement(ByteElement e, [VFFragments fragments]) =>
       TagElement.makeElementFromByteElement(e);
+*/
 
 /*
   /// Interface to Sequence constructor.

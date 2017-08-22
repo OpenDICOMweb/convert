@@ -8,7 +8,8 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:common/common.dart';
+import 'package:system/system.dart';
+
 
 // TODO:
 //  * Finish documentation
@@ -30,15 +31,13 @@ import 'package:common/common.dart';
 /// [ByteBufReader] is always equal to the length of the underlying [Uint8List].
 //TODO: finish description
 
-//const int kMB = 1024 * 1024;
-//const int kGB = 1024 * 1024 * 1024;
 
 /// A skeletal implementation of a buffer.
 
 class ByteBufReader {
   static const int defaultLengthInBytes = 1024;
-  static const int defaultMaxCapacity = 1 * kMB;
-  static const int maxMaxCapacity = 2 * kGB;
+  static const int defaultMaxCapacity = 1 * k1MB;
+  static const int maxMaxCapacity = 2 * k1GB;
   static const Endianness endianness = Endianness.LITTLE_ENDIAN;
 
   final Uint8List _bytes;

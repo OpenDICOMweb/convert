@@ -13,8 +13,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:core/core.dart';
-import 'package:dictionary/dictionary.dart';
 import 'package:dcm_convert/dcm.dart';
 
 /// A [class] for writing a [RootByteDataset] to a [Uint8List],

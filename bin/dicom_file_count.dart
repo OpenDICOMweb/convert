@@ -6,7 +6,7 @@
 
 import 'dart:io';
 
-import 'package:common/logger.dart';
+import 'package:logger/logger.dart';
 import 'package:path/path.dart' as p;
 
 
@@ -31,7 +31,7 @@ void main() {
     List<Directory> dirs = getDirectories(inRoot5);
     int count = 0;
     for(Directory dir in dirs) {
-      log.info('  $dir');
+      log.info0('  $dir');
       count += getDcmFileCount(dir);
     }
     print('count: $count');
@@ -40,7 +40,7 @@ void main() {
 List<FileSystemEntity> getAllFSEntities(String path) {
   Directory dir = new Directory(path);
   List<FileSystemEntity> fList = dir.listSync(recursive: true);
-  log.info('$dir has ${fList.length} entities');
+  log.info0('$dir has ${fList.length} entities');
   return fList;
 }
 
@@ -51,7 +51,7 @@ List<Directory> getDirectories(String path) {
   for (FileSystemEntity fse in fList) {
     if (fse is Directory) dirs.add(fse);
   }
-  log.info('Subdirectories: ${dirs.length}');
+  log.info0('Subdirectories: ${dirs.length}');
   return dirs;
 }
 
@@ -73,8 +73,8 @@ int getDcmFileCount(Directory dir) {
     }
   }
   filesCount = files.length;
-  log.info('    FSEntities: $fsEntityCount');
-  log.info('    DICOM Files: $filesCount');
+  log.info0('    FSEntities: $fsEntityCount');
+  log.info0('    DICOM Files: $filesCount');
   return files.length;
 }
 

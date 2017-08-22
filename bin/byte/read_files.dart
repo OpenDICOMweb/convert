@@ -7,9 +7,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:common/logger.dart';
+import 'package:logger/logger.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
+import 'package:system/system.dart';
 
 final Logger log =
     new Logger("io/bin/read_files.dart", Level.config);
@@ -18,7 +19,7 @@ final Logger log =
 
 void main() {
   print('Read Files');
-  DcmReader.log.level = Level.info;
+  System.log.level = Level.info;
   var paths = testPaths0;
 
   var nFiles = testPaths0.length;
@@ -32,7 +33,7 @@ void main() {
     File f = new File(paths[i]);
     var nBytes = f.lengthSync();
     if (nBytes == 0) {
-      log.info('Skipping empty file: $f');
+      log.info0('Skipping empty file: $f');
     }
     log.config('$n: Reading: $p - $nBytes bytes');
 
@@ -52,10 +53,10 @@ bool readCheck(File file, int fileNo, {int reps = 1, bool fmiOnly = false}) {
   if (rds == null) {
     log.warn('---  File not readable');
   } else {
-    log.info('${rds.parseInfo.info}');
+    log.info0('${rds.parseInfo.info}');
     log.debug('Bytes Dataset: ${rds.info}');
   }
-  log.info('---\n');
+  log.info0('---\n');
   return (rds == null) ? false : true;
 }
 
@@ -73,6 +74,6 @@ bool readWriteCheck(File file, {int reps = 1, bool fmiOnly = false}) {
   ByteElement e = rds0[0x00020010];
   log.debug('e: $e');
   if (rds0 == null) return false;
-  log.info('  Original: $rds0', -1);
+  log.info0('  Original: $rds0', -1);
   return true;
 }

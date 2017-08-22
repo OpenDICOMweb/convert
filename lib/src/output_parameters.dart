@@ -4,7 +4,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See /[package]/AUTHORS file for other contributors.
 
-import 'package:dictionary/dictionary.dart';
+import 'package:uid/uid.dart';
 
 typedef String OutputRegex(RegExp rexp);
 

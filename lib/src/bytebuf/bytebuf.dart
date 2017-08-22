@@ -8,8 +8,8 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:common/common.dart';
-import 'package:core/core.dart';
+import 'package:number/number.dart';
+import 'package:system/system.dart';
 
 //TODO:
 // 1. Put all index checking and moving into same section and eliminate redundancy
@@ -37,9 +37,9 @@ import 'package:core/core.dart';
 /// [ByteBuf] is always equal to the [length] of the underlying [Uint8List].
 //TODO: finish description
 
-//const kKB = 1024 * 1024;
-//const kMB = kKB * 1024;
-//const kGB = kMB * 1024;
+const kKB = 1024 * 1024;
+const kMB = kKB * 1024;
+const kGB = kMB * 1024;
 const int kMaxCapacity = kGB;
 
 /// A skeletal implementation of a buffer.
@@ -48,9 +48,6 @@ class ByteBuf {
   static const int defaultMaxCapacity = 1 * kGB;
   static const int maxMaxCapacity = 2 * kGB;
   static const Endianness endianness = Endianness.LITTLE_ENDIAN;
-
-  //TODO: Make the argument an optional arg to contructor
-  static final Logger log = new Logger('ByteBuf', Level.config);
 
   /// The complete buffer from 0 to [_bytes].[lengthInBytes].
   final Uint8List _bytes;
@@ -903,9 +900,9 @@ class ByteBuf {
   /// Reads and Returns an [Float32List] of signed 32-bit floating point numbers,
   /// and advances the [readIndex] by the number of byte read.
   Float32List readFloat32List(int length) {
-    log.info('readFloat32List0($readIndex)');
+    log.info0('readFloat32List0($readIndex)');
     Float32List list = getFloat32List(_readIndex, length);
-    log.info('readFloat32List1($readIndex) $list');
+    log.info0('readFloat32List1($readIndex) $list');
     _readIndex += length * 4;
     return list;
   }

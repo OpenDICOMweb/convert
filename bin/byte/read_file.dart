@@ -4,25 +4,24 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the   AUTHORS file for other contributors.
 
-import 'package:common/logger.dart';
-import 'package:dcm_convert/data/test_files.dart';
+import 'package:system/system.dart';
 import 'package:dcm_convert/dcm.dart';
 
-import 'package:dcm_convert/src/dcm/dcm_reader.dart';
-
+var pathx ='c:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
 //Urgent: bug with path20
 void main() {
-  final log = new Logger("io/bin/read_files.dart",Level.debug);
-  DcmReader.log.level = Level.debug2;
+  System.log.level = Level.debug2;
 
-  var path = testPaths1[1];
+  var path = pathx;
 
   log.config('Byte Reader: $path');
+  log.config('System: $System');
+  log.config('system: $system');
   RootByteDataset rds = ByteReader.readPath(path);
   if (rds == null) {
     log.warn('No Data: $path');
   } else {
-    log.info('${rds.parseInfo.info}');
-    log.info('Bytes Dataset: ${rds.summary}');
+    log.info0('${rds.parseInfo.info}');
+    log.info0('Bytes Dataset: ${rds.summary}');
   }
 }

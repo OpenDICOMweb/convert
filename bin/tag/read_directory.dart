@@ -6,10 +6,10 @@
 
 import 'dart:io';
 
-import 'package:common/logger.dart';
-import 'package:common/timestamp.dart';
+import 'package:logger/logger.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:path/path.dart' as p;
+import 'package:timing/timestamp.dart';
 
 String inRoot0 = "C:/odw/test_data/sfd/CR";
 String inRoot1 = "C:/odw/test_data/sfd/CR_and_RF";
@@ -57,13 +57,13 @@ void main() {
   }
 
   var timer = new Stopwatch();
-  log.info('Reading ${files.length} files from ${dir.path}:');
+  log.info0('Reading ${files.length} files from ${dir.path}:');
   var timestamp = new Timestamp('Starting Read ...');
   timer.start();
-  log.info('   at: $timestamp');
+  log.info0('   at: $timestamp');
   readFileList(files);
   timer.stop();
-  log.info('Elapsed time: ${timer.elapsed}');
+  log.info0('Elapsed time: ${timer.elapsed}');
 }
 
 void readFileList(List<File> files, {bool fmiOnly = false}) {
@@ -80,7 +80,7 @@ void readFileList(List<File> files, {bool fmiOnly = false}) {
   List<String> success = [];
   List<String> failure = [];
   for (File file in files) {
-    if (count++ % printEvery == 0) log.info('$count good(${success.length}), '
+    if (count++ % printEvery == 0) log.info0('$count good(${success.length}), '
         'bad(${failure.length})');
     log.debug('Reading file: $file');
     try {
@@ -93,24 +93,24 @@ void readFileList(List<File> files, {bool fmiOnly = false}) {
       }
       // print('output:\n${instance.patient.format(new Prefixer())}');
     } catch (e) {
-      log.info('Fail: ${file.path}');
+      log.info0('Fail: ${file.path}');
       failure.add('"${file.path}"');
-   //   log.info('failures: ${failure.length}');
+   //   log.info0('failures: ${failure.length}');
       continue;
     }
     log.reset;
   }
   successCount = success.length;
   failureCount = failure.length;
-  // log.info(instance.study.summary);
-  // log.info('Active Patients: $activeStudies');
-  log.info('FSEntities: $fsEntityCount');
-  log.info('Files: $filesCount');
-  log.info('Success: $successCount');
-  log.info('Failure: $failureCount');
-  log.info('Total: ${successCount + failureCount}');
+  // log.info0(instance.study.summary);
+  // log.info0('Active Patients: $activeStudies');
+  log.info0('FSEntities: $fsEntityCount');
+  log.info0('Files: $filesCount');
+  log.info0('Success: $successCount');
+  log.info0('Failure: $failureCount');
+  log.info0('Total: ${successCount + failureCount}');
 //  var good = success.join(',  \n');
   var bad = failure.join(',  \n');
-//  log.info('Good Files: [\n$good,\n]\n');
-  log.info('bad Files: [\n$bad,\n]\n');
+//  log.info0('Good Files: [\n$good,\n]\n');
+  log.info0('bad Files: [\n$bad,\n]\n');
 }

@@ -14,10 +14,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:dictionary/dictionary.dart';
+import 'package:logger/logger.dart';
+import 'package:system/system.dart';
+
 
 import 'byte_data_buffer.dart';
 
@@ -39,7 +40,7 @@ abstract class DcmWriter {
   static final Logger log = new Logger("DcmWriter", Level.debug2);
 
   /// The default [ByteData] buffer length, if none is provided.
-  static const int defaultBufferLength = 200 * kMB;
+  static const int defaultBufferLength = 200 * k1MB;
 
   /// If [reUseBD] is [true] the [ByteData] buffer is stored here.
   static ByteData _reuse;
@@ -103,7 +104,7 @@ abstract class DcmWriter {
   static TransferSyntaxUid getOutputTS(Dataset rootDS, TransferSyntaxUid outputTS) {
     if (outputTS == null) {
       return (rootDS.transferSyntax == null)
-          ? System.defaultTransferSyntax
+          ? system.defaultTransferSyntax
           : rootDS.transferSyntax;
     } else {
       return outputTS;
@@ -331,6 +332,7 @@ abstract class DcmWriter {
   void _writeSimpleElement(Element e) {
     //TODO: handle replacing undefined lengths
     //TODO: doFixPaddingErrors
+    log.debug('$wbb $e');
     _writeHeader(e);
     _writeBytes(e.vfBytes);
     if (e.hadULength) {
@@ -338,13 +340,14 @@ abstract class DcmWriter {
       assert(kUndefinedLengthVRCodes.contains(e.vrCode));
       _writeDelimiter(kSequenceDelimitationItem);
     }
+    log.debug('$wee $e');
   }
 
   /// Writes an EVR (short == 8 bytes, long == 12 bytes) or IVR (8 bytes)
   /// header.
   void _writeHeader(Element e) {
     log.debug('$wbb writeHeader ${_isEVR ? "EVR" : "IVR"} '
-        'e.vfLength: ${e.vfLength}, ${toHex(e.vfLength, 8)}', 1);
+        'e.vfLength: ${e.vfLength}, ${hex32(e.vfLength)}', 1);
     var length = (e.vfLength == null || encoding.doConvertUndefinedLengths)
         ? e.vfBytes.lengthInBytes
         : e.vfLength;

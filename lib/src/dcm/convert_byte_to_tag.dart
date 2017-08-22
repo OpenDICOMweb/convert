@@ -4,10 +4,13 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:common/common.dart';
 import 'package:core/byte_dataset.dart';
+import 'package:core/byte_element.dart';
+import 'package:core/element.dart';
+import 'package:tag/tag.dart';
 import 'package:core/tag_dataset.dart';
-import 'package:dictionary/dictionary.dart';
+import 'package:core/tag_element.dart';
+import 'package:system/system.dart';
 
 import 'package:dcm_convert/src/dcm/byte_reader.dart';
 
@@ -16,15 +19,13 @@ typedef Element<K, V> Maker<K, V>(K id, List<V> values,
 
 ByteDataset currentBDS;
 TagDataset currentTDS;
-bool isEVR;
 int nElements = 0;
 
 RootTagDataset convertByteDSToTagDS(RootByteDataset rootBDS) {
-  Logger log = new Logger('convertByteDSToTagDS', Level.info);
+
 
   log.level = Level.warn1;
   currentBDS = rootBDS;
-  isEVR = rootBDS.isEVR;
   RootTagDataset rootTDS = new RootTagDataset.fromByteData(rootBDS.bd);
   log.debug('tRoot.isRoot: ${rootTDS.isRoot}');
 
@@ -42,7 +43,6 @@ RootTagDataset convertByteDSToTagDS(RootByteDataset rootBDS) {
 
 TagDataset convertDataset(ByteDataset byteDS, TagDataset tagDS) {
   currentBDS = byteDS;
-  isEVR = byteDS.isEVR;
   currentTDS = tagDS;
   for (ByteElement e in byteDS.elements) {
     TagElement te = convertElement(e);
@@ -61,7 +61,6 @@ Map<String, TagElement> pcElements = <String, TagElement>{};
 TagElement convertElement(ByteElement be) {
   Logger log = new Logger('convertElement', Level.info);
   log.level = Level.info;
-  var code = be.code;
   var vrCode = be.vrCode;
 
   var tag = getTag(be);
@@ -79,7 +78,7 @@ TagElement convertElement(ByteElement be) {
   } else if (tag is PTag) {
     if (tag.code == kPixelData) {
       te = ByteReader.makeTagPixelData(be);
-      log.info('PixelData\n  $be\n  $te');
+      log.info0('PixelData\n  $be\n  $te');
     } else {
       te = be.tagElementFromBytes;
     }
@@ -88,11 +87,11 @@ TagElement convertElement(ByteElement be) {
       _warn(be.code, 'Private Creator e.vr(${be.vr}) should be VR.kLO');
     if (vrCode != VR.kLO.code)
       throw 'Invalid Tag VR: ${tag.vr} should be VR.kLO';
-    te = TagElement.makeElementFromBytes(code, vrCode, be.vfLength, be.vfBytes);
+    te = be.tagElementFromBytes;
     assert(tag is PCTag && tag.name == be.asString);
     pcElements[be.asString] = te;
   } else if (tag is PDTag) {
-    te = TagElement.makeElementFromBytes(code, vrCode, be.vfLength, be.vfBytes);
+    te = be.tagElementFromBytes;
   } else {
     throw 'Invalid Tag: $tag';
   }
@@ -117,11 +116,9 @@ SQ convertSQ(Element e) {
   var parentTDS = currentTDS;
   for (int i = 0; i < sq.items.length; i++) {
     currentBDS = sq.items[i];
-//    print('item: $currentBDS');
     currentTDS = new TagItem.fromDecoder(currentBDS.bd, parentTDS,
         currentBDS.vfLength, <int, TagElement>{}, <int, TagElement>{});
     tItems[i] = convertDataset(currentBDS, currentTDS);
-//    print('item[$i] $currentTDS');
   }
   currentBDS = parentBDS;
   currentTDS = parentTDS;
@@ -156,7 +153,7 @@ Tag getTag(ByteElement be) {
   } else {
     throw 'couldn\'t get tag: ${be.info}';
   }
-  log.debug1('Tag: $tag');
+  log.debug2('Tag: $tag');
   return tag;
 }
 
@@ -172,13 +169,13 @@ int pcCodeFromPDCode(int pdCode) {
 List<String> exceptions = <String>[];
 
 void _warn(int code, String msg)  {
-  var s = '**   Warning ${toDcm(code)}  $msg';
+  var s = '**   Warning ${dcm(code)}  $msg';
   exceptions.add(s);
   log.warn(s);
 }
 
 void _error(int code, String msg)  {
-  var s = '**** Error: ${toDcm(code)} $msg';
+  var s = '**** Error: ${dcm(code)} $msg';
   exceptions.add(s);
   log.error(s);
 }

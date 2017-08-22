@@ -31,12 +31,30 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.15.2+11"
+  base:
+    description:
+      path: "C:/odw/sdk/base"
+      relative: false
+    source: path
+    version: "0.6.2"
   benchmark_harness:
     description:
       name: benchmark_harness
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.4"
+  bignum:
+    description:
+      name: bignum
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.0"
+  binary:
+    description:
+      name: binary
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.3"
   boolean_selector:
     description:
       name: boolean_selector
@@ -67,12 +85,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.14.3"
-  common:
-    description:
-      path: "C:/odw/sdk/common"
-      relative: false
-    source: path
-    version: "0.5.6"
   convert:
     description:
       name: convert
@@ -84,7 +96,7 @@ packages:
       path: "C:/odw/sdk/core"
       relative: false
     source: path
-    version: "0.5.6"
+    version: "0.6.1"
   crypto:
     description:
       name: crypto
@@ -97,12 +109,18 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.14.0"
-  dictionary:
+  date_time:
     description:
-      path: "C:/odw/sdk/dictionary"
+      path: "C:/odw/sdk/date_time"
       relative: false
     source: path
-    version: "0.5.6"
+    version: "0.6.1"
+  fixnum:
+    description:
+      name: fixnum
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.10.6"
   front_end:
     description:
       name: front_end
@@ -163,6 +181,12 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.3.0-alpha.1"
+  logger:
+    description:
+      path: "C:/odw/sdk/logger"
+      relative: false
+    source: path
+    version: "0.6.1"
   logging:
     description:
       name: logging
@@ -199,6 +223,12 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.4.0"
+  number:
+    description:
+      path: "C:/odw/sdk/number"
+      relative: false
+    source: path
+    version: "0.6.1"
   package_config:
     description:
       name: package_config
@@ -235,12 +265,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.3.2"
-  quiver:
-    description:
-      name: quiver
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.25.0"
   shelf:
     description:
       name: shelf
@@ -295,18 +319,42 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.6.1"
+  string:
+    description:
+      path: "C:/odw/sdk/string"
+      relative: false
+    source: path
+    version: "0.6.1"
   string_scanner:
     description:
       name: string_scanner
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.2"
+  subject:
+    description:
+      path: "C:/odw/sdk/subject"
+      relative: false
+    source: path
+    version: "0.6.1"
   supports_color:
     description:
       name: supports_color
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.1.1"
+  system:
+    description:
+      path: "C:/odw/sdk/system"
+      relative: false
+    source: path
+    version: "0.6.1"
+  tag:
+    description:
+      path: "C:/odw/sdk/tag"
+      relative: false
+    source: path
+    version: "0.6.1"
   term_glyph:
     description:
       name: term_glyph
@@ -319,12 +367,24 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.12.24+2"
+  timing:
+    description:
+      path: "C:/odw/sdk/timing"
+      relative: false
+    source: path
+    version: "0.6.1"
   typed_data:
     description:
       name: typed_data
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.1.4"
+  uid:
+    description:
+      path: "C:/odw/sdk/uid"
+      relative: false
+    source: path
+    version: "0.6.1"
   unscripted:
     description:
       name: unscripted
@@ -337,6 +397,18 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.9.0+3"
+  uuid:
+    description:
+      path: "C:/odw/sdk/uuid"
+      relative: false
+    source: path
+    version: "0.6.1"
+  version:
+    description:
+      name: version
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.2"
   watcher:
     description:
       name: watcher

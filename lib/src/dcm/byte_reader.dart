@@ -7,17 +7,16 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:common/common.dart';
 import 'package:core/byte_dataset.dart';
-import 'package:dictionary/dictionary.dart';
-
 import 'package:dcm_convert/dcm.dart';
+import 'package:system/system.dart';
+import 'package:tag/tag.dart';
+
 import 'dcm_reader.dart';
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootByteDataset].
 class ByteReader extends DcmReader {
-  static final Logger log = new Logger('DcmReader.ByteReader');
   final RootByteDataset _rootDS;
   ByteDataset _currentDS;
 
@@ -43,33 +42,6 @@ class ByteReader extends DcmReader {
             allowMissingFMI: allowMissingFMI,
             targetTS: targetTS,
             reUseBD: reUseBD);
-
-/* Flush at V0.9.0 if not used.
-   /// Creates a [Uint8List] with the same length as [list<int>];
-  /// and copies the values to the [Uint8List].  Values are truncated
-  /// to fit in the [Uint8List] as they are copied.
-  factory ByteReader.fromList(List<int> list,
-      {String path = "",
-      bool async: true,
-      bool fast: true,
-      bool fmiOnly = false,
-      bool throwOnError = false,
-      bool allowMissingFMI = false,
-      TransferSyntaxUid targetTS,
-      bool reUseBD = true}) {
-    Uint8List bytes = new Uint8List.fromList(list);
-    ByteData bd = bytes.buffer.asByteData();
-    return new ByteReader(bd,
-        path: path,
-        async: async,
-        fast: fast,
-        fmiOnly: fmiOnly,
-        throwOnError: throwOnError,
-        allowMissingFMI: allowMissingFMI,
-        targetTS: targetTS,
-        reUseBD: true);
-  }
-*/
 
   /// Creates a [ByteReader] from the contents of the [file].
   factory ByteReader.fromFile(File file,
@@ -162,33 +134,6 @@ class ByteReader extends DcmReader {
 
   String showItem(ByteItem item) =>
       (item == null) ? 'Item item = null' : item.info;
-/*
-  /// Returns a new [ByteElement].
-  // Called from [DcmReader].
-  ByteElement makeElementFromBytes(
-          int code, int vrCode, int vfOffset, Uint8List vfBytes, int vfLength,
-          [VFFragments fragments]) =>
-      (isEVR)
-          ? new EVRElement.fromBytes(code, vrCode, vfOffset, vfBytes)
-          : new IVRElement.fromBytes(code, vrCode, vfOffset, vfBytes);
-*/
-
-/*  /// Returns a new [ByteElement].
-  //  Called from [DcmReader].
-  ByteElement makeElementFromByteData(ByteData bd, [VFFragments fragments]) =>
-      (isEVR)
-          ? new EVRElement.fromByteData(bd)
-          : new IVRElement.fromByteData(bd);*/
-/*
-  //Urgent: flush or fix
-  /// Makes a PixelData [Element] from [ByteData]
-  /// Note: ByteReader doesn't handel fragments.
-  ByteElement makePixelData(int code, int vrCode, int vfOffset,
-          Uint8List vfBytes, int vfLength, bool isEVR,
-          [VFFragments fragments]) =>
-      makeElementFromBytes(
-          code, vrCode, vfOffset, vfBytes, vfLength, fragments);
-*/
 
   //Urgent: flush or fix
   ByteElement makeElement(int vrIndex, ByteData bd) =>
@@ -219,10 +164,10 @@ class ByteReader extends DcmReader {
       new ByteItem.fromDecoder(bd, parent, vfLength, map, dupMap);
 
   //Urgent: flush or fix
-  static TagElement makeTagElement(ByteElement e) =>
-      TagElement.makeElementFromBytes(
-          e.code, e.vrCode, e.vfLength, e.vfBytes, e.fragments);
+  static TagElement makeTagElement(ByteElement be) =>
+      be.tagElementFromBytes;
 
+  //Urgent: flush or fix
   static TagElement makeTagPixelData(ByteElement e) {
     assert(e.code == kPixelData);
     print('makePixelData: ${e.info}');

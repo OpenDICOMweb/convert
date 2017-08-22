@@ -4,14 +4,15 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-import 'package:dcm_convert/tools.dart';
+//Urgent: implement test of JobArgParser
+//import 'package:dcm_convert/tools.dart';
 import 'package:test/test.dart';
 
 void main() {
 
-  const List<String> args0 = const <String> ['foo/bar -o foo/bar/output/ -d'];
+ // const List<String> args0 = const <String> ['foo/bar -o foo/bar/output/ -d'];
 
-  JobArgs results = JobArgs.parse(args0);
+ // JobArgs results = JobArgs.parse(args0);
   group('Tag Job ArgParser', () {
 
 

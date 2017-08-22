@@ -6,10 +6,10 @@
 
 import 'dart:typed_data';
 
-import 'package:common/ascii.dart';
+import 'package:base/base.dart';
 import 'package:core/byte_dataset.dart';
-import 'package:core/src/dicom_utils.dart';
-import 'package:dictionary/dictionary.dart';
+import 'package:core/byte_element.dart';
+import 'package:tag/tag.dart';
 
 /// TODO DOC
 bool bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError = false]) {
@@ -75,8 +75,8 @@ void printLine(int line, Uint8List b0, Uint8List b1, [int pos]) {
 
   var v0 = bd0.getUint32(line);
   var v1 = bd1.getUint32(line);
-  var dcm0 = toDcm(v0);
-  var dcm1 = toDcm(v1);
+  var dcm0 = dcm(v0);
+  var dcm1 = dcm(v1);
   var dec0 = toDec32(v0);
   var dec1 = toDec32(v1);
   var s0 = toStr(b0, line);

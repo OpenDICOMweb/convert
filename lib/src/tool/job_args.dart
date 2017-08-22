@@ -6,7 +6,7 @@
 
 import 'dart:io' show Platform;
 import 'package:args/args.dart';
-import 'package:common/logger.dart';
+import 'package:logger/logger.dart';
 
 class JobArgs {
   /// The name of the program that is running
@@ -62,17 +62,7 @@ class JobArgs {
   showHelp: $showHelp
   ''';
 
-  bool parseInt(String s) {
-    print('s: "$s"');
-    if (s == null) {
-      shortMsgEvery = null;
-    } else {
-      int v = int.parse(s, onError: (s) => -1);
-      print('v: $v');
-      shortMsgEvery = v;
-    }
-    return true;
-  }
+  int parseInt(String s) => int.parse(s, onError: (s) => 100);
 
   ArgParser getParser() => new ArgParser()
     ..addOption('logFile',
@@ -93,7 +83,7 @@ class JobArgs {
     //TODO: need better name
     ..addOption('every',
         abbr: 'e',
-        defaultsTo: '1000',
+        defaultsTo: '100',
         callback: (v) => parseInt(v),
         help: 'print a progress message every n files processed"')
     // These next options are for the logger Level
