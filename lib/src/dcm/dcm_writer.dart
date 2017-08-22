@@ -332,6 +332,7 @@ abstract class DcmWriter {
   void _writeSimpleElement(Element e) {
     //TODO: handle replacing undefined lengths
     //TODO: doFixPaddingErrors
+    log.debug('$wbb $e');
     _writeHeader(e);
     _writeBytes(e.vfBytes);
     if (e.hadULength) {
@@ -339,13 +340,15 @@ abstract class DcmWriter {
       assert(kUndefinedLengthVRCodes.contains(e.vrCode));
       _writeDelimiter(kSequenceDelimitationItem);
     }
+    log.debug('$wee $e');
   }
 
   /// Writes an EVR (short == 8 bytes, long == 12 bytes) or IVR (8 bytes)
   /// header.
   void _writeHeader(Element e) {
+    print('vfLength: ${e.vfLength}');
     log.debug('$wbb writeHeader ${_isEVR ? "EVR" : "IVR"} '
-        'e.vfLength: ${e.vfLength}, ${hex(e.vfLength)}', 1);
+        'e.vfLength: ${e.vfLength}, ${hex32(e.vfLength)}', 1);
     var length = (e.vfLength == null || encoding.doConvertUndefinedLengths)
         ? e.vfBytes.lengthInBytes
         : e.vfLength;
