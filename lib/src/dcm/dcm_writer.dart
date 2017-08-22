@@ -346,7 +346,6 @@ abstract class DcmWriter {
   /// Writes an EVR (short == 8 bytes, long == 12 bytes) or IVR (8 bytes)
   /// header.
   void _writeHeader(Element e) {
-    print('vfLength: ${e.vfLength}');
     log.debug('$wbb writeHeader ${_isEVR ? "EVR" : "IVR"} '
         'e.vfLength: ${e.vfLength}, ${hex32(e.vfLength)}', 1);
     var length = (e.vfLength == null || encoding.doConvertUndefinedLengths)
