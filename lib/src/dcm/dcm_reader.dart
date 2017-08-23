@@ -7,6 +7,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:core/dataset.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/system.dart';
 import 'package:tag/tag.dart';
@@ -101,7 +102,7 @@ abstract class DcmReader extends DcmConverterBase {
   int _nonZeroDelimiterLengths = 0;
   int _nOddLengthValueFields = 0;
 
-  TransferSyntaxUid _ts;
+  TransferSyntaxUid _tsUid;
   VR _pixelDataVR;
   int _pixelDataStart;
   int _pixelDataEnd;
@@ -214,7 +215,7 @@ abstract class DcmReader extends DcmConverterBase {
         _hadParsingErrors,
         _nonZeroDelimiterLengths,
         _nOddLengthValueFields,
-        _ts,
+        _tsUid,
         _pixelDataVR,
         _pixelDataStart,
         _pixelDataEnd,
@@ -251,12 +252,12 @@ abstract class DcmReader extends DcmConverterBase {
     _hadFmi =
         _readFMI(checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
     if (!_hadFmi && !allowMissingFMI) return null;
-    if (targetTS != null && _ts != targetTS) return rootDS;
+    if (targetTS != null && _tsUid != targetTS) return rootDS;
 
-    if (!System.isSupportedTransferSyntax(_ts.asString)) {
+    if (!System.isSupportedTransferSyntax(_tsUid.asString)) {
       _hadParsingErrors = true;
-      _error('$ree Unsupported TS: $_ts @end');
-      if (throwOnError) throw new InvalidTransferSyntaxError(_ts);
+      _error('$ree Unsupported TS: $_tsUid @end');
+      if (throwOnError) throw new InvalidTransferSyntaxError(_tsUid);
       return rootDS;
     }
 
@@ -264,7 +265,7 @@ abstract class DcmReader extends DcmConverterBase {
     try {
       currentDS = rootDS;
       //  log.debug1('$rbb readDataset: isExplicitVR(${_isEVR})');
-      while (_hasRemaining(8)) readElement();
+      while (_hasRemaining(8)) _readElement();
       //  log.debug1('$ree end readDataset: isExplicitVR(${_isEVR})');
       assert(identical(currentDS, rootDS));
     } on EndOfDataError {
@@ -401,12 +402,51 @@ abstract class DcmReader extends DcmConverterBase {
       throw new EndOfDataError('_readFMI');
     }
     _hadFmi = true;
-    //  log.debug2('$rmm hadFMI: $_hadFmi');
 
+    Fmi fmi = new Fmi(rootDS);
+    _tsUid = fmi.transferSyntax;
+    _isEVR = !_tsUid.isImplicitLittleEndian;
+/*
+    Uid mediaStorageSopClass =
+        rootDS.getUidByTag(PTag.kMediaStorageSOPClassUID, aType: AType.k1);
+    Uid mediaStorageSopInstance =
+        rootDS.getUidByTag(PTag.kMediaStorageSOPInstanceUID, aType: AType.k1);
+*/
+
+/* remove
+    //TODO: use _ts or tsUid not both
     // Get TS or if not present use default
-    _ts = rootDS.transferSyntax;
-    if (_ts == null) _ts = System.defaultTransferSyntax;
-    _isEVR = !_ts.isImplicitLittleEndian;
+    _tsUid = rootDS.transferSyntax;
+    if (_tsUid == null) _tsUid = System.defaultTransferSyntax;
+    _isEVR = !_tsUid.isImplicitLittleEndian;
+*/
+
+/*
+     _tsUid = rootDS.getUidByTag(PTag.kTransferSyntaxUID, aType: AType.k1);
+    if (_tsUid == null) {
+      missingRequiredElementError(PTag.kTransferSyntaxUID);
+      log.info0('Using System.defaultTransferSyntax: ${System.defaultTransferSyntax}');
+      _tsUid = System.defaultTransferSyntax;
+    }
+    _isEVR = !_tsUid.isImplicitLittleEndian;
+*/
+
+/*
+    Uid implementationClass =
+        rootDS.getUidByTag(PTag.kImplementationClassUID, aType: AType.k1);
+    Uid implementationVersion =
+        rootDS.getUidByTag(PTag.kImplementationVersionName, aType: AType.k3);
+    String sourceAppAETitle =
+        rootDS.getStringByTag(PTag.kSourceApplicationEntityTitle, aType: AType.k3);
+    String sendingAppAETitle =
+        rootDS.getStringByTag(PTag.kSendingApplicationEntityTitle, aType: AType.k3);
+    String receivingAppAETitle =
+        rootDS.getStringByTag(PTag.kReceivingApplicationEntityTitle, aType: AType.k3);
+    Uid privateInfoCreatorUid =
+        rootDS.getUidByTag(PTag.kPrivateInformationCreatorUID, aType: AType.k3);
+    Uint8List privateInfo =
+        rootDS.getIntListByTag(PTag.kPrivateInformation, aType: AType.k3);
+*/
 
     //  log.debug1('$rmm isExplicitVR: $_isEVR');
     //  log.debug('$rmm TS:${_ts}');
@@ -688,7 +728,7 @@ abstract class DcmReader extends DcmConverterBase {
         1);*/
     if (_vrCode != VR.kOB.code && _vrCode != VR.kUN.code) {
       VR vr = VR.lookup(_vrCode);
-      _warn('Invalid VR($vr) for Encapsulated TS: $_ts $_rrr');
+      _warn('Invalid VR($vr) for Encapsulated TS: $_tsUid $_rrr');
       _hadParsingErrors = true;
     }
     var fragments = _readFragments();

@@ -74,8 +74,8 @@ ${jobArgs.parser.usage}
   System.log.level = jobArgs.baseLevel;
 
   // Short circuit arguments for testing
-  dir = new Directory(sfdMR);
-  jobArgs.shortMsgEvery = 250;
+  //dir = new Directory(sfdMR);
+  //jobArgs.shortMsgEvery = 250;
 
   JobRunner.job(dir, doRWRByteFile,
       interval: jobArgs.shortMsgEvery, level: jobArgs.baseLevel);

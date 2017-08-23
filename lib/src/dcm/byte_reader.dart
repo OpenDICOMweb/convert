@@ -125,15 +125,15 @@ class ByteReader extends DcmReader {
   }
 
   void debugStart(Object o, String msg) {
-    //  log.debug('$rbb $o $msg');
+    log.debug('$rbb $o $msg');
   }
 
   void debug(Object o, Level level) {
-    //  log.debug('$rmm $o');
+    log.debug('$rmm $o');
   }
 
   void debugEnd(Object o, Level level) {
-    //  log.debug('$rbb $o');
+    log.debug('$rbb $o');
   }
 
   // Interface

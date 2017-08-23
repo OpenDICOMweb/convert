@@ -51,7 +51,8 @@ ${jobArgs.parser.usage}
   var dirName;
   if (args.length == 0) {
     stderr.write('No Directory name supplied - defaulting to C:/odw/test_data\n');
-    dirName = 'C:/odw/test_data';
+    // **** change this name when testing
+    dirName = 'C:/odw/test_data/sfd/MR/PID_BREASTMR/1_DICOM_Original';
   } else {
     dirName = args[0];
   }
@@ -69,8 +70,8 @@ ${jobArgs.parser.usage}
   System.log.level = jobArgs.baseLevel;
 
   // Short circuit arguments for testing
-  dir = new Directory(dir6688);
-  jobArgs.shortMsgEvery = 10000;
+ // dir = new Directory(dir6688);
+  jobArgs.shortMsgEvery = 100;
   System.log.level = Level.error;
 
   JobRunner.job(dir, doReadByteFile,

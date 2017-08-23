@@ -23,7 +23,7 @@ void main() {
   log.level = Level.error;
 
   /// *** Change directory path name here
-  String path = dir6688;
+  String path = 'C:/odw/test_data/sfd/MR/Patient_20_-_FMRI_brain/1_DICOM_Original';
   Directory dir = new Directory(path);
 
   List<FileSystemEntity> fList = dir.listSync(recursive: true);

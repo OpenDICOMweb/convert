@@ -4,10 +4,21 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
+import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/system.dart';
+
+Future _readFileAsync(File f) async {
+  var bytes = await f.readAsBytes();
+  print(bytes.length);
+  return bytes;
+}
+
+Uint8List _readFileSync(File f)  => f.readAsBytesSync();
+
 
 bool doReadByteFile(File f, [bool throwOnError = false, bool fast = true]) {
   System.log.level = Level.error;
@@ -17,7 +28,9 @@ bool doReadByteFile(File f, [bool throwOnError = false, bool fast = true]) {
   var path = cleanPath(f.path);
 
   try {
-    var reader0 = new ByteReader.fromFile(f);
+    var bytes = _readFileSync(f);
+    ByteData bd = bytes.buffer.asByteData();
+    var reader0 = new ByteReader(bd);
     RootByteDataset rds0 = reader0.readRootDataset();
     if (rds0 == null) {
       log.info0('Unreadable File: $path');

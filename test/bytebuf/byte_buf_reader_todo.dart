@@ -143,8 +143,8 @@ void main() {
     print('bytes: $bytes');
     ByteBufReader reader = new ByteBufReader(bytes);
 
-    print('Uint16List.lengthInBytes= ${uint16list.lengthInBytes}');
-    Uint16List list = reader.readUint16List(uint16list.lengthInBytes);
+    print('Uint16List.lengthInBytes= ${uint16list.length}');
+    Uint16List list = reader.readUint16List(uint16list.length);
     print('readList = $list');
     expect(list, equals(uint16s));
   });
@@ -185,8 +185,8 @@ void main() {
     print('bytes: $bytes');
     ByteBufReader buf = new ByteBufReader(bytes);
 
-    print('int16List.lengthInBytes= ${int16list.lengthInBytes}');
-    Int16List list = buf.readInt16List(int16list.lengthInBytes);
+    print('int16List.lengthInBytes= ${int16list.length}');
+    Int16List list = buf.readInt16List(int16list.length);
     print('Int16List = $list');
     expect(list, equals(int16s));
   });
@@ -227,8 +227,8 @@ void main() {
     print('bytes: $bytes');
     ByteBufReader buf = new ByteBufReader(bytes);
 
-    print('int32List.lengthInBytes= ${uint32list.lengthInBytes}');
-    Uint32List list = buf.readUint32List(uint32list.lengthInBytes);
+    print('int32List.lengthInBytes= ${uint32list.length}');
+    Uint32List list = buf.readUint32List(uint32list.length);
     print('Uint32List = $list');
     expect(list, equals(uint32s));
   });
