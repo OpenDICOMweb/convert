@@ -104,7 +104,7 @@ abstract class DcmWriter {
   static TransferSyntaxUid getOutputTS(Dataset rootDS, TransferSyntaxUid outputTS) {
     if (outputTS == null) {
       return (rootDS.transferSyntax == null)
-          ? System.defaultTransferSyntax
+          ? System.system.defaultTransferSyntax
           : rootDS.transferSyntax;
     } else {
       return outputTS;

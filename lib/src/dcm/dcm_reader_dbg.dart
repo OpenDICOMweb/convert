@@ -411,7 +411,7 @@ abstract class DcmReader extends DcmConverterBase {
 
     // Get TS or if not present use default
     _ts = rootDS.transferSyntax;
-    if (_ts == null) _ts = System.defaultTransferSyntax;
+    if (_ts == null) _ts = System.system.defaultTransferSyntax;
     _isEVR = !_ts.isImplicitLittleEndian;
 
     log.debug1('$rmm isExplicitVR: $_isEVR');
