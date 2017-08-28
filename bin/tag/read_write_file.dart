@@ -63,7 +63,7 @@ void main() {
   }
 
   //   FileCompareResult out = compareFiles(fn.path, fnOut.path, log);
-  var same = bytesEqual(bytes0, bytes1, true);
+  var same = bytesEqual(bytes0, bytes1);
   if (same == true) {
     log.info0('Files are identical.');
   } else {

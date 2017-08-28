@@ -12,7 +12,7 @@ import 'package:core/byte_element.dart';
 import 'package:tag/tag.dart';
 
 /// TODO DOC
-bool bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError = false]) {
+bool bytesEqual1(Uint8List b0, Uint8List b1, [bool throwOnError = false]) {
   if (b0.lengthInBytes != b1.lengthInBytes)
     return compareUnequalLengths(b0, b1);
 
@@ -26,6 +26,29 @@ bool bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError = false]) {
       }
     }
   }
+  return true;
+}
+
+bool bytesEqual(Uint8List b0, Uint8List b1) {
+  int length = b0.lengthInBytes;
+  if (length != b1.lengthInBytes) return compareUnequalLengths(b0, b1);
+  var bd0 = b0.buffer.asByteData();
+  var bd1 = b1.buffer.asByteData();
+
+  // Note: optimized to use 4 byte boundary
+  int remainder = length % 4;
+  assert(remainder.isEven);
+  int end = length - remainder;
+  for (int i = 0; i < end; i += 4)
+    if (bd0.getUint32(i) != bd1.getUint32(i)) {
+      if (throwOnError) {
+        showBytes(bd0.buffer.asUint8List(), bd1.buffer.asUint8List(), i);
+        throw "Non-matching bytes at index: $i";
+      } else {
+        return false;
+      }
+    }
+  if (end < length) if (bd0.getUint16(end) != bd1.getUint16(end)) return false;
   return true;
 }
 

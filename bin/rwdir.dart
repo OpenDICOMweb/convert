@@ -11,27 +11,23 @@ import 'package:system/server.dart';
 
 //import 'package:dcm_convert/data/test_directories.dart';
 
-//TODO: improve performance
-//TODO: On error write the log file to dir/output/name.log where name if path
-// - dir (i.e. remove the prefix dir and replace with dir/output.
-//TODO: create results.log with summary of run including errors.
-//TODO: if an error occurs rerun the file with debug setting and store
-//      output in filename.log
-// TODO: print out the version numbers of the different packages.
-//TODO: better doc
+/// [rwdir] is a fast correctness checker for the [convert] package.
+///
+/// It first reads and parses a DICOM file into a buffer, writes it
+/// to a second buffer, and the does a byte by byte comparison of the two buffers.
 
-const defaultDirectory = 'C:/odw/test_data/sfd/MG';
+const String defaultDirectory = 'C:/odw/test_data/sfd/MG';
 
 /// A program for doing read/write/read testing on DICOM files.
 void main(List<String> args) {
-  Server.initialize(name: 'read_write_file', level: Level.error);
+  Server.initialize(name: 'rwdir', level: Level.error);
 
   /// The processed arguments for this program.
   var jobArgs = new JobArgs(args);
 
   if (jobArgs.showHelp) showHelp(jobArgs);
 
-  JobRunner.job(jobArgs, doRWRByteFile,
+  JobRunner.job(jobArgs, doRWFile,
       interval: jobArgs.shortMsgEvery, level: jobArgs.baseLevel);
 }
 

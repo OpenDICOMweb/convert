@@ -41,6 +41,8 @@ class JobArgs {
     argResults = parser.parse(args);
   }
 
+  int get length => argResults.arguments.length;
+
   String get programName {
     var path = Platform.script.pathSegments;
     var end = path.last.lastIndexOf(".");

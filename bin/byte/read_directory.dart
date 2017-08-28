@@ -6,11 +6,12 @@
 
 import 'dart:io';
 
-import 'package:timer/timer.dart';
-import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:path/path.dart' as p;
+import 'package:timer/timer.dart';
 import 'package:system/server.dart';
+
+//import 'package:dcm_convert/data/test_directories.dart';
 
 String outRoot0 = 'test/output/root0';
 String outRoot1 = 'test/output/root1';
