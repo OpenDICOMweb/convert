@@ -52,7 +52,7 @@ void main(List<String> args) {
     exit(-1);
   }
 
-  system.log.level = jobArgs.baseLevel;
+
 
   // Short circuit arguments for testing
  // dir = new Directory(dir6688);

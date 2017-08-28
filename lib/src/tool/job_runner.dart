@@ -26,12 +26,14 @@ class JobRunner {
       {int interval = 100, Level level = Level.info0, this.throwOnError = true})
       : reporter =
             new JobReporter(fileCount(directory), from: directory.path, short: interval) {
+    system.log.level = level;
     _greeting();
   }
 
   JobRunner.list(this.files, this.doFile,
-      {int interval = 100, Level =  Level.info0, this.throwOnError = true})
+      {int interval = 100, level =  Level.info0, this.throwOnError = true})
       : reporter = new JobReporter(files.length, from: 'FileList', short: interval) {
+    system.log.level = level;
     _greeting();
   }
 

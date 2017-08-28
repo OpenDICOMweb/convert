@@ -6,7 +6,7 @@
 
 import 'dart:io';
 
-import 'package:system/system.dart';
+import 'package:system/server.dart';
 import 'package:tag/vr.dart';
 
 import 'package:dcm_convert/data/test_files.dart';
@@ -18,40 +18,18 @@ import 'package:dcm_convert/tools.dart';
 /// A Program that reads a [File], decodes it into a [RootByteDataset],
 /// and then converts that into a [RootTagDataset].
 void main(List<String> args) {
+  Server.initialize(name: 'convert', level: Level.info0);
+
   /// The processed arguments for this program.
-  JobArgs jobArgs;
+   JobArgs jobArgs = new JobArgs(args);
+  if (jobArgs.showHelp) showHelp(jobArgs);
 
-  /// The help message
-  void showHelp() {
-    var msg = '''
-Usage: converter <input-file> [<options>]
-
-Opens the <input-file> and then:
-  1. Decodes (reads) the data in a byte array (file) into a 
-     Root Byte Dataset [0]
-  2. Converts the Root Byte Dataset to a Root Tag Dataset
-  3. Prints a summary of the Root Tag Dataset to stdout
- 
-Options:
-${jobArgs.parser.usage}
-''';
-    stdout.write(msg);
-    exit(0);
-  }
-
-  jobArgs = new JobArgs(args);
-  if (jobArgs.showHelp) showHelp();
-
-/*
-  DcmReader.log.level = jobArgs.baseLevel;
-  DcmWriter.log.level = jobArgs.baseLevel;
-*/
-  system.log.level = Level.info;
-
+  //TODO: move this into JobRunner
   print('Dart Version: ${Platform.version}');
   print('${Platform.script}');
   print('Logger Root Level: ${log.rootLevel} Log Level: ${log.level}');
 
+    system.log.level = jobArgs.baseLevel;
   // Short circuiting args for testing
   var pathList = [path0];
 
@@ -156,4 +134,22 @@ RootTagDataset convertFile(dynamic file, {int reps = 1, bool fmiOnly = false}) {
   // log.info0('rds1 == rds0: ${tRoot == bRoot}');
   //return tRoot == bRoot;
   return tRoot;
+}
+
+/// The help message
+void showHelp(JobArgs jobArgs) {
+  var msg = '''
+Usage: converter <input-file> [<options>]
+
+Opens the <input-file> and then:
+  1. Decodes (reads) the data in a byte array (file) into a 
+     Root Byte Dataset [0]
+  2. Converts the Root Byte Dataset to a Root Tag Dataset
+  3. Prints a summary of the Root Tag Dataset to stdout
+ 
+Options:
+${jobArgs.parser.usage}
+''';
+  stdout.write(msg);
+  exit(0);
 }
