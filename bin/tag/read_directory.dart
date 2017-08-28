@@ -9,7 +9,7 @@ import 'dart:io';
 import 'package:logger/logger.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:path/path.dart' as p;
-import 'package:timing/timestamp.dart';
+import 'package:timer/timestamp.dart';
 
 String inRoot0 = "C:/odw/test_data/sfd/CR";
 String inRoot1 = "C:/odw/test_data/sfd/CR_and_RF";

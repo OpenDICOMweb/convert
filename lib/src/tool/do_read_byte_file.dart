@@ -11,6 +11,7 @@ import 'dart:typed_data';
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/system.dart';
 
+//Urgent Jim: make this work.
 Future _readFileAsync(File f) async {
   var bytes = await f.readAsBytes();
   print(bytes.length);
@@ -21,7 +22,7 @@ Uint8List _readFileSync(File f)  => f.readAsBytesSync();
 
 
 bool doReadByteFile(File f, [bool throwOnError = false, bool fast = true]) {
-  System.log.level = Level.error;
+  system.log.level = Level.error;
   //TODO: improve output
 //  var n = getPaddedInt(fileNumber, width);
   var pad = "".padRight(5);
@@ -40,11 +41,6 @@ bool doReadByteFile(File f, [bool throwOnError = false, bool fast = true]) {
       log.info0('Bad File - No ParseInfo: $path');
       return false;
     }
-    var bytes0 = reader0.buffer;
-    log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
-$pad    DS0: ${rds0.info}'
-$pad    TS String: ${rds0.transferSyntaxString}
-$pad    TS: ${rds0.transferSyntax}''');
     if (rds0.parseInfo != null)
       log.debug('$pad    ${rds0.parseInfo.info}');
 

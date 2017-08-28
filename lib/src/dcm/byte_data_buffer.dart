@@ -7,7 +7,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:base/base.dart';
+import 'package:system/system.dart';
 
 class ByteDataBuffer {
   /// The underlying data buffer.

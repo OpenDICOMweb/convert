@@ -1,15 +1,16 @@
 // Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
-// Original author: Jim Philbin <jfphilbin@gmail.edu> - 
+// Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
 import 'dart:async' hide Timer;
 import 'dart:io';
 
 import 'package:logger/logger.dart';
+import 'package:dcm_convert/dcm.dart';
+import 'package:system/server.dart';
 
-import 'package:dcm_convert/src/dcm/io_utils.dart';
 import 'job_reporter.dart';
 
 class JobRunner {
@@ -22,14 +23,17 @@ class JobRunner {
   bool throwOnError;
 
   JobRunner(this.directory, this.doFile,
-      {int interval, Logger logger, this.throwOnError = true})
-      : reporter = new JobReporter(fileCount(directory),
-      from: directory.path, short: interval);
+      {int interval = 100, Level level = Level.info0, this.throwOnError = true})
+      : reporter =
+            new JobReporter(fileCount(directory), from: directory.path, short: interval) {
+    _greeting();
+  }
 
   JobRunner.list(this.files, this.doFile,
-      {int interval, Logger logger, this.throwOnError = true})
-      : reporter =
-  new JobReporter(files.length, from: 'FileList', short: interval);
+      {int interval = 100, Level =  Level.info0, this.throwOnError = true})
+      : reporter = new JobReporter(files.length, from: 'FileList', short: interval) {
+    _greeting();
+  }
 
   Future<Null> run() async {
     reporter.startReport;
@@ -57,23 +61,18 @@ class JobRunner {
     return reporter.report(success, path);
   }
 
+  static void _greeting() =>
+    stdout.writeln('Job Runner:');
 
   static void job(Directory dir, bool Function(File f) doFile,
       {int interval, Level level = Level.info, bool throwOnError = true}) {
-    var program = Platform.script.toFilePath();
-    final Logger log = new Logger(program, level);
-    var job = new JobRunner(dir, doFile, interval: interval, logger: log);
-    stdout.writeln('Running: $program');
+    var job = new JobRunner(dir, doFile, interval: interval);
     job.run();
   }
 
   static void fileList(List<String> files, bool Function(File f) doFile,
       {int interval, Level level = Level.debug, bool throwOnError = true}) {
-    var program = Platform.script.toFilePath();
-    final Logger log = new Logger(program, level);
-    var job =
-    new JobRunner.list(files, doFile, interval: interval, logger: log);
-    stdout.writeln('Running: $program');
+    var job = new JobRunner.list(files, doFile, interval: interval);
     job.runList();
   }
 }

@@ -13,7 +13,7 @@ import 'package:dcm_convert/dcm.dart';
 /// A Program that reads a [File], decodes it into a [RootByteDataset],
 /// and then converts that into a [RootTagDataset].
 void main() {
-  System.log.level = Level.info;
+  system.log.level = Level.info;
 
   // Edit this line
   var path = path0;

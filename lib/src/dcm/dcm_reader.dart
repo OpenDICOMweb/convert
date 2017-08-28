@@ -138,6 +138,7 @@ abstract class DcmReader extends DcmConverterBase {
       this.allowDuplicates = true,
       this.targetTS,
       this.doConvertUndefinedVR = false,
+        //TODO: read into preallocated buffer that is used over and over.
       this.reUseBD = true,
       this.checkForUNSequence = false,
       this.decoding = DecodingParameters.kNoChange})
@@ -254,7 +255,7 @@ abstract class DcmReader extends DcmConverterBase {
     if (!_hadFmi && !allowMissingFMI) return null;
     if (targetTS != null && _tsUid != targetTS) return rootDS;
 
-    if (!System.isSupportedTransferSyntax(_tsUid.asString)) {
+    if (!system.isSupportedTransferSyntax(_tsUid.asString)) {
       _hadParsingErrors = true;
       _error('$ree Unsupported TS: $_tsUid @end');
       if (throwOnError) throw new InvalidTransferSyntaxError(_tsUid);
@@ -417,7 +418,7 @@ abstract class DcmReader extends DcmConverterBase {
     //TODO: use _ts or tsUid not both
     // Get TS or if not present use default
     _tsUid = rootDS.transferSyntax;
-    if (_tsUid == null) _tsUid = System.defaultTransferSyntax;
+    if (_tsUid == null) _tsUid = system.defaultTransferSyntax;
     _isEVR = !_tsUid.isImplicitLittleEndian;
 */
 
@@ -425,8 +426,8 @@ abstract class DcmReader extends DcmConverterBase {
      _tsUid = rootDS.getUidByTag(PTag.kTransferSyntaxUID, aType: AType.k1);
     if (_tsUid == null) {
       missingRequiredElementError(PTag.kTransferSyntaxUID);
-      log.info0('Using System.defaultTransferSyntax: ${System.defaultTransferSyntax}');
-      _tsUid = System.defaultTransferSyntax;
+      log.info0('Using system.defaultTransferSyntax: ${system.defaultTransferSyntax}');
+      _tsUid = system.defaultTransferSyntax;
     }
     _isEVR = !_tsUid.isImplicitLittleEndian;
 */
@@ -458,8 +459,10 @@ abstract class DcmReader extends DcmConverterBase {
   /// [true] if the source [ByteData] have been read.
   bool get wasRead => _hadPrefix != null;
 
+/*
   /// Returns a [String] indicating whether VR is Explicit or Implicit.
   String get _evrString => (_isEVR) ? 'EVR' : 'IVR';
+*/
 
   /// All [Elements are read by this method.
   Element _readElement() {
@@ -864,8 +867,10 @@ abstract class DcmReader extends DcmConverterBase {
     return sq;
   }
 
+/*
   String _startSQ(int code, int eStart, int vfLength) =>
       '${dcm(code)} eStart($eStart) vfLength ($vfLength, ${hex32(vfLength)})';
+*/
 
   /// Returns [true] if the sequence delimiter is found at [_rIndex].
   bool _isSequenceDelimiter() => _checkForDelimiter(kSequenceDelimitationItem32BitLE);

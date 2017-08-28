@@ -6,7 +6,7 @@
 
 import 'dart:io';
 
-import 'package:timing/timer.dart';
+import 'package:timer/timer.dart';
 import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:path/path.dart' as p;
@@ -29,7 +29,7 @@ void main() {
   int success = 0;
   int failure = 0;
 
-  System.log.level = Level.error;
+  system.log.level = Level.error;
 
   //TODO: modify so that it reads one directory at a time and recursively
   // walks the tree.

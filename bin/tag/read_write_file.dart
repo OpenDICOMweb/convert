@@ -13,7 +13,7 @@ import 'package:dcm_convert/src/dcm/compare_bytes.dart';
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
 void main() {
-  System.log.level = Level.debug;
+  system.log.level = Level.debug;
 
   // *** Modify this line to read/write a different file
   var path = path0;

@@ -253,7 +253,7 @@ abstract class DcmReader extends DcmConverterBase {
     if (!_hadFmi && !allowMissingFMI) return null;
     if (targetTS != null && _ts != targetTS) return rootDS;
 
-    if (!System.isSupportedTransferSyntax(_ts.asString)) {
+    if (!system.isSupportedTransferSyntax(_ts.asString)) {
       _hadParsingErrors = true;
       _error('$ree Unsupported TS: $_ts @end');
       if (throwOnError) throw new InvalidTransferSyntaxError(_ts);
@@ -411,7 +411,7 @@ abstract class DcmReader extends DcmConverterBase {
 
     // Get TS or if not present use default
     _ts = rootDS.transferSyntax;
-    if (_ts == null) _ts = System.system.defaultTransferSyntax;
+    if (_ts == null) _ts = system.defaultTransferSyntax;
     _isEVR = !_ts.isImplicitLittleEndian;
 
     log.debug1('$rmm isExplicitVR: $_isEVR');

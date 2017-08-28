@@ -34,9 +34,19 @@ bool byteReadWriteFileChecked(String fPath,
     var reader0 = new ByteReader.fromFile(f);
     RootByteDataset rds0 = reader0.readRootDataset();
     var bytes0 = reader0.bytes;
+    log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
+$pad    DS0: ${rds0.info}'
+$pad    TS String: ${rds0.transferSyntaxString}
+$pad    TS: ${rds0.transferSyntax}
+$pad    ${rds0.parseInfo.info}''');
+
     ByteElement e = rds0[kPixelData];
-    if (e == null)
+    if (e == null) {
       log.warn('$pad ** Pixel Data Element not present');
+    } else {
+//      BytePixelData bpd = e;
+      log.debug1('$pad  bpd: ${e.info}');
+    }
 
     // Write the Root Dataset
     ByteWriter writer;
@@ -47,15 +57,13 @@ bool byteReadWriteFileChecked(String fPath,
       writer = new ByteWriter.toPath(rds0, outPath);
     }
     Uint8List bytes1 = writer.writeRootDataset();
+    log.debug('$pad    Encoded ${bytes1.length} bytes');
 
-/*
     if (!fast) {
       log.debug('Re-reading: ${bytes1.length} bytes');
     } else {
       log.debug('Re-reading: ${bytes1.length} bytes from $outPath');
     }
-*/
-
     ByteReader reader1;
     if (fast) {
       // Just read bytes not file
@@ -65,10 +73,11 @@ bool byteReadWriteFileChecked(String fPath,
       reader1 = new ByteReader.fromPath(outPath);
     }
     var rds1 = reader1.readRootDataset();
+    //   RootByteDataset rds1 = ByteReader.readPath(outPath);
+    log.debug('$pad Read ${reader1.bd.lengthInBytes} bytes');
+    log.debug1('$pad DS1: $rds1');
 
-    if (rds0.hasDuplicates)
-      log.warn('$pad  ** Duplicates Present in rds0');
-
+    if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
     if (rds0.parseInfo != rds1.parseInfo) {
       log.warn('$pad ** ParseInfo is Different!');
       log.debug1('$pad rds0: ${rds0.parseInfo.info}');
@@ -80,13 +89,18 @@ bool byteReadWriteFileChecked(String fPath,
     // If duplicates are present the [ElementList]s will not be equal.
     if (!rds0.hasDuplicates) {
       // Compare [ElementList]s
-      if (reader0.elementList != writer.elementList)
+      if (reader0.elementList == writer.elementList) {
+        log.debug('$pad ElementLists are identical.');
+      } else {
         log.warn('$pad ElementLists are different!');
+      }
     }
 
     // Compare [Dataset]s - only compares the elements in dataset.map.
     var same = (rds0 == rds1);
-    if (!same) {
+    if (same) {
+      log.debug('$pad Datasets are identical.');
+    } else {
       success = false;
       log.warn('$pad Datasets are different!');
     }
@@ -95,7 +109,9 @@ bool byteReadWriteFileChecked(String fPath,
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
       var same = bytesEqual(bytes0, bytes1);
-      if (!same) {
+      if (same == true) {
+        log.debug('$pad Files bytes are identical.');
+      } else {
         success = false;
         log.warn('$pad Files bytes are different!');
       }
@@ -118,19 +134,17 @@ RootByteDataset readFileTimed(File file,
   log.level = level;
   var path = file.path;
   var timer = new Stopwatch();
-
-/*
   var timestamp = new Timestamp();
+
   log.debug('Reading $path ...\n'
       '   fmiOnly: $fmiOnly\n'
       '   at: $timestamp');
-*/
 
   timer.start();
 //  var file = new File(path);
   Uint8List bytes = file.readAsBytesSync();
   timer.stop();
-//  log.debug('   read ${bytes.length} bytes in ${timer.elapsedMicroseconds}us');
+  log.debug('   read ${bytes.length} bytes in ${timer.elapsedMicroseconds}us');
 
   if (bytes.length < 1024)
     log.warn('***** Short file length(${bytes.length}): $path');

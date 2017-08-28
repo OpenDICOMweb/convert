@@ -19,7 +19,7 @@ final Logger log =
 
 void main() {
   print('Read Files');
-  System.log.level = Level.info;
+  system.log.level = Level.info;
   var paths = testPaths0;
 
   var nFiles = testPaths0.length;

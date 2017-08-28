@@ -19,9 +19,10 @@ var pathy = 'C:/odw/test_data/sfd/MR/PID_BREASTMR/1_DICOM_Original/'
 
 //Urgent: bug with path20
 Future main() async {
-  Server.initialize(level: Level.debug2, throwOnError: true);
+  Server.initialize(name: "ReadFile", level: Level.debug2, throwOnError: true);
+  system.log.level = Level.debug2;
 
-  var path = pathy;
+  var path = path0;
   var url = new Uri.file(path);
 
   stdout.writeln('Reading(byte): $url');
@@ -34,8 +35,8 @@ Future main() async {
   } else {
     log.info0('${rds.parseInfo.info}');
     log.info0('Bytes Dataset: ${rds.summary}');
-    Formatter z = new Formatter();
-    print(format(rds.format(z)));
+    Formatter z = new Formatter(maxDepth: -1);
+    print(rds.format(z));
   }
 }
 

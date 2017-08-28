@@ -8,7 +8,7 @@ import 'dart:async' hide Timer;
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:timing/timer.dart';
+import 'package:timer/timer.dart';
 import 'package:logger/logger.dart';
 import 'package:core/core.dart';
 import 'package:dcm_convert/dcm.dart';

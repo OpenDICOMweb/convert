@@ -17,7 +17,7 @@ bool doRWRByteFile(File f, [bool throwOnError = false, bool fast = true]) {
   var pad = "".padRight(5);
 
   try {
-    var reader0 = new ByteReader.fromFile(f);
+    var reader0 = new ByteReader.fromFile(f, fast: true);
     RootByteDataset rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -46,7 +46,7 @@ $pad    TS: ${rds0.transferSyntax}''');
       // Just write bytes don't write the file
       writer = new ByteWriter(rds0);
     } else {
-      writer = new ByteWriter.toPath(rds0, outPath);
+      writer = new ByteWriter.toPath(rds0, outPath, fast: true);
     }
     Uint8List bytes1 = writer.writeRootDataset();
     log.debug('$pad    Encoded ${bytes1.length} bytes');

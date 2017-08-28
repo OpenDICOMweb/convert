@@ -46,7 +46,7 @@ ${jobArgs.parser.usage}
   DcmReader.log.level = jobArgs.baseLevel;
   DcmWriter.log.level = jobArgs.baseLevel;
 */
-  System.log.level = Level.info;
+  system.log.level = Level.info;
 
   print('Dart Version: ${Platform.version}');
   print('${Platform.script}');

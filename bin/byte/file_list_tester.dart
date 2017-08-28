@@ -52,7 +52,7 @@ ${jobArgs.parser.usage}
   if (jobArgs.showHelp) showHelp();
 
   //Urgent fix logger
-  System.log.level = jobArgs.baseLevel;
+  system.log.level = jobArgs.baseLevel;
 
   JobRunner.fileList(['C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.392.200036.9123.100.12.11.3.dcm'],
       doRWRByteFile,

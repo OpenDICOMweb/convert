@@ -6,9 +6,10 @@
 
 import 'dart:io';
 
-import 'package:timing/timer.dart';
+import 'package:timer/timer.dart';
 import 'package:system/system.dart';
 
+// Enhancement: add the ability to report every n seconds instead of n files
 /// A class used to monitor the status of a job.
 class JobReporter {
   final int total;
@@ -21,6 +22,7 @@ class JobReporter {
   final Logger log;
   final bool logIt;
   final bool doReportFailure;
+  final bool showPath;
   final List<String> failuresList = <String>[];
 
   DateTime _startTime;
@@ -38,7 +40,8 @@ class JobReporter {
       int long,
       this.doPrint = true,
       this.logIt = false,
-      this.doReportFailure = true})
+      this.doReportFailure = true,
+      this.showPath = false})
       //Urgent: figure out how to calculate interval.
       : this.shortInterval = (short == null) ? total ~/ 50 : short,
         this.log = (logIt) ? new Logger('JobReporter') : null,
@@ -87,23 +90,25 @@ class JobReporter {
   }
 
   //TODO: need a better name for this
-  String report(bool wasSuccessful, String name, [bool force = false]) {
+  String report(bool wasSuccessful, String path, {bool force = false}) {
     _count++;
     if (wasSuccessful) {
       _success++;
-      if (force || check) {
-        var n = '$_count'.padLeft(countWidth);
-        var msg = '$n: ${timer.split} $name';
-        return maybePrint(msg);
-      }
+      if (force || check) maybePrint(interimMsg(path));
     } else if (!wasSuccessful && doReportFailure) {
       _failure++;
-      failuresList.add(name);
+      failuresList.add(path);
       var n = '$_count'.padLeft(countWidth);
-      var msg = '$n: ${timer.split} ** Failure $name';
+      var msg = '$n: ** Failure $path';
       return maybePrint(msg);
     }
     return "";
+  }
+
+  String interimMsg(String path) {
+    var n = '$_count'.padLeft(countWidth);
+    var p = (showPath) ? path : "";
+    return '$n: ${timer.split} ${timer.elapsed} $p';
   }
 
   String maybePrint(String msg) {

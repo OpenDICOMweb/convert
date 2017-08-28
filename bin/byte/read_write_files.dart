@@ -7,13 +7,13 @@
 import 'package:system/system.dart';
 
 import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
+import 'package:dcm_convert/dcm.dart';
+import 'package:system/server.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
 void main() {
-  //TODO: fix logger so next two lines are unnecessary
-  System.log.level = Level.info;
+  Server.initialize(name: 'read_write_file', level: Level.info);
 
   // *** Modify [paths] value to read/write a different file
   List<String> paths = <String>[];

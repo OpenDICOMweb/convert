@@ -7,7 +7,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:timing/timer.dart';
+import 'package:timer/timer.dart';
 import 'package:path/path.dart' as p;
 import 'package:system/system.dart';
 
@@ -21,7 +21,7 @@ import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
 
 
 void main() {
-  System.log.level = Level.info1;
+  system.log.level = Level.info1;
  // String testFile = test6684_02;
  // String testDir = dir36_4485_6684;
   assert(test6684_02 != null);

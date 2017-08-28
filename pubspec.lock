@@ -31,12 +31,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.15.2+11"
-  base:
-    description:
-      path: "C:/odw/sdk/base"
-      relative: false
-    source: path
-    version: "0.6.2"
   benchmark_harness:
     description:
       name: benchmark_harness
@@ -361,9 +355,9 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.12.24+2"
-  timing:
+  timer:
     description:
-      path: "C:/odw/sdk/timing"
+      path: "C:/odw/sdk/timer"
       relative: false
     source: path
     version: "0.6.1"
