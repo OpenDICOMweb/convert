@@ -9,6 +9,14 @@ import 'dart:io';
 import 'package:timer/timer.dart';
 import 'package:system/system.dart';
 
+int getShortInterval(int total) {
+  if (total < 20) return 1;
+  if (total < 100) return 5;
+  if (total < 1000) return 50;
+  if (total < 10000) return 500;
+  return 1000;
+}
+
 // Enhancement: add the ability to report every n seconds instead of n files
 /// A class used to monitor the status of a job.
 class JobReporter {
@@ -43,10 +51,14 @@ class JobReporter {
       this.doReportFailure = true,
       this.showPath = false})
       //Urgent: figure out how to calculate interval.
-      : this.shortInterval = (short == null) ? total ~/ 50 : short,
+      : this.shortInterval = (short == null) ? getShortInterval(total) : short,
         this.log = (logIt) ? new Logger('JobReporter') : null,
         this.timer = new Timer(start: false) {
-    this.longInterval = (long == null) ? 50 * shortInterval : long;
+    this.longInterval = (long == null) ? 10 * shortInterval : long;
+    print('short: $short');
+    print('shortInterval: $shortInterval');
+    print('long: $long');
+    print('longInterval: $longInterval');
   }
 
   String operator +(int v) {
@@ -94,7 +106,7 @@ class JobReporter {
     _count++;
     if (wasSuccessful) {
       _success++;
-      if (force || check) maybePrint(interimMsg(path));
+      if (force || check) maybePrint(shortMsg(path));
     } else if (!wasSuccessful && doReportFailure) {
       _failure++;
       failuresList.add(path);
@@ -105,10 +117,13 @@ class JobReporter {
     return "";
   }
 
-  String interimMsg(String path) {
+  String shortMsg(String path) {
     var n = '$_count'.padLeft(countWidth);
     var p = (showPath) ? path : "";
-    return '$n: ${timer.split} ${timer.elapsed} $p';
+    var elapsed = timer.elapsed.toString();
+    var dotPos = elapsed.indexOf('.');
+    elapsed = elapsed.substring(0, dotPos);
+    return '$n: ${timer.split} $elapsed $p';
   }
 
   String maybePrint(String msg) {

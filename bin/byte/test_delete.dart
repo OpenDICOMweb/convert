@@ -20,15 +20,15 @@ void main() {
 
   File f = toFile(path, mustExist: true);
   log.debug2('Reading: $f');
-  RootByteDataset bRoot = ByteReader.readFile(f, fast: true);
-  log.debug('bRoot.isRoot: ${bRoot.isRoot}');
+  RootByteDataset rds = ByteReader.readFile(f, fast: true);
+  log.debug('bRoot.isRoot: ${rds.isRoot}');
 
-  log.info0('patientID: "${bRoot.patientId}"');
-  List<ByteElement> eList = bRoot.remove(kPatientID);
+  log.info0('patientID: "${rds.patientId}"');
+  ByteElement eList = rds.remove(kPatientID);
   log.info0('removed: $eList');
-  if (bRoot[kPatientID] != null)
+  if (rds[kPatientID] != null)
     log.error('kPatientID not removed: $eList');
-  log.info0('patientID: "${bRoot[kPatientID]}"');
-  log.info0('patientID: "${bRoot.patientId}"');
+  log.info0('patientID: "${rds[kPatientID]}"');
+  log.info0('patientID: "${rds.patientId}"');
 
 }

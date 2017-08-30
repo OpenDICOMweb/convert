@@ -1,5 +1,6 @@
 ## TODO
 
+0. Look for deidentified tag and allow looser verification.
 1. Add DICOM+JSON
 2. Add MINT+JSON
 3. Cleanup or remove examples

@@ -75,7 +75,7 @@ abstract class DcmWriter {
   bool _isEVR;
   TransferSyntaxUid _ts;
 
-  //TODO: this should be reported in an EncodeData structure (like ParseData)
+  //TODO: these should be reported in an EncodeData structure (like ParseData)
   int _nElements = 0;
   int _nSequences = 0;
   int _nPrivateElements = 0;
