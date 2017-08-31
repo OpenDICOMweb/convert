@@ -16,7 +16,7 @@ import 'package:system/server.dart';
 /// It first reads and parses a DICOM file into a buffer, writes it
 /// to a second buffer, and the does a byte by byte comparison of the two buffers.
 
-const String defaultDirectory = 'C:/odw/test_data/mweb/10 Patient IDs';
+const String defaultDirectory = 'C:/odw/test_data/mweb';
 
 /// A program for doing read/write/read testing on DICOM files.
 void main(List<String> args) {

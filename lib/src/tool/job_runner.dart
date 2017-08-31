@@ -14,7 +14,7 @@ import 'job_args.dart';
 import 'job_reporter.dart';
 
 // **** change this name when testing
-const defaultDirName = 'C:/odw/test_data/mweb/100 MB Studies';
+const defaultDirName = 'C:/odw/test_data/mweb';
 
 /// Get target directory and validate it.
 Directory getDirectory(JobArgs args) {
