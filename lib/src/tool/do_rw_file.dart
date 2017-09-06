@@ -29,7 +29,6 @@ bool doRWFile(File f, [bool throwOnError = false, bool fast = true]) {
     var bytes0 = reader0.buffer;
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
-$pad    TS String: ${rds0.transferSyntaxString}
 $pad    TS: ${rds0.transferSyntax}''');
     if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.info}');
 
@@ -52,57 +51,6 @@ $pad    TS: ${rds0.transferSyntax}''');
     Uint8List bytes1 = writer.writeRootDataset();
     log.debug('$pad    Encoded ${bytes1.length} bytes');
 
-/*
-    if (!fast) {
-      log.debug('Re-reading: ${bytes1.length} bytes');
-    } else {
-      log.debug('Re-reading: ${bytes1.length} bytes from $outPath');
-    }
-    ByteReader reader1;
-    if (fast) {
-      // Just read bytes not file
-      reader1 =
-      new ByteReader(
-          bytes1.buffer.asByteData(bytes1.offsetInBytes, bytes1.lengthInBytes));
-    } else {
-      reader1 = new ByteReader.fromPath(outPath);
-    }
-    var rds1 = reader1.readRootDataset();
-    //   RootByteDataset rds1 = ByteReader.readPath(outPath);
-    log.debug('$pad Read ${reader1.bd.lengthInBytes} bytes');
-    log.debug1('$pad DS1: $rds1');
-
-    if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
-    if (rds0.parseInfo != rds1.parseInfo) {
-      log.warn('$pad ** ParseInfo is Different!');
-      log.debug1('$pad rds0: ${rds0.parseInfo.info}');
-      log.debug1('$pad rds1: ${rds1.parseInfo.info}');
-      log.debug2(rds0.format(new Formatter(maxDepth: -1)));
-      log.debug2(rds1.format(new Formatter(maxDepth: -1)));
-    }
-*/
-
-/*
-    // If duplicates are present the [ElementList]s will not be equal.
-    if (!fast || !rds0.hasDuplicates) {
-      // Compare [ElementList]s
-      if (reader0.elementList == writer.elementList) {
-        log.debug('$pad ElementLists are identical.');
-      } else {
-        log.warn('$pad ElementLists are different!');
-      }
-    }
-*/
-
-/*
-    // Compare [Dataset]s - only compares the elements in dataset.map.
-    var same = (rds0 == rds1);
-    if (same) {
-      log.debug('$pad Datasets are identical.');
-    } else {
-      log.warn('$pad Datasets are different!');
-    }
-*/
    // Urgent Jim if file has dups then no test is done. Fix it.
     bool same = true;
     // If duplicates are present the [ElementList]s will not be equal.

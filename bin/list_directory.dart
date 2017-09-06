@@ -6,7 +6,7 @@
 
 import 'dart:io';
 
-import 'package:dcm_convert/src/dcm/io_utils.dart';
+import 'package:dcm_convert/src/byte/io_utils.dart';
 
 main() async {
   var dir = new Directory('C:/odw/test_data/sfd/MR');

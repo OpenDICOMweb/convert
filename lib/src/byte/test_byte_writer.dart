@@ -31,8 +31,8 @@ class TestByteWriter extends ByteWriter {
             encoding: encoding);
 
   /// Returns a [Uint8List] containing the encoded FMI.
-  Uint8List xWriteFmi(ByteDataset rds) {
-    if (!rds.hasFMI || !rds.hasSupportedTransferSyntax) return null;
+  Uint8List xWriteFmi(RootByteDataset rds) {
+    if (!rds.hadFmi || !rds.hasSupportedTransferSyntax) return null;
     return writeFMI(rds);
   }
 

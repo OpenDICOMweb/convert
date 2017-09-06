@@ -13,10 +13,10 @@ import 'package:core/core.dart';
 //import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:dcm_convert/src/dcm/compare_bytes.dart';
+import 'package:dcm_convert/src/byte/compare_bytes.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
+import 'package:dcm_convert/src/byte/byte_read_utils.dart';
 
 final Logger log = new Logger("convert/bin/read_write_files1.dart",
     Level.config);

@@ -97,7 +97,7 @@ class TagWriter extends DcmWriter {
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
-  Uint8List writeFMI([bool checkPreamble = false]) => dcmWriteFMI();
+  Uint8List writeFMI(bool hadFmi, {bool checkPreamble = false}) => dcmWriteFMI(hadFmi);
 
   /// Reads a [RootTagDataset] from [this], stores it in [rootDS],
   /// and returns it.

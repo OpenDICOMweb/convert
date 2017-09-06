@@ -82,7 +82,7 @@ class ByteWriter extends DcmWriter {
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
-  Uint8List writeFMI([bool checkPreamble = false]) => dcmWriteFMI();
+  Uint8List writeFMI([bool checkPreamble = false]) => dcmWriteFMI(rootDS.hadFmi);
 
   /// Reads a [RootByteDataset] from [this], stores it in [rootDS],
   /// and returns it.

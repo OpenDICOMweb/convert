@@ -404,8 +404,9 @@ abstract class DcmReader extends DcmConverterBase {
     }
     _hadFmi = true;
 
-    Fmi fmi = new Fmi(rootDS);
-    _tsUid = fmi.transferSyntax;
+  //  Fmi fmi = new Fmi(rootDS);
+  //  _tsUid = fmi.transferSyntax;
+    _tsUid = rootDS.transferSyntax;
     _isEVR = !_tsUid.isImplicitLittleEndian;
 /*
     Uid mediaStorageSopClass =
@@ -561,6 +562,8 @@ abstract class DcmReader extends DcmConverterBase {
 //      _maker = LongEVR.maker;
     }
     assert(_checkRIndex());
+//    print('vfLength: $_vfLength');
+    //TODO: add a statistics collector here recording frequency of code, vr, vfLength
     return _vfLength;
   }
 

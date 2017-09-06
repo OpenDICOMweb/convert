@@ -28,7 +28,6 @@ bool doRWRByteFile(File f, [bool throwOnError = false, bool fast = true]) {
     var bytes0 = reader0.buffer;
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
-$pad    TS String: ${rds0.transferSyntaxString}
 $pad    TS: ${rds0.transferSyntax}''');
     if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.info}');
 

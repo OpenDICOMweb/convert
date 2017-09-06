@@ -150,8 +150,8 @@ abstract class DcmWriter {
 
   /// Writes (encodes) only the FMI in the root [Dataset] in 'application/dicom'
   /// media type, writes it to a Uint8List, and returns the [Uint8List].
-  Uint8List dcmWriteFMI() {
-    _writeFMI();
+  Uint8List dcmWriteFMI(bool hadFmi) {
+    _writeFMI( hadFmi);
     var bytes = _bd.buffer.asUint8List(0, _wIndex);
     _writeFileOrPath(bytes);
     return bytes;
@@ -222,21 +222,20 @@ abstract class DcmWriter {
 
   /// Writes File Meta Information ([FMI]) to the output.
   /// _Note_: FMI is always Explicit Little Endian
-  bool _writeFMI() {
+  bool _writeFMI(bool hasFmi) {
     //  if (encoding.doUpdateFMI) return writeODWFMI();
     if (_currentDS != rootDS) log.error('Not rootDS');
     log.debug('$wbb writeFMI($_currentDS)', 1);
 
-    var hasFMI = rootDS.hasFMI;
     // Check to see if we should write FMI if missing
-    if (!hasFMI && encoding.allowMissingFMI) {
+    if (!hasFmi && encoding.allowMissingFMI) {
       log.error('Dataset $rootDS is missing FMI elements');
       return false;
-    } else if (encoding.doUpdateFMI && (!hasFMI && encoding.doAddMissingFMI)) {
+    } else if (encoding.doUpdateFMI && (!hasFmi && encoding.doAddMissingFMI)) {
       log.debug('$wmm writing new ODW FMI');
       _writeODWFMI();
     } else {
-      assert(hasFMI);
+      assert(hasFmi);
       log.debug('$wmm writing existing FMI');
       _writeExistingFMI();
     }

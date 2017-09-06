@@ -8,7 +8,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
-import 'package:dcm_convert/src/dcm/byte_reader.dart';
+import 'package:dcm_convert/src/byte/byte_reader.dart';
 
 /// External Interface for Testing Only!!!
 class TestByteReader extends ByteReader {
@@ -53,7 +53,7 @@ class TestByteReader extends ByteReader {
   TransferSyntaxUid xReadFmi(
       {bool checkPreamble = true, bool allowMissingPrefix = false}) {
     readFMI(checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
-    if (!rootDS.hasFMI || !rootDS.hasSupportedTransferSyntax) return null;
+    if (!rootDS.hadFmi || !rootDS.hasSupportedTransferSyntax) return null;
     return rootDS.transferSyntax;
   }
 

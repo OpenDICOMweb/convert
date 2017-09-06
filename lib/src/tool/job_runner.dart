@@ -42,7 +42,7 @@ JobReporter getJobReporter(int fileCount, String path, int interval) =>
     new JobReporter(fileCount, from: path, short: interval);
 
 class JobRunner {
-  static const defaultInterval = 250;
+  static const defaultInterval = 1;
   Directory directory;
   List files;
   bool Function(File) doFile;

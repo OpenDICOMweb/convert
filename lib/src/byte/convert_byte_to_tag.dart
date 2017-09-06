@@ -12,7 +12,7 @@ import 'package:core/tag_dataset.dart';
 import 'package:core/tag_element.dart';
 import 'package:system/system.dart';
 
-import 'package:dcm_convert/src/dcm/byte_reader.dart';
+import 'package:dcm_convert/src/byte/byte_reader.dart';
 
 typedef Element<K, V> Maker<K, V>(K id, List<V> values,
     [int vfLength, VFFragments fragments]);

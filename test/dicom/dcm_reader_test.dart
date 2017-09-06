@@ -6,7 +6,7 @@
 
 import 'package:logger/logger.dart';
 import 'package:core/core.dart';
-import 'package:dcm_convert/src/dcm/tag_reader.dart';
+import 'package:dcm_convert/src/byte/tag_reader.dart';
 import 'package:test/test.dart';
 
 void main() {

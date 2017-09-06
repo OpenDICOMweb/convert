@@ -36,7 +36,6 @@ bool byteReadWriteFileChecked(String fPath,
     var bytes0 = reader0.bytes;
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
-$pad    TS String: ${rds0.transferSyntaxString}
 $pad    TS: ${rds0.transferSyntax}
 $pad    ${rds0.parseInfo.info}''');
 

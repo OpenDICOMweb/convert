@@ -4,7 +4,7 @@
 // Author: Binayak Behera <binayak.b@mwebware.com> -
 // See the AUTHORS file for other contributors.
 
-import 'package:dcm_convert/src/dcm/byte_data_buffer.dart';
+import 'package:dcm_convert/src/byte/byte_data_buffer.dart';
 import 'package:test/test.dart';
 
 void main() {

@@ -12,7 +12,7 @@ import 'package:dcm_convert/dcm.dart';
 import 'package:path/path.dart' as p;
 import 'package:system/system.dart';
 
-import 'package:dcm_convert/src/dcm/byte_read_utils.dart';
+import 'package:dcm_convert/src/byte/byte_read_utils.dart';
 
 var dir0 =
     'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/';

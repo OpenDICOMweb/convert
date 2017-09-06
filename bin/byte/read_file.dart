@@ -11,18 +11,18 @@ import 'dart:typed_data';
 import 'package:system/server.dart';
 import 'package:dcm_convert/dcm.dart';
 
-import 'package:dcm_convert/data/test_files.dart';
-
 var pathx ='c:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
 var pathy = 'C:/odw/test_data/sfd/MR/PID_BREASTMR/1_DICOM_Original/'
     'EFC524F2.dcm';
-
+var pathz = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy/'
+    '1.2.840.113619.2.5.1762583153.215519.978957063.99.dcm';
 //Urgent: bug with path20
 Future main() async {
   Server.initialize(name: "ReadFile", level: Level.debug2, throwOnError: true);
+  system.level = Level.debug2;
   system.log.level = Level.debug2;
 
-  var path = path0;
+  var path = pathz;
   var url = new Uri.file(path);
 
   stdout.writeln('Reading(byte): $url');
