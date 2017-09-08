@@ -4,11 +4,10 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the   AUTHORS file for other contributors.
 
-import 'package:system/system.dart';
-
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:dcm_convert/src/byte/compare_bytes.dart';
+import 'package:system/core.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 

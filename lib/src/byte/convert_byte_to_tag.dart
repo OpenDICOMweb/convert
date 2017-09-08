@@ -4,13 +4,9 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:core/byte_dataset.dart';
-import 'package:core/byte_element.dart';
-import 'package:core/element.dart';
+import 'package:core/core.dart';
 import 'package:tag/tag.dart';
-import 'package:core/tag_dataset.dart';
-import 'package:core/tag_element.dart';
-import 'package:system/system.dart';
+import 'package:system/core.dart';
 
 import 'package:dcm_convert/src/byte/byte_reader.dart';
 

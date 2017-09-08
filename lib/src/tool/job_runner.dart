@@ -8,7 +8,7 @@ import 'dart:async' hide Timer;
 import 'dart:io';
 
 import 'package:dcm_convert/dcm.dart';
-import 'package:system/system.dart';
+import 'package:system/core.dart';
 
 import 'job_args.dart';
 import 'job_reporter.dart';

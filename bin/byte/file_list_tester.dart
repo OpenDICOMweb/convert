@@ -7,7 +7,7 @@
 import 'dart:io';
 
 import 'package:dcm_convert/tools.dart';
-import 'package:system/system.dart';
+import 'package:system/core.dart';
 
 var dir0 =
     'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/';
@@ -54,7 +54,8 @@ ${jobArgs.parser.usage}
   //Urgent fix logger
   system.log.level = jobArgs.baseLevel;
 
-  JobRunner.fileList(['C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.392.200036.9123.100.12.11.3.dcm'],
+  JobRunner.fileList(['C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/'
+      'Sop/1.2.392.200036.9123.100.12.11.3.dcm'],
       doRWRByteFile,
       level: Level.info);
 }

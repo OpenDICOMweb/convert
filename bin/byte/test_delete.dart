@@ -6,9 +6,9 @@
 
 import 'dart:io';
 
-import 'package:system/system.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
+import 'package:system/core.dart';
 
 /// A Program that reads a [File], decodes it into a [RootByteDataset],
 /// and then converts that into a [RootTagDataset].

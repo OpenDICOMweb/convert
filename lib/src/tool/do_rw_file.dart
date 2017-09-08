@@ -8,7 +8,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dcm_convert/dcm.dart';
-import 'package:system/system.dart';
+import 'package:system/core.dart';
 
 /// Read a file then write it to a buffer.
 bool doRWFile(File f, [bool throwOnError = false, bool fast = true]) {

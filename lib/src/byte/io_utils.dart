@@ -77,7 +77,7 @@ File toFile(name, {bool mustExist = true}) {
   return file;
 }
 
-typedef Runner = void Function(File e, [int level]);
+typedef void Runner(File f, [int level]);
 
 /// Walks a [Directory] recursively and applies [runner] to each [File].
 Future<int> walkDirectory(Directory dir, Runner f, [int level = 0]) async {
@@ -100,12 +100,13 @@ Future<int> walkDirectory(Directory dir, Runner f, [int level = 0]) async {
 
 /// Walks a [List] of [String], [File], List<String>, or List<File>, and
 /// applies [runner] to each one asynchronously.
-Future<int> walkPathList(List paths, Runner runner, [int level = 0]) async {
+Future<int> walkPathList(List paths, Null Function(File, [int]) runner,
+    [int level = 0]) async {
   int count = 0;
   for (var entry in paths) {
     if (entry is List) {
       count += await walkPathList(entry, runner, level++);
-    } else if (entry is String){
+    } else if (entry is String) {
       File f = new File(entry);
       runFile(f, runner);
     } else if (entry is File) {
@@ -118,12 +119,12 @@ Future<int> walkPathList(List paths, Runner runner, [int level = 0]) async {
   return count;
 }
 
-Future<Null> runFile(dynamic file, Runner runner, [int level = 0]) async {
+Future<Null> runFile(dynamic file, Null Function(File, [int]) runner,
+    [int level = 0]) async {
   if (file is String) file = new File(file);
   if (file is! File) throw 'Bad File: $file';
   await new Future(() => runner(file, level));
 }
-
 
 /// Returns the number of [Files] in a [Directory]
 int fileCount(Directory d, {List<String> extensions, bool recursive: true}) {

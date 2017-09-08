@@ -4,15 +4,17 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-import 'package:logger/logger.dart';
 import 'package:core/core.dart';
 import 'package:dcm_convert/src/byte/tag_reader.dart';
+import 'package:system/server.dart';
 import 'package:test/test.dart';
 
 void main() {
+  Server.initialize(name: 'dcm_reader_test', level: Level.info0);
   String path0 =
       'C:/odw/sdk/test_tools/test_data/TransferUIDs/1.2.840.10008.1.2.5.dcm';
-  final Logger log = new Logger('dcm_reader_test.dart', Level.debug);
+
+
   group('description', () {
 
     test("instance ", () {

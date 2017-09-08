@@ -28,7 +28,7 @@ Logger log = new Logger("read_a_directory", Level.info);
 
 void main() {
 
-    List<Directory> dirs = getDirectories(inRoot5);
+    List<Directory> dirs = getDirectories(inRoot6);
     int count = 0;
     for(Directory dir in dirs) {
       log.info0('  $dir');

@@ -13,7 +13,7 @@ import 'package:system/server.dart';
 
 /// [rwdir] is a fast correctness checker for the [convert] package.
 ///
-/// It first reads and parses a DICOM file into a buffer, writes it
+/// It first reads and parshes a DICOM file into a buffer, writes it
 /// to a second buffer, and the does a byte by byte comparison of the two buffers.
 
 const String defaultDirectory = 'C:/odw/test_data/mweb';

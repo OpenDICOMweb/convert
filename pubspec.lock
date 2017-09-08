@@ -312,7 +312,7 @@ packages:
       path: "C:/odw/sdk/string"
       relative: false
     source: path
-    version: "0.6.1"
+    version: "0.6.2"
   string_scanner:
     description:
       name: string_scanner

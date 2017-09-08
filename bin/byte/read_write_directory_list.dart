@@ -6,16 +6,16 @@
 
 import 'dart:io';
 
-import 'package:timer/timer.dart';
 import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:path/path.dart' as p;
-import 'package:system/system.dart';
-
 import 'package:dcm_convert/src/byte/byte_read_utils.dart';
+import 'package:path/path.dart' as p;
+import 'package:system/core.dart';
+import 'package:timer/timer.dart';
 
 var dir0 =
-    'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/';
+    'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/'
+    'Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/';
 String outRoot0 = 'test/output/root0';
 String outRoot1 = 'test/output/root1';
 String outRoot2 = 'test/output/root2';
