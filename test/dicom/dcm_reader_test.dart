@@ -7,12 +7,13 @@
 import 'package:logger/logger.dart';
 import 'package:core/core.dart';
 import 'package:dcm_convert/src/byte/tag_reader.dart';
+import 'package:system/server.dart';
 import 'package:test/test.dart';
 
 void main() {
   String path0 =
       'C:/odw/sdk/test_tools/test_data/TransferUIDs/1.2.840.10008.1.2.5.dcm';
-  final Logger log = new Logger('dcm_reader_test.dart', Level.debug);
+  Server.initialize(name: 'dicom/dcm_reader_test', level: Level.info0);
   group('description', () {
 
     test("instance ", () {

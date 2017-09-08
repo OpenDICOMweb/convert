@@ -9,12 +9,14 @@ import 'dart:typed_data';
 import "package:test/test.dart";
 
 import '../../lib/src/bytebuf/bytebuf.dart';
+import 'package:system/server.dart';
 import 'test_utilities.dart';
 
 String magicAsString = "DICOM-MD";
 Uint8List magic = magicAsString.codeUnits;
 
 void main() {
+  Server.initialize(name: 'bytebuf/bytebuf_test', level: Level.info0);
   test("Read MetadataFile Magic value", () {
     var s = "DICOM-MD";
     Uint8List list = toUtf8(s);
@@ -201,14 +203,14 @@ void main() {
 
   test("Read Uint16List Values", () {
     List<int> uint16s = <int>[257, 3401, 2000, 3000, 4000];
-    //  print('length0:${uint16s.length}: $uint16s');
+    //  log.debug('length0:${uint16s.length}: $uint16s');
     Uint16List uint16List = new Uint16List.fromList(uint16s);
-    //  print('length1:${uint16List.length}: $uint16List');
+    //  log.debug('length1:${uint16List.length}: $uint16List');
     Uint8List bytes = uint16List.buffer.asUint8List();
-    //  print('length2:${bytes.length}: $bytes');
+    //  log.debug('length2:${bytes.length}: $bytes');
     ByteBuf buf = new ByteBuf.reader(bytes);
 
-    //  print(buf.info);
+    //  log.debug(buf.info);
     List<int> list = buf.readUint16List(uint16List.length);
 
     expect(uint16s, equals(uint16s));

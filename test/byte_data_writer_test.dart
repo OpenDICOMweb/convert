@@ -6,16 +6,18 @@
 
 import 'package:dcm_convert/src/byte/byte_data_buffer.dart';
 import 'package:test/test.dart';
+import 'package:system/server.dart';
 
 void main() {
+  Server.initialize(name: 'byte_data_writer_test', level: Level.info0);
   group("ByteDataBuffer", () {
     test("Buffer Growing Test", () {
       int startSize = 1;
       int iterations = 1024 * 1024;
-      print('iterations: $iterations');
+      log.debug('iterations: $iterations');
       var buf = new ByteDataBuffer(startSize);
-      print('maxLength: ${buf.maxLength}');
-      print('length: ${buf.lengthInBytes}');
+      log.debug('maxLength: ${buf.maxLength}');
+      log.debug('length: ${buf.lengthInBytes}');
       expect(buf.lengthInBytes == startSize, true);
       for (int i = 0; i < iterations - 1; i++) {
         int v = i % 128;
@@ -24,7 +26,7 @@ void main() {
 
 
       }
-      print('length: ${buf.lengthInBytes}');
+      log.debug('length: ${buf.lengthInBytes}');
       expect(buf.lengthInBytes == iterations, true);
     });
   });
