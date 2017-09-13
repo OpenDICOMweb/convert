@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:core/dataset.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:system/system.dart';
+import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:uid/uid.dart';
 

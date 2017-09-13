@@ -12,7 +12,7 @@ import 'package:core/core.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as p;
-import 'package:system/system.dart';
+import 'package:system/core.dart';
 import 'package:timer/timer.dart';
 
 

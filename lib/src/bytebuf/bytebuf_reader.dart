@@ -35,6 +35,7 @@ import 'package:system/system.dart';
 /// A skeletal implementation of a buffer.
 
 class ByteBufReader {
+
   static const int defaultLengthInBytes = 1024;
   static const int defaultMaxCapacity = 1 * k1MB;
   static const int maxMaxCapacity = 2 * k1GB;

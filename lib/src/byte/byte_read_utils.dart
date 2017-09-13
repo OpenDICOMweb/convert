@@ -20,6 +20,7 @@ bool byteReadWriteFileChecked(String fPath,
     int width = 5,
     bool throwOnError = true,
     bool fast = true]) {
+
   bool success = true;
   var n = getPaddedInt(fileNumber, width);
   var pad = "".padRight(width);

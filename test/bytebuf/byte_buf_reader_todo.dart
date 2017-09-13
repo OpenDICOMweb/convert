@@ -16,7 +16,8 @@ String magicAsString = "DICOM-MD";
 Uint8List magic = magicAsString.codeUnits;
 
 void main() {
-  Server.initialize(name: 'bytebuf/byte_buf_reader_todo', level: Level.info0);
+	Server.initialize(name: 'byte_buf_reader_todo.dart', level: Level.info0);
+
   test("Read MetadataFile Magic value", () {
     var s = "DICOM-MD";
     //List<int> cu = s.codeUnits;

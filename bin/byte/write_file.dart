@@ -7,7 +7,7 @@
 import 'dart:typed_data';
 
 import 'package:dcm_convert/dcm.dart';
-import 'package:system/system.dart';
+import 'package:system/core.dart';
 import 'package:timer/timer.dart';
 
 Uint8List writeFile(RootByteDataset rds, String path,

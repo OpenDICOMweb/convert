@@ -151,7 +151,7 @@ Tag getTag(ByteElement be) {
   return tag;
 }
 
-// TODO: integrate this int /dictionary/tag
+// TODO: integrate this into /dictionary/tag
 int pcCodeFromPDCode(int pdCode) {
   int group = Group.fromTag(pdCode);
   int elt = Elt.fromTag(pdCode);

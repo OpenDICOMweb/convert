@@ -8,6 +8,7 @@ import 'dart:io';
 
 import 'package:system/core.dart';
 import 'package:timer/timer.dart';
+import 'package:system/core.dart';
 
 int getShortInterval(int total) {
   if (total < 20) return 1;

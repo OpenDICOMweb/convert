@@ -7,7 +7,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:system/system.dart';
+import 'package:system/core.dart';
 
 import 'bytebuf_reader.dart';
 

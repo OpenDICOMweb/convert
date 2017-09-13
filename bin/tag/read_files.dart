@@ -6,10 +6,10 @@
 
 import 'dart:io';
 
+import 'package:system/core.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:dcm_convert/src/utilities/file_list_reader.dart';
-import 'package:system/core.dart';
 
 void main() {
  // readFile(path0);

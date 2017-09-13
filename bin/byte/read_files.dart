@@ -10,7 +10,7 @@ import 'dart:typed_data';
 import 'package:logger/logger.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:system/system.dart';
+import 'package:system/core.dart';
 
 final Logger log =
     new Logger("io/bin/read_files.dart", Level.config);

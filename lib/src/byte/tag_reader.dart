@@ -8,7 +8,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dcm_convert/dcm.dart';
-import 'package:system/system.dart';
+import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 
 import 'dcm_reader.dart';

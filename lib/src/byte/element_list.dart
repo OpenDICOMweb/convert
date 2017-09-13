@@ -5,7 +5,7 @@
 // See the AUTHORS file for other contributors.
 
 import 'package:core/element.dart';
-import 'package:system/system.dart';
+import 'package:system/core.dart';
 
 class ElementList {
   List<int> starts = <int>[];
