@@ -10,11 +10,10 @@ import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:path/path.dart' as p;
 import 'package:system/core.dart';
+import 'package:timer/timer.dart';
 
 import 'package:dcm_convert/src/byte/byte_read_utils.dart';
-import 'package:path/path.dart' as p;
-import 'package:system/core.dart';
-import 'package:timer/timer.dart';
+
 
 var dir0 =
     'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/'

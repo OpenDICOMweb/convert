@@ -7,18 +7,15 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:timer/timer.dart';
 import 'package:path/path.dart' as p;
 import 'package:system/core.dart';
+import 'package:timer/timer.dart';
 
 import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:dcm_convert/src/byte/byte_read_utils.dart';
 import 'package:dcm_convert/src/byte/compare_bytes.dart';
-import 'package:path/path.dart' as p;
-import 'package:system/core.dart';
-import 'package:timer/timer.dart';
 
 import 'read_utils.dart';
 

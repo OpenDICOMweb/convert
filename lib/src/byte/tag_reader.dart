@@ -128,7 +128,6 @@ class TagReader extends DcmReader {
     throw new UnimplementedError();
   }
 
-
   Element makePixelData(_vrIndex, ByteData bd, VFFragments fragments) =>
       throw new UnimplementedError();
 

@@ -4,17 +4,15 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the   AUTHORS file for other contributors.
 
-import 'package:system/core.dart';
-
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:dcm_convert/src/byte/compare_bytes.dart';
-import 'package:system/core.dart';
+import 'package:system/server.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
 void main() {
-  system.log.level = Level.debug;
+	Server.initialize(name: 'read_write_file.dart', level: Level.info0);
 
   // *** Modify this line to read/write a different file
   var path = path0;
