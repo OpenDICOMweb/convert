@@ -4,7 +4,17 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-/// Html media type encoder.
-class DicomHtmlEncoder {
+import 'dart:io';
 
+import 'package:grinder/grinder.dart';
+
+
+var dartDocDir = new Directory('doc');
+void cleanDocs() {
+  delete(dartDocDir);
 }
+
+void cleanCore() {
+  delete(dartDocDir);
+}
+
