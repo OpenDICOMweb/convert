@@ -18,7 +18,7 @@ class TestByteReader extends ByteReader {
       bool fmiOnly = false,
       bool throwOnError = true,
       bool allowMissingFMI = false,
-      TransferSyntaxUid targetTS,
+      TransferSyntax targetTS,
       bool reUseBD = true})
       : super(bd,
             path: path,
@@ -34,7 +34,7 @@ class TestByteReader extends ByteReader {
       bool fmiOnly = false,
       bool throwOnError = true,
       bool allowMissingFMI = false,
-      TransferSyntaxUid targetTS,
+      TransferSyntax targetTS,
       bool reUseBD = true}) {
     var bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     return new ByteReader(bd,
@@ -50,7 +50,7 @@ class TestByteReader extends ByteReader {
 
   /// Returns [true] if the File Meta Information was present and
   /// read successfully.
-  TransferSyntaxUid xReadFmi(
+  TransferSyntax xReadFmi(
       {bool checkPreamble = true, bool allowMissingPrefix = false}) {
     readFMI(checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
     if (!rootDS.hadFmi || !rootDS.hasSupportedTransferSyntax) return null;
@@ -84,7 +84,7 @@ class TestByteReader extends ByteReader {
 
   /// Reads only the File Meta Information ([FMI], if present.
   static Dataset readBytes(Uint8List bytes, Dataset rootDS,
-      {String path = "", bool fmiOnly = false, TransferSyntaxUid targetTS}) {
+      {String path = "", bool fmiOnly = false, TransferSyntax targetTS}) {
     ByteData bd =
         bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     ByteReader reader =
@@ -93,7 +93,7 @@ class TestByteReader extends ByteReader {
   }
 
   static RootByteDataset readFile(File file, RootByteDataset rootDS,
-      {bool fmiOnly = false, TransferSyntaxUid targetTS}) {
+      {bool fmiOnly = false, TransferSyntax targetTS}) {
     Uint8List bytes = file.readAsBytesSync();
     return readBytes(bytes, rootDS,
         path: file.path, fmiOnly: fmiOnly, targetTS: targetTS);
@@ -101,6 +101,6 @@ class TestByteReader extends ByteReader {
 
   /// Reads only the File Meta Information ([FMI], if present.
   static RootByteDataset readFileFmiOnly(File file, RootByteDataset rootDS,
-          {String path = "", TransferSyntaxUid targetTS}) =>
+          {String path = "", TransferSyntax targetTS}) =>
       readFile(file, rootDS, fmiOnly: true, targetTS: targetTS);
 }

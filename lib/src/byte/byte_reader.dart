@@ -29,7 +29,7 @@ class ByteReader extends DcmReader {
       bool fmiOnly = false,
       bool throwOnError = true,
       bool allowMissingFMI = false,
-      TransferSyntaxUid targetTS,
+      TransferSyntax targetTS,
       bool reUseBD = true})
       : _rootDS = new RootByteDataset.fromByteData(bd, vfLength: bd.lengthInBytes),
         super(bd,
@@ -49,7 +49,7 @@ class ByteReader extends DcmReader {
       bool fmiOnly = false,
       bool throwOnError = true,
       bool allowMissingFMI = false,
-      TransferSyntaxUid targetTS,
+      TransferSyntax targetTS,
       bool reUseBD = true}) {
     Uint8List bytes = file.readAsBytesSync();
     ByteData bd = bytes.buffer.asByteData();
@@ -71,7 +71,7 @@ class ByteReader extends DcmReader {
       bool fmiOnly = false,
       bool throwOnError = true,
       bool allowMissingFMI = false,
-      TransferSyntaxUid targetTS,
+      TransferSyntax targetTS,
       bool reUseBD = true}) {
     return new ByteReader.fromFile(new File(path),
         async: async,
@@ -142,7 +142,7 @@ class ByteReader extends DcmReader {
   String showItem(ByteItem item) => (item == null) ? 'Item item = null' : item.info;
 
   //Urgent: flush or fix
-  ByteElement makeElement(int vrIndex, ByteData bd) =>
+  ByteElement makeElement(int vrIndex, ByteData bd, Tag tag, int vfLength) =>
       (isEVR) ? EVR.makeElement(vrIndex, bd) : IVR.makeElement(vrIndex, bd);
 
   ByteElement makePixelData(int vrIndex, ByteData bd, [VFFragments fragments]) => (isEVR)
@@ -190,7 +190,7 @@ class ByteReader extends DcmReader {
       bool fmiOnly = false,
       bool throwOnError = true,
       allowMissingFMI = false,
-      TransferSyntaxUid targetTS,
+      TransferSyntax targetTS,
       bool reUseBD = true}) {
     RootByteDataset rds;
     try {
@@ -217,7 +217,7 @@ class ByteReader extends DcmReader {
       bool fmiOnly = false,
       bool throwOnError = true,
       bool allowMissingFMI: false,
-      TransferSyntaxUid targetTS,
+      TransferSyntax targetTS,
       bool reUseBD: true}) {
 // Fix   checkFile(file);
     return readBytes(file.readAsBytesSync(),
@@ -237,7 +237,7 @@ class ByteReader extends DcmReader {
       bool fmiOnly = false,
       bool throwOnError = true,
       allowMissingFMI = false,
-      TransferSyntaxUid targetTS,
+      TransferSyntax targetTS,
       bool reUseBD = true}) {
 //Fix    checkPath(path);
     return readFile(new File(path),
@@ -255,7 +255,7 @@ class ByteReader extends DcmReader {
       bool fast = true,
       bool fmiOnly = false,
       bool throwOnError = true,
-      TransferSyntaxUid targetTS,
+      TransferSyntax targetTS,
       bool reUseBD = true}) {
     var func;
     if (pathOrFile is String) {

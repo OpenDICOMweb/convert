@@ -8,8 +8,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:number/number.dart';
-import 'package:system/system.dart';
+import 'package:system/core.dart';
 
 //TODO:
 // 1. Put all index checking and moving into same section and eliminate redundancy
@@ -1151,7 +1150,7 @@ class ByteBuf {
   /// Stores a Uint8 value at [index].
   ByteBuf setUint8(int index, int value) {
     _checkWriteIndex(index, 1);
-    Uint8.guard(value);
+    inRange(value, 0, 255);
     _bd.setUint8(index, value);
     return this;
   }

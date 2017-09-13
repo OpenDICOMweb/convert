@@ -29,7 +29,7 @@ class TagReader extends DcmReader {
       bool fmiOnly = false,
       bool throwOnError = true,
       bool allowMissingFMI = false,
-      TransferSyntaxUid targetTS,
+      TransferSyntax targetTS,
       bool reUseBD = true})
       : _rootDS = new RootTagDataset.fromByteData(bd, vfLength: vfLength),
         super(bd,
@@ -53,7 +53,7 @@ class TagReader extends DcmReader {
       bool fmiOnly = false,
       bool throwOnError = false,
       bool allowMissingFMI = false,
-      TransferSyntaxUid targetTS,
+      TransferSyntax targetTS,
       bool reUseBD = true}) {
     Uint8List bytes = new Uint8List.fromList(list);
     ByteData bd = bytes.buffer.asByteData();
@@ -76,7 +76,7 @@ class TagReader extends DcmReader {
       bool fmiOnly = false,
       bool throwOnError = false,
       bool allowMissingFMI = false,
-      TransferSyntaxUid targetTS,
+      TransferSyntax targetTS,
       bool reUseBD = true}) {
     Uint8List bytes = file.readAsBytesSync();
     ByteData bd = bytes.buffer.asByteData();
@@ -95,7 +95,7 @@ class TagReader extends DcmReader {
       bool fmiOnly = false,
       bool throwOnError = false,
       bool allowMissingFMI = false,
-      TransferSyntaxUid targetTS,
+      TransferSyntax targetTS,
       bool reUseBD = true}) {
     return new TagReader.fromFile(new File(path),
         async: async, fast: fast, fmiOnly: fmiOnly, targetTS: targetTS);
@@ -124,7 +124,7 @@ class TagReader extends DcmReader {
     return (parseInfo.hadFmi) ? _rootDS : null;
   }
 
-  Element makeElement(_vrIndex, ByteData bd) {
+  Element makeElement(_vrIndex, ByteData bd, Tag tag, int vfLength) {
     throw new UnimplementedError();
   }
 
@@ -205,7 +205,7 @@ class TagReader extends DcmReader {
       bool async = true,
       bool fast = true,
       bool fmiOnly = false,
-      TransferSyntaxUid targetTS}) {
+      TransferSyntax targetTS}) {
     ByteData bd =
         bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     TagReader reader = new TagReader(bd,
@@ -223,7 +223,7 @@ class TagReader extends DcmReader {
       {async: true,
       fast = true,
       bool fmiOnly = false,
-      TransferSyntaxUid targetTS}) {
+      TransferSyntax targetTS}) {
     Uint8List bytes = file.readAsBytesSync();
     return readBytes(bytes,
         path: file.path,
@@ -237,13 +237,13 @@ class TagReader extends DcmReader {
           {bool async: true,
           bool fast = true,
           bool fmiOnly = false,
-          TransferSyntaxUid targetTS}) =>
+          TransferSyntax targetTS}) =>
       readFile(new File(path),
           async: async, fast: fast, fmiOnly: fmiOnly, targetTS: targetTS);
 
   /// Reads only the File Meta Information ([FMI], if present.
   static Dataset readFmiOnly(dynamic pathOrFile,
-      {async = true, fast = true, TransferSyntaxUid targetTS}) {
+      {async = true, fast = true, TransferSyntax targetTS}) {
     var func;
     if (pathOrFile is String) {
       func = readPath;

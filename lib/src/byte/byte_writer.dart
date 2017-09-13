@@ -17,7 +17,7 @@ import 'package:dcm_convert/dcm.dart';
 
 /// A [class] for writing a [RootByteDataset] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
-/// all LITTLE ENDIAN [TransferSyntaxUid]es.
+/// all LITTLE ENDIAN [TransferSyntax]es.
 class ByteWriter extends DcmWriter {
   /// The [RootByteDataset] being written.
   final RootByteDataset _rootDS;
@@ -30,7 +30,7 @@ class ByteWriter extends DcmWriter {
       {int bufferLength = DcmWriter.defaultBufferLength,
       String path = "",
       File file,
-      TransferSyntaxUid outputTS,
+      TransferSyntax outputTS,
       bool throwOnError = true,
       bool reUseBD = true,
       EncodingParameters encoding = EncodingParameters.kNoChange})
@@ -49,7 +49,7 @@ class ByteWriter extends DcmWriter {
       bool overwrite = false,
       bool fmiOnly = false,
       fast = true,
-      TransferSyntaxUid targetTS}) {
+      TransferSyntax targetTS}) {
     checkFile(file, overwrite);
     return new ByteWriter(ds,
         bufferLength: bufferLength, path: file.path, reUseBD: fast, outputTS: targetTS);
@@ -63,7 +63,7 @@ class ByteWriter extends DcmWriter {
       bool overwrite = false,
       bool fmiOnly = false,
       fast = false,
-      TransferSyntaxUid targetTS}) {
+      TransferSyntax targetTS}) {
     checkPath(path);
     return new ByteWriter(ds,
         bufferLength: bufferLength, path: path, reUseBD: fast, outputTS: targetTS);
@@ -94,7 +94,7 @@ class ByteWriter extends DcmWriter {
       String path = "",
       bool fmiOnly: false,
       bool fast: true,
-      TransferSyntaxUid outputTS,
+      TransferSyntax outputTS,
       reUseBD = true}) {
     checkRootDataset(ds);
     var writer = new ByteWriter(ds,
@@ -109,7 +109,7 @@ class ByteWriter extends DcmWriter {
       bool overwrite = false,
       bool fmiOnly = false,
       fast = true,
-      TransferSyntaxUid targetTS}) {
+      TransferSyntax targetTS}) {
     checkFile(file, overwrite);
     var bytes = writeBytes(ds,
         bufferLength: bufferLength, path: file.path, reUseBD: fast, outputTS: targetTS);
@@ -125,7 +125,7 @@ class ByteWriter extends DcmWriter {
       bool overwrite = false,
       bool fmiOnly = false,
       fast = false,
-      TransferSyntaxUid targetTS}) {
+      TransferSyntax targetTS}) {
     checkPath(path);
     return writeFile(ds, new File(path),
         bufferLength: bufferLength,
@@ -142,7 +142,7 @@ class ByteWriter extends DcmWriter {
       {int bufferLength,
       bool overwrite = false,
       fast = false,
-      TransferSyntaxUid targetTS}) {
+      TransferSyntax targetTS}) {
     checkPath(path);
     return writeFile(ds, new File(path),
         bufferLength: bufferLength,

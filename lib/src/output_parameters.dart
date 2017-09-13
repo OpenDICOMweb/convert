@@ -14,11 +14,11 @@ const int k1MB = 1024 * 1024;
 
 //Urgent: finish if useful
 class OutputParameters {
-  /// The [TransferSyntaxUid] for the encoded output. If [null]
-  /// the output will have the same [TransferSyntaxUid] as the Root
-  /// [Dataset]. If the [TransferSyntaxUid] of the Root [Dataset] is
+  /// The [TransferSyntax] for the encoded output. If [null]
+  /// the output will have the same [TransferSyntax] as the Root
+  /// [Dataset]. If the [TransferSyntax] of the Root [Dataset] is
   /// [null] then it defaults to [Explicit VR Little Endian].
-  final TransferSyntaxUid outputTS;
+  final TransferSyntax outputTS;
 
   /// If [true] errors will throw; otherwise, they return [null].
   /// The default is [true].

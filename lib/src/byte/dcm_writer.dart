@@ -18,14 +18,13 @@ import 'package:core/core.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/system.dart';
 
-
 import 'byte_data_buffer.dart';
 
 //TODO: rewrite all comments to reflect current state of code
 
 /// A library for encoding [Dataset]s in the DICOM File Format.
 ///
-/// Supports encoding all LITTLE ENDIAN [TransferSyntaxUid]es.
+/// Supports encoding all LITTLE ENDIAN [TransferSyntax]es.
 /// Does not support BIG ENDIAN which is retired.
 ///
 /// _Notes_:
@@ -49,11 +48,11 @@ abstract class DcmWriter {
   /// precedence over [path].
   final File file;
 
-  /// The [TransferSyntaxUid] for the encoded output. If [null]
-  /// the output will have the same [TransferSyntaxUid] as the Root
-  /// [Dataset]. If the [TransferSyntaxUid] of the Root [Dataset] is
+  /// The [TransferSyntax] for the encoded output. If [null]
+  /// the output will have the same [TransferSyntax] as the Root
+  /// [Dataset]. If the [TransferSyntax] of the Root [Dataset] is
   /// [null] then it defaults to [Explicit VR Little Endian].
-  final TransferSyntaxUid targetTS;
+  final TransferSyntax targetTS;
 
   /// If [true] errors will throw; otherwise, they return [null].
   /// The default is [true].
@@ -73,7 +72,7 @@ abstract class DcmWriter {
 
   /// Return [true] if input is Explicit VR, [false] if Implicit VR.
   bool _isEVR;
-  TransferSyntaxUid _ts;
+  TransferSyntax _ts;
 
   //TODO: these should be reported in an EncodeData structure (like ParseData)
   int _nElements = 0;
@@ -85,7 +84,7 @@ abstract class DcmWriter {
   DcmWriter(Dataset rootDS,
       {this.path,
       this.file,
-      TransferSyntaxUid outputTS,
+      TransferSyntax outputTS,
       this.throwOnError = true,
       this.bufferLength,
       this.reUseBD = true,
@@ -98,7 +97,7 @@ abstract class DcmWriter {
                 (bufferLength == null) ? defaultBufferLength : bufferLength);
 
   /// Returns the [targetTS] for the encoded output.
-  static TransferSyntaxUid getOutputTS(Dataset rootDS, TransferSyntaxUid outputTS) {
+  static TransferSyntax getOutputTS(Dataset rootDS, TransferSyntax outputTS) {
     if (outputTS == null) {
       return (rootDS.transferSyntax == null)
           ? system.defaultTransferSyntax
@@ -127,7 +126,7 @@ abstract class DcmWriter {
   /// The root Dataset being encoded.
   Dataset get rootDS;
 
-  TransferSyntaxUid get ts => rootDS.transferSyntax;
+  TransferSyntax get ts => rootDS.transferSyntax;
 
   /// The current dataset.  This changes as Sequences and Items are encoded.
   Dataset get currentDS => _currentDS;

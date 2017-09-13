@@ -23,7 +23,6 @@ bool byteReadWriteFileChecked(String fPath,
     int width = 5,
     bool throwOnError = true,
     bool fast = true]) {
-//  final Logger log = new Logger("byteReadWriteFileChecked");
   bool success = true;
   var n = getPaddedInt(fileNumber, width);
   var pad = "".padRight(width);
@@ -128,7 +127,7 @@ $pad    ${rds0.parseInfo.info}''');
 
 RootByteDataset readFileTimed(File file,
     {bool fmiOnly = false,
-    TransferSyntaxUid targetTS,
+    TransferSyntax targetTS,
     Level level = Level.warn,
     bool printDS: false}) {
   log.level = level;
@@ -180,7 +179,7 @@ Uint8List writeTimed(RootByteDataset rds,
     {String path = "",
     bool fast = true,
     bool fmiOnly = false,
-    TransferSyntaxUid targetTS}) {
+    TransferSyntax targetTS}) {
   var timer = new Stopwatch();
   var timestamp = new Timestamp();
   var total = rds.total;

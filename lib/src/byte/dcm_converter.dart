@@ -39,10 +39,10 @@ abstract class DcmConverterBase {
   /// If [true], then duplicate [Element]s will be stored.
   bool get allowDuplicates;
 
-  /// When reading only data with [targetTS] [TransferSyntaxUid] will
+  /// When reading only data with [targetTS] [TransferSyntax] will
   /// be decoded. When writing the Root Dataset will be encoded
-  /// in [targetTS] [TransferSyntaxUid].
+  /// in [targetTS] [TransferSyntax].
 
-  TransferSyntaxUid get targetTS;
+  TransferSyntax get targetTS;
 
 }

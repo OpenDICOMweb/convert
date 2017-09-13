@@ -102,7 +102,7 @@ packages:
       path: "C:/odw/sdk/date_time"
       relative: false
     source: path
-    version: "0.6.1"
+    version: "0.6.3"
   fixnum:
     description:
       name: fixnum
@@ -186,7 +186,7 @@ packages:
       name: matcher
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.12.1+1"
+    version: "0.12.1+3"
   meta:
     description:
       name: meta
@@ -258,13 +258,13 @@ packages:
       name: shelf
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.6.8"
+    version: "0.7.0"
   shelf_packages_handler:
     description:
       name: shelf_packages_handler
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.0"
+    version: "1.0.2"
   shelf_static:
     description:
       name: shelf_static
@@ -312,7 +312,7 @@ packages:
       path: "C:/odw/sdk/string"
       relative: false
     source: path
-    version: "0.6.2"
+    version: "0.6.3"
   string_scanner:
     description:
       name: string_scanner
@@ -336,7 +336,7 @@ packages:
       path: "C:/odw/sdk/system"
       relative: false
     source: path
-    version: "0.6.1"
+    version: "0.6.3"
   tag:
     description:
       path: "C:/odw/sdk/tag"
@@ -354,7 +354,7 @@ packages:
       name: test
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.12.24+2"
+    version: "0.12.24+4"
   timer:
     description:
       path: "C:/odw/sdk/timer"

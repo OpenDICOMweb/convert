@@ -57,8 +57,8 @@ abstract class DcmReader extends DcmConverterBase {
   /// If [true], then duplicate [Element]s will be stored.
   final bool allowDuplicates;
 
-  /// Only read the file if it has the same [TransferSyntaxUid] as [targetTS].
-  final TransferSyntaxUid targetTS;
+  /// Only read the file if it has the same [TransferSyntax] as [targetTS].
+  final TransferSyntax targetTS;
 
   //Urgent: todo make this a parameter
   /// If [true] any EVR [Element]s will be checked for being Sequences.
@@ -101,7 +101,7 @@ abstract class DcmReader extends DcmConverterBase {
   int _nonZeroDelimiterLengths = 0;
   int _nOddLengthValueFields = 0;
 
-  TransferSyntaxUid _ts;
+  TransferSyntax _ts;
   VR _pixelDataVR;
   int _pixelDataStart;
   int _pixelDataEnd;

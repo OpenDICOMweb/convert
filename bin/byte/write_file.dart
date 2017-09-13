@@ -6,12 +6,12 @@
 
 import 'dart:typed_data';
 
-import 'package:timer/timer.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/system.dart';
+import 'package:timer/timer.dart';
 
 Uint8List writeFile(RootByteDataset rds, String path,
-    {bool fmiOnly = false, TransferSyntaxUid outputTS}) {
+    {bool fmiOnly = false, TransferSyntax outputTS}) {
   var timer = new Timer();
   var total = rds.total;
   log.debug('writing ${rds.runtimeType} to "$path"\n'

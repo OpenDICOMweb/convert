@@ -9,9 +9,7 @@ import 'dart:typed_data';
 
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/core.dart';
-import 'package:system/system.dart';
 import 'package:timer/timestamp.dart';
-
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
@@ -22,7 +20,6 @@ bool byteReadWriteFileChecked(String fPath,
     int width = 5,
     bool throwOnError = true,
     bool fast = true]) {
-//  final Logger log = new Logger("byteReadWriteFileChecked");
   bool success = true;
   var n = getPaddedInt(fileNumber, width);
   var pad = "".padRight(width);
@@ -112,7 +109,7 @@ bool byteReadWriteFileChecked(String fPath,
 
 RootByteDataset readFileTimed(File file,
     {bool fmiOnly = false,
-    TransferSyntaxUid targetTS,
+    TransferSyntax targetTS,
     Level level = Level.warn,
     bool printDS: false}) {
   log.level = level;
@@ -166,7 +163,7 @@ Uint8List writeTimed(RootByteDataset rds,
     {String path = "",
     bool fast = true,
     bool fmiOnly = false,
-    TransferSyntaxUid targetTS}) {
+    TransferSyntax targetTS}) {
   var timer = new Stopwatch();
   var timestamp = new Timestamp();
   var total = rds.total;

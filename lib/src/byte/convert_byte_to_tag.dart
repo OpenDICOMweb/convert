@@ -5,10 +5,9 @@
 // See the AUTHORS file for other contributors.
 
 import 'package:core/core.dart';
-import 'package:tag/tag.dart';
-import 'package:system/core.dart';
-
 import 'package:dcm_convert/src/byte/byte_reader.dart';
+import 'package:system/core.dart';
+import 'package:tag/tag.dart';
 
 typedef Element<K, V> Maker<K, V>(K id, List<V> values,
     [int vfLength, VFFragments fragments]);
@@ -55,7 +54,6 @@ Map<String, TagElement> pcElements = <String, TagElement>{};
 
 //Urgent fix
 TagElement convertElement(ByteElement be) {
-  Logger log = new Logger('convertElement', Level.info);
   log.level = Level.info;
   var vrCode = be.vrCode;
 

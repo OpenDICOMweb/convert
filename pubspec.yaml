@@ -21,7 +21,7 @@ dependencies:
     version: ^0.6.1
   system:
     path: C:/odw/sdk/system
-    version: ^0.6.1
+    version: ^0.6.3
   tag:
     path: C:/odw/sdk/tag
     version: ^0.6.1

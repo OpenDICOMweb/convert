@@ -7,16 +7,16 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:logger/logger.dart';
-import 'package:timer/timer.dart';
 import 'package:core/core.dart';
-//import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:dcm_convert/src/byte/compare_bytes.dart';
-import 'package:path/path.dart' as p;
-
 import 'package:dcm_convert/src/byte/byte_read_utils.dart';
+import 'package:dcm_convert/src/byte/compare_bytes.dart';
+import 'package:logger/logger.dart';
+import 'package:path/path.dart' as p;
+import 'package:timer/timer.dart';
+//import 'package:dcm_convert/data/test_files.dart';
+
 
 final Logger log = new Logger("convert/bin/read_write_files1.dart",
     Level.config);
@@ -26,7 +26,7 @@ void main() {
   // readFMI(paths, fmiOnly: true);
   //  readWriteFiles(paths, fmiOnly: false);
   readWriteDirectory(mrStudy, fmiOnly: true);
-  //targetTS: TransferSyntaxUid.kImplicitVRLittleEndian);
+  //targetTS: TransferSyntax.kImplicitVRLittleEndian);
 }
 
 final String _tempDir = Directory.systemTemp.path;

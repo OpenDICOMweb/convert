@@ -58,8 +58,8 @@ abstract class DcmReader extends DcmConverterBase {
   /// If [true], then duplicate [Element]s will be stored.
   final bool allowDuplicates;
 
-  /// Only read the file if it has the same [TransferSyntaxUid] as [targetTS].
-  final TransferSyntaxUid targetTS;
+  /// Only read the file if it has the same [TransferSyntax] as [targetTS].
+  final TransferSyntax targetTS;
 
   //Urgent: todo make this a parameter
   /// If [true] any EVR [Element]s will be checked for being Sequences.
@@ -102,7 +102,7 @@ abstract class DcmReader extends DcmConverterBase {
   int _nonZeroDelimiterLengths = 0;
   int _nOddLengthValueFields = 0;
 
-  TransferSyntaxUid _tsUid;
+  TransferSyntax _tsUid;
   VR _pixelDataVR;
   int _pixelDataStart;
   int _pixelDataEnd;
@@ -151,7 +151,7 @@ abstract class DcmReader extends DcmConverterBase {
     }
   }
 
-  Element makeElement(_vrIndex, ByteData bd);
+  Element makeElement(_vrIndex, ByteData bd, Tag tag, int vfLength);
 
   Element makePixelData(_vrIndex, ByteData bd, VFFragments fragments);
 
@@ -468,26 +468,21 @@ abstract class DcmReader extends DcmConverterBase {
   /// All [Elements are read by this method.
   Element _readElement() {
     int eStart = _rIndex;
-    int code = _readTagCode();
-    //  log.debug('$rbb readElement${dcm(code)} $_evrString ', 1);
-    if (code == 0) {
+     _tagCode = _readTagCode();
+    if (_tagCode == 0) {
       _skip(-4); // undo readTagCode
-      _zeroEncountered(code);
-      //  log.debug('$ree Zero encountered', -1);
+      _zeroEncountered(_tagCode);
       return null;
     }
-    int vfLength = (_isEVR) ? _readEVRHdr(code, eStart) : _readIVRHdr(code, eStart);
-
+    int vfLength = (_isEVR) ? _readEVRHdr(_tagCode, eStart) : _readIVRHdr(_tagCode, eStart);
     assert(_vr != null, 'Invalid null VR: vrCode(${hex16(_vrCode)})');
-    //  log.debug('$rmm $_vr start($eStart) vfLength($vfLength, ${dcm(vfLength)})');
-
     Element e;
-    if (code == kPixelData) {
+    if (_tagCode == kPixelData) {
       e = _readPixelData(eStart, vfLength);
     } else if (vfLength == kUndefinedLength) {
-      e = _readULength(code, eStart, vfLength);
+      e = _readULength(_tagCode, eStart, vfLength);
     } else {
-      e = _readDLength(code, eStart, vfLength);
+      e = _readDLength(_tagCode, eStart, vfLength);
     }
 
     //Enhancement: only gather statistics when statisticsEnables is true
@@ -497,8 +492,8 @@ abstract class DcmReader extends DcmConverterBase {
       _endOfLastValueRead = _rIndex;
       if (elementListEnabled) elementList.add(eStart, _rIndex, e);
       _lastTopLevelElementRead = e;
-      _lastElementCode = code;
-      if ((code >> 16).isOdd) _nPrivateElementsRead++;
+      _lastElementCode = _tagCode;
+      if ((_tagCode >> 16).isOdd) _nPrivateElementsRead++;
     }
     //  log.debug('$ree $_nElementsRead: ${show(e)} @end', -1);
     return e;
@@ -535,6 +530,8 @@ abstract class DcmReader extends DcmConverterBase {
 
   // The current VR code and VR.
 //  int _code;
+  int _tagCode;
+  Tag _tag;
   int _vrCode;
   int _vrIndex;
   VR _vr;
@@ -570,33 +567,33 @@ abstract class DcmReader extends DcmConverterBase {
   //TODO: add VR.kSSUS, etc. to dictionary
   /// checks that code & vrCode are
   void _checkVR(int code, int vrCode, [bool warnOnUN = false]) {
-    var tag = Tag.lookupByCode(code);
-    if (tag == null) {
+    _tag = Tag.lookupByCode(code);
+    if (_tag == null) {
       _warn('Unknown Tag Code(${dcm(code)}) $_rrr');
-    } else if (vrCode == VR.kUN.code && tag.vr != VR.kUN) {
+    } else if (vrCode == VR.kUN.code && _tag.vr != VR.kUN) {
       //Enhancement remove PTags with VR.kUN and add multi-values VRs
-      _warn('${dcm(code)} VR.kUN($vrCode) should be ${tag.vr} $_rrr');
-    } else if (vrCode != VR.kUN.code && tag.vr.code == VR.kUN.code) {
+      _warn('${dcm(code)} VR.kUN($vrCode) should be ${_tag.vr} $_rrr');
+    } else if (vrCode != VR.kUN.code && _tag.vr.code == VR.kUN.code) {
       if (code != kPixelData && warnOnUN == true) {
-        if (tag is PDTag && tag is! PDTagKnown) {
+        if (_tag is PDTag && _tag is! PDTagKnown) {
           log.info0('$pad ${dcm(code)} VR.kUN: Unknown Private Data');
-        } else if (tag is PCTag && tag is! PCTagKnown) {
-          log.info0('$pad ${dcm(code)} VR.kUN: Unknown Private Creator $tag');
+        } else if (_tag is PCTag && _tag is! PCTagKnown) {
+          log.info0('$pad ${dcm(code)} VR.kUN: Unknown Private Creator $_tag');
         } else {
-          log.info0('$pad ${dcm(code)} VR.kUN: $tag');
+          log.info0('$pad ${dcm(code)} VR.kUN: $_tag');
         }
       }
-    } else if (vrCode != VR.kUN.code && vrCode != tag.vr.code) {
+    } else if (vrCode != VR.kUN.code && vrCode != _tag.vr.code) {
       var vr0 = VR.lookup(vrCode);
       _warn('${dcm(code)} Wrong VR $vr0($vrCode) '
-          'should be ${tag.vr} $_rrr');
+          'should be ${_tag.vr} $_rrr');
     }
   }
 
   int _readIVRHdr(int code, int eStart) {
     if (doConvertUndefinedVR) {
-      Tag tag = Tag.lookupByCode(code);
-      _vr = (tag == null) ? VR.kUN : tag.vr;
+      _tag = Tag.lookupByCode(code);
+      _vr = (_tag == null) ? VR.kUN : _tag.vr;
       _vrCode = _vr.code;
       _vrIndex = _vr.index;
     } else {
@@ -634,13 +631,8 @@ abstract class DcmReader extends DcmConverterBase {
     //  log.debug1('$rbb  readSimpleDLength');
     Element e;
     if (code > 0x3000 && Tag.isGroupLengthCode(code)) _hadGroupLengths = true;
-    //  log.debug1('$rmm   ${dcm(code)}, start($eStart) vfLength'
-    //    '($vfLength), $_evrString');
     _rIndex = _rIndex + vfLength;
     var eLength = _rIndex - eStart;
-/*    if (code == kPixelData) {
-      e = _makePixelData(eStart, eLength);
-    } else {*/
     e = _makeAndAddElement(eStart, eLength);
     //   }
     //  log.debug1('$ree   ${show(e)} @end');
@@ -650,7 +642,7 @@ abstract class DcmReader extends DcmConverterBase {
 
   Element _makeAndAddElement(eStart, eLength) {
     var ebd = bd.buffer.asByteData(eStart, eLength);
-    var e = makeElement(_vrIndex, ebd);
+    var e = makeElement(_vrIndex, ebd, _tag, _vfLength);
     _add(e);
     return e;
   }
