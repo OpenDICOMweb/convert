@@ -28,8 +28,8 @@ Future main() async {
   stdout.writeln('Reading(byte): $url');
 
   File file = new File(path);
-//  Uint8List bytes = await readFileAsync(file);
-  RootByteDataset rds = await ByteReader.readFile(file);
+  Uint8List bytes = await readFileAsync(file);
+  RootByteDataset rds = ByteReader.readBytes(bytes);
   if (rds == null) {
     log.warn('Invalid DICOM file: $path');
   } else {

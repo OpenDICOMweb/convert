@@ -41,17 +41,19 @@ Directory getDirectory(JobArgs args) {
 JobReporter getJobReporter(int fileCount, String path, int interval) =>
     new JobReporter(fileCount, from: path, short: interval);
 
+typedef Future<bool> DoFile(File f);
+
 class JobRunner {
   static const defaultInterval = 1;
   Directory directory;
   List files;
-  bool Function(File) doFile;
+  DoFile doFile;
   JobReporter reporter;
   List<String> failures = <String>[];
   //TODO: figure out the best way to handle this.
   bool throwOnError;
 
-  factory JobRunner(JobArgs jobArgs, bool Function(File) doFile,
+  factory JobRunner(JobArgs jobArgs, DoFile doFile,
       {int interval = defaultInterval,
       Level level = Level.info0,
       bool throwOnError = true}) {
@@ -61,7 +63,7 @@ class JobRunner {
        level: level, throwOnError: throwOnError);
   }
 
-  factory JobRunner.list(List<File> files, bool Function(File) doFile,
+  factory JobRunner.list(List<File> files, DoFile doFile,
       {int interval = defaultInterval, level = Level.info0, bool throwOnError = true}) {
     var reporter = getJobReporter(files.length, 'FileList', interval);
     return new JobRunner._(null, files, doFile, reporter,
@@ -87,11 +89,11 @@ class JobRunner {
     reporter.endReport;
   }
 
-  String runFile(File f, [int indent]) {
+  Future<String> runFile(File f, [int indent]) async {
     var path = cleanPath(f.path);
     bool success;
     try {
-      success = doFile(f);
+      success = await doFile(f);
       if (!success) failures.add(path);
     } catch (e) {
       print(e);
@@ -103,13 +105,13 @@ class JobRunner {
 
   static void _greeting() => stdout.writeln('Job Runner:');
 
-  static void job(JobArgs jobArgs, bool Function(File f) doFile,
+  static void job(JobArgs jobArgs, DoFile doFile,
       {int interval, Level level = Level.info, bool throwOnError = true}) {
     var job = new JobRunner(jobArgs, doFile, interval: interval);
     job.run();
   }
 
-  static void fileList(List<File> files, bool Function(File f) doFile,
+  static void fileList(List<File> files, DoFile doFile,
       {int interval, Level level = Level.debug, bool throwOnError = true}) {
     var job = new JobRunner.list(files, doFile, interval: interval);
     job.runList();

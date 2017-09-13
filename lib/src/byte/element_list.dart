@@ -16,6 +16,7 @@ class ElementList {
 
   // Enhancement: before release remove debugging.
   // Note: this does not compare elements!
+  @override
   bool operator ==(Object other) {
     bool result = true;
 
@@ -45,6 +46,9 @@ class ElementList {
     return false;
   }
 
+  @override
+  int get hashCode => system.hasher.nList(elements);
+
   int get length => elements.length;
 
   void add(int start, int end, Element e) {
@@ -53,6 +57,7 @@ class ElementList {
     elements.add(e);
   }
 
+  @override
   String toString() {
     var out = "ElementList:\n";
     var sWidth = '${starts.last}'.length;

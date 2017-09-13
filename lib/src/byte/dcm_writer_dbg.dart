@@ -133,7 +133,7 @@ abstract class DcmWriter {
   Dataset get currentDS => _currentDS;
 
   /// Sets the [currentDS] to [ds].
-  void set currentDS(Dataset ds) => _currentDS = ds;
+  set currentDS(Dataset ds) => _currentDS = ds;
 
   /// The current [length] in bytes of [this].
   int get lengthInBytes => _wIndex;
@@ -377,7 +377,7 @@ abstract class DcmWriter {
     //TODO: handle replacing undefined lengths
     log.debug('$wbb SQ $e', 1);
     _writeHeader(e);
-    var sq = e as SequenceMixin;
+    SequenceMixin sq = e as SequenceMixin;
     if (sq.items.length > 0) _writeItems(e);
     if (e.hadULength) _writeDelimiter(kSequenceDelimitationItem);
     _nSequences++;

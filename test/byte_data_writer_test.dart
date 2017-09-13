@@ -7,7 +7,6 @@
 import 'package:dcm_convert/src/byte/byte_data_buffer.dart';
 import 'package:system/server.dart';
 import 'package:test/test.dart';
-import 'package:system/server.dart';
 
 void main() {
 	Server.initialize(name: 'byte_date_writer.dart', level: Level.info0);

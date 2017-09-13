@@ -81,11 +81,7 @@ class TagReader extends DcmReader {
     Uint8List bytes = file.readAsBytesSync();
     ByteData bd = bytes.buffer.asByteData();
     return new TagReader(bd,
-        path: file.path,
-        async: async,
-        fast: fast,
-        fmiOnly: fmiOnly,
-        targetTS: targetTS);
+        path: file.path, async: async, fast: fast, fmiOnly: fmiOnly, targetTS: targetTS);
   }
 
   /// Creates a [ByteReader] from the contents of the [File] at [path].
@@ -103,11 +99,14 @@ class TagReader extends DcmReader {
 
   // The following Getters and Setters provide the correct [Type]s
   // for [rootDS] and [currentDS].
+  @override
   RootTagDataset get rootDS => _rootDS;
 
+  @override
   TagDataset get currentDS => _currentDS;
 
-  void set currentDS(TagDataset ds) => _currentDS = ds;
+  @override
+  set currentDS(Dataset ds) => _currentDS = ds;
 
   RootTagDataset readFMI({bool checkPreamble = false}) {
     var hadFmi = dcmReadFMI(checkPreamble: checkPreamble);
@@ -124,24 +123,34 @@ class TagReader extends DcmReader {
     return (parseInfo.hadFmi) ? _rootDS : null;
   }
 
-  Element makeElement(_vrIndex, ByteData bd, Tag tag, int vfLength) {
-    throw new UnimplementedError();
-  }
+  @override
+  TagElement makeElement(int vrIndex, Tag tag, ByteData bd,
+          [int vfLength, ByteData vfBytes]) =>
+      TagElement.makeElementFromBytes(tag, bytes, vfLength, tag.vrIndex);
 
-  Element makePixelData(_vrIndex, ByteData bd, VFFragments fragments) =>
+  @override
+  TagElement makePixelData(
+    _vrIndex,
+    ByteData bd, [
+    VFFragments fragments,
+    Tag tag,
+    int vfLength,
+    ByteData vfBytes,
+  ]) =>
       throw new UnimplementedError();
 
   // Interface
-  String show(ByteElement e) => (e == null) ? 'Element e = null' : e.info;
+  @override
+  String show(Element e) => (e == null) ? 'Element e = null' : e.info;
 
-  String showItem(ByteItem item) =>
-      (item == null) ? 'Item item = null' : item.info;
+  @override
+  String showItem(ByteItem item) => (item == null) ? 'Item item = null' : item.info;
 
   /// Returns a new [TagItem].
   //  Interface DcmReader.
-  TagItem makeItem(
-      ByteData bd, TagDataset parent, int vfLength, Map<int, Element> map,
-      [Map<int, TagElement> dupMap]) =>
+  @override
+  TagItem makeItem(ByteData bd, Dataset parent, int vfLength, Map<int, Element> map,
+          [Map<int, Element> dupMap]) =>
       new TagItem.fromDecoder(bd, parent, vfLength, map, dupMap);
 
 /*  /// Returns a new [ByteElement].
@@ -169,8 +178,8 @@ class TagReader extends DcmReader {
   /// Returns a new TagSequence.
   /// [vf] is [ByteData] for the complete Value Field of the Sequence.
   /// Interface for DcmReader.
-  SQ makeSQ(ByteData bd, TagDataset parent, List<TagItem> items,
-      int vfLength, bool isEVR) {
+  @override
+  SQ makeSQ(ByteData bd, Dataset parent, List items, int vfLength, bool isEVR) {
     int group = bd.getUint16(0);
     int elt = bd.getUint16(2);
     int code = (group << 16) & elt;
@@ -180,7 +189,6 @@ class TagReader extends DcmReader {
     for (TagItem item in items) item.addSQ(sq);
     return sq;
   }
-
 
 /* Flush if not needed
   TagElement makePixelData(int vrIndex, ByteElement e, VFFragments fragments) {
@@ -205,31 +213,19 @@ class TagReader extends DcmReader {
       bool fast = true,
       bool fmiOnly = false,
       TransferSyntax targetTS}) {
-    ByteData bd =
-        bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
+    ByteData bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     TagReader reader = new TagReader(bd,
-        path: path,
-        async: async,
-        fast: fast,
-        fmiOnly: fmiOnly,
-        targetTS: targetTS);
+        path: path, async: async, fast: fast, fmiOnly: fmiOnly, targetTS: targetTS);
     var root = reader.readRootDataset();
     log.debug(root);
     return root;
   }
 
   static RootTagDataset readFile(File file,
-      {async: true,
-      fast = true,
-      bool fmiOnly = false,
-      TransferSyntax targetTS}) {
+      {async: true, fast = true, bool fmiOnly = false, TransferSyntax targetTS}) {
     Uint8List bytes = file.readAsBytesSync();
     return readBytes(bytes,
-        path: file.path,
-        async: async,
-        fast: fast,
-        fmiOnly: fmiOnly,
-        targetTS: targetTS);
+        path: file.path, async: async, fast: fast, fmiOnly: fmiOnly, targetTS: targetTS);
   }
 
   static TagDataset readPath(String path,
@@ -251,7 +247,6 @@ class TagReader extends DcmReader {
     } else {
       throw 'Invalid path or file: $pathOrFile';
     }
-    return func(pathOrFile,
-        async: async, fmiOnly: true, fast: fast, targetTS: targetTS);
+    return func(pathOrFile, async: async, fmiOnly: true, fast: fast, targetTS: targetTS);
   }
 }

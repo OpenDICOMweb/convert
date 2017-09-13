@@ -1,7 +1,7 @@
 // Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
-// Original author: Jim Philbin <jfphilbin@gmail.edu> - 
+// Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
 import 'dart:async';
@@ -11,17 +11,24 @@ import 'dart:typed_data';
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/core.dart';
 
-//Urgent Jim: make this work.
-Future _readFileAsync(File f) async {
+
+Future<Uint8List> readFileFast(File f, {bool fast = true}) async =>
+	(fast) ? await f.readAsBytes() : 		f.readAsBytesSync();
+
+
+
+
+Future<Uint8List> readFileAsync(File f) async {
   var bytes = await f.readAsBytes();
   print(bytes.length);
   return bytes;
 }
 
-Uint8List _readFileSync(File f)  => f.readAsBytesSync();
+Uint8List readFileSync(File f) => f.readAsBytesSync();
 
-
-bool doReadByteFile(File f, [bool throwOnError = false, bool fast = true]) {
+//Urgent Test async
+Future<bool> doReadByteFile(File f,
+    {bool throwOnError = false, bool fast = true, bool isAsync = true}) async {
   system.log.level = Level.error;
   //TODO: improve output
 //  var n = getPaddedInt(fileNumber, width);
@@ -29,7 +36,7 @@ bool doReadByteFile(File f, [bool throwOnError = false, bool fast = true]) {
   var path = cleanPath(f.path);
 
   try {
-    var bytes = _readFileSync(f);
+    Uint8List bytes = await f.readAsBytes();
     ByteData bd = bytes.buffer.asByteData();
     var reader0 = new ByteReader(bd);
     RootByteDataset rds0 = reader0.readRootDataset();
@@ -41,8 +48,7 @@ bool doReadByteFile(File f, [bool throwOnError = false, bool fast = true]) {
       log.info0('Bad File - No ParseInfo: $path');
       return false;
     }
-    if (rds0.parseInfo != null)
-      log.debug('$pad    ${rds0.parseInfo.info}');
+    if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.info}');
 
 // TODO: move into dataset.warnings.
     ByteElement e = rds0[kPixelData];
@@ -53,7 +59,6 @@ bool doReadByteFile(File f, [bool throwOnError = false, bool fast = true]) {
     }
 
     if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
-
 
     if (rds0 != null) log.info0('$pad Success!');
     return true;

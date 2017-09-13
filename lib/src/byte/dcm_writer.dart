@@ -132,7 +132,7 @@ abstract class DcmWriter {
   Dataset get currentDS => _currentDS;
 
   /// Sets the [currentDS] to [ds].
-  void set currentDS(Dataset ds) => _currentDS = ds;
+  set currentDS(Dataset ds) => _currentDS = ds;
 
   /// The current [length] in bytes of [this].
   int get lengthInBytes => _wIndex;

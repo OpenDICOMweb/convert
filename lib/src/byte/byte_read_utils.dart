@@ -4,6 +4,7 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -175,7 +176,7 @@ Uint8List writeTimed(RootByteDataset rds,
       '    at: $timestamp ...');
 
   timer.start();
-  var bytes =
+  Uint8List bytes =
       ByteWriter.writeBytes(rds, path: path, fmiOnly: fmiOnly, fast: fast);
   timer.stop();
   log.debug('  Elapsed time: ${timer.elapsed}');
@@ -184,8 +185,8 @@ Uint8List writeTimed(RootByteDataset rds,
   return bytes;
 }
 
-Uint8List writeFMI(RootByteDataset rds, [String path]) =>
-    ByteWriter.writePath(rds, path, fmiOnly: true);
+Future<Uint8List> writeFMI(RootByteDataset rds, [String path]) async =>
+    await ByteWriter.writePath(rds, path, fmiOnly: true);
 
-Uint8List writeRoot(RootByteDataset rds, {String path}) =>
+Future<Uint8List> writeRoot(RootByteDataset rds, {String path}) =>
     ByteWriter.writePath(rds, path);

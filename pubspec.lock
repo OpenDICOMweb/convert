@@ -84,7 +84,7 @@ packages:
       path: "C:/odw/sdk/core"
       relative: false
     source: path
-    version: "0.6.1"
+    version: "0.6.3"
   crypto:
     description:
       name: crypto
@@ -216,7 +216,7 @@ packages:
       path: "C:/odw/sdk/number"
       relative: false
     source: path
-    version: "0.6.1"
+    version: "0.6.3"
   package_config:
     description:
       name: package_config
@@ -342,7 +342,7 @@ packages:
       path: "C:/odw/sdk/tag"
       relative: false
     source: path
-    version: "0.6.1"
+    version: "0.6.3"
   term_glyph:
     description:
       name: term_glyph
@@ -372,7 +372,7 @@ packages:
       path: "C:/odw/sdk/uid"
       relative: false
     source: path
-    version: "0.6.1"
+    version: "0.6.3"
   unscripted:
     description:
       name: unscripted
@@ -390,7 +390,7 @@ packages:
       path: "C:/odw/sdk/uuid"
       relative: false
     source: path
-    version: "0.6.1"
+    version: "0.6.3"
   version:
     description:
       name: version

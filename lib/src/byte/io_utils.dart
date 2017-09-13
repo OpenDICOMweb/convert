@@ -19,21 +19,22 @@ String cleanPath(String path) => path.replaceAll('\\', '/');
 
 //TODO: move to io_utils
 /// Checks that [dataset] is not empty.
-checkRootDataset(Dataset dataset) {
+void checkRootDataset(Dataset dataset) {
   if (dataset == null || dataset.length == 0)
     throw new ArgumentError('Empty ' 'Empty Dataset: $dataset');
 }
 
 /// Checks that [file] is not empty.
-checkFile(File file, [bool overwrite = false]) {
+void checkFile(File file, [bool overwrite = false]) {
   if (file == null) throw new ArgumentError('null File');
   if (file.existsSync() && !overwrite)
     throw new ArgumentError('$file already exists');
 }
 
 /// Checks that [path] is not empty.
-checkPath(String path) {
+String checkPath(String path) {
   if (path == null || path == "") throw new ArgumentError('Empty path: $path');
+  return path;
 }
 
 final path.Context pathContext = new path.Context(style: path.Style.posix);
@@ -98,9 +99,10 @@ Future<int> walkDirectory(Directory dir, Runner f, [int level = 0]) async {
   return count;
 }
 
+typedef Null RunFile(File f, [int count]);
 /// Walks a [List] of [String], [File], List<String>, or List<File>, and
 /// applies [runner] to each one asynchronously.
-Future<int> walkPathList(List paths, Null Function(File, [int]) runner,
+Future<int> walkPathList(List paths,RunFile runner,
     [int level = 0]) async {
   int count = 0;
   for (var entry in paths) {
@@ -119,7 +121,7 @@ Future<int> walkPathList(List paths, Null Function(File, [int]) runner,
   return count;
 }
 
-Future<Null> runFile(dynamic file, Null Function(File, [int]) runner,
+Future<Null> runFile(dynamic file, RunFile runner,
     [int level = 0]) async {
   if (file is String) file = new File(file);
   if (file is! File) throw 'Bad File: $file';

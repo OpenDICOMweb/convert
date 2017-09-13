@@ -20,7 +20,7 @@ String outRoot4 = 'test/output/root4';
 //TODO: modify so that it takes the following arguments
 // 1. dirname
 // 2. reportIncrement
-void main(List<String> args)  {
+void main(List<String> args) {
   /// The processed arguments for this program.
   JobArgs jobArgs;
 
@@ -54,8 +54,8 @@ ${jobArgs.parser.usage}
   //Urgent fix logger
   system.log.level = jobArgs.baseLevel;
 
-  JobRunner.fileList(['C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/'
-      'Sop/1.2.392.200036.9123.100.12.11.3.dcm'],
-      doRWRByteFile,
-      level: Level.info);
+  File f = new File('C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/'
+      'Sop/1.2.392.200036.9123.100.12.11.3.dcm');
+
+  JobRunner.fileList([f], doRWRByteFile, level: Level.info);
 }

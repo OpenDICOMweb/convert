@@ -4,13 +4,14 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:async' hide Timer;
 import 'dart:typed_data';
 
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/core.dart';
 import 'package:timer/timer.dart';
 
-Uint8List writeFile(RootByteDataset rds, String path,
+Future<Uint8List> writeFile(RootByteDataset rds, String path,
     {bool fmiOnly = false, TransferSyntax outputTS}) {
   var timer = new Timer();
   var total = rds.total;
@@ -20,7 +21,7 @@ Uint8List writeFile(RootByteDataset rds, String path,
   if (fmiOnly) log.debug('    fmiOnly: $fmiOnly');
 
   //  timer.start();
-  var bytes = ByteWriter.writePath(rds, path, fmiOnly: fmiOnly);
+  Future<Uint8List> bytes = ByteWriter.writePath(rds, path, fmiOnly: fmiOnly);
   timer.stop();
 
   log.debug('  Elapsed time: ${timer.elapsed}');

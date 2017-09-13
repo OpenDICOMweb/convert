@@ -39,26 +39,34 @@ typedef Element PixelDataMaker<V>(ByteData bd, Dataset parent, List<Dataset> ite
 ///   return the empty [List] [].
 abstract class DcmReader extends DcmConverterBase {
   /// The [ByteData] being read.
+  @override
   final ByteData bd;
 
   // Input parameters
+  @override
   final bool async;
+  @override
   final bool fast;
+  @override
   final bool fmiOnly;
 
   /// If [true] errors will throw; otherwise, return [null].
+  @override
   final bool throwOnError;
 
   /// If [true] and Preamble and Prefix are not present, abort reading.
   final bool allowMissingPrefix;
 
   /// If [true] and [FMI] is not present, abort reading.
+  @override
   final bool allowMissingFMI;
 
   /// If [true], then duplicate [Element]s will be stored.
+  @override
   final bool allowDuplicates;
 
   /// Only read the file if it has the same [TransferSyntax] as [targetTS].
+  @override
   final TransferSyntax targetTS;
 
   //Urgent: todo make this a parameter
@@ -137,8 +145,8 @@ abstract class DcmReader extends DcmConverterBase {
       this.allowMissingFMI = false,
       this.allowDuplicates = true,
       this.targetTS,
-      this.doConvertUndefinedVR = false,
-        //TODO: read into preallocated buffer that is used over and over.
+      this.doConvertUndefinedVR = true,
+      //TODO: read into preallocated buffer that is used over and over.
       this.reUseBD = true,
       this.checkForUNSequence = false,
       this.decoding = DecodingParameters.kNoChange})
@@ -151,9 +159,11 @@ abstract class DcmReader extends DcmConverterBase {
     }
   }
 
-  Element makeElement(_vrIndex, ByteData bd, Tag tag, int vfLength);
+  Element makeElement(int vrIndex, Tag tag, ByteData bytes,
+      [int vfLength, ByteData vfBytes]);
 
-  Element makePixelData(_vrIndex, ByteData bd, VFFragments fragments);
+  Element makePixelData(int vrIndex, ByteData bytes,
+      [VFFragments fragments, Tag tag, int vfLength, ByteData vfBytes]);
 
   /// Interface for logging
   String show(Element e);
@@ -183,7 +193,7 @@ abstract class DcmReader extends DcmConverterBase {
 
   /// The current dataset.  This changes as Sequences are read.
   Dataset get currentDS;
-  void set currentDS(Dataset ds);
+  set currentDS(Dataset ds);
 
   Map<int, Element> currentMap;
   Map<int, Element> currentDupMap;
@@ -320,6 +330,7 @@ abstract class DcmReader extends DcmConverterBase {
   /// External Interface for testing.
   Element readElement() => _readElement();
 
+  @override
   String toString() => '$runtimeType: rootDS: $rootDS, currentDS: $currentDS';
 
   // **** Internal Methods
@@ -404,8 +415,8 @@ abstract class DcmReader extends DcmConverterBase {
     }
     _hadFmi = true;
 
-  //  Fmi fmi = new Fmi(rootDS);
-  //  _tsUid = fmi.transferSyntax;
+    //  Fmi fmi = new Fmi(rootDS);
+    //  _tsUid = fmi.transferSyntax;
     _tsUid = rootDS.transferSyntax;
     _isEVR = !_tsUid.isImplicitLittleEndian;
 /*
@@ -468,13 +479,14 @@ abstract class DcmReader extends DcmConverterBase {
   /// All [Elements are read by this method.
   Element _readElement() {
     int eStart = _rIndex;
-     _tagCode = _readTagCode();
+    _tagCode = _readTagCode();
     if (_tagCode == 0) {
       _skip(-4); // undo readTagCode
       _zeroEncountered(_tagCode);
       return null;
     }
-    int vfLength = (_isEVR) ? _readEVRHdr(_tagCode, eStart) : _readIVRHdr(_tagCode, eStart);
+    int vfLength =
+        (_isEVR) ? _readEVRHdr(_tagCode, eStart) : _readIVRHdr(_tagCode, eStart);
     assert(_vr != null, 'Invalid null VR: vrCode(${hex16(_vrCode)})');
     Element e;
     if (_tagCode == kPixelData) {
@@ -559,7 +571,6 @@ abstract class DcmReader extends DcmConverterBase {
 //      _maker = LongEVR.maker;
     }
     assert(_checkRIndex());
-//    print('vfLength: $_vfLength');
     //TODO: add a statistics collector here recording frequency of code, vr, vfLength
     return _vfLength;
   }
@@ -573,6 +584,7 @@ abstract class DcmReader extends DcmConverterBase {
     } else if (vrCode == VR.kUN.code && _tag.vr != VR.kUN) {
       //Enhancement remove PTags with VR.kUN and add multi-values VRs
       _warn('${dcm(code)} VR.kUN($vrCode) should be ${_tag.vr} $_rrr');
+      _vrCode = _tag.vr.code;
     } else if (vrCode != VR.kUN.code && _tag.vr.code == VR.kUN.code) {
       if (code != kPixelData && warnOnUN == true) {
         if (_tag is PDTag && _tag is! PDTagKnown) {
@@ -594,13 +606,11 @@ abstract class DcmReader extends DcmConverterBase {
     if (doConvertUndefinedVR) {
       _tag = Tag.lookupByCode(code);
       _vr = (_tag == null) ? VR.kUN : _tag.vr;
-      _vrCode = _vr.code;
-      _vrIndex = _vr.index;
     } else {
       _vr = VR.kUN;
-      _vrCode = VR.kUN.code;
-      _vrIndex = VR.kUN.index;
     }
+    _vrCode = _vr.code;
+    _vrIndex = _vr.index;
     _vfLength = _readUint32();
     //   _maker = IVR.maker;
     assert(_checkRIndex());
@@ -642,7 +652,7 @@ abstract class DcmReader extends DcmConverterBase {
 
   Element _makeAndAddElement(eStart, eLength) {
     var ebd = bd.buffer.asByteData(eStart, eLength);
-    var e = makeElement(_vrIndex, ebd, _tag, _vfLength);
+    var e = makeElement(_tag.vrIndex, _tag, ebd, _vfLength);
     _add(e);
     return e;
   }
@@ -1127,7 +1137,7 @@ abstract class DcmReader extends DcmConverterBase {
   // **** Below this level is all for debugging and can be commented out for
   // **** production.
 
-  _showNext(int start) {
+  void _showNext(int start) {
     if (_isEVR) {
       _showShortEVR(start);
       _showLongEVR(start);

@@ -10,6 +10,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -73,12 +74,16 @@ class ByteWriter extends DcmWriter {
   // for [rootDS] and [currentDS].
 
   /// Returns the [RootTagDataset] being written.
+  @override
   RootByteDataset get rootDS => _rootDS;
 
+  @override
   ByteDataset get currentDS => _currentDS;
 
-  void set currentDS(ByteDataset ds) => _currentDS = ds;
+  @override
+  set currentDS(Dataset ds) => _currentDS = ds;
 
+  @override
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
@@ -104,28 +109,28 @@ class ByteWriter extends DcmWriter {
 
   /// Writes the [RootByteDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
-  static Uint8List writeFile(RootByteDataset ds, File file,
+  static Future<Uint8List> writeFile(RootByteDataset ds, File file,
       {int bufferLength,
       bool overwrite = false,
       bool fmiOnly = false,
       fast = true,
-      TransferSyntax targetTS}) {
+      TransferSyntax targetTS}) async {
     checkFile(file, overwrite);
     var bytes = writeBytes(ds,
         bufferLength: bufferLength, path: file.path, reUseBD: fast, outputTS: targetTS);
-    file.writeAsBytesSync(bytes);
+    await file.writeAsBytes(bytes);
     return bytes;
   }
 
   /// Creates a new empty [File] from [path], writes the [RootByteDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  static Uint8List writePath(RootByteDataset ds, String path,
+  static Future<Uint8List> writePath(RootByteDataset ds, String path,
       {int bufferLength,
       bool overwrite = false,
       bool fmiOnly = false,
       fast = false,
-      TransferSyntax targetTS}) {
+      TransferSyntax targetTS})  {
     checkPath(path);
     return writeFile(ds, new File(path),
         bufferLength: bufferLength,
@@ -138,7 +143,7 @@ class ByteWriter extends DcmWriter {
   /// Creates a new empty [File] at [path], writes the [RootByteDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File],
   /// and returns the [Uint8List].
-  static Uint8List writeFmi(RootByteDataset ds, String path,
+  static Future<Uint8List> writeFmi(RootByteDataset ds, String path,
       {int bufferLength,
       bool overwrite = false,
       fast = false,

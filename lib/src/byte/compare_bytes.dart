@@ -124,7 +124,7 @@ bool compareByteDatasets(ByteDataset ds0, ByteDataset ds1,
   for (ByteElement e0 in ds0.elements) {
     ByteElement e1 = ds1[e0.code];
     if (e0.vrCode == VR.kSQ.code) {
-      if (e1.vrCode != VR.kSQ.code) return false;
+      if (e1.vrCode != VR.kSQ.code) return false;  
       if (!compareSequences(e0 as SequenceMixin, e1 as SequenceMixin)) return
         false;
     } else {

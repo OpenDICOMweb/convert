@@ -38,26 +38,36 @@ typedef Element PixelDataMaker<V>(ByteData bd, Dataset parent, List<Dataset> ite
 ///   return the empty [List] [].
 abstract class DcmReader extends DcmConverterBase {
   /// The [ByteData] being read.
+  @override
   final ByteData bd;
 
   // Input parameters
+  @override
   final bool async;
+
+  @override
   final bool fast;
+
+  @override
   final bool fmiOnly;
 
   /// If [true] errors will throw; otherwise, return [null].
+  @override
   final bool throwOnError;
 
   /// If [true] and Preamble and Prefix are not present, abort reading.
   final bool allowMissingPrefix;
 
   /// If [true] and [FMI] is not present, abort reading.
+  @override
   final bool allowMissingFMI;
 
   /// If [true], then duplicate [Element]s will be stored.
+  @override
   final bool allowDuplicates;
 
   /// Only read the file if it has the same [TransferSyntax] as [targetTS].
+  @override
   final TransferSyntax targetTS;
 
   //Urgent: todo make this a parameter
@@ -181,7 +191,7 @@ abstract class DcmReader extends DcmConverterBase {
 
   /// The current dataset.  This changes as Sequences are read.
   Dataset get currentDS;
-  void set currentDS(Dataset ds);
+  set currentDS(Dataset ds);
 
   Map<int, Element> currentMap;
   Map<int, Element> currentDupMap;
@@ -318,6 +328,7 @@ abstract class DcmReader extends DcmConverterBase {
   /// External Interface for testing.
   Element readElement() => _readElement();
 
+  @override
   String toString() => '$runtimeType: rootDS: $rootDS, currentDS: $currentDS';
 
   // **** Internal Methods
@@ -1093,7 +1104,7 @@ abstract class DcmReader extends DcmConverterBase {
   // **** Below this level is all for debugging and can be commented out for
   // **** production.
 
-  _showNext(int start) {
+  void _showNext(int start) {
     if (_isEVR) {
       _showShortEVR(start);
       _showLongEVR(start);

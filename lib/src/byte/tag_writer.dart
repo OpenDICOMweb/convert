@@ -88,12 +88,16 @@ class TagWriter extends DcmWriter {
   // for [rootDS] and [currentDS].
 
   /// Returns the [RootTagDataset] being written.
+  @override
   RootTagDataset get rootDS => _rootDS;
 
+  @override
   TagDataset get currentDS => _currentDS;
 
-  void set currentDS(TagDataset ds) => _currentDS = ds;
+  @override
+  set currentDS(Dataset ds) => _currentDS = ds;
 
+  @override
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 

@@ -73,12 +73,16 @@ class ByteWriter extends DcmWriter {
   // for [rootDS] and [currentDS].
 
   /// Returns the [RootTagDataset] being written.
+  @override
   RootByteDataset get rootDS => _rootDS;
 
+  @override
   ByteDataset get currentDS => _currentDS;
 
-  void set currentDS(ByteDataset ds) => _currentDS = ds;
+  @override
+  set currentDS(Dataset ds) => _currentDS = ds;
 
+  @override
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 

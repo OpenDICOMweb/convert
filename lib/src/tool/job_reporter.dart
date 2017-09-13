@@ -8,7 +8,6 @@ import 'dart:io';
 
 import 'package:system/core.dart';
 import 'package:timer/timer.dart';
-import 'package:system/core.dart';
 
 int getShortInterval(int total) {
   if (total < 20) return 1;
@@ -69,7 +68,7 @@ class JobReporter {
 
   Level get level => log.level;
 
-  void set level(Level level) => log.level = level;
+  set level(Level level) => log.level = level;
 
   String get _from => (from == null) ? "" : "from $from";
 
@@ -135,8 +134,7 @@ class JobReporter {
 
   String get failures {
     var out = "Failures($_failure):";
-    for (String s in failuresList)
-      out += '  $s\n';
+    for (String s in failuresList) out += '  $s\n';
     return out;
   }
 

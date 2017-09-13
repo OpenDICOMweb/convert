@@ -1,23 +1,26 @@
 // Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
-// Original author: Jim Philbin <jfphilbin@gmail.edu> - 
+// Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/core.dart';
 
-bool doRWRByteFile(File f, [bool throwOnError = false, bool fast = true]) {
+Future<bool> doRWRByteFile(File f, [bool throwOnError = false, bool fast = true]) async {
   log.level = Level.error;
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
   var pad = "".padRight(5);
 
   try {
-    var reader0 = new ByteReader.fromFile(f, fast: true);
+    Uint8List bytes = await f.readAsBytes();
+    ByteData bd = bytes.buffer.asByteData();
+    var reader0 = new ByteReader(bd, fast: true);
     RootByteDataset rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -58,8 +61,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     ByteReader reader1;
     if (fast) {
       // Just read bytes not file
-      reader1 =
-      new ByteReader(
+      reader1 = new ByteReader(
           bytes1.buffer.asByteData(bytes1.offsetInBytes, bytes1.lengthInBytes));
     } else {
       reader1 = new ByteReader.fromPath(outPath);

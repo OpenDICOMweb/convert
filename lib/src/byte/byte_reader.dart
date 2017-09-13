@@ -8,6 +8,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:core/byte_dataset.dart';
+import 'package:core/byte_element.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
@@ -85,9 +86,14 @@ class ByteReader extends DcmReader {
 
   // The following Getters and Setters provide the correct [Type]s
   // for [rootDS] and [currentDS].
+  @override
   RootByteDataset get rootDS => _rootDS;
+
+  @override
   ByteDataset get currentDS => _currentDS;
-  void set currentDS(ByteDataset ds) => _currentDS = ds;
+
+  @override
+  set currentDS(Dataset ds) => _currentDS = ds;
 
   RootByteDataset readFMI({bool checkPreamble = false, bool allowMissingPrefix = false}) {
     bool hadFmi =
@@ -137,22 +143,39 @@ class ByteReader extends DcmReader {
   }
 
   // Interface
-  String show(ByteElement e) => (e == null) ? 'Element e = null' : e.info;
+  @override
+  String show(Element e) => (e == null) ? 'Element e = null' : e.info;
 
+  @override
   String showItem(ByteItem item) => (item == null) ? 'Item item = null' : item.info;
 
   //Urgent: flush or fix
-  ByteElement makeElement(int vrIndex, ByteData bd, Tag tag, int vfLength) =>
-      (isEVR) ? EVR.makeElement(vrIndex, bd) : IVR.makeElement(vrIndex, bd);
+  @override
+  Element makeElement(int vrIndex, Tag tag, ByteData bytes,
+      [int vfLength, ByteData vfBytes]) {
+    int index = (vrIndex == VR.kUN.index) ? tag.vr.index : vrIndex;
+    return (isEVR)
+        ? EVR.makeElement(index, tag, bytes)
+        : IVR.makeElement(index, tag, bytes);
+  }
 
-  ByteElement makePixelData(int vrIndex, ByteData bd, [VFFragments fragments]) => (isEVR)
-      ? EVR.makePixelData(vrIndex, bd, fragments)
-      : IVR.makePixelData(vrIndex, bd, fragments);
+  @override
+  ByteElement makePixelData(
+    int vrIndex,
+    ByteData bytes, [
+    VFFragments fragments,
+    Tag tag,
+    int vfLength,
+    ByteData vfBytes,
+  ]) =>
+      (isEVR)
+          ? EVR.makePixelData(vrIndex, bytes, fragments)
+          : IVR.makePixelData(vrIndex, bytes, fragments);
 
   /// Returns a new ByteSequence.
   /// [bd] is the complete [ByteElement] for the Sequence.
-  ByteElement makeSQ(
-      ByteData bd, ByteDataset parent, List<ByteItem> items, int vfLength, bool isEVR) {
+  @override
+  Element makeSQ(ByteData bd, Dataset parent, List items, int vfLength, bool isEVR) {
     //TODO: figure out how to create a ByteSequence with one call.
     ByteElement sq =
         (isEVR) ? EVR.makeSQ(bd, currentDS, items) : IVR.makeSQ(bd, currentDS, items);
@@ -161,7 +184,8 @@ class ByteReader extends DcmReader {
   }
 
   /// Returns a new [ByteItem].
-  ByteItem makeItem(ByteData bd, ByteDataset parent, int vfLength, Map<int, Element> map,
+  @override
+  ByteItem makeItem(ByteData bd, Dataset parent, int vfLength, Map<int, Element> map,
           [Map<int, Element> dupMap]) =>
       new ByteItem.fromDecoder(bd, parent, vfLength, map, dupMap);
 

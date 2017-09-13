@@ -4,11 +4,12 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dcm_convert/src/byte/io_utils.dart';
 
-main() async {
+Future main() async {
   var dir = new Directory('C:/odw/test_data');
   var stat = await dir.stat();
   var length = dir.listSync(recursive: true).length;

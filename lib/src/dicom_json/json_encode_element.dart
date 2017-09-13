@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'package:logger/logger.dart';
 
 import 'package:core/core.dart';
+import 'package:system/core.dart';
 import 'json_type.dart';
 
 //TODO:
@@ -19,8 +20,9 @@ import 'json_type.dart';
 //     byte streams.
 
 
-typedef void VFWriter(a);
+typedef void VFWriter(Element a);
 
+const kMB = 1024 * 1024;
 /// A library for parsing [Uint8List] containing DICOM File Format [Dataset]s.
 ///
 /// Supports parsing both BIG_ENDIAN and LITTLE_ENDIAN format in the
@@ -39,7 +41,7 @@ typedef void VFWriter(a);
 ///   2. All String manipulation should be handled in the attribute itself.
 ///   3. All VRWriters allow the Value Field to be empty.
 class JsonEncodeBuffer {
-    static const defaultLengthInBytes = 1 * kMB;
+    static const defaultLengthInBytes = 1 * kM;
     static final Logger log = new Logger("JsonEncodeBuffer");
 
     bool breakOnError = true;

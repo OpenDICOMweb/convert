@@ -4,6 +4,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See /[package]/AUTHORS file for other contributors.
 
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dcm_convert/dcm.dart';
@@ -31,18 +32,17 @@ class TestByteWriter extends ByteWriter {
             encoding: encoding);
 
   /// Returns a [Uint8List] containing the encoded FMI.
-  Uint8List xWriteFmi(RootByteDataset rds) {
+  Future<Uint8List> xWriteFmi(RootByteDataset rds) {
     if (!rds.hadFmi || !rds.hasSupportedTransferSyntax) return null;
     return writeFMI(rds);
   }
 
   /// Returns a [Uint8List] containing the encoded [Dataset].
-  Uint8List xWriteDataset(ByteDataset ds) {
+  void xWriteDataset(ByteDataset ds) {
     log.debug('$wbb writeDataset: isExplicitVR(${ds.isEVR})', 1);
     var writer = new ByteWriter(ds, bufferLength: ds.vfLength);
-    var bytes = writer.writeDataset(ds);
+    writer.writeDataset(ds);
     log.debug('$wee end writeDataset: isExplicitVR(${ds.isEVR})', -1);
-    return bytes;
   }
 
   /// Writes an element to the [currentDS].

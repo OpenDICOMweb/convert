@@ -12,7 +12,7 @@ environment:
 dependencies:
   core:
     path: C:/odw/sdk/core
-    version: ^0.6.1
+    version: ^0.6.3
   logger:
     path: C:/odw/sdk/logger
     version: ^0.6.1
@@ -24,10 +24,10 @@ dependencies:
     version: ^0.6.3
   tag:
     path: C:/odw/sdk/tag
-    version: ^0.6.1
+    version: ^0.6.3
   uid:
     path: C:/odw/sdk/uid
-    version: ^0.6.1
+    version: ^0.6.3
 
 
 dev_dependencies:

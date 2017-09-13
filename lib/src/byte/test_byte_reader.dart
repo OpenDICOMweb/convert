@@ -28,6 +28,7 @@ class TestByteReader extends ByteReader {
             targetTS: targetTS,
             reUseBD: reUseBD);
 
+/* Flush
   /// Creates a new [DcmByteReader]  where [_rIndex] = [writeIndex] = 0.
   factory TestByteReader.fromBytes(Uint8List bytes,
       {String path = "",
@@ -44,7 +45,7 @@ class TestByteReader extends ByteReader {
         allowMissingFMI: allowMissingFMI,
         targetTS: targetTS,
         reUseBD: reUseBD);
-  }
+  }*/
 
 // **** These methods should not be used in the code above ****
 

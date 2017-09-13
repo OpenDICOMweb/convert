@@ -4,6 +4,7 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -11,14 +12,16 @@ import 'package:dcm_convert/dcm.dart';
 import 'package:system/core.dart';
 
 /// Read a file then write it to a buffer.
-bool doRWFile(File f, [bool throwOnError = false, bool fast = true]) {
+Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) async {
   log.level = Level.error;
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
   var pad = "".padRight(5);
 
   try {
-    var reader0 = new ByteReader.fromFile(f, fast: true);
+  	  Uint8List bytes = await f.readAsBytes();
+  	  ByteData bd = bytes.buffer.asByteData();
+    var reader0 = new ByteReader(bd, fast: true);
     RootByteDataset rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
