@@ -13,21 +13,13 @@ import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:uid/uid.dart';
 
-import 'dcm_converter.dart';
+import 'dcm_reader_interface.dart';
 
 //TODO: redoc to reflect current state of code
 
-/// The type of the different Value Field readers.  Each [VFReader]
-/// reads the Value Field for a particular Value Representation.
-typedef Element ElementMaker<V>(ByteData bd);
-
-typedef Element SequenceMaker<V>(ByteData bd, Dataset parent, List<Dataset> items);
-
-typedef Element PixelDataMaker<V>(ByteData bd, Dataset parent, List<Dataset> items);
-
-/// A [Converter] [Uint8List]s containing a [Dataset] encoded in the
+/// A [Converter] for [Uint8List]s containing a [Dataset] encoded in the
 /// application/dicom media type.
-
+///
 /// _Notes_:
 /// 1. Reads and returns the Value Fields as they are in the data.
 ///  For example DcmReader does not trim whitespace from strings.
@@ -37,36 +29,29 @@ typedef Element PixelDataMaker<V>(ByteData bd, Dataset parent, List<Dataset> ite
 ///  [Element] itself.
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
-abstract class DcmReader extends DcmConverterBase {
+abstract class DcmReader extends DcmReaderInterface {
+	/// The source of the [Uint8List] being read.
+	final String path;
   /// The [ByteData] being read.
-  @override
-  final ByteData bd;
-
-  // Input parameters
-  @override
+	@override
+  final ByteData rootBD;
   final bool async;
-  @override
   final bool fast;
-  @override
   final bool fmiOnly;
 
   /// If [true] errors will throw; otherwise, return [null].
-  @override
   final bool throwOnError;
 
   /// If [true] and Preamble and Prefix are not present, abort reading.
   final bool allowMissingPrefix;
 
   /// If [true] and [FMI] is not present, abort reading.
-  @override
   final bool allowMissingFMI;
 
   /// If [true], then duplicate [Element]s will be stored.
-  @override
   final bool allowDuplicates;
 
   /// Only read the file if it has the same [TransferSyntax] as [targetTS].
-  @override
   final TransferSyntax targetTS;
 
   //Urgent: todo make this a parameter
@@ -76,7 +61,7 @@ abstract class DcmReader extends DcmConverterBase {
   /// If [true] elements with VR.kUN will be converted to correct VR if known.
   final bool doConvertUndefinedVR;
 
-  /// If [true] the [ByteData] buffer ([bd] will be reused.
+  /// If [true] the [ByteData] buffer ([rootBD] will be reused.
   final bool reUseBD;
 
   final DecodingParameters decoding;
@@ -86,9 +71,11 @@ abstract class DcmReader extends DcmConverterBase {
   final bool elementListEnabled = true;
   final ElementList elementList = new ElementList();
 
-  ByteData bdRead;
   final List<String> exceptions = <String>[];
 
+	/// Returns the [ByteData] that was actually read, i.e. from 0 to
+	/// end of last [Element] read.
+  ByteData bdRead;
   // ParseInfo values
   bool _isEVR;
   int _nElementsRead = 0;
@@ -99,8 +86,6 @@ abstract class DcmReader extends DcmConverterBase {
   int _nPrivateElementsRead = 0;
   int _nPrivateSequencesRead = 0;
 
-  /// The source of the [Uint8List] being read.
-  final String path;
   bool _hadFmi = false;
   Uint8List _preamble;
   bool _preambleWasZeros;
@@ -132,10 +117,8 @@ abstract class DcmReader extends DcmConverterBase {
   /// The current read index.
   int _rIndex = 0;
 
-  // *** Constructors ***
-
   /// Creates a new [DcmReader]  where [_rIndex] = [writeIndex] = 0.
-  DcmReader(this.bd,
+  DcmReader(this.rootBD,
       {this.path = "",
       this.async = true,
       this.fast: true,
@@ -150,57 +133,29 @@ abstract class DcmReader extends DcmConverterBase {
       this.reUseBD = true,
       this.checkForUNSequence = false,
       this.decoding = DecodingParameters.kNoChange})
-      : _wasShortFile = bd.lengthInBytes < shortFileThreshold {
-    //  log.debug('ByteData length: ${bd.lengthInBytes}');
+      : _wasShortFile = rootBD.lengthInBytes < shortFileThreshold {
+    //  log.debug('ByteData length: ${rootBD.lengthInBytes}');
     if (_wasShortFile) {
-      var s = 'Short file error: length(${bd.lengthInBytes}) $path';
+      var s = 'Short file error: length(${rootBD.lengthInBytes}) $path';
       _warn('$s $_rrr');
-      if (throwOnError) throw new ShortFileError('Length($bd.lengthInBytes) $path');
+      if (throwOnError) throw new ShortFileError('Length($rootBD.lengthInBytes) $path');
     }
   }
 
-  Element makeElement(int vrIndex, Tag tag, ByteData bytes,
-      [int vfLength, ByteData vfBytes]);
-
-  Element makePixelData(int vrIndex, ByteData bytes,
-      [VFFragments fragments, Tag tag, int vfLength, ByteData vfBytes]);
-
-  /// Interface for logging
-  String show(Element e);
-
-  /// Interface for logging
-  String showItem(ByteItem item);
-
-  /// Interface to Item constructor.
-  Dataset makeItem(ByteData bd, Dataset parent, int vfLength, Map<int, Element> map,
-      [Map<int, Element> dupMap]);
-
-  /// Interface to Sequence constructor.
-  Element makeSQ(ByteData bd, Dataset parent, List items, int vfLength, bool isEVR);
-
   bool get isEVR => _isEVR;
 
-  Dataset get rootDS;
+  bool get _isReadable => _rIndex < rootBD.lengthInBytes;
 
-  bool get _isReadable => _rIndex < bd.lengthInBytes;
-
-  /// External interface for testing.
   bool get isReadable => _isReadable;
 
-  bool _hasRemaining(int n) => (_rIndex + n) <= bd.lengthInBytes;
+  bool _hasRemaining(int n) => (_rIndex + n) <= rootBD.lengthInBytes;
 
   bool hasRemaining(int n) => _hasRemaining(n);
 
-  /// The current dataset.  This changes as Sequences are read.
-  Dataset get currentDS;
-  set currentDS(Dataset ds);
+  Uint8List get buffer => rootBD.buffer.asUint8List(rootBD.offsetInBytes, rootBD.lengthInBytes);
 
-  Map<int, Element> currentMap;
-  Map<int, Element> currentDupMap;
-  Uint8List get buffer => bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes);
-
-  Uint8List get bytes =>
-      bdRead.buffer.asUint8List(bdRead.offsetInBytes, bdRead.lengthInBytes);
+  Uint8List get rootBytes =>
+      rootBD.buffer.asUint8List(rootBD.offsetInBytes, rootBD.lengthInBytes);
 
   String get info => '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${currentDS.info}';
 
@@ -234,7 +189,7 @@ abstract class DcmReader extends DcmConverterBase {
         _lastElementCode,
         _endOfLastValueRead,
         _dsLengthInBytes,
-        bd.lengthInBytes,
+        rootBD.lengthInBytes,
         shortFileThreshold,
         _wasShortFile,
         _hadTrailingBytes,
@@ -294,12 +249,12 @@ abstract class DcmReader extends DcmConverterBase {
       // *** Keep, but only use for debugging.
       if (throwOnError) rethrow;
     } finally {
-      bdRead = bd.buffer.asByteData(0, _endOfLastValueRead);
+      bdRead = rootBD.buffer.asByteData(0, _endOfLastValueRead);
 //      assert(_rIndex == _endOfLastValueRead,
 //          '_rIndex($_rIndex), _endOfLastValueRead($_endOfLastValueRead)');
-      _bytesUnread = bd.lengthInBytes - _rIndex;
+      _bytesUnread = rootBD.lengthInBytes - _rIndex;
       _hadTrailingBytes = _bytesUnread > 0;
-      _hadTrailingZeros = _checkAllZeros(_endOfLastValueRead, bd.lengthInBytes);
+      _hadTrailingZeros = _checkAllZeros(_endOfLastValueRead, rootBD.lengthInBytes);
       _dsLengthInBytes = _endOfLastValueRead;
       assert(_dsLengthInBytes == bdRead.lengthInBytes);
     }
@@ -310,9 +265,9 @@ abstract class DcmReader extends DcmConverterBase {
           '(${bdRead.lengthInBytes}) $_rrr');
       _dsLengthInBytes = _rIndex;
       _endOfLastValueRead = _rIndex;
-      _hadTrailingBytes = (bdRead.lengthInBytes != bd.lengthInBytes);
+      _hadTrailingBytes = (bdRead.lengthInBytes != rootBD.lengthInBytes);
       if (_hadTrailingBytes)
-        _hadTrailingZeros = _checkAllZeros(_rIndex, bd.lengthInBytes);
+        _hadTrailingZeros = _checkAllZeros(_rIndex, rootBD.lengthInBytes);
     }
 
     int rootDSTotal = rootDS.total + rootDS.dupTotal;
@@ -339,7 +294,7 @@ abstract class DcmReader extends DcmConverterBase {
   /// Returns [true] if a valid Preamble and Prefix where read.
   bool _readPrefix(bool checkPreamble) {
     String readAsciiPrefix() {
-      var chars = bd.buffer.asUint8List(_rIndex, 4);
+      var chars = rootBD.buffer.asUint8List(_rIndex, 4);
       _rIndex += 4;
       return ASCII.decode(chars);
     }
@@ -348,15 +303,15 @@ abstract class DcmReader extends DcmConverterBase {
       String msg = "";
       if (_rIndex != 0) msg += 'Attempt to read DICOM Prefix at ByteData[$_rIndex]\n';
       if (_hadPrefix != null) msg += 'Attempt to re-read DICOM Preamble and Prefix.\n';
-      if (bd.lengthInBytes <= 132) msg += 'ByteData length(${bd.lengthInBytes}) < 132';
+      if (rootBD.lengthInBytes <= 132) msg += 'ByteData length(${rootBD.lengthInBytes}) < 132';
       if (msg.length > 0) {
         _error(msg);
         return false;
       }
       if (checkPreamble) {
         _preambleWasZeros = true;
-        _preamble = bd.buffer.asUint8List(0, 128);
-        for (int i = 0; i < 128; i++) if (bd.getUint8(i) != 0) _preambleWasZeros = false;
+        _preamble = rootBD.buffer.asUint8List(0, 128);
+        for (int i = 0; i < 128; i++) if (rootBD.getUint8(i) != 0) _preambleWasZeros = false;
       }
       _skip(128);
 
@@ -397,7 +352,7 @@ abstract class DcmReader extends DcmConverterBase {
     } on InvalidTransferSyntaxError catch (x) {
       _hadParsingErrors = true;
       _warn('Failed to read FMI: "$path"\nException: $x\n $_rrr');
-      _warn('  File length: ${bd.lengthInBytes}\n$ree readFMI catch: $x');
+      _warn('  File length: ${rootBD.lengthInBytes}\n$ree readFMI catch: $x');
       _rIndex = 0;
       //  log.debug('$ree readFMI Invalid TS catch: $x', -1);
       rethrow;
@@ -405,7 +360,7 @@ abstract class DcmReader extends DcmConverterBase {
       if (code == 0) _zeroEncountered(code);
       _hadParsingErrors = true;
       _error('Failed to read FMI: "$path"\nException: $x\n'
-          'File length: ${bd.lengthInBytes}\n$ree readFMI catch: $x');
+          'File length: ${rootBD.lengthInBytes}\n$ree readFMI catch: $x');
       _rIndex = eStart;
       //  log.debug('$ree readFMI Catch: $x', -1);
       rethrow;
@@ -479,22 +434,22 @@ abstract class DcmReader extends DcmConverterBase {
   /// All [Elements are read by this method.
   Element _readElement() {
     int eStart = _rIndex;
-    _tagCode = _readTagCode();
-    if (_tagCode == 0) {
+    int code = _readTagCode();
+    if (code == 0) {
       _skip(-4); // undo readTagCode
-      _zeroEncountered(_tagCode);
+      _zeroEncountered(code);
       return null;
     }
     int vfLength =
-        (_isEVR) ? _readEVRHdr(_tagCode, eStart) : _readIVRHdr(_tagCode, eStart);
+        (_isEVR) ? _readEVRHdr(code, eStart) : _readIVRHdr(code, eStart);
     assert(_vr != null, 'Invalid null VR: vrCode(${hex16(_vrCode)})');
     Element e;
-    if (_tagCode == kPixelData) {
+    if (code == kPixelData) {
       e = _readPixelData(eStart, vfLength);
     } else if (vfLength == kUndefinedLength) {
-      e = _readULength(_tagCode, eStart, vfLength);
+      e = _readULength(code, eStart, vfLength);
     } else {
-      e = _readDLength(_tagCode, eStart, vfLength);
+      e = _readDLength(code, eStart, vfLength);
     }
 
     //Enhancement: only gather statistics when statisticsEnables is true
@@ -504,10 +459,11 @@ abstract class DcmReader extends DcmConverterBase {
       _endOfLastValueRead = _rIndex;
       if (elementListEnabled) elementList.add(eStart, _rIndex, e);
       _lastTopLevelElementRead = e;
-      _lastElementCode = _tagCode;
-      if ((_tagCode >> 16).isOdd) _nPrivateElementsRead++;
+      _lastElementCode = code;
+      if ((code >> 16).isOdd) _nPrivateElementsRead++;
     }
-    //  log.debug('$ree $_nElementsRead: ${show(e)} @end', -1);
+    // For debugging only
+    _tagCode = code;
     return e;
   }
 
@@ -528,7 +484,7 @@ abstract class DcmReader extends DcmConverterBase {
       // Urgent: add check for valid values with switch
       currentMap[eNew.key] = eNew;
     } else if (allowDuplicates && v != null) {
-      _warn('Duplicate Element: current($v) duplicat(${show(eNew)}) $_rrr');
+      _warn('Duplicate Element: current($v) duplicat(${elementInfo(eNew)}) $_rrr');
       if (v.vr != VR.kUN) {
         currentDupMap[eNew.key] = eNew;
       } else {
@@ -540,35 +496,28 @@ abstract class DcmReader extends DcmConverterBase {
     }
   }
 
-  // The current VR code and VR.
-//  int _code;
+  // The current tag code, tag, VR code, VR, and VR Index.
   int _tagCode;
   Tag _tag;
   int _vrCode;
-  int _vrIndex;
   VR _vr;
+	int _vrIndex;
   int _vfLength;
 
   int _readEVRHdr(int code, int eStart) {
     _vrCode = _readUint16();
     _vr = VR.lookup(_vrCode);
     _vrIndex = _vr.index;
-    //  log.debug2('$rmm readEVRHdr vrCode(${hex16(_vrCode)}) $_vr');
     if (_vr == null) {
       _warn('VR is Null: _vrCode(${hex16(_vrCode)}) $_rrr');
       _showNext(_rIndex - 4);
     }
     if (decoding.doCheckVR) _checkVR(code, _vrCode);
-
     if (_vr.hasShortVF) {
-      //  log.debug2('$rmm readEVRHdr Short VR');
       _vfLength = _readUint16();
-//      _maker = ShortEVR.maker;
     } else {
-      //  log.debug2('$rmm readEVRHdr Long VR');
       _skip(2);
       _vfLength = _readUint32();
-//      _maker = LongEVR.maker;
     }
     assert(_checkRIndex());
     //TODO: add a statistics collector here recording frequency of code, vr, vfLength
@@ -578,28 +527,29 @@ abstract class DcmReader extends DcmConverterBase {
   //TODO: add VR.kSSUS, etc. to dictionary
   /// checks that code & vrCode are
   void _checkVR(int code, int vrCode, [bool warnOnUN = false]) {
-    _tag = Tag.lookupByCode(code);
-    if (_tag == null) {
+    Tag tag = Tag.lookupByCode(code);
+    if (tag == null) {
       _warn('Unknown Tag Code(${dcm(code)}) $_rrr');
-    } else if (vrCode == VR.kUN.code && _tag.vr != VR.kUN) {
+    } else if (vrCode == VR.kUN.code && tag.vr != VR.kUN) {
       //Enhancement remove PTags with VR.kUN and add multi-values VRs
-      _warn('${dcm(code)} VR.kUN($vrCode) should be ${_tag.vr} $_rrr');
-      _vrCode = _tag.vr.code;
-    } else if (vrCode != VR.kUN.code && _tag.vr.code == VR.kUN.code) {
+      _warn('${dcm(code)} VR.kUN($vrCode) should be ${tag.vr} $_rrr');
+      _vrCode = tag.vr.code;
+    } else if (vrCode != VR.kUN.code && tag.vr.code == VR.kUN.code) {
       if (code != kPixelData && warnOnUN == true) {
-        if (_tag is PDTag && _tag is! PDTagKnown) {
+        if (tag is PDTag && tag is! PDTagKnown) {
           log.info0('$pad ${dcm(code)} VR.kUN: Unknown Private Data');
-        } else if (_tag is PCTag && _tag is! PCTagKnown) {
-          log.info0('$pad ${dcm(code)} VR.kUN: Unknown Private Creator $_tag');
+        } else if (tag is PCTag && tag is! PCTagKnown) {
+          log.info0('$pad ${dcm(code)} VR.kUN: Unknown Private Creator $tag');
         } else {
-          log.info0('$pad ${dcm(code)} VR.kUN: $_tag');
+          log.info0('$pad ${dcm(code)} VR.kUN: $tag');
         }
       }
-    } else if (vrCode != VR.kUN.code && vrCode != _tag.vr.code) {
+    } else if (vrCode != VR.kUN.code && vrCode != tag.vr.code) {
       var vr0 = VR.lookup(vrCode);
       _warn('${dcm(code)} Wrong VR $vr0($vrCode) '
-          'should be ${_tag.vr} $_rrr');
+          'should be ${tag.vr} $_rrr');
     }
+    _tag = tag;
   }
 
   int _readIVRHdr(int code, int eStart) {
@@ -651,7 +601,7 @@ abstract class DcmReader extends DcmConverterBase {
   }
 
   Element _makeAndAddElement(eStart, eLength) {
-    var ebd = bd.buffer.asByteData(eStart, eLength);
+    var ebd = rootBD.buffer.asByteData(eStart, eLength);
     var e = makeElement(_tag.vrIndex, _tag, ebd, _vfLength);
     _add(e);
     return e;
@@ -757,7 +707,7 @@ abstract class DcmReader extends DcmConverterBase {
       assert(vfLength != kUndefinedLength, 'Invalid length: ${dcm(vfLength)}');
       int startOfVF = _rIndex;
       _rIndex += vfLength;
-      fragments.add(bd.buffer.asUint8List(startOfVF, _rIndex - startOfVF));
+      fragments.add(rootBD.buffer.asUint8List(startOfVF, _rIndex - startOfVF));
 //      fragNumber++;
       //  log.debug1('$rmm   fragment: $fragNumber, vfLength: $vfLength');
       code = _readUint32();
@@ -777,7 +727,7 @@ abstract class DcmReader extends DcmConverterBase {
         '$rbb _makePixelData: $_vr '
         '$eStart - $eLength = ${eStart + eLength}, $fragments',
         1);*/
-    var ebd = bd.buffer.asByteData(eStart, eLength);
+    var ebd = rootBD.buffer.asByteData(eStart, eLength);
     var e = makePixelData(_vrIndex, ebd, fragments);
     _add(e);
     assert(_checkRIndex());
@@ -863,7 +813,7 @@ abstract class DcmReader extends DcmConverterBase {
     int eLength = _rIndex - eStart;
     //  log.debug1('$rmm   eLength($eLength), makeSQ');
 
-    var ebd = bd.buffer.asByteData(eStart, eLength);
+    var ebd = rootBD.buffer.asByteData(eStart, eLength);
     Element sq = makeSQ(ebd, currentDS, items, _vfLength, _isEVR);
     _add(sq);
     if (Tag.isPrivateCode(code)) _nPrivateSequencesRead++;
@@ -906,19 +856,12 @@ abstract class DcmReader extends DcmConverterBase {
     assert(delimiter == kItem32BitLE, 'Invalid Item code: ${dcm(delimiter)}');
     int vfLength = _readUint32();
 
-/*    String actual = hex32(delimiter);
-      log.debug(
-        '$rbb readItem kItem($kItem), actual($actual) '
-        '${toVFLength(vfLength)}',
-        1);*/
-    //  log.debug1('$rmm   ${toHadULength(vfLength)}');
-
     // Save parent [Dataset], and make [item] is new parent [Dataset].
     Dataset parentDS = currentDS;
     var parentMap = currentMap;
     var parentDupMap = currentDupMap;
-    var map = <int, Element>{};
-    var dupMap = <int, Element>{};
+    var map = makeEmptyMap();
+    var dupMap = makeEmptyMap();
     currentMap = map;
     currentDupMap = dupMap;
 
@@ -957,7 +900,7 @@ abstract class DcmReader extends DcmConverterBase {
       // Keep, but only use for debugging.
       //  _showNext(_rIndex);
     }
-    var ibd = bd.buffer.asByteData(itemStart, itemEnd - itemStart);
+    var ibd = rootBD.buffer.asByteData(itemStart, itemEnd - itemStart);
     var item = makeItem(ibd, currentDS, vfLength, map, dupMap);
     _nItemsRead++;
     //  log.debug('$ree   ${showItem(item)} @end', -1);
@@ -1039,20 +982,20 @@ abstract class DcmReader extends DcmConverterBase {
 
   int _getUint32(int offset) {
     assert(offset.isEven);
-    return bd.getUint32(offset, Endianness.LITTLE_ENDIAN);
+    return rootBD.getUint32(offset, Endianness.LITTLE_ENDIAN);
   }
 
   int _getUint16(int offset) {
     assert(offset.isEven);
-    return bd.getUint16(offset, Endianness.LITTLE_ENDIAN);
+    return rootBD.getUint16(offset, Endianness.LITTLE_ENDIAN);
   }
 
-  int _getUint8(int offset) => bd.getUint8(offset);
+  int _getUint8(int offset) => rootBD.getUint8(offset);
 
   int _skip(int n) {
     assert(_rIndex.isEven);
     int index = _rIndex + n;
-    _rIndex = RangeError.checkValidRange(0, index, bd.lengthInBytes);
+    _rIndex = RangeError.checkValidRange(0, index, rootBD.lengthInBytes);
     return _rIndex;
   }
 
@@ -1205,7 +1148,7 @@ abstract class DcmReader extends DcmConverterBase {
 lastTopLevelElementRead: $_lastTopLevelElementRead
         lastElementRead: $_lastElementRead
         lastElementCode: ${dcm(_lastElementCode)}
-        bdLengthInBytes: ${bd.lengthInBytes}
+        bdLengthInBytes: ${rootBD.lengthInBytes}
         dsLengthInBytes: $_dsLengthInBytes
          endOfDataError: $_endOfDataError
            bytesUnread: $_bytesUnread

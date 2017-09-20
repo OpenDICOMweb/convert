@@ -34,7 +34,7 @@ bool byteReadWriteFileChecked(String fPath,
   try {
     var reader0 = new ByteReader.fromFile(f);
     RootByteDataset rds0 = reader0.readRootDataset();
-    var bytes0 = reader0.bytes;
+    var bytes0 = reader0.rootBytes;
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}
@@ -74,7 +74,7 @@ $pad    ${rds0.parseInfo.info}''');
     }
     var rds1 = reader1.readRootDataset();
     //   RootByteDataset rds1 = ByteReader.readPath(outPath);
-    log.debug('$pad Read ${reader1.bd.lengthInBytes} bytes');
+    log.debug('$pad Read ${reader1.rootBD.lengthInBytes} bytes');
     log.debug1('$pad DS1: $rds1');
 
     if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');

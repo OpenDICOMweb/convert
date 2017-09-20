@@ -68,7 +68,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     }
     var rds1 = reader1.readRootDataset();
     //   RootByteDataset rds1 = ByteReader.readPath(outPath);
-    log.debug('$pad Read ${reader1.bd.lengthInBytes} bytes');
+    log.debug('$pad Read ${reader1.rootBD.lengthInBytes} bytes');
     log.debug1('$pad DS1: $rds1');
 
     if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');

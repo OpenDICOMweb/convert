@@ -7,14 +7,12 @@
 import 'dart:typed_data';
 
 import 'package:system/core.dart';
-import 'package:core/byte_dataset.dart';
-import 'package:core/byte_element.dart';
+import 'package:core/core.dart';
 import 'package:tag/tag.dart';
 
 /// TODO DOC
 bool bytesEqual1(Uint8List b0, Uint8List b1, [bool throwOnError = false]) {
-  if (b0.lengthInBytes != b1.lengthInBytes)
-    return compareUnequalLengths(b0, b1);
+  if (b0.lengthInBytes != b1.lengthInBytes) return compareUnequalLengths(b0, b1);
 
   for (int i = 0; i < b0.length; i++) {
     if (b0[i] != b1[i]) {
@@ -52,11 +50,9 @@ bool bytesEqual(Uint8List b0, Uint8List b1) {
   return true;
 }
 
-bool compareUnequalLengths(Uint8List b0, Uint8List b1,
-    [bool throwOnError = true]) {
-  int length = (b0.lengthInBytes < b1.lengthInBytes)
-      ? b0.lengthInBytes
-      : b1.lengthInBytes;
+bool compareUnequalLengths(Uint8List b0, Uint8List b1, [bool throwOnError = true]) {
+  int length =
+      (b0.lengthInBytes < b1.lengthInBytes) ? b0.lengthInBytes : b1.lengthInBytes;
   for (int i = 0; i < length; i++) {
     if (b0[i] != b1[i]) {
       print('  diff @$i');
@@ -119,14 +115,12 @@ String toStr(Uint8List bytes, int index) {
   return new String.fromCharCodes(line);
 }
 
-bool compareByteDatasets(ByteDataset ds0, ByteDataset ds1,
-    [bool throwOnError = false]) {
+bool compareByteDatasets(ByteDataset ds0, ByteDataset ds1, [bool throwOnError = false]) {
   for (ByteElement e0 in ds0.elements) {
     ByteElement e1 = ds1[e0.code];
     if (e0.vrCode == VR.kSQ.code) {
-      if (e1.vrCode != VR.kSQ.code) return false;  
-      if (!compareSequences(e0 as SequenceMixin, e1 as SequenceMixin)) return
-        false;
+      if (e1.vrCode != VR.kSQ.code) return false;
+      if (!compareSequences(e0, e1)) return false;
     } else {
       if (e0.code != e1.code ||
           e0.vrCode != e1.vrCode ||
@@ -152,14 +146,24 @@ bool compareByteDatasets(ByteDataset ds0, ByteDataset ds1,
   return true;
 }
 
-bool compareSequences(SequenceMixin s0, SequenceMixin s1) {
-  if (s0.code != s1.code ||
-      s0.vrCode != s1.vrCode ||
-      s0.items.length != s1.items.length) return false;
-  for (int i = 0; i < s0.items.length; i++) {
-    var item0 = s0[i];
-    var item1 = s1[i];
-    if (!compareByteDatasets(item0, item1)) return false;
+bool compareSequences(Element s0, Element s1) {
+  if (s0.code != s1.code || s0.vrCode != s1.vrCode) return false;
+  if (s0 is EVRByteSQ && s1 is EVRByteSQ) {
+    if (s0.items.length != s1.items.length) return false;
+    for (int i = 0; i < s0.items.length; i++) {
+      var item0 = s0[i];
+      var item1 = s1[i];
+      if (!compareByteDatasets(item0, item1)) return false;
+    }
+    return true;
+  } else if (s0 is IVRByteSQ && s1 is IVRByteSQ) {
+    if (s0.items.length != s1.items.length) return false;
+    for (int i = 0; i < s0.items.length; i++) {
+      var item0 = s0[i];
+      var item1 = s1[i];
+      if (!compareByteDatasets(item0, item1)) return false;
+    }
+    return true;
   }
-  return true;
+  return false;
 }

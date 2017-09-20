@@ -17,8 +17,11 @@ import 'dcm_reader.dart';
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootByteDataset].
 class ByteReader extends DcmReader {
-  final RootByteDataset _rootDS;
+	@override
+	final RootByteDataset rootDS;
   ByteDataset _currentDS;
+  Map<int, ByteElement> _currentMap;
+  Map<int, ByteElement> _currentDupMap;
 
   /// Creates a new [ByteReader].
   ByteReader(ByteData bd,
@@ -31,7 +34,7 @@ class ByteReader extends DcmReader {
       bool allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true})
-      : _rootDS = new RootByteDataset.fromByteData(bd, vfLength: bd.lengthInBytes),
+      : rootDS = new RootByteDataset.fromByteData(bd, vfLength: bd.lengthInBytes),
         super(bd,
             path: path,
             async: async,
@@ -83,20 +86,82 @@ class ByteReader extends DcmReader {
         reUseBD: reUseBD);
   }
 
-  // The following Getters and Setters provide the correct [Type]s
-  // for [rootDS] and [currentDS].
-  @override
-  RootByteDataset get rootDS => _rootDS;
+  // **** DcmReaderInterface ****
+
+  /// The current [Dataset] being read.  This changes as Sequences are reAD.
   @override
   ByteDataset get currentDS => _currentDS;
   @override
   set currentDS(Dataset ds) => _currentDS = ds;
 
+  /// The current [ByteElement] [Map].
+  @override
+  Map<int, ByteElement> get currentMap => _currentMap;
+  @override
+  set currentMap(Map<int, Element> map) => _currentMap = map;
+
+  /// The current duplicate [ByteElement] [Map].
+  @override
+  Map<int, ByteElement> get currentDupMap => _currentDupMap;
+  @override
+  set currentDupMap(Map<int, Element> map) => _currentDupMap = map;
+
+  /// Returns an empty [Map<int, ByteElement].
+  @override
+  Map<int, ByteElement> makeEmptyMap() => <int, ByteElement>{};
+
+  //Urgent: flush or fix
+  @override
+  ByteElement makeElement(int vrIndex, Tag tag, ByteData bytes,
+                          [int vfLength, Uint8List vfBytes]) {
+	  int index = (vrIndex == VR.kUN.index) ? tag.vr.index : vrIndex;
+	  return (isEVR)
+	         ? EVR.makeElement(index, tag, bytes)
+	         : IVR.makeElement(index, tag, bytes);
+  }
+
+  @override
+  String elementInfo(Element e) => (e == null) ? 'ByteElement e = null' : e.info;
+
+  @override
+  ByteElement makePixelData(
+		  int vrIndex,
+		  ByteData bytes, [
+			  VFFragments fragments,
+			  Tag tag,
+			  int vfLength,
+			  ByteData vfBytes,
+		  ]) =>
+		  (isEVR)
+		  ? EVR.makePixelData(vrIndex, bytes, fragments)
+		  : IVR.makePixelData(vrIndex, bytes, fragments);
+
+  /// Returns a new ByteSequence.
+  @override
+  ByteElement makeSQ(ByteData bd, Dataset parent, List items, int vfLength, bool isEVR) {
+	  //TODO: figure out how to create a ByteSequence with one call.
+	  ByteElement sq =
+	  (isEVR) ? EVR.makeSQ(bd, currentDS, items) : IVR.makeSQ(bd, currentDS, items);
+	  for (ByteItem item in items) item.addSQ(sq);
+	  return sq;
+  }
+
+  /// Returns a new [ByteItem].
+  @override
+  ByteItem makeItem(ByteData bd, Dataset parent, int vfLength, Map<int, Element> map,
+                    [Map<int, Element> dupMap]) =>
+		  new ByteItem.fromDecoder(bd, parent, vfLength, map, dupMap);
+
+  @override
+  String itemInfo(ByteItem item) => (item == null) ? 'Item item = null' : item.info;
+
+  // **** End DcmReaderInterface ****
+
   RootByteDataset readFMI({bool checkPreamble = false, bool allowMissingPrefix = false}) {
     bool hadFmi =
         dcmReadFMI(checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
-    _rootDS.parseInfo = getParseInfo();
-    return (hadFmi) ? _rootDS : null;
+    rootDS.parseInfo = getParseInfo();
+    return (hadFmi) ? rootDS : null;
   }
 
   /// Reads a [RootByteDataset] from [this], stores it in [rootDS],
@@ -111,7 +176,7 @@ class ByteReader extends DcmReader {
           checkPreamble: checkPreamble,
           allowMissingPrefix: allowMissingPrefix);
       if (rds == null) return null;
-      _rootDS.parseInfo = getParseInfo();
+      rootDS.parseInfo = getParseInfo();
       log.debug('rootDS: $rootDS');
       log.debug('RootDS.TS: ${rootDS.transferSyntax}');
       log.debug('elementList(${elementList.length})');
@@ -123,8 +188,8 @@ class ByteReader extends DcmReader {
     } on InvalidTransferSyntaxError catch (e) {
       log.error(e);
     }
-    _rootDS.bd = bdRead;
-    return _rootDS;
+    rootDS.bd = bdRead;
+    return rootDS;
   }
 
   void debugStart(Object o, String msg) {
@@ -138,51 +203,6 @@ class ByteReader extends DcmReader {
   void debugEnd(Object o, Level level) {
     log.debug('$rbb $o');
   }
-
-  // Interface
-  @override
-  String show(Element e) => (e == null) ? 'Element e = null' : e.info;
-
-  @override
-  String showItem(ByteItem item) => (item == null) ? 'Item item = null' : item.info;
-
-  //Urgent: flush or fix
-  @override
-  Element makeElement(int vrIndex, Tag tag, ByteData bytes,
-          [int vfLength, ByteData vfBytes]) =>
-      (isEVR)
-          ? EVR.makeElement(vrIndex, tag, bytes)
-          : IVR.makeElement(vrIndex, tag, bytes);
-
-  @override
-  ByteElement makePixelData(
-    int vrIndex,
-    ByteData bytes, [
-    VFFragments fragments,
-    Tag tag,
-    int vfLength,
-    ByteData vfBytes,
-  ]) =>
-      (isEVR)
-          ? EVR.makePixelData(vrIndex, bytes, fragments)
-          : IVR.makePixelData(vrIndex, bytes, fragments);
-
-  /// Returns a new ByteSequence.
-  /// [bd] is the complete [ByteElement] for the Sequence.
-  @override
-  Element makeSQ(ByteData bd, Dataset parent, List items, int vfLength, bool isEVR) {
-    //TODO: figure out how to create a ByteSequence with one call.
-    ByteElement sq =
-        (isEVR) ? EVR.makeSQ(bd, currentDS, items) : IVR.makeSQ(bd, currentDS, items);
-    for (ByteItem item in items) item.addSQ(sq);
-    return sq;
-  }
-
-  /// Returns a new [ByteItem].
-  @override
-  ByteItem makeItem(ByteData bd, Dataset parent, int vfLength, Map<int, Element> map,
-          [Map<int, Element> dupMap]) =>
-      new ByteItem.fromDecoder(bd, parent, vfLength, map, dupMap);
 
   //Urgent: flush or fix
   static TagElement makeTagElement(ByteElement be) => be.tagElementFromBytes;

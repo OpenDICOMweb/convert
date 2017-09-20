@@ -13,11 +13,14 @@ import 'package:tag/tag.dart';
 
 import 'dcm_reader.dart';
 
-/// A decoder for Binary DICOM (application/dicom).
-/// The resulting [Dataset] is a [RootTagDataset].
+/// Creates a new [TagReader], which is decoder for Binary DICOM
+/// (application/dicom).
 class TagReader extends DcmReader {
-  final RootTagDataset _rootDS;
+	@override
+  final RootTagDataset rootDS;
   TagDataset _currentDS;
+  Map<int, TagElement> _currentMap;
+	Map<int, TagElement> _currentDupMap;
 
   /// Creates a new [TagReader].
   TagReader(ByteData bd,
@@ -31,7 +34,7 @@ class TagReader extends DcmReader {
       bool allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true})
-      : _rootDS = new RootTagDataset.fromByteData(bd, vfLength: vfLength),
+      : rootDS = new RootTagDataset.fromByteData(bd, vfLength: vfLength),
         super(bd,
             path: path,
             async: async,
@@ -42,34 +45,7 @@ class TagReader extends DcmReader {
             targetTS: targetTS,
             reUseBD: reUseBD);
 
-/*  Flush at V0.9.0 if not used.
-  /// Creates a [Uint8List] with the same length as [list<int>];
-  /// and copies the values to the [Uint8List].  Values are truncated
-  /// to fit in the [Uint8List] as they are copied.
-  factory TagReader.fromList(List<int> list, RootTagDataset rootDS,
-      {String path = "",
-      async: true,
-      fast: true,
-      bool fmiOnly = false,
-      bool throwOnError = false,
-      bool allowMissingFMI = false,
-      TransferSyntax targetTS,
-      bool reUseBD = true}) {
-    Uint8List bytes = new Uint8List.fromList(list);
-    ByteData bd = bytes.buffer.asByteData();
-    return new TagReader(bd,
-        path: path,
-        async: async,
-        fast: fast,
-        fmiOnly: fmiOnly,
-        throwOnError: throwOnError,
-        allowMissingFMI: allowMissingFMI,
-        targetTS: targetTS,
-        reUseBD: true);
-  }
-*/
-
-  /// Creates a [ByteReader] from the contents of the [file].
+  /// Creates a [TagReader] from the contents of the [file].
   factory TagReader.fromFile(File file,
       {bool async: false,
       bool fast: true,
@@ -84,7 +60,7 @@ class TagReader extends DcmReader {
         path: file.path, async: async, fast: fast, fmiOnly: fmiOnly, targetTS: targetTS);
   }
 
-  /// Creates a [ByteReader] from the contents of the [File] at [path].
+  /// Creates a [TagReader] from the contents of the [File] at [path].
   factory TagReader.fromPath(String path,
       {bool async: true,
       bool fast: true,
@@ -97,38 +73,39 @@ class TagReader extends DcmReader {
         async: async, fast: fast, fmiOnly: fmiOnly, targetTS: targetTS);
   }
 
-  // The following Getters and Setters provide the correct [Type]s
-  // for [rootDS] and [currentDS].
-  @override
-  RootTagDataset get rootDS => _rootDS;
+	// **** DcmReaderInterface ****
 
-  @override
+	@override
   TagDataset get currentDS => _currentDS;
 
   @override
   set currentDS(Dataset ds) => _currentDS = ds;
 
-  RootTagDataset readFMI({bool checkPreamble = false}) {
-    var hadFmi = dcmReadFMI(checkPreamble: checkPreamble);
-    rootDS.parseInfo = getParseInfo();
-    return (hadFmi) ? _rootDS : null;
-  }
+	/// The current [TagElement] [Map].
+	@override
+	Map<int, TagElement> get currentMap => _currentMap;
+	@override
+	set currentMap(Map<int, Element> map) => _currentMap = map;
 
-  /// Reads a [RootTagDataset] from [this], stores it in [rootDS],
-  /// and returns it.
-  RootTagDataset readRootDataset({bool allowMissingFMI = false}) {
-    dcmReadRootDataset(allowMissingFMI: allowMissingFMI);
-    var parseInfo = getParseInfo();
-    rootDS.parseInfo = parseInfo;
-    return (parseInfo.hadFmi) ? _rootDS : null;
-  }
+	/// The current duplicate [TagElement] [Map].
+	@override
+	Map<int, TagElement> get currentDupMap => _currentDupMap;
+	@override
+	set currentDupMap(Map<int, Element> map) => _currentDupMap = map;
+
+	/// Returns an empty [Map<int, TagElement].
+	@override
+	Map<int, TagElement> makeEmptyMap() => <int, TagElement>{};
 
   @override
   TagElement makeElement(int vrIndex, Tag tag, ByteData bd,
-          [int vfLength, ByteData vfBytes]) =>
-      TagElement.makeElementFromBytes(tag, bytes, vfLength, tag.vrIndex);
+          [int vfLength, Uint8List vfBytes]) =>
+      TagElement.makeElementFromBytes(tag, vfBytes, vfLength, tag.vrIndex);
 
-  @override
+	@override
+	String elementInfo(Element e) => (e == null) ? 'Element e = null' : e.info;
+
+	@override
   TagElement makePixelData(
     _vrIndex,
     ByteData bd, [
@@ -139,21 +116,8 @@ class TagReader extends DcmReader {
   ]) =>
       throw new UnimplementedError();
 
-  // Interface
-  @override
-  String show(Element e) => (e == null) ? 'Element e = null' : e.info;
 
-  @override
-  String showItem(ByteItem item) => (item == null) ? 'Item item = null' : item.info;
-
-  /// Returns a new [TagItem].
-  //  Interface DcmReader.
-  @override
-  TagItem makeItem(ByteData bd, Dataset parent, int vfLength, Map<int, Element> map,
-          [Map<int, Element> dupMap]) =>
-      new TagItem.fromDecoder(bd, parent, vfLength, map, dupMap);
-
-/*  /// Returns a new [ByteElement].
+/*  /// Returns a new [TagElement].
   //  Called from [DcmReader].
   TagElement makeElementFromBytes(
           int code, int vrCode, int vfOffset, Uint8List vfBytes, int vfLength,
@@ -162,22 +126,13 @@ class TagReader extends DcmReader {
           code, vrCode, vfLength, vfBytes, fragments);
 
   //TODO: decide where to parse Fragments.
-  /// Returns a new [ByteElement].
+  /// Returns a new [TagElement].
   //  Called from [DcmReader].
-  TagElement makeTagElement(ByteElement e, [VFFragments fragments]) =>
-      TagElement.makeElementFromByteElement(e);
-*/
-
-/*
-  /// Interface to Sequence constructor.
-  Element makeSQ(
-      ByteData bd, Dataset parent, List items, int vfLength, bool isEVR) =>
-      throw new UnimplementedError();
+  TagElement makeTagElement(TagElement e, [VFFragments fragments]) =>
+      TagElement.makeElementFromTagElement(e);
 */
 
   /// Returns a new TagSequence.
-  /// [vf] is [ByteData] for the complete Value Field of the Sequence.
-  /// Interface for DcmReader.
   @override
   SQ makeSQ(ByteData bd, Dataset parent, List items, int vfLength, bool isEVR) {
     int group = bd.getUint16(0);
@@ -190,8 +145,17 @@ class TagReader extends DcmReader {
     return sq;
   }
 
-/* Flush if not needed
-  TagElement makePixelData(int vrIndex, ByteElement e, VFFragments fragments) {
+	/// Returns a new [TagItem].
+	@override
+	TagItem makeItem(ByteData bd, Dataset parent, int vfLength, Map<int, Element> map,
+	                 [Map<int, Element> dupMap]) =>
+			new TagItem.fromDecoder(bd, parent, vfLength, map, dupMap);
+
+	@override
+	String itemInfo(ByteItem item) => (item == null) ? 'Item item = null' : item.info;
+
+	/* Flush if not needed
+  TagElement makePixelData(int vrIndex, TagElement e, VFFragments fragments) {
     assert(e.code == kPixelData);
     Tag tag = PTag.kPixelData;
     VR vr = VR.vrList[vrIndex];
@@ -205,7 +169,25 @@ class TagReader extends DcmReader {
   }
 */
 
-  // TODO: add Async argument and make it the default
+
+	// **** End DcmReaderInterface ****
+
+	RootTagDataset readFMI({bool checkPreamble = false}) {
+		var hadFmi = dcmReadFMI(checkPreamble: checkPreamble);
+		rootDS.parseInfo = getParseInfo();
+		return (hadFmi) ? rootDS : null;
+	}
+
+	/// Reads a [RootTagDataset] from [this], stores it in [rootDS],
+	/// and returns it.
+	RootTagDataset readRootDataset({bool allowMissingFMI = false}) {
+		dcmReadRootDataset(allowMissingFMI: allowMissingFMI);
+		var parseInfo = getParseInfo();
+		rootDS.parseInfo = parseInfo;
+		return (parseInfo.hadFmi) ? rootDS : null;
+	}
+
+	// TODO: add Async argument and make it the default
   /// Reads only the File Meta Information ([FMI], if present.
   static RootTagDataset readBytes(Uint8List bytes,
       {String path = "",

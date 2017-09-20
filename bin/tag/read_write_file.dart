@@ -20,7 +20,7 @@ void main() {
   log.info0('Reading: $path');
   var reader0 = new TagReader.fromPath(path);
   RootTagDataset tagDS0 = reader0.readRootDataset();
-  var bytes0 = reader0.bytes;
+  var bytes0 = reader0.rootBytes;
   log.debug('  Read ${bytes0.lengthInBytes} bytes');
   log.info0('  DS0: $tagDS0');
 
@@ -36,7 +36,7 @@ void main() {
   log.info0('Re-reading: $outPath');
   var reader1 = new TagReader.fromPath(path);
   var tagDS1 = TagReader.readPath(outPath);
-  log.debug('  Read ${reader1.bd.lengthInBytes} bytes');
+  log.debug('  Read ${reader1.rootBD.lengthInBytes} bytes');
   log.info0('  DS1: $tagDS1');
 
   if (tagDS0.parseInfo != tagDS1.parseInfo) {

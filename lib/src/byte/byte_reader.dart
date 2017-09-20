@@ -18,10 +18,14 @@ import 'dcm_reader.dart';
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootByteDataset].
 class ByteReader extends DcmReader {
-  final RootByteDataset _rootDS;
+  @override
+  final RootByteDataset rootDS;
   ByteDataset _currentDS;
+  Map<int, ByteElement> _currentMap;
+  Map<int, ByteElement> _currentDupMap;
 
-  /// Creates a new [ByteReader].
+  /// Creates a new [ByteReader], which is decoder for Binary DICOM
+  /// (application/dicom).
   ByteReader(ByteData bd,
       {String path = "",
       //TODO: make async work and be the default
@@ -32,7 +36,7 @@ class ByteReader extends DcmReader {
       bool allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true})
-      : _rootDS = new RootByteDataset.fromByteData(bd, vfLength: bd.lengthInBytes),
+      : rootDS = new RootByteDataset.fromByteData(bd, vfLength: bd.lengthInBytes),
         super(bd,
             path: path,
             async: async,
@@ -84,80 +88,42 @@ class ByteReader extends DcmReader {
         reUseBD: reUseBD);
   }
 
-  // The following Getters and Setters provide the correct [Type]s
-  // for [rootDS] and [currentDS].
-  @override
-  RootByteDataset get rootDS => _rootDS;
+  // **** DcmReaderInterface ****
 
+  /// The current [Dataset] being read.  This changes as Sequences are reAD.
   @override
   ByteDataset get currentDS => _currentDS;
-
   @override
   set currentDS(Dataset ds) => _currentDS = ds;
 
-  RootByteDataset readFMI({bool checkPreamble = false, bool allowMissingPrefix = false}) {
-    bool hadFmi =
-        dcmReadFMI(checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
-    _rootDS.parseInfo = getParseInfo();
-    return (hadFmi) ? _rootDS : null;
-  }
-
-  /// Reads a [RootByteDataset] from [this], stores it in [rootDS],
-  /// and returns it.
-  RootByteDataset readRootDataset(
-      {bool allowMissingFMI = false,
-      bool checkPreamble = true,
-      bool allowMissingPrefix = false}) {
-    try {
-      var rds = dcmReadRootDataset(
-          allowMissingFMI: allowMissingFMI,
-          checkPreamble: checkPreamble,
-          allowMissingPrefix: allowMissingPrefix);
-      if (rds == null) return null;
-      _rootDS.parseInfo = getParseInfo();
-      //  log.debug('rootDS: $rootDS');
-      //  log.debug('RootDS.TS: ${rootDS.transferSyntax}');
-      //  log.debug('elementList(${elementList.length})');
-    } on ShortFileError catch (e) {
-      log.error(e);
-      return null;
-    } on EndOfDataError catch (e) {
-      log.error(e);
-    } on InvalidTransferSyntaxError catch (e) {
-      log.error(e);
-    }
-    _rootDS.bd = bdRead;
-    return _rootDS;
-  }
-
-  void debugStart(Object o, String msg) {
-    log.debug('$rbb $o $msg');
-  }
-
-  void debug(Object o, Level level) {
-    log.debug('$rmm $o');
-  }
-
-  void debugEnd(Object o, Level level) {
-    log.debug('$rbb $o');
-  }
-
-  // Interface
+  /// The current [ByteElement] [Map].
   @override
-  String show(Element e) => (e == null) ? 'Element e = null' : e.info;
-
+  Map<int, ByteElement> get currentMap => _currentMap;
   @override
-  String showItem(ByteItem item) => (item == null) ? 'Item item = null' : item.info;
+  set currentMap(Map<int, Element> map) => _currentMap = map;
+
+  /// The current duplicate [ByteElement] [Map].
+  @override
+  Map<int, ByteElement> get currentDupMap => _currentDupMap;
+  @override
+  set currentDupMap(Map<int, Element> map) => _currentDupMap = map;
+
+  /// Returns an empty [Map<int, ByteElement].
+  @override
+  Map<int, ByteElement> makeEmptyMap() => <int, ByteElement>{};
 
   //Urgent: flush or fix
   @override
-  Element makeElement(int vrIndex, Tag tag, ByteData bytes,
-      [int vfLength, ByteData vfBytes]) {
+  ByteElement makeElement(int vrIndex, Tag tag, ByteData bytes,
+      [int vfLength, Uint8List vfBytes]) {
     int index = (vrIndex == VR.kUN.index) ? tag.vr.index : vrIndex;
     return (isEVR)
         ? EVR.makeElement(index, tag, bytes)
         : IVR.makeElement(index, tag, bytes);
   }
+
+  @override
+  String elementInfo(Element e) => (e == null) ? 'ByteElement e = null' : e.info;
 
   @override
   ByteElement makePixelData(
@@ -173,9 +139,8 @@ class ByteReader extends DcmReader {
           : IVR.makePixelData(vrIndex, bytes, fragments);
 
   /// Returns a new ByteSequence.
-  /// [bd] is the complete [ByteElement] for the Sequence.
   @override
-  Element makeSQ(ByteData bd, Dataset parent, List items, int vfLength, bool isEVR) {
+  ByteElement makeSQ(ByteData bd, Dataset parent, List items, int vfLength, bool isEVR) {
     //TODO: figure out how to create a ByteSequence with one call.
     ByteElement sq =
         (isEVR) ? EVR.makeSQ(bd, currentDS, items) : IVR.makeSQ(bd, currentDS, items);
@@ -188,6 +153,60 @@ class ByteReader extends DcmReader {
   ByteItem makeItem(ByteData bd, Dataset parent, int vfLength, Map<int, Element> map,
           [Map<int, Element> dupMap]) =>
       new ByteItem.fromDecoder(bd, parent, vfLength, map, dupMap);
+
+  @override
+  String itemInfo(ByteItem item) => (item == null) ? 'Item item = null' : item.info;
+
+  // **** End DcmReaderInterface ****
+
+  RootByteDataset readFMI({bool checkPreamble = false, bool allowMissingPrefix = false}) {
+    bool hadFmi =
+        dcmReadFMI(checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
+    rootDS.parseInfo = getParseInfo();
+    return (hadFmi) ? rootDS : null;
+  }
+
+  /// Reads a [RootByteDataset] from [this], stores it in [rootDS],
+  /// and returns it.
+  RootByteDataset readRootDataset(
+      {bool allowMissingFMI = false,
+      bool checkPreamble = true,
+      bool allowMissingPrefix = false}) {
+    try {
+      var rds = dcmReadRootDataset(
+          allowMissingFMI: allowMissingFMI,
+          checkPreamble: checkPreamble,
+          allowMissingPrefix: allowMissingPrefix);
+      if (rds == null) return null;
+      rootDS.parseInfo = getParseInfo();
+      //  log.debug('rootDS: $rootDS');
+      //  log.debug('RootDS.TS: ${rootDS.transferSyntax}');
+      //  log.debug('elementList(${elementList.length})');
+    } on ShortFileError catch (e) {
+      log.error(e);
+      return null;
+    } on EndOfDataError catch (e) {
+      log.error(e);
+    } on InvalidTransferSyntaxError catch (e) {
+      log.error(e);
+    }
+    rootDS.bd = rootBD;
+    return rootDS;
+  }
+
+  void debugStart(Object o, String msg) {
+    log.debug('$rbb $o $msg');
+  }
+
+  void debug(Object o, Level level) {
+    log.debug('$rmm $o');
+  }
+
+  void debugEnd(Object o, Level level) {
+    log.debug('$rbb $o');
+  }
+
+  // **** DcmReaderInterface ****
 
   //Urgent: flush or fix
   static TagElement makeTagElement(ByteElement be) => be.tagElementFromBytes;
@@ -206,7 +225,7 @@ class ByteReader extends DcmReader {
     return invalidVRError(e.vr, 'TagReader.makePixelData');
   }
 
-  /// Reads only the File Meta Information ([FMI], if present.
+  /// Reads the [RootByteDataset] from a [Uint8List].
   static RootByteDataset readBytes(Uint8List bytes,
       {String path = "",
       bool async = true,
@@ -235,6 +254,7 @@ class ByteReader extends DcmReader {
     return rds;
   }
 
+  /// Reads the [RootByteDataset] from a [File].
   static RootByteDataset readFile(File file,
       {bool async: true,
       bool fast = true,
@@ -255,6 +275,7 @@ class ByteReader extends DcmReader {
         reUseBD: reUseBD);
   }
 
+  /// Reads the [RootByteDataset] from a [path] ([File] or URL).
   static ByteDataset readPath(String path,
       {bool async: true,
       bool fast = true,

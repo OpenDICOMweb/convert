@@ -32,7 +32,7 @@ bool byteReadWriteFileChecked(String fPath,
   try {
     var reader0 = new ByteReader.fromFile(f);
     RootByteDataset rds0 = reader0.readRootDataset();
-    var bytes0 = reader0.bytes;
+    var bytes0 = reader0.rootBytes;
     ByteElement e = rds0[kPixelData];
     if (e == null)
       log.warn('$pad ** Pixel Data Element not present');
