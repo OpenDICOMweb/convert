@@ -24,7 +24,7 @@ void main() {
   log.debug('bRoot.isRoot: ${rds.isRoot}');
 
   log.info0('patientID: "${rds.patientId}"');
-  ByteElement eList = rds.remove(kPatientID);
+  Element eList = rds.remove(kPatientID);
   log.info0('removed: $eList');
   if (rds[kPatientID] != null)
     log.error('kPatientID not removed: $eList');

@@ -26,7 +26,7 @@ RootTagDataset convertByteDSToTagDS(RootByteDataset rootBDS) {
 
   convertDataset(rootBDS, rootTDS);
 
-  // Fix: can't compare datasets because ByteElements values are unprocessed
+  // Fix: can't compare datasets because Elements values are unprocessed
   // Uint8List.
   // if (rootBDS != rootTDS) log.error('**** rootBDS != rootTDS');
   if (rootBDS.total != rootTDS.total ||
@@ -39,11 +39,11 @@ RootTagDataset convertByteDSToTagDS(RootByteDataset rootBDS) {
 TagDataset convertDataset(ByteDataset byteDS, TagDataset tagDS) {
   currentBDS = byteDS;
   currentTDS = tagDS;
-  for (ByteElement e in byteDS.elements) {
+  for (Element e in byteDS.elements) {
     TagElement te = convertElement(e);
     if (te == null) throw 'null TE';
   }
-  for (ByteElement e in byteDS.duplicates) {
+  for (Element e in byteDS.duplicates) {
     TagElement te = convertElement(e);
     if (te == null) throw 'null TE';
   }
@@ -53,7 +53,7 @@ TagDataset convertDataset(ByteDataset byteDS, TagDataset tagDS) {
 Map<String, TagElement> pcElements = <String, TagElement>{};
 
 //Urgent fix
-TagElement convertElement(ByteElement be) {
+TagElement convertElement(Element be) {
   log.level = Level.info;
   var vrCode = be.vrCode;
 
@@ -127,7 +127,7 @@ SQ convertSQ(Element e) {
 
 final Map<int, PCTag> pcTags = <int, PCTag>{};
 
-Tag getTag(ByteElement be) {
+Tag getTag(Element be) {
   int code = be.code;
   VR vr = be.vr;
   Tag tag;

@@ -116,8 +116,8 @@ String toStr(Uint8List bytes, int index) {
 }
 
 bool compareByteDatasets(ByteDataset ds0, ByteDataset ds1, [bool throwOnError = false]) {
-  for (ByteElement e0 in ds0.elements) {
-    ByteElement e1 = ds1[e0.code];
+  for (Element e0 in ds0.elements) {
+    Element e1 = ds1[e0.code];
     if (e0.vrCode == VR.kSQ.code) {
       if (e1.vrCode != VR.kSQ.code) return false;
       if (!compareSequences(e0, e1)) return false;

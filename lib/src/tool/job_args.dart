@@ -44,9 +44,9 @@ class JobArgs {
   int get length => argResults.arguments.length;
 
   String get programName {
-    var path = Platform.script.pathSegments;
-    var end = path.last.lastIndexOf(".");
-    var name = path.last.substring(0, end);
+	  final path = Platform.script.pathSegments;
+	  final end = path.last.lastIndexOf(".");
+	  final name = path.last.substring(0, end);
     return name;
   }
 
@@ -132,7 +132,7 @@ class JobArgs {
         help: 'prints some helpful information about this program');
 
   static JobArgs parse(List<String> args) {
-    var jArgs = new JobArgs(args);
+	  final jArgs = new JobArgs(args);
     return jArgs;
   }
 

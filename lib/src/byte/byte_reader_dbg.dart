@@ -20,8 +20,8 @@ class ByteReader extends DcmReader {
 	@override
 	final RootByteDataset rootDS;
   ByteDataset _currentDS;
-  Map<int, ByteElement> _currentMap;
-  Map<int, ByteElement> _currentDupMap;
+  Map<int, Element> _currentMap;
+  Map<int, Element> _currentDupMap;
 
   /// Creates a new [ByteReader].
   ByteReader(ByteData bd,
@@ -94,25 +94,25 @@ class ByteReader extends DcmReader {
   @override
   set currentDS(Dataset ds) => _currentDS = ds;
 
-  /// The current [ByteElement] [Map].
+  /// The current [Element] [Map].
   @override
-  Map<int, ByteElement> get currentMap => _currentMap;
+  Map<int, Element> get currentMap => _currentMap;
   @override
   set currentMap(Map<int, Element> map) => _currentMap = map;
 
-  /// The current duplicate [ByteElement] [Map].
+  /// The current duplicate [Element] [Map].
   @override
-  Map<int, ByteElement> get currentDupMap => _currentDupMap;
+  Map<int, Element> get currentDupMap => _currentDupMap;
   @override
   set currentDupMap(Map<int, Element> map) => _currentDupMap = map;
 
-  /// Returns an empty [Map<int, ByteElement].
+  /// Returns an empty [Map<int, Element].
   @override
-  Map<int, ByteElement> makeEmptyMap() => <int, ByteElement>{};
+  Map<int, Element> makeEmptyMap() => <int, Element>{};
 
   //Urgent: flush or fix
   @override
-  ByteElement makeElement(int vrIndex, Tag tag, ByteData bytes,
+  Element makeElement(int vrIndex, Tag tag, ByteData bytes,
                           [int vfLength, Uint8List vfBytes]) {
 	  int index = (vrIndex == VR.kUN.index) ? tag.vr.index : vrIndex;
 	  return (isEVR)
@@ -121,10 +121,10 @@ class ByteReader extends DcmReader {
   }
 
   @override
-  String elementInfo(Element e) => (e == null) ? 'ByteElement e = null' : e.info;
+  String elementInfo(Element e) => (e == null) ? 'Element e = null' : e.info;
 
   @override
-  ByteElement makePixelData(
+  Element makePixelData(
 		  int vrIndex,
 		  ByteData bytes, [
 			  VFFragments fragments,
@@ -138,9 +138,9 @@ class ByteReader extends DcmReader {
 
   /// Returns a new ByteSequence.
   @override
-  ByteElement makeSQ(ByteData bd, Dataset parent, List items, int vfLength, bool isEVR) {
+  Element makeSQ(ByteData bd, Dataset parent, List items, int vfLength, bool isEVR) {
 	  //TODO: figure out how to create a ByteSequence with one call.
-	  ByteElement sq =
+	  Element sq =
 	  (isEVR) ? EVR.makeSQ(bd, currentDS, items) : IVR.makeSQ(bd, currentDS, items);
 	  for (ByteItem item in items) item.addSQ(sq);
 	  return sq;
@@ -205,10 +205,10 @@ class ByteReader extends DcmReader {
   }
 
   //Urgent: flush or fix
-  static TagElement makeTagElement(ByteElement be) => be.tagElementFromBytes;
+  static TagElement makeTagElement(Element be) => be.tagElementFromBytes;
 
   //Urgent: flush or fix
-  static TagElement makeTagPixelData(ByteElement e) {
+  static TagElement makeTagPixelData(Element e) {
     assert(e.code == kPixelData);
     print('makePixelData: ${e.info}');
     if (e.vr == VR.kOB)

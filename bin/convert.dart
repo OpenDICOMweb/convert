@@ -27,7 +27,7 @@ void main(List<String> args) {
   //TODO: move this into JobRunner
   print('Dart Version: ${Platform.version}');
   print('${Platform.script}');
-  print('Logger Root Level: ${log.rootLevel} Log Level: ${log.level}');
+  print('Logger Root Level: ${log.level} Log Level: ${log.level}');
 
     system.log.level = jobArgs.baseLevel;
   // Short circuiting args for testing
@@ -95,7 +95,7 @@ RootTagDataset convertFile(dynamic file, {int reps = 1, bool fmiOnly = false}) {
   }
 
   for (int code in bRoot.map.keys) {
-    ByteElement be = bRoot.map[code];
+    Element be = bRoot.map[code];
     TagElement te = tRoot.map[code];
 
     bool error = false;

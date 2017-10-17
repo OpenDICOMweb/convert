@@ -16,7 +16,7 @@ RootTDataset convert(RootByteDataset byteDS) {
   RootByteDataset byteDS;
   RootTDataset tagDS;
 
-  TElement convertElement(ByteElement e) {
+  TElement convertElement(Element e) {
     int code = e.code;
     if (Tag.isPublicCode(code)) {
       Tag tag = PTag.lookupByCodeCode(e.code, e.vr, true);
@@ -41,7 +41,7 @@ TElement convertSequence(Tag tag, ByteSQ bSQ) {
 
     for (ByteItem bItem in bSQ.items) {
        Map<int, TElement> map = <int, TElement>{};
-      for(ByteElement e in bItem.elements) {
+      for(Element e in bItem.elements) {
         if (e is ByteSQ) {
           map.(convertSequence(tag, bSQ));
         } else {
@@ -52,14 +52,14 @@ TElement convertSequence(Tag tag, ByteSQ bSQ) {
 
   }
 
-   PrivateGroup convertPrivateGroup(int group, ByteElement e) {
+   PrivateGroup convertPrivateGroup(int group, Element e) {
     int group = e.group;
     PrivateGroup pg = new PrivateGroup(group);
 
     return pg;
   }
 
-  for (ByteElement e in byteDS.elements)
+  for (Element e in byteDS.elements)
     tagDS.add(convertElement(e));
 }
 
@@ -74,7 +74,7 @@ class ProfiledDataset extends RootByteDataset {
   }
 
   UI replaceUid(int code, Uid uid) {
-    ByteElement ui = original[code];
+    Element ui = original[code];
     if (ui.vr != VR.kUI) throw 'Not a UI Element';
   }
 }

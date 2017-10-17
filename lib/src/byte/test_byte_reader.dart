@@ -58,19 +58,19 @@ class TestByteReader extends ByteReader {
     return rootDS.transferSyntax;
   }
 
-  ByteElement xReadPublicElement() => readElement();
+  Element xReadPublicElement() => readElement();
 
   // External Interface for testing
-  ByteElement xReadPGLength() => readElement();
+  Element xReadPGLength() => readElement();
 
   // External Interface for testing
-  ByteElement xReadPrivateIllegal(int code) => readElement();
+  Element xReadPrivateIllegal(int code) => readElement();
 
   // External Interface for testing
-  ByteElement xReadPrivateCreator() => readElement();
+  Element xReadPrivateCreator() => readElement();
 
   // External Interface for testing
-  ByteElement xReadPrivateData(ByteElement pc) => readElement();
+  Element xReadPrivateData(Element pc) => readElement();
 
   // Reads
   ByteDataset xReadDataset() {

@@ -4,7 +4,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-import 'package:core/core.dart';
+import 'package:entity/entity.dart';
 import 'package:dcm_convert/src/byte/tag_reader.dart';
 import 'package:system/server.dart';
 import 'package:test/test.dart';

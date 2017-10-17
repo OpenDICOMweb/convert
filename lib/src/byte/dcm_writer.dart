@@ -14,9 +14,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:core/core.dart';
+import 'package:dataset/byte_dataset.dart';
+import 'package:element/element.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/core.dart';
+import 'package:uid/uid.dart';
 
 import 'byte_data_buffer.dart';
 
@@ -148,7 +150,7 @@ abstract class DcmWriter {
   /// media type, writes it to a Uint8List, and returns the [Uint8List].
   Uint8List dcmWriteFMI(bool hadFmi) {
     _writeFMI(hadFmi);
-    var bytes = _bd.buffer.asUint8List(0, _wIndex);
+    final bytes = _bd.buffer.asUint8List(0, _wIndex);
     _writeFileOrPath(bytes);
     return bytes;
   }
@@ -166,7 +168,7 @@ abstract class DcmWriter {
 
     _isEVR = rootDS.isEVR;
     _writeDataset(rootDS);
-    var encoding = _bd.buffer.asUint8List(0, _wIndex);
+    final encoding = _bd.buffer.asUint8List(0, _wIndex);
     if (encoding == null || encoding.length < 256)
       throw 'Invalid bytes error: $encoding';
     _writeFileOrPath(encoding);
@@ -177,7 +179,7 @@ abstract class DcmWriter {
   /// Writes [bytes] to [file] if it is not [null]; otherwise, writes to
   /// [path] if it is not null. If both are [null] nothing is written.
   void _writeFileOrPath(Uint8List bytes) {
-    var f = (file == null && path != "") ? new File(path) : file;
+	  final f = (file == null && path != "") ? new File(path) : file;
     if (f != null) {
       f.writeAsBytesSync(bytes);
     }
@@ -194,13 +196,13 @@ abstract class DcmWriter {
   /// The current readIndex as a string.
   String get www => 'W@$wIndex';
 
-  /// The beginning of reading an [ByteElement] or [ByteItem].
+  /// The beginning of reading an [Element] or [ByteItem].
   String get wbb => '> $www';
 
-  /// In the middle of reading an [ByteElement] or [ByteItem]
+  /// In the middle of reading an [Element] or [ByteItem]
   String get wmm => '| $www';
 
-  /// The end of reading an [ByteElement] or [ByteItem]
+  /// The end of reading an [Element] or [ByteItem]
   String get wee => '< $www';
 
 
@@ -229,7 +231,7 @@ abstract class DcmWriter {
   void _writeExistingFMI() {
     _isEVR = true;
     _writePrefix();
-    for (Element e in rootDS.elements) {
+    for (var e in rootDS.elements) {
       if (e.code < 0x00030000) {
         _writeElement(e);
       } else {
@@ -247,13 +249,13 @@ abstract class DcmWriter {
   /// Writes a DICOM Preamble and Prefix (see PS3.10) as the
   /// beginning of the encoding.
   void _writePrefix() {
-    var pInfo = rootDS.parseInfo;
+	  final pInfo = rootDS.parseInfo;
     assert(pInfo.hadPrefix == false || !encoding.doAddMissingFMI);
     if (pInfo.preambleWasZeros || encoding.doCleanPreamble) {
-      for (int i = 0; i < 128; i++) _bd.setUint8(i, 0);
+      for (var i = 0; i < 128; i++) _bd.setUint8(i, 0);
     } else {
       assert(pInfo.preamble != null && !encoding.doCleanPreamble);
-      for (int i = 0; i < 128; i++) _bd.setUint8(i, pInfo.preamble[i]);
+      for (var i = 0; i < 128; i++) _bd.setUint8(i, pInfo.preamble[i]);
     }
     _skip(128);
     _writeAsciiString('DICM');
@@ -261,11 +263,11 @@ abstract class DcmWriter {
 
   void _writeDataset(Dataset ds) {
     assert(ds != null);
-    Dataset previousDS = _currentDS;
+    final previousDS = _currentDS;
     _currentDS = ds;
 
     _isEVR = true;
-    for (Element e in ds.elements) {
+    for (var e in ds.elements) {
       //Urgent Jim: figure out how to move this outside loop.
       //  should fmi be a separate map in the rootDS?
       if (e.code > 0x30000) _isEVR = rootDS.isEVR;
@@ -275,7 +277,7 @@ abstract class DcmWriter {
   }
 
   void _writeElement(Element e) {
-    int eStart = _wIndex;
+	  final eStart = _wIndex;
     if (e.isSequence) {
       _writeSequence(e);
     } else {
@@ -305,10 +307,10 @@ abstract class DcmWriter {
   /// Writes an EVR (short == 8 bytes, long == 12 bytes) or IVR (8 bytes)
   /// header.
   void _writeHeader(Element e) {
-    var length = (e.vfLength == null || encoding.doConvertUndefinedLengths)
+	  final length = (e.vfLength == null || encoding.doConvertUndefinedLengths)
         ? e.vfBytes.lengthInBytes
         : e.vfLength;
-    int start = _wIndex;
+	  final start = _wIndex;
     // Write Tag
     _writeTagCode(e.code);
     if (_isEVR) {
@@ -331,25 +333,24 @@ abstract class DcmWriter {
     }
   }
 
-  void _writeSequence(Element e) {
+  void _writeSequence(SQ e) {
     assert(e.isSequence);
     //TODO: handle replacing undefined lengths
     _writeHeader(e);
-    var sq = e as SequenceMixin;
-    if (sq.items.length > 0) _writeItems(e);
+    final sq = e;
+    if (sq.items.isNotEmpty) _writeItems(e);
     if (e.hadULength) _writeDelimiter(kSequenceDelimitationItem);
     _nSequences++;
     if (e.isPrivate) _nPrivateSequences++;
   }
 
-  void _writeItems(Element e) {
-    if (!e.isSequence) throw '$e Not Sequence';
+  void _writeItems(SQ sq) {
     //TODO: handle replacing undefined lengths
-    var sq = e as SequenceMixin;
-    List<ByteItem> items = sq.items;
+
+    List<Dataset> items = sq.items;
     for (Dataset item in items) {
       _writeDelimiter(kItem, item.vfLength);
-      for (Element e in item.elements) _writeElement(e);
+      for (var e in item.elements) _writeElement(e);
       if (item.hadULength) _writeDelimiter(kItemDelimitationItem);
     }
   }
@@ -402,7 +403,7 @@ abstract class DcmWriter {
 
   /// Moves the [_wIndex] forward [n] bytes, or backward if [n] is negative.
   void _skip(int n) {
-    int v = _wIndex + n;
+	  final v = _wIndex + n;
     // Note: keep next line for debugging
     // _checkRange(v);
     _wIndex = v;
@@ -446,9 +447,9 @@ abstract class DcmWriter {
   void _writeBytes(Uint8List bytes) => __writeBytes(bytes);
 
   void __writeBytes(Uint8List bytes) {
-    int length = bytes.lengthInBytes;
+	  final length = bytes.lengthInBytes;
     _maybeGrow(length);
-    for (int i = 0, j = _wIndex; i < length; i++, j++)
+    for (var i = 0, j = _wIndex; i < length; i++, j++)
       _bd.setUint8(j, bytes[i]);
     _wIndex = _wIndex + length;
   }
@@ -499,19 +500,19 @@ abstract class DcmWriter {
   /// least that size. It will always have at least have double the
   /// capacity of the current buffer.
   void _grow([int capacity]) {
-    int oldLength = _bd.lengthInBytes;
-    int newLength = oldLength * 2;
+	  final oldLength = _bd.lengthInBytes;
+	  var newLength = oldLength * 2;
     if (capacity != null && capacity > newLength) newLength = capacity;
 
     _isValidBufferLength(newLength);
     if (newLength < oldLength) return;
-    var newBuffer = new ByteData(newLength);
-    for (int i = 0; i < oldLength; i++) newBuffer.setUint8(i, _bd.getUint8(i));
+	  final newBuffer = new ByteData(newLength);
+    for (var i = 0; i < oldLength; i++) newBuffer.setUint8(i, _bd.getUint8(i));
     _bd = newBuffer;
   }
 
   static ByteData _reuseBuffer([int size = defaultBufferLength]) {
-    if (size == null) size = defaultBufferLength;
+    size ??= defaultBufferLength;
     if (_reuse == null) return _reuse = new ByteData(size);
     if (size > _reuse.lengthInBytes) {
       _reuse = new ByteData(size + 1024);

@@ -14,11 +14,11 @@ import 'job_args.dart';
 import 'job_reporter.dart';
 
 // **** change this name when testing
-const defaultDirName = 'C:/odw/test_data/mweb';
+const String defaultDirName = 'C:/odw/test_data/mweb';
 
 /// Get target directory and validate it.
 Directory getDirectory(JobArgs args) {
-  var dirName;
+  String dirName;
   if (args.length == 0) {
     stderr.write('No Directory name supplied - defaulting to $defaultDirName\n');
     dirName = defaultDirName;
@@ -26,7 +26,7 @@ Directory getDirectory(JobArgs args) {
     dirName = args.argResults.arguments[0];
   }
 
-  var dir = toDirectory(dirName);
+  final dir = toDirectory(dirName);
   if (dir == null) {
     if (dirName[0] == '-') {
       stderr.write('Error: Missing directory argument - "$dir"');
@@ -44,7 +44,7 @@ JobReporter getJobReporter(int fileCount, String path, int interval) =>
 typedef Future<bool> DoFile(File f);
 
 class JobRunner {
-  static const defaultInterval = 1;
+  static const int defaultInterval = 1;
   Directory directory;
   List files;
   DoFile doFile;
@@ -57,22 +57,23 @@ class JobRunner {
       {int interval = defaultInterval,
       Level level = Level.info0,
       bool throwOnError = true}) {
-    var dir = getDirectory(jobArgs);
-    var reporter = getJobReporter(fileCount(dir), dir.path, interval);
+    final dir = getDirectory(jobArgs);
+    final reporter = getJobReporter(fileCount(dir), dir.path, interval);
     return new JobRunner._(dir, null, doFile, reporter,
-       level: level, throwOnError: throwOnError);
+        level: level, throwOnError: throwOnError);
   }
 
   factory JobRunner.list(List<File> files, DoFile doFile,
-      {int interval = defaultInterval, level = Level.info0, bool throwOnError = true}) {
-    var reporter = getJobReporter(files.length, 'FileList', interval);
+      {int interval = defaultInterval,
+      Level level = Level.info0,
+      bool throwOnError = true}) {
+    final reporter = getJobReporter(files.length, 'FileList', interval);
     return new JobRunner._(null, files, doFile, reporter,
         level: level, throwOnError: throwOnError);
   }
 
   JobRunner._(this.directory, this.files, this.doFile, this.reporter,
-      {Level level = Level.info0,
-      this.throwOnError = true}) {
+      {Level level = Level.info0, this.throwOnError = true}) {
     system.log.level = level;
     _greeting();
   }
@@ -90,15 +91,17 @@ class JobRunner {
   }
 
   Future<String> runFile(File f, [int indent]) async {
-    var path = cleanPath(f.path);
+    final path = cleanPath(f.path);
     bool success;
     try {
       success = await doFile(f);
-      if (!success) failures.add(path);
+      if (!success)
+      	failures.add(path);
     } catch (e) {
       print(e);
       print('In File: $path');
-      if (throwOnError) rethrow;
+      if (throwOnError)
+      	rethrow;
     }
     return reporter.report(success, path);
   }
@@ -106,14 +109,10 @@ class JobRunner {
   static void _greeting() => stdout.writeln('Job Runner:');
 
   static void job(JobArgs jobArgs, DoFile doFile,
-      {int interval, Level level = Level.info, bool throwOnError = true}) {
-    var job = new JobRunner(jobArgs, doFile, interval: interval);
-    job.run();
-  }
+          {int interval, Level level = Level.info, bool throwOnError = true}) =>
+      new JobRunner(jobArgs, doFile, interval: interval)..run();
 
   static void fileList(List<File> files, DoFile doFile,
-      {int interval, Level level = Level.debug, bool throwOnError = true}) {
-    var job = new JobRunner.list(files, doFile, interval: interval);
-    job.runList();
-  }
+          {int interval, Level level = Level.debug, bool throwOnError = true}) =>
+      new JobRunner.list(files, doFile, interval: interval)..runList();
 }

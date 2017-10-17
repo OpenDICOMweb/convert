@@ -10,6 +10,7 @@ import 'dart:typed_data';
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/core.dart';
 import 'package:timer/timer.dart';
+import 'package:uid/uid.dart';
 
 Future<Uint8List> writeFile(RootByteDataset rds, String path,
     {bool fmiOnly = false, TransferSyntax outputTS}) {

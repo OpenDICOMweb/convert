@@ -8,19 +8,22 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dataset/byte_dataset.dart';
 import 'package:dcm_convert/dcm.dart';
+import 'package:element/element.dart';
+import 'package:entity/entity.dart';
 import 'package:system/core.dart';
 
-Future<bool> doRWRByteFile(File f, [bool throwOnError = false, bool fast = true]) async {
+Future<bool> doRWRByteFile(File f, [bool fast = true]) async {
   log.level = Level.error;
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
   var pad = "".padRight(5);
 
   try {
-    Uint8List bytes = await f.readAsBytes();
-    ByteData bd = bytes.buffer.asByteData();
-    var reader0 = new ByteReader(bd, fast: true);
+    final Uint8List bytes = await f.readAsBytes();
+    final bd = bytes.buffer.asByteData();
+    final reader0 = new ByteReader(bd, fast: true);
     RootByteDataset rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -28,14 +31,14 @@ Future<bool> doRWRByteFile(File f, [bool throwOnError = false, bool fast = true]
       return false;
     }
     if (rds0.parseInfo == null) throw 'Bad File - No ParseInfo: $f';
-    var bytes0 = reader0.buffer;
+    final bytes0 = reader0.buffer;
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');
     if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.info}');
 
     // TODO: move into dataset.warnings.
-    ByteElement e = rds0[kPixelData];
+    final e = rds0[kPixelData];
     if (e == null) {
       log.warn('$pad ** Pixel Data Element not present');
     } else {
@@ -50,7 +53,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       writer = new ByteWriter.toPath(rds0, outPath, fast: true);
     }
-    Uint8List bytes1 = writer.writeRootDataset();
+    final bytes1 = writer.writeRootDataset();
     log.debug('$pad    Encoded ${bytes1.length} bytes');
 
     if (!fast) {
@@ -68,16 +71,19 @@ $pad    TS: ${rds0.transferSyntax}''');
     }
     var rds1 = reader1.readRootDataset();
     //   RootByteDataset rds1 = ByteReader.readPath(outPath);
-    log.debug('$pad Read ${reader1.rootBD.lengthInBytes} bytes');
-    log.debug1('$pad DS1: $rds1');
+    log
+      ..debug('$pad Read ${reader1.rootBD.lengthInBytes} bytes')
+      ..debug1('$pad DS1: $rds1');
 
-    if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
+    if (rds0.hasDuplicates)
+    	log.warn('$pad  ** Duplicates Present in rds0');
     if (rds0.parseInfo != rds1.parseInfo) {
-      log.warn('$pad ** ParseInfo is Different!');
-      log.debug1('$pad rds0: ${rds0.parseInfo.info}');
-      log.debug1('$pad rds1: ${rds1.parseInfo.info}');
-      log.debug2(rds0.format(new Formatter(maxDepth: -1)));
-      log.debug2(rds1.format(new Formatter(maxDepth: -1)));
+      log
+        ..warn('$pad ** ParseInfo is Different!')
+        ..debug1('$pad rds0: ${rds0.parseInfo.info}')
+        ..debug1('$pad rds1: ${rds1.parseInfo.info}')
+        ..debug2(rds0.format(new Formatter(maxDepth: -1)))
+        ..debug2(rds1.format(new Formatter(maxDepth: -1)));
     }
 
     // If duplicates are present the [ElementList]s will not be equal.
@@ -91,7 +97,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     }
 
     // Compare [Dataset]s - only compares the elements in dataset.map.
-    var same = (rds0 == rds1);
+    final same = (rds0 == rds1);
     if (same) {
       log.debug('$pad Datasets are identical.');
     } else {
@@ -101,14 +107,15 @@ $pad    TS: ${rds0.transferSyntax}''');
     // If duplicates are present the [ElementList]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
-      var same = bytesEqual(bytes0, bytes1);
+      final bool same = bytesEqual(bytes0, bytes1);
       if (same == true) {
         log.debug('$pad Files bytes are identical.');
       } else {
         log.warn('$pad Files bytes are different!');
       }
     }
-    if (same) log.info0('$pad Success!');
+    if (same)
+    	log.info0('$pad Success!');
     return same;
   } on ShortFileError {
     log.warn('$pad ** Short File(${f.lengthSync()} bytes): $f');

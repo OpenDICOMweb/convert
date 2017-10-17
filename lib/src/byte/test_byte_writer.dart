@@ -46,20 +46,20 @@ class TestByteWriter extends ByteWriter {
   }
 
   /// Writes an element to the [currentDS].
-  void xWritePublicElement(ByteElement e) => xWriteElement(e);
+  void xWritePublicElement(Element e) => xWriteElement(e);
 
 /* Flush or Test if needed.
   // External Interface for testing
-  void xWritePGLength(ByteElement e) => writeElement(e);
+  void xWritePGLength(Element e) => writeElement(e);
 
   // External Interface for testing
-  void xWritePrivateIllegal(int code, ByteElement e) => writeElement(e);
+  void xWritePrivateIllegal(int code, Element e) => writeElement(e);
 
   // External Interface for testing
-  void xWritePrivateCreator(ByteElement e) => writeElement(e);
+  void xWritePrivateCreator(Element e) => writeElement(e);
 
   // External Interface for testing
-  void xWritePrivateData(ByteElement pc, ByteElement e) => writeElement(e);
+  void xWritePrivateData(Element pc, Element e) => writeElement(e);
 */
 
 }

@@ -13,34 +13,31 @@ import 'package:dcm_convert/dcm.dart';
 import 'package:logger/logger.dart';
 import 'package:system/core.dart';
 import 'package:timer/timestamp.dart';
-
+import 'package:uid/uid.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
 final Formatter format = new Formatter();
 
-bool byteReadWriteFileChecked(String fPath,
-    [int fileNumber,
-    int width = 5,
-    bool throwOnError = true,
-    bool fast = true]) {
-  bool success = true;
-  var n = getPaddedInt(fileNumber, width);
-  var pad = "".padRight(width);
-  fPath = cleanPath(fPath);
-  log.info1('$n: Reading: $fPath');
+bool byteReadWriteFileChecked(String path,
+    [int fileNumber, int width = 5, bool throwOnError = true, bool fast = true]) {
+  var success = true;
+  final n = getPaddedInt(fileNumber, width);
+  final pad = ''.padRight(width);
+  final fPath = cleanPath(path);
+  log.info1('$n: Reading: $path');
 
-  File f = new File(fPath);
+  final f = new File(path);
   try {
-    var reader0 = new ByteReader.fromFile(f);
-    RootByteDataset rds0 = reader0.readRootDataset();
-    var bytes0 = reader0.rootBytes;
+    final reader0 = new ByteReader.fromFile(f);
+    final rds0 = reader0.readRootDataset();
+    final bytes0 = reader0.rootBytes;
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}
 $pad    ${rds0.parseInfo.info}''');
 
-    ByteElement e = rds0[kPixelData];
+    Element e = rds0[kPixelData];
     if (e == null) {
       log.warn('$pad ** Pixel Data Element not present');
     } else {
@@ -132,9 +129,9 @@ RootByteDataset readFileTimed(File file,
     Level level = Level.warn,
     bool printDS: false}) {
   log.level = level;
-  var path = file.path;
-  var timer = new Stopwatch();
-  var timestamp = new Timestamp();
+  final path = file.path;
+  final timer = new Stopwatch();
+  final timestamp = new Timestamp();
 
   log.debug('Reading $path ...\n'
       '   fmiOnly: $fmiOnly\n'
@@ -142,12 +139,12 @@ RootByteDataset readFileTimed(File file,
 
   timer.start();
 //  var file = new File(path);
-  Uint8List bytes = file.readAsBytesSync();
+  final bytes = file.readAsBytesSync();
   timer.stop();
   log.debug('   read ${bytes.length} bytes in ${timer.elapsedMicroseconds}us');
 
   if (bytes.length < 1024)
-    log.warn('***** Short file length(${bytes.length}): $path');
+  	log.warn('***** Short file length(${bytes.length}): $path');
 
   Dataset rds;
   timer.start();
@@ -158,44 +155,42 @@ RootByteDataset readFileTimed(File file,
     log.error('Null Instance $path');
     return null;
   } else {
-    var n = rds.total;
-    var us = timer.elapsedMicroseconds;
-    var msPerElement = us ~/ n;
-    log.debug('  Elapsed time: ${timer.elapsed}');
-    log.debug('  $n elements');
-    log.debug('  ${msPerElement}us per element');
-
-    log.debug('  Has valid TS(${rds.hasSupportedTransferSyntax}) '
-        '${rds.transferSyntax}');
+    final n = rds.total;
+    final us = timer.elapsedMicroseconds;
+    final msPerElement = us ~/ n;
+    log
+      ..debug('  Elapsed time: ${timer.elapsed}')
+      ..debug('  $n elements')
+      ..debug('  ${msPerElement}us per element')
+      ..debug('  Has valid TS(${rds.hasSupportedTransferSyntax}) '
+          '${rds.transferSyntax}');
     // log.debug('RDS: ${rds.info}');
-    if (printDS) rds.format(new Formatter());
+    if (printDS)
+	    rds.format(new Formatter());
     return rds;
   }
 }
 
-RootByteDataset readFMI(Uint8List bytes, [String path = ""]) =>
+RootByteDataset readFMI(Uint8List bytes, [String path = '']) =>
     ByteReader.readBytes(bytes, path: path, fmiOnly: true);
 
 Uint8List writeTimed(RootByteDataset rds,
-    {String path = "",
-    bool fast = true,
-    bool fmiOnly = false,
-    TransferSyntax targetTS}) {
-  var timer = new Stopwatch();
-  var timestamp = new Timestamp();
-  var total = rds.total;
-  log.debug('current dir: ${Directory.current}');
-  log.debug('Writing ${rds.runtimeType} to "$path"\n'
-      '    with $total Elements\n'
-      '    fmiOnly: $fmiOnly\n'
-      '    at: $timestamp ...');
+    {String path = '', bool fast = true, bool fmiOnly = false, TransferSyntax targetTS}) {
+  final timer = new Stopwatch();
+  final timestamp = new Timestamp();
+  final total = rds.total;
+  log
+    ..debug('current dir: ${Directory.current}')
+    ..debug('Writing ${rds.runtimeType} to "$path"\n'
+        '    with $total Elements\n'
+        '    fmiOnly: $fmiOnly\n'
+        '    at: $timestamp ...');
 
   timer.start();
-  var bytes =
-      ByteWriter.writeBytes(rds, path: path, fmiOnly: fmiOnly, fast: fast);
+  final bytes = ByteWriter.writeBytes(rds, path: path, fmiOnly: fmiOnly, fast: fast);
   timer.stop();
   log.debug('  Elapsed time: ${timer.elapsed}');
-  int msPerElement = (timer.elapsedMicroseconds ~/ total) ~/ 1000;
+  final msPerElement = (timer.elapsedMicroseconds ~/ total) ~/ 1000;
   log.debug('  $msPerElement ms per Element: ');
   return bytes;
 }

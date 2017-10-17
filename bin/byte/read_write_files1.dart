@@ -10,6 +10,7 @@ import 'dart:typed_data';
 import 'package:path/path.dart' as p;
 import 'package:system/core.dart';
 import 'package:timer/timer.dart';
+import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/data/test_files.dart';

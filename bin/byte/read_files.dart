@@ -71,7 +71,7 @@ bool readWriteCheck(File file, {int reps = 1, bool fmiOnly = false}) {
       ByteReader.readBytes(bytes0, path: file.path, fast: true);
   log.debug('rds0 root: ${rds0.root}');
   log.debug('ParseInfo: ${rds0.parseInfo}');
-  ByteElement e = rds0[0x00020010];
+  Element e = rds0[0x00020010];
   log.debug('e: $e');
   if (rds0 == null) return false;
   log.info0('  Original: $rds0', -1);

@@ -22,7 +22,7 @@ Future main() async {
 }
 
 void printIt(FileSystemEntity e, [int level = 0]) {
-  var type;
+  String type;
   if (e is File) {
     type = 'F';
   } else if (e is Link) {

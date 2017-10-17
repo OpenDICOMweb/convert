@@ -51,7 +51,7 @@ Future<bool> doReadByteFile(File f,
     if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.info}');
 
 // TODO: move into dataset.warnings.
-    ByteElement e = rds0[kPixelData];
+    Element e = rds0[kPixelData];
     if (e == null) {
       log.warn('$pad ** Pixel Data Element not present');
     } else {

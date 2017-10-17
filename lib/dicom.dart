@@ -4,7 +4,10 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-export 'package:core/core.dart';
-export 'src/dicom/dcm_reader.dart';
+export 'package:dataset/dataset.dart';
+export 'package:element/element.dart';
+export 'package:entity/entity.dart';
+
 export 'src/dicom/dcm_encoder.dart';
+export 'src/dicom/dcm_reader.dart';
 export 'src/dicom/dcm_writer.dart';

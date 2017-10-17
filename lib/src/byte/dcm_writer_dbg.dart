@@ -205,13 +205,13 @@ abstract class DcmWriter {
   /// The current readIndex as a string.
   String get www => 'W@$wIndex';
 
-  /// The beginning of reading an [ByteElement] or [ByteItem].
+  /// The beginning of reading an [Element] or [ByteItem].
   String get wbb => '> $www';
 
-  /// In the middle of reading an [ByteElement] or [ByteItem]
+  /// In the middle of reading an [Element] or [ByteItem]
   String get wmm => '| $www';
 
-  /// The end of reading an [ByteElement] or [ByteItem]
+  /// The end of reading an [Element] or [ByteItem]
   String get wee => '< $www';
 
 

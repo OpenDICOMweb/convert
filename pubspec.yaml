@@ -7,27 +7,30 @@ author: Jim Philbin <jfphilbin@gmail.com>
 homepage: https://github.com/OpenDICOMweb/convert
 
 environment:
-  sdk: ^1.24.2
+  sdk: '>=1.24.2 <2.1.0'
 
 dependencies:
-  core:
-    path: C:/odw/sdk/core
-    version: ^0.6.3
+  dataset:
+    path: C:/odw/sdk/dataset
+    version: ^0.6.5
+  element:
+    path: C:/odw/sdk/element
+    version: ^0.6.5
+  entity:
+    path: C:/odw/sdk/entity
+    version: ^0.6.5
   logger:
     path: C:/odw/sdk/logger
-    version: ^0.6.1
-  subject:
-    path: C:/odw/sdk/subject
-    version: ^0.6.1
+    version: ^0.6.5
   system:
     path: C:/odw/sdk/system
-    version: ^0.6.3
+    version: ^0.6.5
   tag:
     path: C:/odw/sdk/tag
-    version: ^0.6.3
+    version: ^0.6.5
   uid:
     path: C:/odw/sdk/uid
-    version: ^0.6.3
+    version: ^0.6.5
 
 
 dev_dependencies:
