@@ -8,23 +8,22 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
-import 'package:element/element.dart';
-import 'package:entity/entity.dart';
-import 'package:dcm_convert/dcm.dart';
+import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:uid/uid.dart';
 
-import 'dcm_reader.dart';
+import 'package:dcm_convert/src/byte/dcm_reader.dart';
+import 'package:dcm_convert/src/byte/dcm_reader_interface.dart';
+import 'package:dcm_convert/src/errors.dart';
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootByteDataset].
-class ByteReader extends DcmReader {
+class ByteReader extends DcmReader implements DcmReaderInterface {
   @override
   final RootByteDataset rootDS;
-  ByteDataset _currentDS;
-  Map<int, Element> _currentMap;
-  Map<int, Element> _currentDupMap;
+  Dataset _currentDS;
+  ElementList _elements;
 
   /// Creates a new [ByteReader], which is decoder for Binary DICOM
   /// (application/dicom).
@@ -38,13 +37,12 @@ class ByteReader extends DcmReader {
       bool allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true})
-      : rootDS = new RootByteDataset.fromByteData(bd, vfLength: bd.lengthInBytes),
+      : rootDS = new RootByteDataset(bd, vfLength: bd.lengthInBytes),
         super(bd,
             path: path,
             async: async,
             fast: fast,
             fmiOnly: fmiOnly,
-            throwOnError: throwOnError,
             allowMissingFMI: allowMissingFMI,
             targetTS: targetTS,
             reUseBD: reUseBD);
@@ -58,7 +56,7 @@ class ByteReader extends DcmReader {
       bool allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true}) {
-	  final bytes = file.readAsBytesSync();
+	  final Uint8List bytes = file.readAsBytesSync();
 	  final bd = bytes.buffer.asByteData();
     return new ByteReader(bd,
         path: file.path,
@@ -88,27 +86,24 @@ class ByteReader extends DcmReader {
         allowMissingFMI: allowMissingFMI,
         targetTS: targetTS,
         reUseBD: reUseBD);
-  }
 
   // **** DcmReaderInterface ****
 
   /// The current [Dataset] being read.  This changes as Sequences are reAD.
   @override
-  ByteDataset get currentDS => _currentDS;
+  Dataset get currentDS => _currentDS;
   @override
-  set currentDS(ByteDataset ds) => _currentDS = ds;
+  set currentDS(Dataset ds) => _currentDS = ds;
 
   /// The current [Element] [Map].
   @override
-  Map<int, Element> get currentMap => _currentMap;
+  List<Element> get currentElements => _elements;
   @override
-  set currentMap(Map<int, Element> map) => _currentMap = map;
+  set currentElements(List<Element> eList) => _elements = eList;
 
-  /// The current duplicate [Element] [Map].
+  /// The current duplicate [List<Element>].
   @override
-  Map<int, Element> get currentDupMap => _currentDupMap;
-  @override
-  set currentDupMap(Map<int, Element> map) => _currentDupMap = map;
+  List<Element> get duplicates => currentDS.elements.duplicates;
 
   /// Returns an empty [Map<int, Element].
   @override
@@ -116,9 +111,9 @@ class ByteReader extends DcmReader {
 
   //Urgent: flush or fix
   @override
-  Element makeElement(int vrIndex, Tag tag, ByteData bytes,
-      [int vfLength, Uint8List vfBytes]) {
-    int index = (vrIndex == VR.kUN.index) ? tag.vr.index : vrIndex;
+  Element makeElement(int index, List<V> values, ByteData bd,
+      [int vfLengthField, Uint8List vfBytes]) {
+    int tag = Tag.lookupByCode(index);
     return (isEVR)
         ? EVR.makeElement(index, tag, bytes)
         : IVR.makeElement(index, tag, bytes);
@@ -133,7 +128,7 @@ class ByteReader extends DcmReader {
     ByteData bytes, [
     VFFragments fragments,
     Tag tag,
-    int vfLength,
+    int vfLengthField,
     ByteData vfBytes,
   ]) =>
       (isEVR)
@@ -142,9 +137,10 @@ class ByteReader extends DcmReader {
 
   /// Returns a new ByteSequence.
   @override
-  Element makeSQ(ByteData bd, ByteDataset parent, List items, int vfLength, bool isEVR) {
+  Element makeSQ(Dataset parent, List items, int vfLengthField, ByteData bd, {bool
+  isEVR }) {
     //TODO: figure out how to create a ByteSequence with one call.
-	  final sq =
+	  final SQbyte sq =
         (isEVR) ? EVR.makeSQ(bd, currentDS, items) : IVR.makeSQ(bd, currentDS, items);
     for (ByteItem item in items) item.addSQ(sq);
     return sq;
@@ -152,21 +148,23 @@ class ByteReader extends DcmReader {
 
   /// Returns a new [ByteItem].
   @override
-  ByteItem makeItem(ByteData bd, ByteDataset parent, int vfLength, Map<int, Element> map,
-          [Map<int, Element> dupMap]) =>
-      new ByteItem.fromDecoder(bd, parent, vfLength, map, dupMap);
+  ByteItem makeItem(Dataset parent, ElementList elements, int vfLengthField,
+          [ByteData bd]) =>
+      new ByteItem.fromList( parent, elements, vfLengthField, bd);
 
   @override
   String itemInfo(ByteItem item) => (item == null) ? 'Item item = null' : item.info;
 
   // **** End DcmReaderInterface ****
 
+/*
   RootByteDataset readFMI({bool checkPreamble = false, bool allowMissingPrefix = false}) {
-	  final hadFmi =
+	  final bool hadFmi =
         dcmReadFMI(checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
     rootDS.parseInfo = getParseInfo();
     return (hadFmi) ? rootDS : null;
   }
+*/
 
   /// Reads a [RootByteDataset] from [this], stores it in [rootDS],
   /// and returns it.
@@ -175,7 +173,7 @@ class ByteReader extends DcmReader {
       bool checkPreamble = true,
       bool allowMissingPrefix = false}) {
     try {
-      var rds = dcmReadRootDataset(
+      final RootByteDataset rds = dcmReadRootDataset(
           allowMissingFMI: allowMissingFMI,
           checkPreamble: checkPreamble,
           allowMissingPrefix: allowMissingPrefix);
@@ -211,18 +209,19 @@ class ByteReader extends DcmReader {
   // **** DcmReaderInterface ****
 
   //Urgent: flush or fix
-  static TagElement makeTagElement(Element be) => be.tagElementFromBytes;
+  static Element makeTagElement(Element be) => be.tagElementFromBytes;
 
   //Urgent: flush or fix
-  static TagElement makeTagPixelData(Element e) {
+  static Uint8Base makeTagPixelData(Element e) {
     assert(e.code == kPixelData);
     print('makePixelData: ${e.info}');
     if (e.vr == VR.kOB)
-      return new OBPixelData.fromBytes(e.tag, e.vfBytes, e.vfLength, e.fragments);
+      return new OBtagPixelData.fromBytes(e.tag, e.vfBytes, e.vfLengthField,
+		                                          rootDS.transferSyntax, e.fragments);
     if (e.vr == VR.kOW)
-      return new OWPixelData.fromBytes(e.tag, e.vfBytes, e.vfLength, e.fragments);
+      return new OWtagPixelData.fromBytes(e.tag, e.vfBytes, e.vfLengthField, e.fragments);
     if (e.vr == VR.kOB)
-      return new UNPixelData.fromBytes(e.tag, e.vfBytes, e.vfLength, e.fragments);
+      return new UNtagPixelData.fromBytes(e.tag, e.vfBytes, e.vfLengthField, e.fragments);
     print('makePixelData: ${e.info}');
     return invalidVRError(e.vr, 'TagReader.makePixelData');
   }
@@ -234,13 +233,13 @@ class ByteReader extends DcmReader {
       bool fast = true,
       bool fmiOnly = false,
       bool throwOnError = true,
-      allowMissingFMI = false,
+      bool allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true}) {
     RootByteDataset rds;
     try {
-      ByteData bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
-      ByteReader reader = new ByteReader(bd,
+      final bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
+      final reader = new ByteReader(bd,
           path: path,
           async: async,
           fast: fast,
@@ -249,7 +248,7 @@ class ByteReader extends DcmReader {
           allowMissingFMI: allowMissingFMI,
           targetTS: targetTS,
           reUseBD: reUseBD);
-      rds = reader.readRootDataset();
+      rds = reader.dcmReadRootDataset();
     } on ShortFileError catch (e) {
       log.warn('Short File: $e');
     }
@@ -264,9 +263,9 @@ class ByteReader extends DcmReader {
       bool throwOnError = true,
       bool allowMissingFMI: false,
       TransferSyntax targetTS,
-      bool reUseBD: true}) {
+      bool reUseBD: true}) =>
 // Fix   checkFile(file);
-    return readBytes(file.readAsBytesSync(),
+     readBytes(file.readAsBytesSync(),
         path: file.path,
         async: async,
         fast: fast,
@@ -275,44 +274,35 @@ class ByteReader extends DcmReader {
         allowMissingFMI: allowMissingFMI,
         targetTS: targetTS,
         reUseBD: reUseBD);
-  }
+
 
   /// Reads the [RootByteDataset] from a [path] ([File] or URL).
-  static ByteDataset readPath(String path,
+  static RootByteDataset readPath(String path,
       {bool async: true,
       bool fast = true,
       bool fmiOnly = false,
       bool throwOnError = true,
-      allowMissingFMI = false,
+      bool allowMissingFMI = false,
       TransferSyntax targetTS,
-      bool reUseBD = true}) {
+      bool reUseBD = true}) =>
 //Fix    checkPath(path);
-    return readFile(new File(path),
+     readFile(new File(path),
         async: async,
         fast: fast,
         fmiOnly: fmiOnly,
         throwOnError: throwOnError,
         allowMissingFMI: allowMissingFMI,
         targetTS: targetTS);
-  }
 
   /// Reads only the File Meta Information ([FMI], if present.
-  static ByteDataset readFmiOnly(dynamic pathOrFile,
+  static RootByteDataset readFileFmiOnly(File file,
       {bool async: true,
       bool fast = true,
       bool fmiOnly = false,
       bool throwOnError = true,
       TransferSyntax targetTS,
-      bool reUseBD = true}) {
-    var func;
-    if (pathOrFile is String) {
-      func = readPath;
-    } else if (pathOrFile is File) {
-      func = readFile;
-    } else {
-      throw 'Invalid path or file: $pathOrFile';
-    }
-    return func(pathOrFile,
+      bool reUseBD = true}) =>
+     readFile(file,
         async: async,
         fast: fast,
         fmiOnly: true,
@@ -320,5 +310,17 @@ class ByteReader extends DcmReader {
         allowMissingFMI: false,
         targetTS: targetTS,
         reUseBD: reUseBD);
-  }
+
+/// Reads only the File Meta Information ([FMI], if present.
+static RootByteDataset readPathFmiOnly(String path,
+{bool async: true,
+bool fast = true,
+bool fmiOnly = false,
+bool throwOnError = true,
+TransferSyntax targetTS,
+bool reUseBD = true}) =>
+
+readPath(path, async: async, fast: fast, fmiOnly: true, throwOnError: true,
+allowMissingFMI: false, targetTS: targetTS, reUseBD: reUseBD);
+
 }

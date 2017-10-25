@@ -163,6 +163,12 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.1.1"
+  io:
+    description:
+      name: io
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.3.0"
   isolate:
     description:
       name: isolate
@@ -288,7 +294,7 @@ packages:
       name: shelf_static
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.2.5"
+    version: "0.2.6"
   shelf_web_socket:
     description:
       name: shelf_web_socket
@@ -318,7 +324,7 @@ packages:
       name: stack_trace
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.8.2"
+    version: "1.8.3"
   stream_channel:
     description:
       name: stream_channel
@@ -366,7 +372,7 @@ packages:
       name: test
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.12.24+8"
+    version: "0.12.26"
   timer:
     description:
       path: "C:/odw/sdk/timer"

@@ -111,12 +111,12 @@ SQ convertSQ(Element e) {
   for (int i = 0; i < sq.items.length; i++) {
     currentBDS = sq.items[i];
     currentTDS = new TagItem.fromDecoder(currentBDS.bd, parentTDS,
-        currentBDS.vfLength, <int, TagElement>{}, <int, TagElement>{});
+        currentBDS.dsLength, <int, TagElement>{}, <int, TagElement>{});
     tItems[i] = convertDataset(currentBDS, currentTDS);
   }
   currentBDS = parentBDS;
   currentTDS = parentTDS;
-  var tagSQ = new SQ(sq.tag, currentTDS, tItems, sq.vfLength);
+  var tagSQ = new SQ(sq.tag, currentTDS, tItems, sq.dsLength);
 
 //  print('byteSQ: ${byteSQ.info}');
 //  print('tagSQ: ${tagSQ.info}');

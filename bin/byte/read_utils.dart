@@ -78,7 +78,7 @@ class FileResult {
   FileResult(this.file, this.rds,
       {this.fmiOnly = false, this.targetTS, this.times, this.hasProblem = false}) {
     path = file.path;
-    length = rds.vfLength;
+    length = rds.dsLength;
     ts = rds.transferSyntax;
     hasDuplicates = rds.hasDuplicates;
     isShort = rds.parseInfo.wasShortFile;

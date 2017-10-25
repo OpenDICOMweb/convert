@@ -124,7 +124,7 @@ bool compareByteDatasets(ByteDataset ds0, ByteDataset ds1, [bool throwOnError = 
     } else {
       if (e0.code != e1.code ||
           e0.vrCode != e1.vrCode ||
-          e0.vfLength != e1.vfLength ||
+          e0.dsLength != e1.dsLength ||
           e0.vfBytes.length != e1.vfBytes.length) {
         if (throwOnError) {
           throw 'ds0 != ds1';

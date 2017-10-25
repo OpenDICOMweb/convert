@@ -34,7 +34,7 @@ class TagReader extends DcmReader {
       bool allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true})
-      : rootDS = new RootTagDataset.fromByteData(bd, vfLength: vfLength),
+      : rootDS = new RootTagDataset.fromByteData(bd, dsLength: vfLength),
         super(bd,
             path: path,
             async: async,

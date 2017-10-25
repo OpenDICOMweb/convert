@@ -6,21 +6,19 @@
 
 import 'dart:typed_data';
 
-import 'package:core/core.dart';
+import 'package:element/element.dart';
+import 'package:dataset/dataset.dart';
 import 'package:tag/tag.dart';
 
-
-/// The type of the different Value Field readers.  Each [VFReader]
+/// The type of the different Value Field readers.  Each [ElementMaker]
 /// reads the Value Field for a particular Value Representation.
 typedef Element ElementMaker<V>(ByteData bd);
 
-typedef Element SequenceMaker<V>(
-    ByteData bd, Dataset parent, List<Dataset> items);
+typedef Element SequenceMaker<V>(ByteData bd, Dataset parent, List<Dataset> items);
 
-typedef Element PixelDataMaker<V>(
-    ByteData bd, Dataset parent, List<Dataset> items);
+typedef Element PixelDataMaker<V>(ByteData bd, Dataset parent, List<Dataset> items);
 
-const shortFileThreshold = 1024;
+const int shortFileThreshold = 1024;
 
 abstract class DcmReaderInterface {
 /*
@@ -48,47 +46,51 @@ abstract class DcmReaderInterface {
   TransferSyntax get targetTS;
 */
 
-	/// Returns the [ByteData] for the entire Root [Dataset].
-	ByteData get rootBD;
+  /// Returns the [ByteData] for the entire Root [Dataset].
+  ByteData get rootBD;
 
   /// Returns the Root [Dataset].
-  Dataset get rootDS;
+  RootDataset get rootDS;
 
   /// The current dataset.  This changes as Sequences are read.
   Dataset get currentDS;
   set currentDS(Dataset ds);
 
-	/// The current [Element] [Map].
+  /// The current [Element] [Map].
   Map<int, Element> get currentMap;
-	set currentMap(Map<int, Element> map);
+  set currentMap(Map<int, Element> map);
 
-	/// The current duplicate [Element] [Map].
-	Map<int, Element> get currentDupMap;
-	set currentDupMap(Map<int, Element> map);
+  /// The current duplicate [Element] [Map].
+  Map<int, Element> get currentDupMap;
+  set currentDupMap(Map<int, Element> map);
+
+  ElementList get elementList;
 
   /// Returns an empty [Map], which be a subtype of [Element].
   Map<int, Element> makeEmptyMap();
 
   /// Returns a subtype of [Element].
-  Element makeElement(int vrIndex, Tag tag, ByteData bytes,
-                      [int vfLength, Uint8List vfBytes]);
+  Element makeElement<V>(int index, List<V> values,
+      [int vfLengthField, Uint8List vfBytes]);
 
-  /// Interface for logging
-  String elementInfo(Element e);
+  /// Returns a subtype of [Element].
+  Element makeElementFromBytes(int index, ByteData bytes, int vfLengthField);
 
   /// Returns a subtype of [Element].
   Element makePixelData(int vrIndex, ByteData bytes,
-                        [VFFragments fragments, Tag tag, int vfLength, ByteData vfBytes]);
+      [VFFragments fragments, Tag tag, int vfLength, ByteData vfBytes]);
 
   /// Returns a new Sequence.
   /// [bd] is the complete [ByteData] for the Sequence.
-  Element makeSQ(ByteData bd, Dataset parent, List items, int vfLength, bool isEVR);
+  Element makeSQ(Dataset parent, List items, int vfLength, bool isEVR, [ByteData bd]);
 
   /// Interface to Item constructor.
-  Dataset makeItem(ByteData bd, Dataset parent, int vfLength, Map<int, Element> map,
-                   [Map<int, Element> dupMap]);
+  Dataset makeItemFromList(Dataset parent, ElementList eList, int vfLengthField,
+      [ByteData bd]);
 
   /// Interface for logging
-  String itemInfo(ByteItem item);
+  String itemInfo(Item item);
 
+  /// Interface for logging
+  String elementInfo(Element e);
 }

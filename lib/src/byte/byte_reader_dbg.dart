@@ -34,7 +34,7 @@ class ByteReader extends DcmReader {
       bool allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true})
-      : rootDS = new RootByteDataset.fromByteData(bd, vfLength: bd.lengthInBytes),
+      : rootDS = new RootByteDataset.fromByteData(bd, dsLength: bd.lengthInBytes),
         super(bd,
             path: path,
             async: async,

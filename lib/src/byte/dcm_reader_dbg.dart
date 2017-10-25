@@ -206,7 +206,7 @@ abstract class DcmReader extends DcmReaderInterface {
   bool dcmReadFMI({bool checkPreamble = true, bool allowMissingPrefix = false}) {
     currentDS = rootDS;
     currentMap = rootDS.map;
-    currentDupMap = rootDS.dupMap;
+    duplicates = rootDS.dupMap;
     return _readFMI(checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
   }
 
@@ -220,7 +220,7 @@ abstract class DcmReader extends DcmReaderInterface {
     log.debug('$rbb readRootDataset');
     currentDS = rootDS;
     currentMap = rootDS.map;
-    currentDupMap = rootDS.dupMap;
+    duplicates = rootDS.dupMap;
     _hadFmi =
         _readFMI(checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
     if (!_hadFmi && !allowMissingFMI) return null;
@@ -461,10 +461,10 @@ abstract class DcmReader extends DcmReaderInterface {
     } else if (allowDuplicates && v != null) {
       _warn('Duplicate Element: current($v) duplicat(${elementInfo(eNew)}) $_rrr');
       if (v.vr != VR.kUN) {
-        currentDupMap[eNew.key] = eNew;
+        duplicates[eNew.key] = eNew;
       } else {
         currentMap[eNew.key] = eNew;
-        currentDupMap[eNew.key] = v;
+        duplicates[eNew.key] = v;
       }
     } else {
       if (throwOnError) throw new DuplicateElementError(v, eNew);
@@ -846,11 +846,11 @@ abstract class DcmReader extends DcmReaderInterface {
     // Save parent [Dataset], and make [item] is new parent [Dataset].
     Dataset parentDS = currentDS;
     var parentMap = currentMap;
-    var parentDupMap = currentDupMap;
+    var parentDupMap = duplicates;
     var map = <int, Element>{};
     var dupMap = <int, Element>{};
     currentMap = map;
-    currentDupMap = dupMap;
+    duplicates = dupMap;
 
     int itemEnd;
     try {
@@ -883,7 +883,7 @@ abstract class DcmReader extends DcmReaderInterface {
       // Restore previous parent
       currentDS = parentDS;
       currentMap = parentMap;
-      currentDupMap = parentDupMap;
+      duplicates = parentDupMap;
       // Keep, but only use for debugging.
       //  _showNext(_rIndex);
     }
@@ -1144,7 +1144,7 @@ lastTopLevelElementRead: $_lastTopLevelElementRead
         rootDSSequences: $dsSQs
         rootDSDupLength: ${rootDS.length}
         currentDSLength: ${currentMap.length}
-     currentDSDupLength: ${currentDupMap.length}
+     currentDSDupLength: ${duplicates.length}
      currentDSSequences: $dupSQs
                 totalDS: ${rootDS.total + rootDS.dupTotal}''';
   }

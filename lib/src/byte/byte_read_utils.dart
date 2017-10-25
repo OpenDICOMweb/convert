@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dataset/dataset.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/core.dart';
 import 'package:timer/timestamp.dart';

@@ -28,7 +28,7 @@ linter:
     - valid_regexps
 # Style rules
     - always_declare_return_types
-    - always_put_control_body_on_new_line
+#    - always_put_control_body_on_new_line
     - always_put_required_named_parameters_first
     - always_require_non_null_named_parameters
 #    - always_specify_types
@@ -72,7 +72,7 @@ linter:
     - prefer_conditional_assignment
     - prefer_const_constructors
     - prefer_const_constructors_in_immutables
-    - prefer_constructors_over_static_methods
+#    - prefer_constructors_over_static_methods
     - prefer_contains
     - prefer_expression_function_bodies
     - prefer_final_fields
