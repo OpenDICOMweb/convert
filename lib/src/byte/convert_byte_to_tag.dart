@@ -4,19 +4,20 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:core/core.dart';
+import 'package:element/element.dart';
+
 import 'package:dcm_convert/src/byte/byte_reader.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 
-typedef Element<K, V> Maker<K, V>(K id, List<V> values,
+typedef Element<V> Maker<K, V>(K id, List<V> values,
     [int vfLength, VFFragments fragments]);
 
-ByteDataset currentBDS;
+BDataset currentBDS;
 TagDataset currentTDS;
 int nElements = 0;
 
-RootTagDataset convertByteDSToTagDS(RootByteDataset rootBDS) {
+RootTagDataset convertByteDSToTagDS(RootDatasetBytes rootBDS) {
 
 
   log.level = Level.warn1;
@@ -32,7 +33,7 @@ RootTagDataset convertByteDSToTagDS(RootByteDataset rootBDS) {
   if (rootBDS.total != rootTDS.total ||
       rootBDS.dupTotal != rootTDS.dupTotal)
     _error(0, '**** rootBDS != rootTDS');
-  log.info0(exceptions);
+  log.info0(_exceptions);
   return rootTDS;
 }
 
@@ -160,16 +161,16 @@ int pcCodeFromPDCode(int pdCode) {
   return pcCode;
 }
 
-List<String> exceptions = <String>[];
+List<String> _exceptions = <String>[];
 
 void _warn(int code, String msg)  {
   var s = '**   Warning ${dcm(code)}  $msg';
-  exceptions.add(s);
+  _exceptions.add(s);
   log.warn(s);
 }
 
 void _error(int code, String msg)  {
   var s = '**** Error: ${dcm(code)} $msg';
-  exceptions.add(s);
+  _exceptions.add(s);
   log.error(s);
 }

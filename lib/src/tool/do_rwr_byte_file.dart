@@ -24,7 +24,7 @@ Future<bool> doRWRByteFile(File f, [bool fast = true]) async {
     final Uint8List bytes = await f.readAsBytes();
     final bd = bytes.buffer.asByteData();
     final reader0 = new ByteReader(bd, fast: true);
-    RootByteDataset rds0 = reader0.readRootDataset();
+    RootDatasetBytes rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
       log.info0('Bad File: ${f.path}');
@@ -70,7 +70,7 @@ $pad    TS: ${rds0.transferSyntax}''');
       reader1 = new ByteReader.fromPath(outPath);
     }
     var rds1 = reader1.readRootDataset();
-    //   RootByteDataset rds1 = ByteReader.readPath(outPath);
+    //   RootDatasetBytes rds1 = ByteReader.readPath(outPath);
     log
       ..debug('$pad Read ${reader1.rootBD.lengthInBytes} bytes')
       ..debug1('$pad DS1: $rds1');
@@ -86,13 +86,13 @@ $pad    TS: ${rds0.transferSyntax}''');
         ..debug2(rds1.format(new Formatter(maxDepth: -1)));
     }
 
-    // If duplicates are present the [ElementList]s will not be equal.
+    // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!fast || !rds0.hasDuplicates) {
-      // Compare [ElementList]s
+      // Compare [ElementOffsets]s
       if (reader0.elementList == writer.elementList) {
-        log.debug('$pad ElementLists are identical.');
+        log.debug('$pad ElementOffsetss are identical.');
       } else {
-        log.warn('$pad ElementLists are different!');
+        log.warn('$pad ElementOffsetss are different!');
       }
     }
 
@@ -104,7 +104,7 @@ $pad    TS: ${rds0.transferSyntax}''');
       log.warn('$pad Datasets are different!');
     }
 
-    // If duplicates are present the [ElementList]s will not be equal.
+    // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
       final bool same = bytesEqual(bytes0, bytes1);

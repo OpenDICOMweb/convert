@@ -4,16 +4,19 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See /[package]/AUTHORS file for other contributors.
 
+import 'package:uid/uid.dart';
+
 //Urgent: test
 class EncodingParameters {
-  /// if [true] [Dataset]s will be allowed to be encoded in IVRLE.
+  /// if [true] Datasets will be allowed to be encoded in IVRLE.
   /// The default is [false].
   final bool allowImplicitLittleEndian;
 
-  /// Encodes the Root [Dataset] even if it does not have any FMI.
+  final TransferSyntax targetTS;
+  /// Encodes the Root Dataset even if it does not have any FMI.
   final bool allowMissingFMI;
 
-  /// If [true] [Element]s will be checked for valid VR by looking up Tag.
+  /// If [true] Elements will be checked for valid VR by looking up Tag.
   final bool doCheckVR;
   /// If [true], ODW FMI (with clean preamble) will be added or replaced,
   /// undefined lengths will be removed, if RootDS is in Implicit VR it
@@ -22,7 +25,7 @@ class EncodingParameters {
 
   /// If [true], a DICOM File Prefix (PS3.10) will be written, and
   /// DICOM File Meta Information (PS3.10) will be written
-  /// even if it wasn't present when the [Dataset] was decoded (parsed).
+  /// even if it wasn't present when the Dataset was decoded (parsed).
   final bool doAddMissingFMI;
 
   /// If [true] write ODW FMI into encoded output.
@@ -31,11 +34,11 @@ class EncodingParameters {
   /// If the Root Dataset had a non-zero preamble, replace it with all zeros.
   final bool doCleanPreamble;
 
-  /// Replace any undefined length [Element]s with defined length, except
-  /// for Encapsulated [kPixelData].
+  /// Replace any undefined length Elements with defined length, except
+  /// for Encapsulated kPixelData.
   final bool doConvertUndefinedLengths;
 
-  /// Remove fragments from encapsulated [kPixelData] frames.
+  /// Remove fragments from encapsulated kPixelData frames.
   final bool doRemoveFragments;
 
   /// Replace any non-zero end of Value Field delimiter lengths with zero.
@@ -48,11 +51,12 @@ class EncodingParameters {
   final bool doSeparateBulkdata;
 
   /// The number of bytes in a value field at which point it is converted
-  /// to [bulkdata].
+  /// to Bulkdata.
   final int bulkdataThreshold;
 
   const EncodingParameters({
     this.allowImplicitLittleEndian = true,
+	  this.targetTS,
     this.allowMissingFMI = true,
     this.doCheckVR = true,
     this.doConvertToNormalForm = false,
@@ -68,9 +72,9 @@ class EncodingParameters {
 
   });
 
-  static const kNoChange = const EncodingParameters();
+  static const EncodingParameters kNoChange = const EncodingParameters();
 
-  static const kCanonical = const EncodingParameters(
+  static const EncodingParameters kCanonical = const EncodingParameters(
       allowImplicitLittleEndian: false,
       allowMissingFMI: false,
       doCheckVR: true,
@@ -85,7 +89,7 @@ class EncodingParameters {
       doRemoveNoZeroDelimiterLengths: true,
       doFixPaddingErrors: true);
 
-  static const kCanonicalWithBulkdata = const EncodingParameters(
+  static const EncodingParameters kCanonicalWithBulkdata = const EncodingParameters(
       allowImplicitLittleEndian: false,
       allowMissingFMI: false,
       doCheckVR: true,

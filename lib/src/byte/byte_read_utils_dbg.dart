@@ -70,7 +70,7 @@ $pad    ${rds0.parseInfo.info}''');
       reader1 = new ByteReader.fromPath(outPath);
     }
     var rds1 = reader1.readRootDataset();
-    //   RootByteDataset rds1 = ByteReader.readPath(outPath);
+    //   RootDatasetBytes rds1 = ByteReader.readPath(outPath);
     log.debug('$pad Read ${reader1.rootBD.lengthInBytes} bytes');
     log.debug1('$pad DS1: $rds1');
 
@@ -83,13 +83,13 @@ $pad    ${rds0.parseInfo.info}''');
       log.debug2(rds1.format(new Formatter(maxDepth: -1)));
     }
 
-    // If duplicates are present the [ElementList]s will not be equal.
+    // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
-      // Compare [ElementList]s
+      // Compare [ElementOffsets]s
       if (reader0.elementList == writer.elementList) {
-        log.debug('$pad ElementLists are identical.');
+        log.debug('$pad ElementOffsetss are identical.');
       } else {
-        log.warn('$pad ElementLists are different!');
+        log.warn('$pad ElementOffsetss are different!');
       }
     }
 
@@ -102,7 +102,7 @@ $pad    ${rds0.parseInfo.info}''');
       log.warn('$pad Datasets are different!');
     }
 
-    // If duplicates are present the [ElementList]s will not be equal.
+    // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
       var same = bytesEqual(bytes0, bytes1);
@@ -123,7 +123,7 @@ $pad    ${rds0.parseInfo.info}''');
   return success;
 }
 
-RootByteDataset readFileTimed(File file,
+RootDatasetBytes readFileTimed(File file,
     {bool fmiOnly = false,
     TransferSyntax targetTS,
     Level level = Level.warn,
@@ -171,10 +171,10 @@ RootByteDataset readFileTimed(File file,
   }
 }
 
-RootByteDataset readFMI(Uint8List bytes, [String path = '']) =>
+RootDatasetBytes readFMI(Uint8List bytes, [String path = '']) =>
     ByteReader.readBytes(bytes, path: path, fmiOnly: true);
 
-Uint8List writeTimed(RootByteDataset rds,
+Uint8List writeTimed(RootDatasetBytes rds,
     {String path = '', bool fast = true, bool fmiOnly = false, TransferSyntax targetTS}) {
   final timer = new Stopwatch();
   final timestamp = new Timestamp();
@@ -195,8 +195,8 @@ Uint8List writeTimed(RootByteDataset rds,
   return bytes;
 }
 
-Future<Uint8List> writeFMI(RootByteDataset rds, [String path]) =>
+Future<Uint8List> writeFMI(RootDatasetBytes rds, [String path]) =>
     ByteWriter.writePath(rds, path, fmiOnly: true);
 
-Future<Uint8List> writeRoot(RootByteDataset rds, {String path}) =>
+Future<Uint8List> writeRoot(RootDatasetBytes rds, {String path}) =>
     ByteWriter.writePath(rds, path);

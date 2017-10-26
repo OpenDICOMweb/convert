@@ -4,16 +4,36 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See /[package]/AUTHORS file for other contributors.
 
-//Urgent: Test
+import 'package:uid/uid.dart';
+
 class DecodingParameters {
-  /// if [true] [Dataset]s will be allowed to be encoded in IVRLE.
+  /// if [true] Datasets will be allowed to be encoded in IVRLE.
   /// The default is [false].
   final bool allowImplicitLittleEndian;
 
-  /// Encodes the Root [Dataset] even if it does not have any FMI.
+  /// If [true] and Preamble is not all zeros, abort reading.
+  final bool checkPreambleAllZeros;
+
+  /// If [true] and Preamble and Prefix are not present, abort reading.
+  final bool allowMissingPrefix;
+
+  /// If [true] and File Meta Information (FMI) is not present, abort reading.
   final bool allowMissingFMI;
 
-  /// If [true] [Element]s will be checked for valid VR by looking up Tag.
+  /// If [true], then duplicate Elements will be stored.
+  final bool allowDuplicates;
+
+  /// Only read the file if it has the same [TransferSyntax] as [targetTS].
+  final TransferSyntax targetTS;
+
+  /// If [true] Elements with VR.kUN will be check to see if they
+  /// are Sequences.
+  final bool checkForUNSequence;
+
+  /// If [true] elements with VR.kUN will be converted to correct VR if known.
+  final bool doConvertUndefinedVR;
+
+  /// If [true] Elements will be checked for valid VR by looking up Tag.
   final bool doCheckVR;
 
   /// If [true], ODW FMI (with clean preamble) will be added or replaced,
@@ -23,8 +43,8 @@ class DecodingParameters {
 
   /// If [true], a DICOM File Prefix (PS3.10) will be written, and
   /// DICOM File Meta Information (PS3.10) will be written
-  /// even if it wasn't present when the [Dataset] was decoded (parsed).
- final bool doAddMissingFMI;
+  /// even if it wasn't present when the Dataset was decoded (parsed).
+  final bool doAddMissingFMI;
 
   /// If [true] write ODW FMI into encoded output.
   final bool doUpdateFMI;
@@ -32,11 +52,11 @@ class DecodingParameters {
   /// If the Root Dataset had a non-zero preamble, replace it with all zeros.
   final bool doCleanPreamble;
 
-  /// Replace any undefined length [Element]s with defined length, except
-  /// for Encapsulated [kPixelData].
+  /// Replace any undefined length Elements with defined length, except
+  /// for Encapsulated kPixelData.
   final bool doConvertUndefinedLengths;
 
-  /// Remove fragments from encapsulated [kPixelData] frames.
+  /// Remove fragments from encapsulated kPixelData frames.
   final bool doRemoveFragments;
 
   /// Replace any non-zero end of Value Field delimiter lengths with zero.
@@ -49,12 +69,18 @@ class DecodingParameters {
   final bool doSeparateBulkdata;
 
   /// The number of bytes in a value field at which point it is converted
-  /// to [bulkdata].
+  /// to bulkdata.
   final int bulkdataThreshold;
 
   const DecodingParameters({
     this.allowImplicitLittleEndian = true,
+    this.targetTS,
+	  this.checkPreambleAllZeros = true,
+    this.allowMissingPrefix = false,
     this.allowMissingFMI = true,
+    this.allowDuplicates = true,
+    this.checkForUNSequence = true,
+    this.doConvertUndefinedVR = true,
     this.doCheckVR = true,
     this.doConvertToNormalForm = false,
     this.doSeparateBulkdata = false,
@@ -66,12 +92,11 @@ class DecodingParameters {
     this.doRemoveFragments = false,
     this.doRemoveNoZeroDelimiterLengths = false,
     this.doFixPaddingErrors = false,
-
   });
 
-  static const kNoChange = const DecodingParameters();
+  static const DecodingParameters kNoChange = const DecodingParameters();
 
-  static const kCanonical = const DecodingParameters(
+  static const DecodingParameters kCanonical = const DecodingParameters(
       allowImplicitLittleEndian: false,
       allowMissingFMI: false,
       doCheckVR: true,
@@ -86,7 +111,7 @@ class DecodingParameters {
       doRemoveNoZeroDelimiterLengths: true,
       doFixPaddingErrors: true);
 
-  static const kCanonicalWithBulkdata = const DecodingParameters(
+  static const DecodingParameters kCanonicalWithBulkdata = const DecodingParameters(
       allowImplicitLittleEndian: false,
       allowMissingFMI: false,
       doCheckVR: true,

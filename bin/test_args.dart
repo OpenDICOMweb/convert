@@ -5,6 +5,8 @@
 // See the AUTHORS file for other contributors.
 
 import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:dcm_convert/tools.dart';
 
@@ -19,7 +21,7 @@ For each application/dicom file in the <directory> tree:
   1. Decodes (reads) the data in a byte array (file) into a Root Dataset [0]
   2. Encodes (writes) the Root Dataset into a new byte array
   3. Decodes (reads) the new bytes array (file) into a new Root Dataset [1]
-  4. It than compares the ElementLists, Datasets, and bytes arrays to 
+  4. It than compares the ElementOffsetss, Datasets, and bytes arrays to 
     determine whether the writter and re-read Dataset and bytes are equivalent
     to the original byte array that was read in step 1.
     

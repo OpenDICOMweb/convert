@@ -8,13 +8,12 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
-import 'package:element/element.dart';
-import 'package:dcm_convert/dcm.dart';
+import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:uid/uid.dart';
 
-import 'dcm_reader_interface.dart';
+import 'package:dcm_convert/src/reader_interface.dart';
 
 //TODO: redoc to reflect current state of code
 
@@ -31,7 +30,7 @@ import 'dcm_reader_interface.dart';
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
 abstract class DcmReader extends DcmReaderInterface {
-	/// The source of the [Uint8List] being read.
+  /// The source of the [Uint8List] being read.
   final String path;
 
   /// The [ByteData] being read.
@@ -67,7 +66,7 @@ abstract class DcmReader extends DcmReaderInterface {
 
   // **** stats and debugging
   final bool statisticsEnabled = true;
-  final bool elementListEnabled = true;
+  final bool elementOffsetsEnabled = true;
   final List<String> exceptions = <String>[];
 
   /// Returns the [ByteData] that was actually read, i.e. from 0 to
@@ -113,6 +112,8 @@ abstract class DcmReader extends DcmReaderInterface {
 
   /// The current read index.
   var _rIndex = 0;
+  EBytesMaker _shortMaker = EvrShort.make;
+  EBytesMaker _longMaker = EvrLong.make;
 
   /// Creates a new [DcmReader]  where [_rIndex] = writeIndex = 0.
   DcmReader(this.rootBD,
@@ -138,7 +139,7 @@ abstract class DcmReader extends DcmReaderInterface {
     }
   }
 
-  ElementList  _elements;
+  ElementList _elements;
   bool get isEVR => _isEVR;
 
   bool get _isReadable => _rIndex < rootBD.lengthInBytes;
@@ -432,15 +433,16 @@ abstract class DcmReader extends DcmReaderInterface {
       _zeroEncountered(code);
       return null;
     }
-    final vfLengthFieldField = (_isEVR) ? _readEVRHdr(code, eStart) : _readIVRHdr(code, eStart);
+    final vfLengthField =
+        (_isEVR) ? _readEVRHdr(code, eStart) : _readIVRHdr(code, eStart);
     assert(_vr != null, 'Invalid null VR: vrCode(${hex16(_vrCode)})');
     Element e;
     if (code == kPixelData) {
-      e = _readPixelData(eStart, vfLengthFieldField);
-    } else if (vfLengthFieldField == kUndefinedLength) {
-      e = _readULength(code, eStart, vfLengthFieldField);
+      e = _readPixelData(eStart, vfLengthField);
+    } else if (vfLengthField == kUndefinedLength) {
+      e = _readULength(code, eStart, vfLengthField);
     } else {
-      e = _readDLength(code, eStart, vfLengthFieldField);
+      e = _readDLength(code, eStart, vfLengthField);
     }
 
     //Enhancement: only gather statistics when statisticsEnables is true
@@ -448,7 +450,7 @@ abstract class DcmReader extends DcmReaderInterface {
     if (statisticsEnabled) {
       _nElementsRead++;
       _endOfLastValueRead = _rIndex;
-// TODO: convert to ELementOffsets      
+// TODO: convert to ELementOffsets
 //      if (elementListEnabled) elementList.add(eStart, _rIndex, e);
       _lastTopLevelElementRead = e;
       _lastElementCode = code;
@@ -471,7 +473,7 @@ abstract class DcmReader extends DcmReaderInterface {
   /// thrown; otherwise, the [TagElement] is added to both the [duplicates] [Map]
   /// and to the [TagDataset].
   void _add(Element eNew) => currentDS.elements.add(eNew);
-		  
+
 /*
   void _add(Element eNew) {
     final v = elements.lookup(eNew.index);
@@ -516,7 +518,7 @@ abstract class DcmReader extends DcmReaderInterface {
       _vfLengthField = _readUint32();
     }
     assert(_checkRIndex());
-    //TODO: add a statistics collector here recording frequency of code, vr, vfLengthFieldField
+    //TODO: add a statistics collector here recording frequency of code, vr, vfLengthField
     return _vfLengthField;
   }
 
@@ -563,31 +565,52 @@ abstract class DcmReader extends DcmReaderInterface {
     return _vfLengthField;
   }
 
+  Element _readShortEvrElement(int code, int eStart, int eLength) {
+		  log.down;
+		  Element e;
+		  if (code > 0x3000 && Tag.isGroupLengthCode(code)) _hadGroupLengths = true;
+		  _rIndex = _rIndex + vfLengthField;
+		  final eLength = _rIndex - eStart;
+		  e = _makeAndAddElement(eStart, eLength);
+		  //   }
+		  //  log.debug1('$ree   ${show(e)} @end');
+		  log.up;
+		  return e;
+	  }
+  }
+
+  Element _readLongEvrElement(int eStart, int eLength) {
+
+  }
+
+  Element _readEvrSequence(int eStart, int eLength) {
+
+  }
   // Read an [Element] with a defined length.
-  Element _readDLength(int code, int eStart, int vfLengthFieldField) {
-    //  log.debug2('$rmm   readDLength: ${dcm(code)} s:$eStart vfl: $vfLengthFieldField');
+  Element _readDLength(int code, int eStart, int vfLengthField) {
+    //  log.debug2('$rmm   readDLength: ${dcm(code)} s:$eStart vfl: $vfLengthField');
     Element e;
     if (_isSequence(code, _vrCode)) {
       //  log.debug2('$rmm     DLength Sequence');
-      e = _readDSQ(code, eStart, vfLengthFieldField);
-    } else if (vfLengthFieldField == 0) {
+      e = _readDSQ(code, eStart, vfLengthField);
+    } else if (vfLengthField == 0) {
       //  log.debug2('$rmm     DLength Empty Element');
       e = _makeAndAddElement(eStart, _rIndex - eStart);
     } else {
       //  log.debug2('$rmm     Simple DLength ');
-      e = _readSimpleDLength(code, eStart, vfLengthFieldField);
+      e = _readSimpleDLength(code, eStart, vfLengthField);
     }
     //  log.debug2('$rmm     ${show(e)} @end');
     assert(_checkRIndex());
     return e;
   }
 
-  Element _readSimpleDLength(int code, int eStart, int vfLengthFieldField) {
+  Element _readSimpleDLength(int code, int eStart, int vfLengthField) {
     log.down;
     //  log.debug1('$rbb  readSimpleDLength');
     Element e;
     if (code > 0x3000 && Tag.isGroupLengthCode(code)) _hadGroupLengths = true;
-    _rIndex = _rIndex + vfLengthFieldField;
+    _rIndex = _rIndex + vfLengthField;
     final eLength = _rIndex - eStart;
     e = _makeAndAddElement(eStart, eLength);
     //   }
@@ -596,28 +619,41 @@ abstract class DcmReader extends DcmReaderInterface {
     return e;
   }
 
+  Element _readShortEvrElement(int eStart, int eLength) {
+
+  }
+
+  Element _readLongEvrElement(int eStart, int eLength) {
+
+  }
+
+  Element _readEvrSequence(int eStart, int eLength) {
+
+  }
+
   Element _makeAndAddElement(int eStart, int eLength) {
-    final ebd = rootBD.buffer.asByteData(eStart, eLength);
-    final e = makeElement(_tag.vrIndex, _tag, ebd, _vfLengthField);
+    final bd = rootBD.buffer.asByteData(eStart, eLength);
+    final e = _eByteMaker(bd);
+    final e = makeElement(_tag.vrIndex, _elements, _vfLengthField, e);
     _add(e);
     return e;
   }
 
   /// Read an [Element] with [kUndefinedLength] Value Length Field.
-  Element _readULength(int code, int eStart, int vfLengthFieldField) {
+  Element _readULength(int code, int eStart, int vfLengthField) {
     log.down;
     //  log.debug2('$rbb readULength code${dcm(code)} eStart($eStart)');
-    assert(vfLengthFieldField == kUndefinedLength);
+    assert(vfLengthField == kUndefinedLength);
     Element e;
     if (_isSequence(code, _vrCode)) {
       //  log.debug2('$rmm   ULength Sequence(${dcm(code)}');
-      e = _readUSQ(code, eStart, vfLengthFieldField);
+      e = _readUSQ(code, eStart, vfLengthField);
 /*    } else if (code == kPixelData) {
       //  log.debug2('$rmm   ULength Pixel Data(${dcm(code)}');
-      e = _readFragmentedPixelData(eStart, vfLengthFieldField);*/
+      e = _readFragmentedPixelData(eStart, vfLengthField);*/
     } else {
       //  log.debug2('$rmm   Simple ULength element(${dcm(code)}');
-      e = _readSimpleULength(code, eStart, vfLengthFieldField);
+      e = _readSimpleULength(code, eStart, vfLengthField);
     }
     assert(_checkRIndex());
     //  log.debug2('$ree ${show(e)}   @end');
@@ -626,9 +662,9 @@ abstract class DcmReader extends DcmReaderInterface {
   }
 
   /// Read a simple Undefined Length [Element], i.e. not a [Sequence],
-  /// and not an encapsulated [kPixelData].
-  Element _readSimpleULength(int code, int eStart, int vfLengthFieldField) {
-    assert(vfLengthFieldField == kUndefinedLength);
+  /// and not an encapsulated [kPixelData]. Must be OB, OW, or UN.
+  Element _readSimpleULength(int code, int eStart, int vfLengthField) {
+    assert(vfLengthField == kUndefinedLength);
     log.down;
     //  log.debug1('$rbb readSimpleULength code(${dcm(code)}eStart($eStart)');
     final endOfVF = _findEndOfULengthVF();
@@ -645,7 +681,7 @@ abstract class DcmReader extends DcmReaderInterface {
     return e;
   }
 
-  Element _readPixelData(int eStart, int vfLengthFieldField) {
+  Element _readPixelData(int eStart, int vfLengthField) {
     assert(_vrCode == VR.kOB.code || _vrCode == VR.kOW.code || _vrCode == VR.kUN.code);
     _pixelDataStart = _rIndex;
     _pixelDataVR = VR.lookup(_vrCode);
@@ -655,8 +691,8 @@ abstract class DcmReader extends DcmReaderInterface {
     //  log.debug2('$rmm   item($item, ${hex32(item)}');
     if (item == kItem32BitLE) {
       //  log.debug1('$rmm readFragmentedPixelData eStart($eStart)');
-      e = _readFragmentedPixelData(eStart, vfLengthFieldField);
-    } else if (vfLengthFieldField == kUndefinedLength) {
+      e = _readFragmentedPixelData(eStart, vfLengthField);
+    } else if (vfLengthField == kUndefinedLength) {
       //  log.debug1('$rmm read Undefined Pixel Data eStart($eStart)');
       final endOfVF = _findEndOfULengthVF();
       final eLength = endOfVF - eStart;
@@ -664,7 +700,7 @@ abstract class DcmReader extends DcmReaderInterface {
       e = _makePixelData(eStart, eLength);
     } else {
       //  log.debug1('$rmm read Defined Pixel Data eStart($eStart)');
-      _rIndex = _rIndex + vfLengthFieldField;
+      _rIndex = _rIndex + vfLengthField;
       final eLength = _rIndex - eStart;
       e = _makePixelData(eStart, eLength);
     }
@@ -675,10 +711,10 @@ abstract class DcmReader extends DcmReaderInterface {
   }
 
   /// Reads an encapsulated (compressed) [kPixelData] [Element].
-  Element _readFragmentedPixelData(int eStart, int vfLengthFieldField) {
+  Element _readFragmentedPixelData(int eStart, int vfLengthField) {
 /*    log.debug(
         '$rbb readFragmentedPixelData vfLengthField($vfLengthField, '
-        '${hex32(vfLengthFieldField)}',
+        '${hex32(vfLengthField)}',
         1);*/
     if (_vrCode != VR.kOB.code && _vrCode != VR.kUN.code) {
       final vr = VR.lookup(_vrCode);
@@ -697,16 +733,17 @@ abstract class DcmReader extends DcmReaderInterface {
     var code = _readUint32();
     do {
       assert(code == kItem32BitLE, 'Invalid Item code: ${dcm(code)}');
-      final vfLengthFieldField = _readUint32();
-      assert(vfLengthFieldField != kUndefinedLength, 'Invalid length: ${dcm(vfLengthFieldField)}');
+      final vfLengthField = _readUint32();
+      assert(vfLengthField != kUndefinedLength,
+          'Invalid length: ${dcm(vfLengthField)}');
       final startOfVF = _rIndex;
-      _rIndex += vfLengthFieldField;
+      _rIndex += vfLengthField;
       fragments.add(rootBD.buffer.asUint8List(startOfVF, _rIndex - startOfVF));
       code = _readUint32();
     } while (code != kSequenceDelimitationItem32BitLE);
     // Read the Sequence Delimitation Item length field.
-    final vfLengthFieldField = _readUint32();
-    if (vfLengthFieldField != 0)
+    final vfLengthField = _readUint32();
+    if (vfLengthField != 0)
       _warn('Pixel Data Sequence delimiter has non-zero '
           'value: $code/0x${hex32(code)} $_rrr');
     return new VFFragments(fragments);
@@ -758,8 +795,8 @@ abstract class DcmReader extends DcmReaderInterface {
   // reading the value field of these [Element]s. Returns an [SQ] [Element].
 
   /// Reads a [kUndefinedLength] Sequence.
-  Element _readUSQ(int code, int eStart, int vfLengthFieldField) {
-    assert(vfLengthFieldField == kUndefinedLength);
+  Element _readUSQ(int code, int eStart, int vfLengthField) {
+    assert(vfLengthField == kUndefinedLength);
     //  log.debug('$rbb readUSQ: ${_startSQ(code, eStart, vfLengthField)}', 1);
     // FIX: give this a type when understood.
     final items = <Dataset>[];
@@ -794,10 +831,10 @@ abstract class DcmReader extends DcmReaderInterface {
     //  log.debug1('$rmm   makeSQ: $eStart - $items', 1);
     // Keep, but only use for debugging.
     //_showNext(_rIndex);
-	  final eLength = _rIndex - eStart;
+    final eLength = _rIndex - eStart;
     //  log.debug1('$rmm   eLength($eLength), makeSQ');
 
-	  final ebd = rootBD.buffer.asByteData(eStart, eLength);
+    final ebd = rootBD.buffer.asByteData(eStart, eLength);
     final sq = makeSQ(ebd, currentDS, items, _vfLengthField, _isEVR);
     _add(sq);
     if (Tag.isPrivateCode(code)) _nPrivateSequencesRead++;
@@ -844,7 +881,6 @@ abstract class DcmReader extends DcmReaderInterface {
     final RootDataset parentDS = currentDS;
     final eListParent = currentDS.elements;
     _elements = new MapAsList();
- 
 
     int itemEnd;
     try {

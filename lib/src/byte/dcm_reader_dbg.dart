@@ -13,7 +13,7 @@ import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:uid/uid.dart';
 
-import 'dcm_reader_interface.dart';
+import 'package:dcm_convert/src/base/dcm_reader_interface.dart';
 
 //TODO: redoc to reflect current state of code
 
@@ -69,7 +69,7 @@ abstract class DcmReader extends DcmReaderInterface {
   // **** stats and debugging
   final bool statisticsEnabled = true;
   final bool elementListEnabled = true;
-  final ElementList elementList = new ElementList();
+  final ElementOffsets elementList = new ElementOffsets();
 
   ByteData bdRead;
   final List<String> exceptions = <String>[];

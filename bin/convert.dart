@@ -15,7 +15,7 @@ import 'package:dcm_convert/src/byte/convert_byte_to_tag.dart';
 import 'package:dcm_convert/tools.dart';
 
 
-/// A Program that reads a [File], decodes it into a [RootByteDataset],
+/// A Program that reads a [File], decodes it into a [RootDatasetBytes],
 /// and then converts that into a [RootTagDataset].
 void main(List<String> args) {
   Server.initialize(name: 'convert', level: Level.info0);
@@ -50,7 +50,7 @@ RootTagDataset convertFile(dynamic file, {int reps = 1, bool fmiOnly = false}) {
   Logger log = new Logger('convertFile', Level.info);
   log.level = Level.warn1;
   log.debug2('Reading: $file');
-  RootByteDataset bRoot = ByteReader.readFile(f, fast: true);
+  RootDatasetBytes bRoot = ByteReader.readFile(f, fast: true);
   print('TS: ${bRoot.transferSyntax}');
   log.debug('bRoot.isRoot: ${bRoot.isRoot}');
   log.debug1(bRoot.parseInfo.info);

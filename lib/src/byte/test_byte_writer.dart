@@ -16,7 +16,7 @@ import 'byte_writer.dart';
 /// Note: This class should not be used in production code.
 class TestByteWriter extends ByteWriter {
   /// Creates a new [TestByteWriter].
-  TestByteWriter(RootByteDataset rootDS,
+  TestByteWriter(RootDatasetBytes rootDS,
       {int length,
       String path = "",
       TransferSyntax outputTS,
@@ -32,7 +32,7 @@ class TestByteWriter extends ByteWriter {
             encoding: encoding);
 
   /// Returns a [Uint8List] containing the encoded FMI.
-  Future<Uint8List> xWriteFmi(RootByteDataset rds) {
+  Future<Uint8List> xWriteFmi(RootDatasetBytes rds) {
     if (!rds.hadFmi || !rds.hasSupportedTransferSyntax) return null;
     return writeFMI(rds);
   }

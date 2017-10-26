@@ -14,9 +14,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:core/core.dart';
+import 'package:dataset/dataset.dart';
+import 'package:element/element.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/core.dart';
+import 'package:uid/uid.dart';
 
 import 'byte_data_buffer.dart';
 
@@ -67,7 +69,7 @@ abstract class DcmWriter {
 
   final EncodingParameters encoding;
 
-  final ElementList elementList = new ElementList();
+  final ElementOffsets elementList = new ElementOffsets();
 
   /// The current dataset.  This changes as Sequences are written.
   Dataset _currentDS;
@@ -86,7 +88,6 @@ abstract class DcmWriter {
       {this.path,
       this.file,
       TransferSyntax outputTS,
-      this.throwOnError = true,
       this.bufferLength,
       this.reUseBD = true,
       this.encoding = EncodingParameters.kNoChange})

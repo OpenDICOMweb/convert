@@ -54,7 +54,7 @@ bool readWritePath(String path, {int reps = 1, bool fmiOnly = false}) {
 bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
   Uint8List bytes0 = inFile.readAsBytesSync();
   ByteReader reader = new ByteReader(bytes0.buffer.asByteData());
-  RootByteDataset rds0 = reader.readRootDataset();
+  RootDatasetBytes rds0 = reader.readRootDataset();
 /*  List<int> elementIndex0 = reader.elementIndex;*/
   log.info0(rds0.parseInfo);
   log.info0(rds0.info);
@@ -68,7 +68,7 @@ bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
   for (int i = 0; i < reader.nthElement; i++)
     if (elementIndex0[i] != elementIndex1[i])
       print('$i: ${elementIndex0[i]} != ${elementIndex1[i]}');*/
-  RootByteDataset rds1 = ByteReader.readBytes(bytes1);
+  RootDatasetBytes rds1 = ByteReader.readBytes(bytes1);
   log.info0(rds1.parseInfo);
   log.info0(rds1.info);
   bool areDatasetsEqual = _compareDatasets(rds0, rds1);
@@ -97,13 +97,13 @@ bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
   log.info0('     read: ${inMS(rbTime)} ms');
 
   for (int i = 0; i < reps; i++) {
-    RootByteDataset rds0 = ByteReader.readBytes(bytes0);
+    RootDatasetBytes rds0 = ByteReader.readBytes(bytes0);
     Duration readDS0 = timer.split;
 
     Uint8List bytes1 = writeTimed(rds0);
     Duration writeDS0 = timer.split;
 
-    //  RootByteDataset rds1 =
+    //  RootDatasetBytes rds1 =
     ByteReader.readBytes(bytes1);
     Duration readDS1 = timer.split;
 
@@ -200,7 +200,7 @@ FileResult readWriteFileTiming(File file,
       Uint8List bytes2 = outFile.readAsBytesSync();
       Duration readBD2 = getElapsed();
 
-      RootByteDataset rds2 = ByteReader.readBytes(bytes1);
+      RootDatasetBytes rds2 = ByteReader.readBytes(bytes1);
       Duration readDS2 = getElapsed();
 
       if (shouldCompareDatasets) {
@@ -224,7 +224,7 @@ FileResult readWriteFileTiming(File file,
   return result;
 }
 
-bool _compareDatasets(RootByteDataset rds0, RootByteDataset rds1,
+bool _compareDatasets(RootDatasetBytes rds0, RootDatasetBytes rds1,
     [bool throwOnError = true]) {
   var v = compareByteDatasets(rds0, rds1, throwOnError);
   if (!v) {

@@ -4,43 +4,43 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:core/element.dart';
+import 'package:element/element.dart';
 import 'package:system/core.dart';
 
-class ElementList {
+class ElementOffsets {
   List<int> starts = <int>[];
   List<int> ends = <int>[];
   List<Element> elements = <Element>[];
 
-  ElementList();
+  ElementOffsets();
 
   // Enhancement: before release remove debugging.
   // Note: this does not compare elements!
   @override
   bool operator ==(Object other) {
-    bool result = true;
+    var result = true;
 
-    if (other is ElementList) {
-  //    log.debug('ElementList0 $length');
-  //    log.debug('ElementList0 ${other.length}');
+    if (other is ElementOffsets) {
+  //    log.debug('ElementOffsets0 $length');
+  //    log.debug('ElementOffsets0 ${other.length}');
       if (length != other.length) {
         result = false;
         log.debug('Length not equal: $length != ${other.length}');
       }
-      int len = (length > other.length) ? other.length : length;
-      for (int i = 0; i < len; i++) {
+      final len = (length > other.length) ? other.length : length;
+      for (var i = 0; i < len; i++) {
         if (starts[i] != other.starts[i] || ends[i] != other.ends[i]) {
-          int end = (len < i + 10) ? len : i + 10;
-          for(int j = i; j < end; j++) {
+          final end = (len < i + 10) ? len : i + 10;
+          for(var j = i; j < end; j++) {
             result = false;
-            log.debug('$i: ${starts[i]} other: ${other.starts[i]}');
-            log.debug('$i: ${ends[i]} other: ${other.ends[i]}');
-            log.debug('$i: ${elements[i]} other: ${other.elements[i]}');
+            log..debug('$i: ${starts[i]} other: ${other.starts[i]}')
+            ..debug('$i: ${ends[i]} other: ${other.ends[i]}')
+            ..debug('$i: ${elements[i]} other: ${other.elements[i]}');
             return false;
           }
         }
       }
-  //    log.debug('ElementList equal: $result');
+  //    log.debug('ElementOffsets equal: $result');
       return result;
     }
     return false;
@@ -59,16 +59,16 @@ class ElementList {
 
   @override
   String toString() {
-    var out = "ElementList:\n";
-    var sWidth = '${starts.last}'.length;
-    var eWidth = '${ends.last}'.length;
-    for (int i = 0; i < elements.length; i++) {
-      var start = '${starts[i]}'.padLeft(sWidth);
-      var end = '${ends[i]}'.padLeft(eWidth);
-      var e = elements[i];
-      out += '  $start - $end: $e\n';
+    final sb = new StringBuffer('ElementOffsets:\n');
+    final sWidth = '${starts.last}'.length;
+    final eWidth = '${ends.last}'.length;
+    for (var i = 0; i < elements.length; i++) {
+	    final start = '${starts[i]}'.padLeft(sWidth);
+	    final end = '${ends[i]}'.padLeft(eWidth);
+	    final e = elements[i];
+      sb.write('  $start - $end: $e\n');
     }
-    out += '  Total: $length\n';
-    return out;
+    sb.write('  Total: $length\n');
+    return sb.toString();
   }
 }

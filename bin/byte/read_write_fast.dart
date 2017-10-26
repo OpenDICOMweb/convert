@@ -45,7 +45,7 @@ bool readWriteFileFast(File file, {int reps = 1, bool fmiOnly = false}) {
   Uint8List bytes0 = file.readAsBytesSync();
   if (bytes0 == null) return false;
   if (bytes0.length <= shortFileMark) shortFiles.add('"${file.path}"');
-  RootByteDataset rds0 = ByteReader.readBytes(bytes0, path: file.path);
+  RootDatasetBytes rds0 = ByteReader.readBytes(bytes0, path: file.path);
   if (rds0 == null) return false;
   log.debug(rds0);
   Uint8List bytes1 = writeTimed(rds0);
@@ -63,7 +63,7 @@ bool readWriteFileTimed(File file, {int reps = 1, bool fmiOnly = false}) {
   if (bytes0 == null) return false;
   if (bytes0.length <= shortFileMark) shortFiles.add('"${file.path}"');
 
-  RootByteDataset rds0 = ByteReader.readBytes(bytes0, path: file.path);
+  RootDatasetBytes rds0 = ByteReader.readBytes(bytes0, path: file.path);
   var parse = timer.split;
   if (rds0 == null) return false;
 

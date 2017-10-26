@@ -67,7 +67,7 @@ bool readWriteCheck(File file, {int reps = 1, bool fmiOnly = false}) {
   log.config('Reading: $file with ${bytes0.lengthInBytes} bytes', 1);
 
   if (bytes0 == null) return false;
-  RootByteDataset rds0 =
+  RootDatasetBytes rds0 =
       ByteReader.readBytes(bytes0, path: file.path, fast: true);
   log.debug('rds0 root: ${rds0.root}');
   log.debug('ParseInfo: ${rds0.parseInfo}');

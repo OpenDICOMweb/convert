@@ -62,7 +62,7 @@ Timings for ${file.path}
 
 class FileResult {
   File file;
-  RootByteDataset rds;
+  RootDatasetBytes rds;
   bool fmiOnly;
   TransferSyntax targetTS;
   FileTiming times;
@@ -295,7 +295,7 @@ ResultSet readFileList(List<File> files,
   return results;
 }
 
-void formatDataset(RootByteDataset rds, [bool includePrivate = true]) {
+void formatDataset(RootDatasetBytes rds, [bool includePrivate = true]) {
   var z = new Formatter(maxDepth: 146);
   log.debug(rds.format(z));
 }

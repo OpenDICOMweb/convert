@@ -8,7 +8,7 @@ class EndOfDataError extends Error {
   String method;
   String msg;
 
-  EndOfDataError(this.method, [this.msg = ""]);
+  EndOfDataError(this.method, [this.msg = '']);
 
   @override
   String toString() => 'EndOfDataException in $method: $msg';
@@ -17,7 +17,7 @@ class EndOfDataError extends Error {
 class ShortFileError extends Error {
   String msg;
 
-  ShortFileError([this.msg = ""]);
+  ShortFileError([this.msg = '']);
 
   @override
   String toString() => 'ShortFileError in $msg';

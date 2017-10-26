@@ -12,13 +12,13 @@ import 'package:dcm_convert/dcm.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 
-import 'dcm_reader.dart';
+import 'package:dcm_convert/src/base/dcm_reader.dart';
 
 /// A decoder for Binary DICOM (application/dicom).
-/// The resulting [Dataset] is a [RootByteDataset].
+/// The resulting [Dataset] is a [RootDatasetBytes].
 class ByteReader extends DcmReader {
 	@override
-	final RootByteDataset rootDS;
+	final RootDatasetBytes rootDS;
   ByteDataset _currentDS;
   Map<int, Element> _currentMap;
   Map<int, Element> _currentDupMap;
@@ -34,7 +34,7 @@ class ByteReader extends DcmReader {
       bool allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true})
-      : rootDS = new RootByteDataset.fromByteData(bd, dsLength: bd.lengthInBytes),
+      : rootDS = new RootDatasetBytes.fromByteData(bd, dsLength: bd.lengthInBytes),
         super(bd,
             path: path,
             async: async,
@@ -157,16 +157,16 @@ class ByteReader extends DcmReader {
 
   // **** End DcmReaderInterface ****
 
-  RootByteDataset readFMI({bool checkPreamble = false, bool allowMissingPrefix = false}) {
+  RootDatasetBytes readFMI({bool checkPreamble = false, bool allowMissingPrefix = false}) {
     bool hadFmi =
         dcmReadFMI(checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
     rootDS.parseInfo = getParseInfo();
     return (hadFmi) ? rootDS : null;
   }
 
-  /// Reads a [RootByteDataset] from [this], stores it in [rootDS],
+  /// Reads a [RootDatasetBytes] from [this], stores it in [rootDS],
   /// and returns it.
-  RootByteDataset readRootDataset(
+  RootDatasetBytes readRootDataset(
       {bool allowMissingFMI = false,
       bool checkPreamble = true,
       bool allowMissingPrefix = false}) {
@@ -222,7 +222,7 @@ class ByteReader extends DcmReader {
   }
 
   /// Reads only the File Meta Information ([FMI], if present.
-  static RootByteDataset readBytes(Uint8List bytes,
+  static RootDatasetBytes readBytes(Uint8List bytes,
       {String path = "",
       bool async = true,
       bool fast = true,
@@ -231,7 +231,7 @@ class ByteReader extends DcmReader {
       allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true}) {
-    RootByteDataset rds;
+    RootDatasetBytes rds;
     try {
       ByteData bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
       ByteReader reader = new ByteReader(bd,
@@ -250,7 +250,7 @@ class ByteReader extends DcmReader {
     return rds;
   }
 
-  static RootByteDataset readFile(File file,
+  static RootDatasetBytes readFile(File file,
       {bool async: true,
       bool fast = true,
       bool fmiOnly = false,

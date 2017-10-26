@@ -22,7 +22,7 @@ Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) asy
   	  Uint8List bytes = await f.readAsBytes();
   	  ByteData bd = bytes.buffer.asByteData();
     var reader0 = new ByteReader(bd, fast: true);
-    RootByteDataset rds0 = reader0.readRootDataset();
+    RootDatasetBytes rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
       log.info0('Bad File: ${f.path}');
@@ -56,7 +56,7 @@ $pad    TS: ${rds0.transferSyntax}''');
 
    // Urgent Jim if file has dups then no test is done. Fix it.
     bool same = true;
-    // If duplicates are present the [ElementList]s will not be equal.
+    // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
       same = bytesEqual(bytes0, bytes1);

@@ -10,7 +10,7 @@ import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
 import 'package:system/core.dart';
 
-/// A Program that reads a [File], decodes it into a [RootByteDataset],
+/// A Program that reads a [File], decodes it into a [RootDatasetBytes],
 /// and then converts that into a [RootTagDataset].
 void main() {
   system.log.level = Level.info;
@@ -20,7 +20,7 @@ void main() {
 
   File f = toFile(path, mustExist: true);
   log.debug2('Reading: $f');
-  RootByteDataset rds = ByteReader.readFile(f, fast: true);
+  RootDatasetBytes rds = ByteReader.readFile(f, fast: true);
   log.debug('bRoot.isRoot: ${rds.isRoot}');
 
   log.info0('patientID: "${rds.patientId}"');

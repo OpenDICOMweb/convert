@@ -12,7 +12,7 @@ import 'package:system/core.dart';
 import 'package:timer/timer.dart';
 import 'package:uid/uid.dart';
 
-Future<Uint8List> writeFile(RootByteDataset rds, String path,
+Future<Uint8List> writeFile(RootDatasetBytes rds, String path,
     {bool fmiOnly = false, TransferSyntax outputTS}) {
   var timer = new Timer();
   var total = rds.total;

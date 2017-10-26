@@ -12,8 +12,8 @@ import 'package:core/core.dart';
 
 
 
-RootTDataset convert(RootByteDataset byteDS) {
-  RootByteDataset byteDS;
+RootTDataset convert(RootDatasetBytes byteDS) {
+  RootDatasetBytes byteDS;
   RootTDataset tagDS;
 
   TElement convertElement(Element e) {
@@ -63,13 +63,13 @@ TElement convertSequence(Tag tag, ByteSQ bSQ) {
     tagDS.add(convertElement(e));
 }
 
-class ProfiledDataset extends RootByteDataset {
-  RootByteDataset original;
+class ProfiledDataset extends RootDatasetBytes {
+  RootDatasetBytes original;
 
   ProfiledDataset(this.original, {bool replaceAllUids = true})
       : super.from(original);
 
-  static toProfiledDataset(RootByteDataset rds) {
+  static toProfiledDataset(RootDatasetBytes rds) {
 
   }
 

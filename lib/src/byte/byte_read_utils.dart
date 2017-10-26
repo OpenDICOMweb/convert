@@ -73,11 +73,11 @@ bool byteReadWriteFileChecked(String path,
         ..debug2(rds1.format(new Formatter(maxDepth: -1)));
     }
 
-    // If duplicates are present the [ElementList]s will not be equal.
+    // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
-      // Compare [ElementList]s
+      // Compare [ElementOffsets]s
       if (reader0.elementList != writer.elementList)
-        log.warn('$pad ElementLists are different!');
+        log.warn('$pad ElementOffsetss are different!');
     }
 
     // Compare [Dataset]s - only compares the elements in dataset.map.
@@ -87,7 +87,7 @@ bool byteReadWriteFileChecked(String path,
       log.warn('$pad Datasets are different!');
     }
 
-    // If duplicates are present the [ElementList]s will not be equal.
+    // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
       final same = bytesEqual(bytes0, bytes1);
@@ -107,7 +107,7 @@ bool byteReadWriteFileChecked(String path,
   return success;
 }
 
-RootByteDataset readFileTimed(File file,
+RootDatasetBytes readFileTimed(File file,
     {bool fmiOnly = false,
     TransferSyntax targetTS,
     Level level = Level.warn,
@@ -148,10 +148,10 @@ RootByteDataset readFileTimed(File file,
   }
 }
 
-RootByteDataset readFMI(Uint8List bytes, [String path = '']) =>
+RootDatasetBytes readFMI(Uint8List bytes, [String path = '']) =>
     ByteReader.readBytes(bytes, path: path, fmiOnly: true);
 
-Uint8List writeTimed(RootByteDataset rds,
+Uint8List writeTimed(RootDatasetBytes rds,
     {String path = '', bool fast = true, bool fmiOnly = false, TransferSyntax targetTS}) {
   final timer = new Stopwatch();
   final timestamp = new Timestamp();
@@ -172,8 +172,8 @@ Uint8List writeTimed(RootByteDataset rds,
   return bytes;
 }
 
-Future<Uint8List> writeFMI(RootByteDataset rds, [String path]) async =>
+Future<Uint8List> writeFMI(RootDatasetBytes rds, [String path]) async =>
     await ByteWriter.writePath(rds, path, fmiOnly: true);
 
-Future<Uint8List> writeRoot(RootByteDataset rds, {String path}) =>
+Future<Uint8List> writeRoot(RootDatasetBytes rds, {String path}) =>
     ByteWriter.writePath(rds, path);

@@ -16,11 +16,12 @@ import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
 import 'package:element/element.dart';
-import 'package:dcm_convert/dcm.dart';
 import 'package:system/core.dart';
 import 'package:uid/uid.dart';
 
-import 'byte_data_buffer.dart';
+import 'package:dcm_convert/src/byte/byte_data_buffer.dart';
+import 'package:dcm_convert/src/byte/element_offsets.dart';
+import 'package:dcm_convert/src/encoding_parameters.dart';
 
 //TODO: rewrite all comments to reflect current state of code
 
@@ -67,7 +68,7 @@ abstract class DcmWriter {
 
   final EncodingParameters encoding;
 
-  final ElementList elementList = new ElementList();
+  final ElementOffsets elementList = new ElementOffsets();
 
   /// The current dataset.  This changes as Sequences are written.
   Dataset _currentDS;
@@ -82,7 +83,7 @@ abstract class DcmWriter {
   int _nPrivateElements = 0;
   int _nPrivateSequences = 0;
 
-  /// Creates a new [DcmByteWriter], where [_wIndex] = [writeIndex] = 0.
+  /// Creates a new [DcmWriter], where [_wIndex] = [wIndex] = 0.
   DcmWriter(Dataset rootDS,
       {this.path,
       this.file,
@@ -99,7 +100,7 @@ abstract class DcmWriter {
                 (bufferLength == null) ? defaultBufferLength : bufferLength);
 
   /// Returns the [targetTS] for the encoded output.
-  static TransferSyntax getOutputTS(Dataset rootDS, TransferSyntax outputTS) {
+  static TransferSyntax getOutputTS(RootDataset rootDS, TransferSyntax outputTS) {
     if (outputTS == null) {
       return (rootDS.transferSyntax == null)
           ? system.defaultTransferSyntax
@@ -111,7 +112,6 @@ abstract class DcmWriter {
 
   /// The [ByteData] buffer being written.
   ByteData get bd => _bd;
-
 
   /// Returns a [Uint8List] view of the [ByteData] buffer at the current time
   Uint8List get bytes => _bd.buffer.asUint8List(0, _wIndex);
@@ -126,15 +126,12 @@ abstract class DcmWriter {
   bool get isWriteable => _isWritable;
 
   /// The root Dataset being encoded.
-  Dataset get rootDS;
+  RootDataset get rootDS;
 
   TransferSyntax get ts => rootDS.transferSyntax;
 
   /// The current dataset.  This changes as Sequences and Items are encoded.
-  Dataset get currentDS => _currentDS;
-
-  /// Sets the [currentDS] to [ds].
-  set currentDS(Dataset ds) => _currentDS = ds;
+  Dataset currentDS;
 
   /// The current [length] in bytes of [this].
   int get lengthInBytes => _wIndex;
@@ -142,13 +139,14 @@ abstract class DcmWriter {
   /// The current [length] in bytes of [this].
   int get length => lengthInBytes;
 
+  bool get removeUndefinedLengths => encoding.doConvertUndefinedLengths;
   /// Returns [info] about [this].
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
   /// Writes (encodes) only the FMI in the root [Dataset] in 'application/dicom'
   /// media type, writes it to a Uint8List, and returns the [Uint8List].
-  Uint8List dcmWriteFMI(bool hadFmi) {
+  Uint8List dcmWriteFMI({bool hadFmi}) {
     _writeFMI(hadFmi);
     final bytes = _bd.buffer.asUint8List(0, _wIndex);
     _writeFileOrPath(bytes);
@@ -179,7 +177,7 @@ abstract class DcmWriter {
   /// Writes [bytes] to [file] if it is not [null]; otherwise, writes to
   /// [path] if it is not null. If both are [null] nothing is written.
   void _writeFileOrPath(Uint8List bytes) {
-	  final f = (file == null && path != "") ? new File(path) : file;
+	  final f = (file == null && path != '') ? new File(path) : file;
     if (f != null) {
       f.writeAsBytesSync(bytes);
     }
@@ -196,19 +194,19 @@ abstract class DcmWriter {
   /// The current readIndex as a string.
   String get www => 'W@$wIndex';
 
-  /// The beginning of reading an [Element] or [ByteItem].
+  /// The beginning of reading an [Element] or [Item].
   String get wbb => '> $www';
 
-  /// In the middle of reading an [Element] or [ByteItem]
+  /// In the middle of reading an [Element] or [Item]
   String get wmm => '| $www';
 
-  /// The end of reading an [Element] or [ByteItem]
+  /// The end of reading an [Element] or [Item]
   String get wee => '< $www';
 
 
   // **** Private methods
 
-  /// Writes File Meta Information ([FMI]) to the output.
+  /// Writes File Meta Information (FMI) to the output.
   /// _Note_: FMI is always Explicit Little Endian
   bool _writeFMI(bool hadFmi) {
     //  if (encoding.doUpdateFMI) return writeODWFMI();
@@ -278,7 +276,7 @@ abstract class DcmWriter {
 
   void _writeElement(Element e) {
 	  final eStart = _wIndex;
-    if (e.isSequence) {
+    if (e is SQ) {
       _writeSequence(e);
     } else {
       if (e.code == kPixelData) {
@@ -334,7 +332,6 @@ abstract class DcmWriter {
   }
 
   void _writeSequence(SQ e) {
-    assert(e.isSequence);
     //TODO: handle replacing undefined lengths
     _writeHeader(e);
     final sq = e;
@@ -347,29 +344,28 @@ abstract class DcmWriter {
   void _writeItems(SQ sq) {
     //TODO: handle replacing undefined lengths
 
-    List<Dataset> items = sq.items;
-    for (Dataset item in items) {
+    final items = sq.items;
+    for (var item in items) {
       _writeDelimiter(kItem, item.vfLength);
-      for (var e in item.elements) _writeElement(e);
-      if (item.hadULength) _writeDelimiter(kItemDelimitationItem);
+      item.elements.forEach(_writeElement);
+      if (item.hasULength) _writeDelimiter(kItemDelimitationItem);
     }
   }
 
-  /// Write encapsulated (compressed) [kPixelData] from [Element] [e].
-  void _writePixelData(Element e) {
+  /// Write encapsulated (compressed) [kPixelData] from [PixelData] [pd].
+  void _writePixelData(PixelData pd) {
     //TODO: handle replacing undefined lengths
     //TODO: handle doRemoveFragments
-    PixelDataMixin pd = e as PixelDataMixin;
     if (pd.fragments != null) {
-      _writeHeader(e);
-      for (Uint8List fragment in pd.fragments.fragments) {
+      _writeHeader(pd);
+      for (var fragment in pd.fragments.fragments) {
         _writeTagCode(kItem);
         _writeUint32(fragment.lengthInBytes);
         _writeBytes(fragment);
       }
       _writeDelimiter(kSequenceDelimitationItem);
     } else {
-      _writeSimpleElement(e);
+      _writeSimpleElement(pd);
     }
   }
 
@@ -511,7 +507,7 @@ abstract class DcmWriter {
     _bd = newBuffer;
   }
 
-  static ByteData _reuseBuffer([int size = defaultBufferLength]) {
+  static ByteData _reuseBuffer([int size]) {
     size ??= defaultBufferLength;
     if (_reuse == null) return _reuse = new ByteData(size);
     if (size > _reuse.lengthInBytes) {

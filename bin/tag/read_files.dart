@@ -28,7 +28,7 @@ void readFile(String path) {
   // if (log.level == Level.debug) formatDataset(rds);
 }
 
-void formatDataset(RootByteDataset rds, [bool includePrivate = true]) {
+void formatDataset(RootDatasetBytes rds, [bool includePrivate = true]) {
   var z = new Formatter(maxDepth: 146);
   log.debug(rds.format(z));
   for (PrivateGroup pg in rds.privateGroups)
@@ -42,12 +42,12 @@ void readFiles(List<String> paths) {
 }
 
 /* Flush if not needed
-RootByteDataset _readFile(File file) {
+RootDatasetBytes _readFile(File file) {
   Uint8List bytes = file.readAsBytesSync();
   if (bytes.length < 8 * 1024)
     log.warn('***** Short file length: ${bytes.length} - ${file.path}');
   log.debug('Reading file: $file, length: ${bytes.length}');
-  RootByteDataset rds;
+  RootDatasetBytes rds;
   try {
     rds = ByteReader.readBytes(bytes, path: file.path);
   } on InvalidTransferSyntaxError catch(e) {
