@@ -19,7 +19,7 @@ typedef Element PixelDataMaker<V>(ByteData bd, Dataset parent, List<Dataset> ite
 
 const int shortFileThreshold = 1024;
 
-abstract class DcmReaderInterface {
+abstract class DcmWriterInterface {
   /// Returns the [ByteData] for the entire Root [Dataset].
   ByteData get rootBD;
 
@@ -35,6 +35,7 @@ abstract class DcmReaderInterface {
   /// The current duplicate [List<Element>].
   List<Element> get duplicates => currentDS.elements.duplicates;
 
+/*
   /// Returns a new Element.
   Element makeElement(EBytes eb, int vrIndex);
 
@@ -48,6 +49,7 @@ abstract class DcmReaderInterface {
 
   /// Returns a new [Item].
   Item makeItem(Dataset parent, {ElementList elements, SQ sequence, DSBytes eb});
+*/
 
   /// Returns a new [Item].
 //  Item makeItemFromBytes(IDSBytes dsBytes, Dataset parent, ElementList elements,
@@ -56,9 +58,12 @@ abstract class DcmReaderInterface {
   /// Returns a subtype of [Element].
  // Element makePixelData(EBytes eb, int vrIndex, [VFFragments fragments]);
 
+/*
   /// Interface for logging
   String itemInfo(Item item);
 
   /// Interface for logging
   String elementInfo(Element e);
+*/
+
 }

@@ -11,38 +11,45 @@ part of odw.sdk.convert.binary;
 /// If an error is encountered and [system].throwOnError is [true],
 /// an Error will be thrown; otherwise, returns [null].
 RootDataset _readRootDataset(String path, DecodingParameters dParam) {
-  _currentDS = _rootDS;
-
-   _hadFmi = _readFmi(path, dParam);
-  if (!_hadFmi) return _rootDS;
-
-
-
-  // Set the Element reader based on the Transfer Syntax.
-  _readElement = (_isEVR) ? _readEvrElement : _readIvrElement;
+  final eStart = _rIndex;
 
   try {
     _currentDS = _rootDS;
+    _hadFmi = _readFmi(path, dParam);
+    if (!_hadFmi && !dParam.allowMissingFMI) return _rootDS;
+
+    // Set the Element reader based on the Transfer Syntax.
+    _readElement = (_isEVR) ? _readEvrElement : _readIvrElement;
+
     //  log.debug1('$rbb readDataset: isExplicitVR(${_isEVR})');
     while (_hasRemaining(8)) {
+      assert(identical(_currentDS, _rootDS));
       _lastTopLevelElementRead = _readElement();
       //  log.debug1('$ree end readDataset: isExplicitVR(${_isEVR})');
       assert(identical(_currentDS, _rootDS));
     }
-  } on EndOfDataError {
-    log.info0('$_rrr EndOfDataError');
+    //  log.debug('rootDS: $rootDS');
+    //  log.debug('RootDS.TS: ${rootDS.transferSyntax}');
+    //  log.debug('elementList(${elementList.length})');
+  } on ShortFileError catch (e) {
+    _hadParsingErrors = true;
+    _rootDS = null;
+    _error(failedFMIErrorMsg(path, e));
+  } on EndOfDataError catch (e) {
+    _hadParsingErrors = true;
     _endOfDataError = true;
-  } on ShortFileError {
-    rethrow;
+    log.error(e);
+  } on InvalidTransferSyntax catch (e) {
+    _warn(failedTSErrorMsg(path, e));
   } on RangeError catch (ex) {
     _error('$ex\n $stats');
     if (_beyondPixelData) log.info0('$_rrr Beyond Pixel Data');
     // Keep: *** Keep, but only use for debugging.
     if (throwOnError) rethrow;
-  } catch (ex) {
-    _error('$_rrr $ex\n $stats');
-    // *** Keep, but only use for debugging.
-    if (throwOnError) rethrow;
+  } catch (x) {
+    _rIndex = eStart;
+    _hadParsingErrors = true;
+    _error(failedFMIErrorMsg(path, x));
   } finally {
     bdRead = _rootBD.buffer.asByteData(0, _endOfLastValueRead);
     //      assert(_rIndex == _endOfLastValueRead,
@@ -65,6 +72,7 @@ RootDataset _readRootDataset(String path, DecodingParameters dParam) {
       _hadTrailingZeros = _checkAllZeros(_rIndex, _rootBD.lengthInBytes);
   }
 
+  _rootDS.parseInfo = getParseInfo();
   final _rootDSTotal = _rootDS.total + _rootDS.dupTotal;
   if (_nElementsRead != _rootDSTotal) readerInconsistencyError(_rootDS);
   return _rootDS;

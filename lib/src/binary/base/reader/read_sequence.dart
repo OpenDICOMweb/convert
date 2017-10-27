@@ -68,7 +68,7 @@ Element _makeSequence(
   //  log.debug1('$rmm   eLength($eLength), makeSQ');
   final bd = _rootBD.buffer.asByteData(eStart, _rIndex - eStart);
   final eb = ebMaker(bd);
-  final sq = makeSequence(eb, _currentDS, items);
+  final SQ sq = makeSequence(eb, _currentDS, items);
   _currentDS.elements.add(sq);
   if (Tag.isPrivateCode(code)) _nPrivateSequencesRead++;
   _nSequencesRead++;

@@ -13,7 +13,7 @@ import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/reader_interface.dart';
+import 'package:dcm_convert/src/binary/base/reader/reader_interface.dart';
 
 //TODO: redoc to reflect current state of code
 

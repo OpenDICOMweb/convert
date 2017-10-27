@@ -7,18 +7,21 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/dcm.dart';
+import 'package:dataset/byte_dataset.dart';
+import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
+import 'package:uid/uid.dart';
 
-import 'byte_writer.dart';
+import 'package:dcm_convert/src/binary/byte/byte_writer.dart';
+import 'package:dcm_convert/src/encoding_parameters.dart';
 
 /// A class designed for testing [ByteWriter].
 /// Note: This class should not be used in production code.
 class TestByteWriter extends ByteWriter {
   /// Creates a new [TestByteWriter].
-  TestByteWriter(RootDatasetBytes rootDS,
+  TestByteWriter(RootDatasetByte rootDS,
       {int length,
-      String path = "",
+      String path = '',
       TransferSyntax outputTS,
       bool throwOnError = true,
       bool reUseBD = true,
@@ -32,16 +35,15 @@ class TestByteWriter extends ByteWriter {
             encoding: encoding);
 
   /// Returns a [Uint8List] containing the encoded FMI.
-  Future<Uint8List> xWriteFmi(RootDatasetBytes rds) {
-    if (!rds.hadFmi || !rds.hasSupportedTransferSyntax) return null;
-    return writeFMI(rds);
+  Future<Uint8List> xWriteFmi(RootDatasetByte rds) {
+    if (!rds.hasFmi || !rds.hasSupportedTransferSyntax) return null;
+    return writeFMI();
   }
 
   /// Returns a [Uint8List] containing the encoded [Dataset].
-  void xWriteDataset(ByteDataset ds) {
+  void xWriteDataset(RootDatasetByte ds) {
     log.debug('$wbb writeDataset: isExplicitVR(${ds.isEVR})', 1);
-    var writer = new ByteWriter(ds, bufferLength: ds.dsLength);
-    writer.writeDataset(ds);
+    new ByteWriter(ds, bufferLength: ds.length)..writeDataset(ds);
     log.debug('$wee end writeDataset: isExplicitVR(${ds.isEVR})', -1);
   }
 

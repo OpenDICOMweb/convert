@@ -16,7 +16,7 @@ part of odw.sdk.convert.binary;
 
 	  final e = (vrIndex == VR.kSQ.index || _isSequence(code, vrIndex))
 	      ? _readIvrSequence(code, eStart)
-	      : _readLongElement(code, eStart, vrIndex);
+	      : _readLong(code, eStart, vrIndex, _readUint32());
     assert(_checkRIndex());
     return _finishReadElement(code, eStart, e);
   }

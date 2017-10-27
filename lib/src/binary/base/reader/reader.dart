@@ -14,19 +14,19 @@ import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/binary/element_offsets.dart';
+import 'package:dcm_convert/src/binary/base/reader/element_offsets.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/errors.dart';
-import 'package:dcm_convert/src/reader_interface.dart';
+import 'package:dcm_convert/src/binary/base/reader/reader_interface.dart';
 
-part 'package:dcm_convert/src/binary/read_evr.dart';
-part 'package:dcm_convert/src/binary/read_fmi.dart';
-part 'package:dcm_convert/src/binary/reader_info.dart';
-part 'package:dcm_convert/src/binary/read_ivr.dart';
-part 'package:dcm_convert/src/binary/read_pixels.dart';
-part 'package:dcm_convert/src/binary/read_root.dart';
-part 'package:dcm_convert/src/binary/read_sequence.dart';
-part 'package:dcm_convert/src/binary/read_utils.dart';
+part 'package:dcm_convert/src/binary/base/reader/read_evr.dart';
+part 'package:dcm_convert/src/binary/base/reader/read_fmi.dart';
+part 'package:dcm_convert/src/binary/base/reader/reader_info.dart';
+part 'package:dcm_convert/src/binary/base/reader/read_ivr.dart';
+part 'package:dcm_convert/src/binary/base/reader/read_pixels.dart';
+part 'package:dcm_convert/src/binary/base/reader/read_root.dart';
+part 'package:dcm_convert/src/binary/base/reader/read_sequence.dart';
+part 'package:dcm_convert/src/binary/base/reader/read_utils.dart';
 
 //TODO: redoc to reflect current state of code
 
@@ -40,7 +40,7 @@ Dataset _currentDS;
 ElementList _elements;
 var _bytesUnread = 0;
 
-DecodingParameters _decode;
+DecodingParameters _dParams;
 ElementOffsets _offsets;
 
 /// The current read index.
@@ -48,6 +48,9 @@ var _rIndex = 0;
 
 bool _hasRemaining(int n) => (_rIndex + n) <= _rootBD.lengthInBytes;
 bool _isReadable() => _rIndex < _rootBD.lengthInBytes;
+
+Element readElement({bool isEVR = true}) =>
+		(isEVR) ?_readEvrElement() : _readIvrElement();
 
 Function _readElement;
 
@@ -96,7 +99,7 @@ abstract class DcmReader extends DcmReaderInterface {
       if (throwOnError) throw new ShortFileError('Length($rootBD.lengthInBytes) $path');
     }
     _rootBD = rootBD;
-    _decode = dParams;
+    _dParams = dParams;
     if (elementOffsetsEnabled) _offsets = new ElementOffsets();
   }
 
@@ -104,18 +107,19 @@ abstract class DcmReader extends DcmReaderInterface {
 
   bool get isReadable => _isReadable();
 
-  bool hasRemaining(int n) => _hasRemaining(n);
-
   Uint8List get buffer =>
       rootBD.buffer.asUint8List(rootBD.offsetInBytes, rootBD.lengthInBytes);
 
   Uint8List get rootBytes =>
       rootBD.buffer.asUint8List(rootBD.offsetInBytes, rootBD.lengthInBytes);
 
+  ElementOffsets get offsets => _offsets;
+
   String get info => '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${currentDS.info}';
 
-  RootDataset readRoot() =>
-      _readRootDataset(path, dParams);
+  bool hasRemaining(int n) => _hasRemaining(n);
+
+  RootDataset readRoot() => _readRootDataset(path, dParams);
 
   bool dcmReadFMI({bool checkPreamble = true, bool allowMissingPrefix = false}) {
     _currentDS = rootDS;
@@ -127,3 +131,13 @@ abstract class DcmReader extends DcmReaderInterface {
   @override
   String toString() => '$runtimeType: rootDS: $rootDS, currentDS: $currentDS';
 }
+
+String failedTSErrorMsg(String path, Error x) => '''
+Failed to read FMI: "$path"\nException: $x\n $_rrr
+    File length: ${_rootBD.lengthInBytes}\n$ree readFMI catch: $x
+''';
+
+String failedFMIErrorMsg(String path, Error x) => '''
+Failed to read FMI: "$path"\nException: $x\n'
+	  File length: ${_rootBD.lengthInBytes}\n$ree readFMI catch: $x');
+''';

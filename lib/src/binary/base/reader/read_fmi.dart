@@ -12,53 +12,39 @@ const int kDcmPrefix = 0x44494349;
 
 /// Reads File Meta Information ([Fmi]) and returns a Map<int, Element>
 /// if any [Fmi] [Element]s were present; otherwise, returns null.
-bool _readFmi(String path, DecodingParameters param) {
-  final eStart = _rIndex;
+bool _readFmi(String path, DecodingParameters dParams) {
   _isEVR = true;
   assert(_currentDS == _rootDS);
   //  log.debug('$rbb readFmi($currentDS)', -1);
   assert(_hadPrefix == null);
-  try {
-    _hadPrefix = _readPrefix(path, param.checkPreambleAllZeros);
-    if (!_hadPrefix && !param.allowMissingPrefix) {
-      _rootDS = null;
-      return false;
-    }
-    //  log.debug1('$rmm readFMI: prefix($_hadPrefix) $rootDS');
-
-    while (_isReadable()) {
-      final code = _peekTagCode();
-      if (code == 0) _zeroEncountered(code);
-      if (code >= 0x00030000) break;
-      _readEvrElement();
-    }
-    _hadFmi = true;
-
-    if (!_hadFmi && !param.allowMissingFMI) return false;
-    if (!system.isSupportedTransferSyntax(_tsUid.asString)) {
-      _hadParsingErrors = true;
-      _error('$ree Unsupported TS: $_tsUid @end');
-      if (throwOnError) throw new InvalidTransferSyntax();
-      return false;
-    }
-
-    //TODO: better error msg
-    if (!_isReadable()) return false;
-  } on InvalidTransferSyntax catch (x) {
-    _hadParsingErrors = true;
-    _warn(failedTSErrorMsg(path, x));
-    _rIndex = 0;
-    //  log.debug('$ree readFMI Invalid TS catch: $x', -1);
+  _hadPrefix = _readPrefix(path, dParams.checkPreambleAllZeros);
+  if (!_hadPrefix && !dParams.allowMissingPrefix) {
+    _rootDS = null;
     return false;
-  } catch (x) {
+  }
+  //  log.debug1('$rmm readFMI: prefix($_hadPrefix) $rootDS');
+
+  while (_isReadable()) {
+    final code = _peekTagCode();
+    if (code == 0) _zeroEncountered(code);
+    if (code >= 0x00030000) break;
+    _readEvrElement();
+  }
+  _hadFmi = true;
+
+  if (!_hasRemaining(shortFileThreshold - _rIndex)) {
+	  _hadParsingErrors = true;
+	  throw new ShortFileError();
+  }
+  if (!system.isSupportedTransferSyntax(_tsUid.asString)) {
+    _rIndex = 0;
     _hadParsingErrors = true;
-    _error(failedFMIErrorMsg(path, x));
-    _rIndex = eStart;
-    //  log.debug('$ree readFMI Catch: $x', -1);
+    invalidTransferSyntax(_tsUid);
     return false;
   }
 
-  if (param.targetTS != null && _tsUid != param.targetTS) return false;
+  if (dParams.targetTS != null && _tsUid != dParams.targetTS)
+	  invalidTransferSyntax(_tsUid, dParams.targetTS);
 
   _tsUid = _rootDS.transferSyntax;
   _isEVR = !_tsUid.isImplicitLittleEndian;
@@ -84,10 +70,6 @@ bool _readPrefix(String path, bool checkPreamble) {
     for (var i = 0; i < 128; i++) if (_rootBD.getUint8(i) != 0) _preambleWasZeros = false;
   }
   return isDcmPrefixPresent();
-/*  } catch (e) {
-    _error('Error reading prefix @$_rrr: $e\n  of path: $path');
-    return false;
-  }*/
 }
 
 /// Read as 32-bit integer. This is faster
@@ -117,13 +99,3 @@ bool isAsciiPrefixPresent() {
     return false;
   }
 }
-
-String failedTSErrorMsg(String path, Exception x) => '''
-Failed to read FMI: "$path"\nException: $x\n $_rrr
-    File length: ${_rootBD.lengthInBytes}\n$ree readFMI catch: $x
-''';
-
-String failedFMIErrorMsg(String path, Error x) => '''
-Failed to read FMI: "$path"\nException: $x\n'
-	  File length: ${_rootBD.lengthInBytes}\n$ree readFMI catch: $x');
-''';

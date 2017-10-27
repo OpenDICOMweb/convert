@@ -30,7 +30,7 @@ Element _readMaybeUndefined(int code, int eStart, int vrIndex, int vfLengthField
 }
 
 /// Read an Element (not SQ) with a 32-bit [vfLengthField], but that cannot
-/// have [kUndefinedValue].
+/// have kUndefinedValue.
 Element _readLong(int code, int eStart, int vrIndex, int vfLengthField) {
 	final  eLength = _rIndex - eStart;
 	_rIndex = _rIndex + vfLengthField;

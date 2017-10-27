@@ -8,9 +8,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:core/core.dart';
-import 'package:dcm_convert/dcm.dart';
-import 'package:logger/logger.dart';
+import 'package:dataset/dataset.dart';
+import 'package:dcm_convert/byte_convert.dart';
 import 'package:system/core.dart';
 import 'package:timer/timestamp.dart';
 import 'package:uid/uid.dart';
@@ -20,30 +19,20 @@ String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 final Formatter format = new Formatter();
 
 bool byteReadWriteFileChecked(String path,
-    [int fileNumber, int width = 5, bool throwOnError = true, bool fast = true]) {
+    [int fileNumber, int width = 5, bool fast = true]) {
   var success = true;
   final n = getPaddedInt(fileNumber, width);
   final pad = ''.padRight(width);
   final fPath = cleanPath(path);
-  log.info1('$n: Reading: $path');
+  log.info1('$n: Reading: $fPath');
 
-  final f = new File(path);
+  final f = new File(fPath);
   try {
     final reader0 = new ByteReader.fromFile(f);
     final rds0 = reader0.readRootDataset();
     final bytes0 = reader0.rootBytes;
-    log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
-$pad    DS0: ${rds0.info}'
-$pad    TS: ${rds0.transferSyntax}
-$pad    ${rds0.parseInfo.info}''');
-
-    Element e = rds0[kPixelData];
-    if (e == null) {
-      log.warn('$pad ** Pixel Data Element not present');
-    } else {
-//      BytePixelData bpd = e;
-      log.debug1('$pad  bpd: ${e.info}');
-    }
+    final e = rds0[kPixelData];
+    if (e == null) log.warn('$pad ** Pixel Data Element not present');
 
     // Write the Root Dataset
     ByteWriter writer;
@@ -53,14 +42,16 @@ $pad    ${rds0.parseInfo.info}''');
     } else {
       writer = new ByteWriter.toPath(rds0, outPath);
     }
-    Uint8List bytes1 = writer.writeRootDataset();
-    log.debug('$pad    Encoded ${bytes1.length} bytes');
+    final bytes1 = writer.writeRootDataset();
 
+/*
     if (!fast) {
       log.debug('Re-reading: ${bytes1.length} bytes');
     } else {
       log.debug('Re-reading: ${bytes1.length} bytes from $outPath');
     }
+*/
+
     ByteReader reader1;
     if (fast) {
       // Just read bytes not file
@@ -69,35 +60,29 @@ $pad    ${rds0.parseInfo.info}''');
     } else {
       reader1 = new ByteReader.fromPath(outPath);
     }
-    var rds1 = reader1.readRootDataset();
-    //   RootDatasetBytes rds1 = ByteReader.readPath(outPath);
-    log.debug('$pad Read ${reader1.rootBD.lengthInBytes} bytes');
-    log.debug1('$pad DS1: $rds1');
+    final rds1 = reader1.readRootDataset();
 
-    if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
+    if (rds0.hasDuplicates)
+    	log.warn('$pad  ** Duplicates Present in rds0');
+
     if (rds0.parseInfo != rds1.parseInfo) {
-      log.warn('$pad ** ParseInfo is Different!');
-      log.debug1('$pad rds0: ${rds0.parseInfo.info}');
-      log.debug1('$pad rds1: ${rds1.parseInfo.info}');
-      log.debug2(rds0.format(new Formatter(maxDepth: -1)));
-      log.debug2(rds1.format(new Formatter(maxDepth: -1)));
+      log..warn('$pad ** ParseInfo is Different!')
+        ..debug1('$pad rds0: ${rds0.parseInfo.info}')
+        ..debug1('$pad rds1: ${rds1.parseInfo.info}')
+        ..debug2(rds0.format(new Formatter(maxDepth: -1)))
+        ..debug2(rds1.format(new Formatter(maxDepth: -1)));
     }
 
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       // Compare [ElementOffsets]s
-      if (reader0.elementList == writer.elementList) {
-        log.debug('$pad ElementOffsetss are identical.');
-      } else {
+      if (reader0.offsets != writer.elementList)
         log.warn('$pad ElementOffsetss are different!');
-      }
     }
 
     // Compare [Dataset]s - only compares the elements in dataset.map.
-    var same = (rds0 == rds1);
-    if (same) {
-      log.debug('$pad Datasets are identical.');
-    } else {
+    final same = (rds0 == rds1);
+    if (!same) {
       success = false;
       log.warn('$pad Datasets are different!');
     }
@@ -105,15 +90,14 @@ $pad    ${rds0.parseInfo.info}''');
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
-      var same = bytesEqual(bytes0, bytes1);
-      if (same == true) {
-        log.debug('$pad Files bytes are identical.');
-      } else {
+      final same = bytesEqual(bytes0, bytes1);
+      if (!same) {
         success = false;
         log.warn('$pad Files bytes are different!');
       }
     }
-    if (same) log.info1('$pad Success!');
+    if (same)
+    	log.info1('$pad Success!');
   } on ShortFileError {
     log.warn('$pad ** Short File(${f.lengthSync()} bytes): $f');
   } catch (e) {
@@ -130,18 +114,11 @@ RootDatasetBytes readFileTimed(File file,
     bool printDS: false}) {
   log.level = level;
   final path = file.path;
-  final timer = new Stopwatch();
-  final timestamp = new Timestamp();
+  final timer = new Stopwatch()..start();
 
-  log.debug('Reading $path ...\n'
-      '   fmiOnly: $fmiOnly\n'
-      '   at: $timestamp');
-
-  timer.start();
-//  var file = new File(path);
   final bytes = file.readAsBytesSync();
   timer.stop();
-  log.debug('   read ${bytes.length} bytes in ${timer.elapsedMicroseconds}us');
+//  log.debug('   read ${bytes.length} bytes in ${timer.elapsedMicroseconds}us');
 
   if (bytes.length < 1024)
   	log.warn('***** Short file length(${bytes.length}): $path');
@@ -166,7 +143,7 @@ RootDatasetBytes readFileTimed(File file,
           '${rds.transferSyntax}');
     // log.debug('RDS: ${rds.info}');
     if (printDS)
-	    rds.format(new Formatter());
+    	rds.format(new Formatter());
     return rds;
   }
 }
@@ -195,8 +172,8 @@ Uint8List writeTimed(RootDatasetBytes rds,
   return bytes;
 }
 
-Future<Uint8List> writeFMI(RootDatasetBytes rds, [String path]) =>
-    ByteWriter.writePath(rds, path, fmiOnly: true);
+Future<Uint8List> writeFMI(RootDatasetBytes rds, [String path]) async =>
+    await ByteWriter.writePath(rds, path, fmiOnly: true);
 
 Future<Uint8List> writeRoot(RootDatasetBytes rds, {String path}) =>
     ByteWriter.writePath(rds, path);

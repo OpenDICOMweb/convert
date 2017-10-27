@@ -7,13 +7,13 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:core/dataset.dart';
-import 'package:dcm_convert/dcm.dart';
+import 'package:dataset/dataset.dart';
+
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/base/dcm_reader_interface.dart';
+import 'package:dcm_convert/src/binary/base/reader/reader_interface.dart';
 
 //TODO: redoc to reflect current state of code
 

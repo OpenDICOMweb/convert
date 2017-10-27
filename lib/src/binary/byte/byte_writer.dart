@@ -17,7 +17,10 @@ import 'dart:typed_data';
 import 'package:dataset/byte_dataset.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/src/binary/base/writer/dcm_writer.dart';
+import 'package:dcm_convert/src/encoding_parameters.dart';
+import 'package:dcm_convert/src/io_utils.dart';
+
 
 /// A [class] for writing a [RootDatasetByte] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
@@ -42,9 +45,8 @@ class ByteWriter extends DcmWriter {
             bufferLength: bufferLength,
             path: path,
             outputTS: outputTS,
-            throwOnError: throwOnError,
             reUseBD: reUseBD,
-            encoding: encoding);
+            eParams: encoding);
 
   /// Writes the [RootDatasetByte] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
@@ -81,16 +83,17 @@ class ByteWriter extends DcmWriter {
   RootDatasetByte get rootDS => _rootDS;
 
   @override
-  Dataset get currentDS => _currentDS;
+  ElementList get elements => currentDS.elements;
 
   @override
-  set currentDS(Dataset ds) => _currentDS = ds;
+  Dataset get currentDS => _currentDS;
 
   @override
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
-  Uint8List writeFMI({bool checkPreamble = false}) => dcmWriteFMI(hadFmi: _rootDS.hadFmi);
+  Future<Uint8List> writeFMI({bool checkPreamble = false}) =>
+		  dcmWriteFMI(hadFmi: _rootDS.hasFmi);
 
   /// Reads a [RootDatasetByte] from [this], stores it in [rootDS],
   /// and returns it.

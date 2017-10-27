@@ -10,6 +10,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -19,12 +20,28 @@ import 'package:element/element.dart';
 import 'package:system/core.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/byte/byte_data_buffer.dart';
-import 'package:dcm_convert/src/byte/element_offsets.dart';
+import 'package:dcm_convert/src/binary/base/writer/writer_interface.dart';
+import 'package:dcm_convert/src/binary/byte/byte_data_buffer.dart';
+import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 
 //TODO: rewrite all comments to reflect current state of code
 
+String _path;
+ByteData _rootBD;
+bool _isEVR;
+bool _wasShortFile;
+
+RootDataset _rootDS;
+Dataset _currentDS;
+ElementList _elements;
+var _bytesUnread = 0;
+
+EncodingParameters _eParams;
+ElementOffsets _offsets;
+
+/// The current read index.
+var _rIndex = 0;
 /// A library for encoding [Dataset]s in the DICOM File Format.
 ///
 /// Supports encoding all LITTLE ENDIAN [TransferSyntax]es.
@@ -36,7 +53,7 @@ import 'package:dcm_convert/src/encoding_parameters.dart';
 ///   2. All String manipulation should be handled in the attribute itself.
 // There are four [Element]s that might have an Undefined Length value
 // (0xFFFFFFFF), [SQ], [OB], [OW], [UN].
-abstract class DcmWriter {
+abstract class DcmWriter extends DcmWriterInterface {
   /// The default [ByteData] buffer length, if none is provided.
   static const int defaultBufferLength = 200 * k1MB;
 
@@ -57,16 +74,12 @@ abstract class DcmWriter {
   /// [null] then it defaults to [Explicit VR Little Endian].
   final TransferSyntax targetTS;
 
-  /// If [true] errors will throw; otherwise, they return [null].
-  /// The default is [true].
-  final bool throwOnError;
-
   // The length of the initial output ByteData buffer.
   final int bufferLength;
 
   final bool reUseBD;
 
-  final EncodingParameters encoding;
+  final EncodingParameters eParams;
 
   final ElementOffsets elementList = new ElementOffsets();
 
@@ -88,16 +101,18 @@ abstract class DcmWriter {
       {this.path,
       this.file,
       TransferSyntax outputTS,
-      this.throwOnError = true,
       this.bufferLength,
       this.reUseBD = true,
-      this.encoding = EncodingParameters.kNoChange})
+      this.eParams = EncodingParameters.kNoChange})
       : targetTS = getOutputTS(rootDS, outputTS),
         _wIndex = 0,
-        _bd = (reUseBD)
+        rootBD = (reUseBD)
             ? _reuseBuffer(bufferLength)
             : new ByteData(
-                (bufferLength == null) ? defaultBufferLength : bufferLength);
+                (bufferLength == null) ? defaultBufferLength : bufferLength) {
+	  _rootBD = rootBD;
+	  _eParams = eParams;
+  }
 
   /// Returns the [targetTS] for the encoded output.
   static TransferSyntax getOutputTS(RootDataset rootDS, TransferSyntax outputTS) {
@@ -111,27 +126,27 @@ abstract class DcmWriter {
   }
 
   /// The [ByteData] buffer being written.
-  ByteData get bd => _bd;
+  ByteData get bd => rootBD;
 
   /// Returns a [Uint8List] view of the [ByteData] buffer at the current time
-  Uint8List get bytes => _bd.buffer.asUint8List(0, _wIndex);
+  Uint8List get bytes => rootBD.buffer.asUint8List(0, _wIndex);
 
   /// Return's the current position of the write index ([_wIndex]).
   int get wIndex => _wIndex;
 
   /// Returns the underlying [ByteBuffer].
-  ByteBuffer get buffer => _bd.buffer;
+  ByteBuffer get buffer => rootBD.buffer;
 
   /// Returns [true] if there is space left in the write buffer.
   bool get isWriteable => _isWritable;
 
   /// The root Dataset being encoded.
-  RootDataset get rootDS;
+//  RootDataset get rootDS;
 
   TransferSyntax get ts => rootDS.transferSyntax;
 
   /// The current dataset.  This changes as Sequences and Items are encoded.
-  Dataset currentDS;
+//  Dataset currentDS;
 
   /// The current [length] in bytes of [this].
   int get lengthInBytes => _wIndex;
@@ -139,17 +154,17 @@ abstract class DcmWriter {
   /// The current [length] in bytes of [this].
   int get length => lengthInBytes;
 
-  bool get removeUndefinedLengths => encoding.doConvertUndefinedLengths;
+  bool get removeUndefinedLengths => eParams.doConvertUndefinedLengths;
   /// Returns [info] about [this].
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
   /// Writes (encodes) only the FMI in the root [Dataset] in 'application/dicom'
   /// media type, writes it to a Uint8List, and returns the [Uint8List].
-  Uint8List dcmWriteFMI({bool hadFmi}) {
+  Future<Uint8List> dcmWriteFMI({bool hadFmi}) async {
     _writeFMI(hadFmi);
-    final bytes = _bd.buffer.asUint8List(0, _wIndex);
-    _writeFileOrPath(bytes);
+    final bytes = rootBD.buffer.asUint8List(0, _wIndex);
+    await _writeFileOrPath(bytes);
     return bytes;
   }
 
@@ -166,11 +181,11 @@ abstract class DcmWriter {
 
     _isEVR = rootDS.isEVR;
     _writeDataset(rootDS);
-    final encoding = _bd.buffer.asUint8List(0, _wIndex);
+    final encoding = rootBD.buffer.asUint8List(0, _wIndex);
     if (encoding == null || encoding.length < 256)
       throw 'Invalid bytes error: $encoding';
     _writeFileOrPath(encoding);
-    return encoding;
+    return rootBD.buffer.asUint8List(rootBD.offsetInBytes, rootBD.lengthInBytes);
   }
 
   //TODO: make this work for [async] == [true] and make that the default.
@@ -213,10 +228,10 @@ abstract class DcmWriter {
     if (_currentDS != rootDS) log.error('Not rootDS');
 
     // Check to see if we should write FMI if missing
-    if (!hadFmi && encoding.allowMissingFMI) {
+    if (!hadFmi && eParams.allowMissingFMI) {
       log.error('Dataset $rootDS is missing FMI elements');
       return false;
-    } else if (encoding.doUpdateFMI && (!hadFmi && encoding.doAddMissingFMI)) {
+    } else if (eParams.doUpdateFMI && (!hadFmi && eParams.doAddMissingFMI)) {
       _writeODWFMI();
     } else {
       assert(hadFmi);
@@ -248,12 +263,12 @@ abstract class DcmWriter {
   /// beginning of the encoding.
   void _writePrefix() {
 	  final pInfo = rootDS.parseInfo;
-    assert(pInfo.hadPrefix == false || !encoding.doAddMissingFMI);
-    if (pInfo.preambleWasZeros || encoding.doCleanPreamble) {
-      for (var i = 0; i < 128; i++) _bd.setUint8(i, 0);
+    assert(pInfo.hadPrefix == false || !eParams.doAddMissingFMI);
+    if (pInfo.preambleWasZeros || eParams.doCleanPreamble) {
+      for (var i = 0; i < 128; i++) rootBD.setUint8(i, 0);
     } else {
-      assert(pInfo.preamble != null && !encoding.doCleanPreamble);
-      for (var i = 0; i < 128; i++) _bd.setUint8(i, pInfo.preamble[i]);
+      assert(pInfo.preamble != null && !eParams.doCleanPreamble);
+      for (var i = 0; i < 128; i++) rootBD.setUint8(i, pInfo.preamble[i]);
     }
     _skip(128);
     _writeAsciiString('DICM');
@@ -305,7 +320,7 @@ abstract class DcmWriter {
   /// Writes an EVR (short == 8 bytes, long == 12 bytes) or IVR (8 bytes)
   /// header.
   void _writeHeader(Element e) {
-	  final length = (e.vfLength == null || encoding.doConvertUndefinedLengths)
+	  final length = (e.vfLength == null || eParams.doConvertUndefinedLengths)
         ? e.vfBytes.lengthInBytes
         : e.vfLength;
 	  final start = _wIndex;
@@ -376,7 +391,7 @@ abstract class DcmWriter {
   /// if [removeUndefinedLengths] is true this method should not be called.
   void _writeDelimiter(int delimiter, [int lengthInBytes = 0]) {
     //TODO: handle doRemoveNoZeroDelimiterLengths
-    assert(encoding.doConvertUndefinedLengths == false);
+    assert(eParams.doConvertUndefinedLengths == false);
     _writeTagCode(delimiter);
     _writeUint32(lengthInBytes);
   }
@@ -389,13 +404,14 @@ abstract class DcmWriter {
   // **** Buffer management
 
   /// The [ByteDataBuffer] buffer being written.
-  ByteData _bd;
+  @override
+  ByteData rootBD;
 
   int _wIndex = 0;
-  // int get endOfBD => _bd.lengthInBytes;
+  // int get endOfBD => rootBD.lengthInBytes;
 
   /// Returns [true] if there is space left in the write buffer.
-  bool get _isWritable => _wIndex < _bd.lengthInBytes;
+  bool get _isWritable => _wIndex < rootBD.lengthInBytes;
 
   /// Moves the [_wIndex] forward [n] bytes, or backward if [n] is negative.
   void _skip(int n) {
@@ -407,7 +423,7 @@ abstract class DcmWriter {
 
 /* Keep for debugging
   void _checkRange(int v) {
-    int max = _bd.lengthInBytes;
+    int max = rootBD.lengthInBytes;
     if (v < 0 || v >= max) throw new RangeError.range(v, 0, max);
   }
 */
@@ -415,77 +431,77 @@ abstract class DcmWriter {
   // The Writers
 
 /* Flush if not needed
-  /// Writes a byte (Uint8) value to the output [_bd].
+  /// Writes a byte (Uint8) value to the output [rootBD].
   void _writeUint8(int value) {
     assert(value >= 0 && value <= 255, 'Value out of range: $value');
     _maybeGrow(1);
-    _bd.setUint8(_wIndex, value);
+    rootBD.setUint8(_wIndex, value);
     _wIndex++;
   }*/
 
-  /// Writes a 16-bit unsigned integer (Uint16) value to the output [_bd].
+  /// Writes a 16-bit unsigned integer (Uint16) value to the output [rootBD].
   void _writeUint16(int value) {
     assert(value >= 0 && value <= 0xFFFF, 'Value out of range: $value');
     _maybeGrow(2);
-    _bd.setUint16(_wIndex, value, Endianness.HOST_ENDIAN);
+    rootBD.setUint16(_wIndex, value, Endianness.HOST_ENDIAN);
     _wIndex += 2;
   }
 
-  /// Writes a 32-bit unsigned integer (Uint32) value to the output [_bd].
+  /// Writes a 32-bit unsigned integer (Uint32) value to the output [rootBD].
   void _writeUint32(int value) {
     assert(value >= 0 && value <= 0xFFFFFFFF, 'Value out if range: $value');
     _maybeGrow(4);
-    _bd.setUint32(_wIndex, value, Endianness.HOST_ENDIAN);
+    rootBD.setUint32(_wIndex, value, Endianness.HOST_ENDIAN);
     _wIndex += 4;
   }
 
-  /// Writes [bytes] to the output [_bd].
+  /// Writes [bytes] to the output [rootBD].
   void _writeBytes(Uint8List bytes) => __writeBytes(bytes);
 
   void __writeBytes(Uint8List bytes) {
 	  final length = bytes.lengthInBytes;
     _maybeGrow(length);
     for (var i = 0, j = _wIndex; i < length; i++, j++)
-      _bd.setUint8(j, bytes[i]);
+      rootBD.setUint8(j, bytes[i]);
     _wIndex = _wIndex + length;
   }
 
-  /// Writes [bytes], which contains Code Units to the output [_bd],
+  /// Writes [bytes], which contains Code Units to the output [rootBD],
   /// ensuring that an even number of bytes are written, by adding
   /// a padding character if necessary.
   void _writeStringBytes(Uint8List bytes, [int padChar = kSpace]) {
     //TODO: doFixPaddingErrors
     _writeBytes(bytes);
     if (bytes.length.isOdd) {
-      _bd.setUint8(_wIndex, padChar);
+      rootBD.setUint8(_wIndex, padChar);
       _wIndex++;
     }
   }
 
   //TODO: doFixPaddingErrors
-  /// Writes an [ASCII] [String] to the output [_bd].
+  /// Writes an [ASCII] [String] to the output [rootBD].
   void _writeAsciiString(String s,
           [int offset = 0, int limit, int padChar = kSpace]) =>
       _writeStringBytes(ASCII.encode(s), padChar);
 
-  /// Writes an [UTF8] [String] to the output [_bd].
+  /// Writes an [UTF8] [String] to the output [rootBD].
   void writeUtf8String(String s, [int offset = 0, int limit]) =>
       _writeStringBytes(UTF8.encode(s), kSpace);
 
-  /// Ensures that [_bd] is at least [index] + [remaining] long,
+  /// Ensures that [rootBD] is at least [index] + [remaining] long,
   /// and grows the buffer if necessary, preserving existing data.
   void ensureRemaining(int index, int remaining) =>
       ensureCapacity(index + remaining);
 
-  /// Ensures that [_bd] is at least [capacity] long, and grows
+  /// Ensures that [rootBD] is at least [capacity] long, and grows
   /// the buffer if necessary, preserving existing data.
   void ensureCapacity(int capacity) =>
-      (capacity > _bd.lengthInBytes) ? _grow() : null;
+      (capacity > rootBD.lengthInBytes) ? _grow() : null;
 
   /// Grow the buffer if the index is at, or beyond, the end of the current
   /// buffer.
   void _maybeGrow([int size = 1]) {
-    if (_wIndex + size >= _bd.lengthInBytes) _grow();
+    if (_wIndex + size >= rootBD.lengthInBytes) _grow();
   }
 
   /// Creates a new buffer at least double the size of the current buffer,
@@ -496,15 +512,15 @@ abstract class DcmWriter {
   /// least that size. It will always have at least have double the
   /// capacity of the current buffer.
   void _grow([int capacity]) {
-	  final oldLength = _bd.lengthInBytes;
+	  final oldLength = rootBD.lengthInBytes;
 	  var newLength = oldLength * 2;
     if (capacity != null && capacity > newLength) newLength = capacity;
 
     _isValidBufferLength(newLength);
     if (newLength < oldLength) return;
 	  final newBuffer = new ByteData(newLength);
-    for (var i = 0; i < oldLength; i++) newBuffer.setUint8(i, _bd.getUint8(i));
-    _bd = newBuffer;
+    for (var i = 0; i < oldLength; i++) newBuffer.setUint8(i, rootBD.getUint8(i));
+    rootBD = newBuffer;
   }
 
   static ByteData _reuseBuffer([int size]) {

@@ -15,8 +15,8 @@ import 'package:uid/uid.dart';
 import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:dcm_convert/src/byte/byte_read_utils.dart';
-import 'package:dcm_convert/src/byte/compare_bytes.dart';
+import 'package:dcm_convert/src/binary/byte_read_utils.dart';
+import 'package:dcm_convert/src/binary/compare_bytes.dart';
 
 import 'read_utils.dart';
 

@@ -13,81 +13,71 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dataset/tag_dataset.dart';
-import 'package:uid/uid.dart';
+import 'package:dcm_convert/dcm.dart';
 
-import 'package:dcm_convert/byte_reader.dart';
-import 'dcm_writer.dart';
-
-/// A [class] for writing a [RootDatasetTag] to a [Uint8List],
+/// A [class] for writing a [RootDatasetBytes] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
 /// all LITTLE ENDIAN [TransferSyntax]es.
-class TagWriter extends DcmWriter {
-  /// The root [RootDatasetTag] being written.
-  final RootDataset _rootDS;
+class ByteWriter extends DcmWriter {
+  /// The [RootDatasetBytes] being written.
+  final RootDatasetBytes _rootDS;
 
-  /// The current [Dataset].  This changes as Sequences are written.
-  Dataset _currentDS;
+  /// The current [ByteDataset].  This changes as Sequences are written.
+  ByteDataset _currentDS;
 
-  /// Creates a new [TagWriter] where [wIndex] = 0.
-  TagWriter(this._rootDS,
-      {int bufferLength,
-      String path = '',
+  /// Creates a new [ByteWriter] where [wIndex] = 0.
+  ByteWriter(this._rootDS,
+      {int bufferLength = DcmWriter.defaultBufferLength,
+      String path = "",
+      File file,
       TransferSyntax outputTS,
       bool throwOnError = true,
-      bool allowImplicitLittleEndian = true,
-      bool addMissingPrefix = false,
-      bool allowMissingFMI = false,
-      bool addMissingFMI = false,
-      bool removeUndefinedLengths = false,
       bool reUseBD = true,
-      EncodingParameters encoding})
+      EncodingParameters encoding = EncodingParameters.kNoChange})
       : super(_rootDS,
             bufferLength: bufferLength,
             path: path,
             outputTS: outputTS,
             throwOnError: throwOnError,
             reUseBD: reUseBD,
-            encoding: encoding) {
-    assert(_rootDS.transferSyntax != null);
-  }
+            eParams: encoding);
 
-  /// Writes the [RootDataset] to a [Uint8List], and then writes the
+  /// Writes the [RootDatasetBytes] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
-  factory TagWriter.toFile(RootDataset ds, File file,
-      {int bufferLength = DcmWriter.defaultBufferLength,
+  factory ByteWriter.toFile(RootDatasetBytes ds, File file,
+      {int bufferLength,
       bool overwrite = false,
       bool fmiOnly = false,
-      bool fast = true,
+      fast = true,
       TransferSyntax targetTS}) {
-    checkFile(file, overwrite: overwrite);
-    return new TagWriter(ds,
+    checkFile(file, overwrite);
+    return new ByteWriter(ds,
         bufferLength: bufferLength, path: file.path, reUseBD: fast, outputTS: targetTS);
   }
 
-  /// Creates a new empty [File] from [path], writes the [RootDataset]
+  /// Creates a new empty [File] from [path], writes the [RootDatasetBytes]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  factory TagWriter.toPath(RootDataset ds, String path,
-      {int bufferLength = DcmWriter.defaultBufferLength,
+  factory ByteWriter.toPath(RootDatasetBytes ds, String path,
+      {int bufferLength,
       bool overwrite = false,
       bool fmiOnly = false,
-      bool fast = false,
+      fast = false,
       TransferSyntax targetTS}) {
     checkPath(path);
-    return new TagWriter(ds,
+    return new ByteWriter(ds,
         bufferLength: bufferLength, path: path, reUseBD: fast, outputTS: targetTS);
   }
 
   // The following Getters and Setters provide the correct [Type]s
   // for [rootDS] and [currentDS].
 
-  /// Returns the [RootDataset] being written.
+  /// Returns the [RootTagDataset] being written.
   @override
-  RootDataset get rootDS => _rootDS;
+  RootDatasetBytes get rootDS => _rootDS;
 
   @override
-  Dataset get currentDS => _currentDS;
+  ByteDataset get currentDS => _currentDS;
 
   @override
   set currentDS(Dataset ds) => _currentDS = ds;
@@ -96,50 +86,49 @@ class TagWriter extends DcmWriter {
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
-  Uint8List writeFMI({bool hadFmi, bool addPreamble = false}) =>
-      dcmWriteFMI(hadFmi: hadFmi);
+  Uint8List writeFMI([bool checkPreamble = false]) => dcmWriteFMI(rootDS.hadFmi);
 
-  /// Reads a [RootDataset] from [this], stores it in [rootDS],
+  /// Reads a [RootDatasetBytes] from [this], stores it in [rootDS],
   /// and returns it.
-  Uint8List writeRootDataset({bool addMissingFMI = false}) => dcmWriteRootDataset();
+  Uint8List writeRootDataset({bool allowMissingFMI = false}) => dcmWriteRootDataset();
 
-  /// Writes the [RootDataset] to a [Uint8List], and returns the [Uint8List].
-  static Uint8List writeBytes(RootDataset ds,
+  /// Writes the [RootDatasetBytes] to a [Uint8List], and returns the [Uint8List].
+  static Uint8List writeBytes(RootDatasetBytes ds,
       {int bufferLength,
-      String path = '',
+      String path = "",
       bool fmiOnly: false,
       bool fast: true,
-      bool reUseBD = true,
-      TransferSyntax outputTS}) {
+      TransferSyntax outputTS,
+      reUseBD = true}) {
     checkRootDataset(ds);
-    final writer = new TagWriter(ds,
+    var writer = new ByteWriter(ds,
         bufferLength: bufferLength, path: path, reUseBD: reUseBD, outputTS: outputTS);
     return writer.writeRootDataset();
   }
 
-  /// Writes the [RootDataset] to a [Uint8List], then writes the
-  /// [Uint8List] to the [File], and returns the [Uint8List].
-  static Uint8List writeFile(RootDatasetTag ds, File file,
+  /// Writes the [RootDatasetBytes] to a [Uint8List], and then writes the
+  /// [Uint8List] to the [File]. Returns the [Uint8List].
+  static Uint8List writeFile(RootDatasetBytes ds, File file,
       {int bufferLength,
       bool overwrite = false,
       bool fmiOnly = false,
-      bool fast = true,
+      fast = true,
       TransferSyntax targetTS}) {
-    checkFile(file, overwrite: overwrite);
-    final bytes = writeBytes(ds,
+    checkFile(file, overwrite);
+    var bytes = writeBytes(ds,
         bufferLength: bufferLength, path: file.path, reUseBD: fast, outputTS: targetTS);
     file.writeAsBytesSync(bytes);
     return bytes;
   }
 
-  /// Creates a new empty [File] from [path], writes the [RootDataset]
+  /// Creates a new empty [File] from [path], writes the [RootDatasetBytes]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  static Uint8List writePath(RootDatasetTag ds, String path,
+  static Uint8List writePath(RootDatasetBytes ds, String path,
       {int bufferLength,
       bool overwrite = false,
       bool fmiOnly = false,
-      bool fast = false,
+      fast = false,
       TransferSyntax targetTS}) {
     checkPath(path);
     return writeFile(ds, new File(path),
@@ -150,13 +139,13 @@ class TagWriter extends DcmWriter {
         targetTS: targetTS);
   }
 
-  /// Creates a new empty [File] at [path], writes the [RootDataset]
+  /// Creates a new empty [File] at [path], writes the [RootDatasetBytes]
   /// to a [Uint8List], then writes the [Uint8List] to the [File],
   /// and returns the [Uint8List].
-  static Uint8List writeFmi(RootDatasetTag ds, String path,
+  static Uint8List writeFmi(RootDatasetBytes ds, String path,
       {int bufferLength,
       bool overwrite = false,
-      bool fast = false,
+      fast = false,
       TransferSyntax targetTS}) {
     checkPath(path);
     return writeFile(ds, new File(path),

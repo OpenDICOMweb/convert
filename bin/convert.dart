@@ -11,7 +11,7 @@ import 'package:tag/vr.dart';
 
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:dcm_convert/src/byte/convert_byte_to_tag.dart';
+import 'package:dcm_convert/src/binary/convert_byte_to_tag.dart';
 import 'package:dcm_convert/tools.dart';
 
 

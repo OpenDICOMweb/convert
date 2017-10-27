@@ -6,7 +6,7 @@
 
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/dcm.dart';
-import 'package:dcm_convert/src/byte/compare_bytes.dart';
+import 'package:dcm_convert/src/binary/compare_bytes.dart';
 import 'package:system/server.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';

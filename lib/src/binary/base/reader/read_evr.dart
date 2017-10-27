@@ -20,7 +20,7 @@ Element _readEvrElement() {
     _warn('VR is Null: vrCode(${hex16(vrCode)}) $_rrr');
     _showNext(_rIndex - 4);
   }
-  final vrIndex = (_decode.doCheckVR) ? _checkVR(code, vrCode) : vr.index;
+  final vrIndex = (_dParams.doCheckVR) ? _checkVR(code, vrCode) : vr.index;
 
   Element e;
   if (vr.hasShortVF) {
@@ -46,7 +46,7 @@ Element _readShortElement(int code, int eStart, int vrIndex) {
 /// Only OB, OW, and UN can have Undefined Length.
 Element _readLongEvrElement(int code, int eStart, int vrIndex) {
   _skip(2);
-  return _readLongElement(code, eStart, vrIndex);
+  return _readLong(code, eStart, vrIndex, _readUint32());
 }
 
 SQ _readEvrSequence(int code, int eStart) {
