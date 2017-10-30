@@ -22,9 +22,6 @@ import 'package:dcm_convert/src/io_utils.dart';
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootDataset].
 class ByteReader extends DcmReader {
-  @override
-  final RootDatasetByte rootDS;
-  Dataset _currentDS;
 
   /// Creates a new [ByteReader].
   ByteReader(ByteData bd,
@@ -36,8 +33,7 @@ class ByteReader extends DcmReader {
       TransferSyntax targetTS,
       bool reUseBD = true,
       DecodingParameters dParams})
-      : rootDS = new RootDatasetByte(new RDSBytes(bd), path: path),
-        super(bd,
+      : super(bd, new RootDatasetByte(new RDSBytes(bd), path: path),
             path: path,
             async: async,
             fast: fast,
@@ -78,34 +74,35 @@ class ByteReader extends DcmReader {
 
   // **** DcmReaderInterface ****
 
-  /// The current [Dataset] being read.  This changes as Sequences are reAD.
+/*  /// The current [Dataset] being read.  This changes as Sequences are reAD.
   @override
-  Dataset get currentDS => _currentDS;
+  Dataset get currentDS => _currentDS;*/
 
   @override
   ElementList get elements => currentDS.elements;
 
-  @override
+//  @override
   Element makeElement(EBytes eb, int vrIndex, [VFFragments fragments]) =>
-      makeFromEBytes(eb, vrIndex, fragments);
+      makeTagElementFromEBytes(eb, vrIndex, fragments);
 
   /// Returns a new ByteSequence.
-  @override
+//  @override
   SQ makeSequence(EBytes eb, Dataset parent, List<Item> items) =>
       new SQbyte.fromBytes(eb, parent, items);
 
-  @override
+//  @override
   RootDataset makeRootDataset(RDSBytes dsBytes, Dataset parent,
           [ElementList elements, String path]) =>
       new RootDatasetByte(dsBytes, elements: elements, path: path);
 
   /// Returns a new [ItemByte].
-  @override
+//  @override
   Item makeItem(Dataset parent, {ElementList elements, SQ sequence, DSBytes eb}) =>
       new ItemByte(parent);
 
+  @override
   String elementInfo(Element e) => (e == null) ? 'Element e = null' : e.info;
-
+  @override
   String itemInfo(Item item) => (item == null) ? 'Item item = null' : item.info;
   // **** End DcmReaderInterface ****
 
@@ -116,7 +113,7 @@ class ByteReader extends DcmReader {
     return (hadFmi) ? rootDS : null;
   }
 
-  /// Reads a [RootDatasetByte] from [this], stores it in [rootDS],
+  /// Reads a [RootDatasetByte],and stores it in [rootDS],
   /// and returns it.
 
   RootDatasetByte readRootDataset() {
@@ -138,8 +135,8 @@ class ByteReader extends DcmReader {
   }
 
   //Urgent: flush or fix
-  static Element makeTagElement<V>(EBytes eb, int vrIndex, VFFragments fragments) =>
-      makeTagElementFromEBytes<V>(eb, vrIndex, fragments);
+  static Element makeTagElement(EBytes eb, int vrIndex, VFFragments fragments) =>
+      makeTagElementFromEBytes(eb, vrIndex, fragments);
 
 /*
   //Urgent: flush or fix
@@ -177,10 +174,7 @@ class ByteReader extends DcmReader {
   }
 
   static RootDatasetByte readFile(File file,
-      {bool async: true,
-      bool fast = true,
-      bool fmiOnly = false,
-      bool reUseBD: true}) {
+      {bool async: true, bool fast = true, bool fmiOnly = false, bool reUseBD: true}) {
     checkFile(file);
     return readBytes(file.readAsBytesSync(),
         path: file.path, async: async, fast: fast, fmiOnly: fmiOnly, reUseBD: reUseBD);
@@ -198,11 +192,7 @@ class ByteReader extends DcmReader {
           bool fast = true,
           bool fmiOnly = false,
           bool reUseBD = true}) =>
-      readFile(file,
-          async: async,
-          fast: fast,
-          fmiOnly: true,
-          reUseBD: reUseBD);
+      readFile(file, async: async, fast: fast, fmiOnly: true, reUseBD: reUseBD);
 
   /// Reads only the File Meta Information (FMI), if present.
   static RootDataset readPathFmiOnly(String path,

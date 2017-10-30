@@ -10,7 +10,6 @@ import 'dart:typed_data';
 
 import 'package:system/system.dart';
 
-
 // TODO:
 //  * Finish documentation
 //  * Make buffers Unmodifiable
@@ -27,15 +26,13 @@ import 'package:system/system.dart';
 /// A Byte Buffer implementation based on Netty's ByteBuf.
 ///
 /// A [ByteBufReader] uses an underlying [Uint8List] to contain byte data,
-/// where a "byte" is an unsigned 8-bit integer.  The "capacity" of the
+/// where a 'byte' is an unsigned 8-bit integer.  The 'capacity' of the
 /// [ByteBufReader] is always equal to the length of the underlying [Uint8List].
 //TODO: finish description
-
 
 /// A skeletal implementation of a buffer.
 
 class ByteBufReader {
-
   static const int defaultLengthInBytes = 1024;
   static const int defaultMaxCapacity = 1 * k1MB;
   static const int maxMaxCapacity = 2 * k1GB;
@@ -48,23 +45,20 @@ class ByteBufReader {
 
   //*** Constructors ***
 
-  factory ByteBufReader(Uint8List bytes) => new ByteBufReader.internal(
-      bytes, 0, bytes.lengthInBytes, bytes.lengthInBytes);
+  factory ByteBufReader(Uint8List bytes) =>
+      new ByteBufReader.internal(bytes, 0, bytes.lengthInBytes, bytes.lengthInBytes);
 
-  /// Creates a new readable [ByteBufReader] from the [Uint8List] [bytes].
-  factory ByteBufReader.fromByteBuf(ByteBufReader buf,
-      [int offset = 0, int length]) {
+  /// Creates a new readable [ByteBufReader] from the [Uint8List] [_bytes].
+  factory ByteBufReader.fromByteBuf(ByteBufReader buf, [int offset = 0, int length]) {
     length = (length == null) ? buf._bytes.length : length;
-    if ((length < 0) ||
-        ((offset < 0) || ((buf._bytes.length - offset) < length)))
+    if ((length < 0) || ((offset < 0) || ((buf._bytes.length - offset) < length)))
       throw new ArgumentError('Invalid offset($offset) or '
           'length($length) for ${buf._bytes}bytes(length = ${buf._bytes.lengthInBytes}');
     return new ByteBufReader.internal(buf._bytes, offset, length, length);
   }
 
   /// Creates a new readable [ByteBufReader] from the [Uint8List] [bytes].
-  factory ByteBufReader.fromUint8List(Uint8List bytes,
-      [int offset = 0, int length]) {
+  factory ByteBufReader.fromUint8List(Uint8List bytes, [int offset = 0, int length]) {
     length = (length == null) ? bytes.length : length;
     if ((length < 0) || ((offset < 0) || ((bytes.length - offset) < length)))
       throw new ArgumentError('Invalid offset($offset) or '
@@ -78,9 +72,8 @@ class ByteBufReader {
   factory ByteBufReader.fromList(List<int> list) => new ByteBufReader.internal(
       new Uint8List.fromList(list), 0, list.length, list.length);
 
-  factory ByteBufReader.fromString(String s) {
-    return new ByteBufReader(UTF8.encode(s));
-  }
+  factory ByteBufReader.fromString(String s) => new ByteBufReader(UTF8.encode(s));
+
   /// Internal Constructor: Returns a [ByteBufReader] view from [bytes].
   ByteBufReader.internal(
       Uint8List bytes, int readIndex, int writeIndex, int lengthInBytes)
@@ -89,25 +82,24 @@ class ByteBufReader {
         _readIndex = readIndex,
         _writeIndex = writeIndex;
 
-  /// Creates a new [ByteBufReader] that is a view of [this].  The underlying
+  /// Creates a new [ByteBufReader] that is a view of this [ByteBufReader].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
   ByteBufReader readSlice(int offset, int length) =>
       new ByteBufReader.internal(_bytes, offset, length, length);
 
-  /// Creates a new [ByteBufReader] that is a view of [this].  The underlying
+  /// Creates a new [ByteBufReader] that is a view of this [ByteBufReader].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
   ByteBufReader view(int offset, int length) =>
       new ByteBufReader.internal(_bytes, offset, offset, length);
 
-  /// Creates a new [ByteBufReader] that is a [sublist] of [this].  The underlying
+  /// Creates a new [ByteBufReader] that is a [sublist] of this [ByteBufReader].  The underlying
   /// [Uint8List] is shared, and modifications to it will be visible in the original.
   ByteBufReader sublist(int start, int end) =>
       new ByteBufReader.internal(_bytes, start, end - start, end - start);
 
   @override
   bool operator ==(Object object) =>
-      (this == object) ||
-      ((object is ByteBufReader) && (this.hashCode == object.hashCode));
+      (this == object) || ((object is ByteBufReader) && (hashCode == object.hashCode));
 
   //*** Internal Utilities ***
 
@@ -116,41 +108,40 @@ class ByteBufReader {
 
   /// Checks that the [readIndex] is valid;
   void checkReadIndex(int index, [int lengthInBytes = 1]) {
-    //log.debug("checkReadIndex: index($index), lengthInBytes($lengthInBytes)");
-    //log.debug("checkReadIndex: readIndex($_readIndex), writeIndex($_writeIndex)");
+    //log.debug('checkReadIndex: index($index), lengthInBytes($lengthInBytes)');
+    //log.debug('checkReadIndex: readIndex($_readIndex), writeIndex($_writeIndex)');
     if ((index < _readIndex) || ((index + lengthInBytes) > writeIndex))
-      indexOutOfBounds(index, "read");
+      indexOutOfBounds(index, 'read');
   }
 
   /*
   /// Checks that the [writeIndex] is valid;
   void _checkWriteIndex(int index, [int lengthInBytes = 1]) {
     if (((index < _writeIndex) || (index + lengthInBytes) >= _bytes.lengthInBytes))
-      indexOutOfBounds(index, "write");
+      indexOutOfBounds(index, 'write');
   }
   */
 
   /// Checks that there are at least [minimumReadableBytes] available.
   void _checkReadableBytes(int minimumReadableBytes) {
     if (_readIndex > (_writeIndex - minimumReadableBytes))
-      throw new RangeError(
-          "readIndex($readIndex) + length($minimumReadableBytes) "
-          "exceeds writeIndex($writeIndex): #this");
+      throw new RangeError('readIndex($readIndex) + length($minimumReadableBytes) '
+          'exceeds writeIndex($writeIndex): #this');
   }
 
-  /// Checks that there are at least [minimumWritableableBytes] available.
+  /// Checks that there are at least [minimumWritableBytes] available.
   void _checkWritableBytes(int minimumWritableBytes) {
     if ((_writeIndex + minimumWritableBytes) > lengthInBytes)
       throw new RangeError(
-          "writeIndex($writeIndex) + minimumWritableBytes($minimumWritableBytes) "
-          "exceeds lengthInBytes($lengthInBytes): $this");
+          'writeIndex($writeIndex) + minimumWritableBytes($minimumWritableBytes) '
+          'exceeds lengthInBytes($lengthInBytes): $this');
   }
 
   /// Sets the [readIndex] to [index].  If [index] is not valid a [RangeError] is thrown.
   ByteBufReader setReadIndex(int index) {
     if (index < 0 || index > _writeIndex)
-      throw new RangeError("readIndex: $index "
-          "(expected: 0 <= readIndex <= writeIndex($_writeIndex))");
+      throw new RangeError('readIndex: $index '
+          '(expected: 0 <= readIndex <= writeIndex($_writeIndex))');
     _readIndex = index;
     return this;
   }
@@ -159,7 +150,7 @@ class ByteBufReader {
   ByteBufReader setWriteIndex(int index) {
     if (index < _readIndex || index > capacity)
       throw new RangeError(
-          "writeIndex: $index (expected: readIndex($_readIndex) <= writeIndex <= capacity($capacity))");
+          'writeIndex: $index (expected: readIndex($_readIndex) <= writeIndex <= capacity($capacity))');
     _writeIndex = index;
     return this;
   }
@@ -167,8 +158,8 @@ class ByteBufReader {
   /// Sets the [readIndex] and [writeIndex].  If either is not valid a [RangeError] is thrown.
   ByteBufReader setIndices(int readIndex, int writeIndex) {
     if (readIndex < 0 || readIndex > writeIndex || writeIndex > capacity)
-      throw new RangeError("readIndex: $readIndex, writeIndex: $writeIndex "
-          "(expected: 0 <= readIndex <= writeIndex <= capacity($capacity))");
+      throw new RangeError('readIndex: $readIndex, writeIndex: $writeIndex '
+          '(expected: 0 <= readIndex <= writeIndex <= capacity($capacity))');
     _readIndex = readIndex;
     _writeIndex = writeIndex;
     return this;
@@ -195,11 +186,11 @@ class ByteBufReader {
     setWriteIndex(index);
   }
 
-  /// Returns [true] if [this] is a read only.
+  /// Returns true if this [ByteBufReader] is a read only.
   bool get isReadOnly => false;
 
   //TODO: create subclass
-  /// Returns an unmodifiable version of [this].
+  /// Returns an unmodifiable version of this [ByteBufReader].
   /// Note: an UnmodifiableByteBuf can still be read.
   //BytebBufBase get asReadOnly => new UnmodifiableByteBuf(this);
 
@@ -208,16 +199,16 @@ class ByteBufReader {
   /// Returns the number of bytes (octets) this buffer can contain.
   int get capacity => _bytes.lengthInBytes;
 
-  /// Returns [true] if there are readable bytes available, false otherwise.
+  /// Returns true if there are readable bytes available, false otherwise.
   bool get isReadable => _writeIndex > _readIndex;
 
-  /// Returns [true] if there are [numBytes] available to read, false otherwise.
+  /// Returns true if there are [numBytes] available to read, false otherwise.
   bool hasReadable(int numBytes) => _writeIndex - _readIndex >= numBytes;
 
-  /// Returns [true] if there are writable bytes available, false otherwise.
+  /// Returns true if there are writable bytes available, false otherwise.
   bool get isWritable => lengthInBytes > _writeIndex;
 
-  /// Returns [true] if there are [numBytes] available to write, false otherwise.
+  /// Returns true if there are [numBytes] available to write, false otherwise.
   bool hasWritable(int numBytes) => lengthInBytes - _writeIndex >= numBytes;
 
   /// Returns the number of readable bytes.
@@ -231,51 +222,49 @@ class ByteBufReader {
   void checkReadableBytes(int minimumReadableBytes) {
     if (minimumReadableBytes < 0)
       throw new ArgumentError(
-          "minimumReadableBytes: $minimumReadableBytes (expected: >= 0)");
+          'minimumReadableBytes: $minimumReadableBytes (expected: >= 0)');
     _checkReadableBytes(minimumReadableBytes);
   }
 
   void checkWritableBytes(int minimumWritableBytes) {
     if (minimumWritableBytes < 0)
       throw new ArgumentError(
-          "minimumWritableBytes: $minimumWritableBytes (expected: >= 0)");
+          'minimumWritableBytes: $minimumWritableBytes (expected: >= 0)');
     _checkWritableBytes(minimumWritableBytes);
   }
 
   /// Ensures that there are at least [minReadableBytes] available to read.
   void ensureReadable(int minReadableBytes) {
     if (minReadableBytes < 0)
-      throw new ArgumentError(
-          "minWritableBytes: $minReadableBytes (expected: >= 0)");
+      throw new ArgumentError('minWritableBytes: $minReadableBytes (expected: >= 0)');
     if (minReadableBytes > readableBytes)
-      throw new RangeError("writeIndex($_writeIndex) + "
-          "minWritableBytes($minReadableBytes) exceeds lengthInBytes($lengthInBytes): $this");
+      throw new RangeError('writeIndex($_writeIndex) + '
+          'minWritableBytes($minReadableBytes) exceeds lengthInBytes($lengthInBytes): $this');
     return;
   }
 
   /// Ensures that there are at least [minWritableBytes] available to write.
   void ensureWritable(int minWritableBytes) {
     if (minWritableBytes < 0)
-      throw new ArgumentError(
-          "minWritableBytes: $minWritableBytes (expected: >= 0)");
+      throw new ArgumentError('minWritableBytes: $minWritableBytes (expected: >= 0)');
     if (minWritableBytes > writableBytes)
-      throw new RangeError("writeIndex($_writeIndex) + "
-          "minWritableBytes($minWritableBytes) exceeds lengthInBytes($lengthInBytes): $this");
+      throw new RangeError('writeIndex($_writeIndex) + '
+          'minWritableBytes($minWritableBytes) exceeds lengthInBytes($lengthInBytes): $this');
     return;
   }
 
-  /// Compares the content of [this] to the content
+  /// Compares the content of this [ByteBufReader] to the content
   /// of [other].  Comparison is performed in a similar
   /// manner to the [String.compareTo] method.
   int compareTo(ByteBufReader other) {
     if (this == other) return 0;
-    final int len = readableBytes;
-    final int oLen = other.readableBytes;
-    final int minLength = math.min(len, oLen);
+    final len = readableBytes;
+    final oLen = other.readableBytes;
+    final minLength = math.min(len, oLen);
 
-    int aIndex = readIndex;
-    int bIndex = other.readIndex;
-    for (int i = 0; i < minLength; i++) {
+    final aIndex = readIndex;
+    final bIndex = other.readIndex;
+    for (var i = 0; i < minLength; i++) {
       if (this[aIndex] > other[bIndex]) return 1;
       if (this[aIndex] < other[bIndex]) return -1;
     }
@@ -284,13 +273,13 @@ class ByteBufReader {
   }
 
   String toHex(int start, int end) {
-    var s = "";
-    for (int i = start; i < end; i++)
-      s += _bytes[i].toRadixString(16).padLeft(2, " 0") + " ";
-    return s;
+    final sb = new StringBuffer();
+    for (var i = start; i < end; i++)
+      sb.write('${_bytes[i].toRadixString(16).padLeft(2, ' 0')} ');
+    return sb.toString();
   }
 
-  String get info => """
+  String get info => '''
   ByteBuf $hashCode
     rdIdx: $_readIndex,
     bytes: '${toHex(_readIndex, _writeIndex)}'
@@ -299,7 +288,7 @@ class ByteBufReader {
     remaining: ${capacity - _writeIndex }
     cap: $capacity,
     maxCap: $lengthInBytes
-  """;
+  ''';
 
   void debug() => print(info);
 
@@ -311,15 +300,13 @@ class ByteBufReader {
 
   ///
   void indexOutOfBounds(int index, String type) {
-    // log.debug("indexOutOfBounds: index($index), type($type)");
-    // log.debug("indexOutOfBounds: readIndex($_readIndex), writeIndex($_writeIndex)");
     String s;
-    if (type == "read")
-      s = "Invalid Read Index($index): $index "
-          "(readIndex($readIndex) <= index($index) < writeIndex($writeIndex)";
-    if (type == "write")
-      s = "Invalid Write Index($index): $index to ByteBuf($this) with lengthInB "
-          "(writeIndex($writeIndex) <= index($index) < capacity(${_bytes.lengthInBytes})";
+    if (type == 'read')
+      s = 'Invalid Read Index($index): $index '
+          '(readIndex($readIndex) <= index($index) < writeIndex($writeIndex)';
+    if (type == 'write')
+      s = 'Invalid Write Index($index): $index to ByteBuf($this) with lengthInB '
+          '(writeIndex($writeIndex) <= index($index) < capacity(${_bytes.lengthInBytes})';
     throw new RangeError(s);
   }
 
@@ -330,11 +317,11 @@ class ByteBufReader {
 
   //*** Read Methods ***
 
-  ///Returns a [bool] value.  [bools]s are encoded as a single byte
+  ///Returns a [bool] value.  [bool]s are encoded as a single byte
   ///where 0 is false and any other value is true.
   bool getBoolean(int index) => getUint8(index) != 0;
 
-  /// Reads a [bool] value.  [bools]s are encoded as a single byte
+  /// Reads a [bool] value.  [bool]s are encoded as a single byte
   /// where 0 is false and any other value is true,
   /// and advances the [readIndex] by 1.
   bool readBoolean() => readUint8() != 0;
@@ -342,8 +329,8 @@ class ByteBufReader {
   /// Returns an [List] of [bool].
   List<bool> getBooleanList(int index, int length) {
     checkReadIndex(index, length);
-    List<bool> list = new List(length);
-    for (int i = 0; i < length; i++) list[i] = getBoolean(i);
+    final list = new List<bool>(length);
+    for (var i = 0; i < length; i++) list[i] = getBoolean(i);
     return list;
   }
 
@@ -351,7 +338,7 @@ class ByteBufReader {
   /// the [readIndex] by the number of byte read.
   List<bool> readBooleanList(int length) {
     checkReadIndex(_readIndex, length);
-    var list = getBooleanList(_readIndex, length);
+    final list = getBooleanList(_readIndex, length);
     _readIndex += length;
     return list;
   }
@@ -367,7 +354,7 @@ class ByteBufReader {
   /// Read and returns an signed 8-bit integer.
   int readInt8() {
     // log.debug('readInt8: _readIndex($_readIndex)');
-    var v = getInt8(_readIndex);
+    final v = getInt8(_readIndex);
     _readIndex++;
     return v;
   }
@@ -381,7 +368,7 @@ class ByteBufReader {
   /// Reads and Returns an [Int8List] of signed 8-bit integers,
   /// and advances the [readIndex] by the number of byte read.
   Int8List readInt8List(int length) {
-    var list = getInt8List(_readIndex, length);
+    final list = getInt8List(_readIndex, length);
     _readIndex += length;
     return list;
   }
@@ -394,7 +381,7 @@ class ByteBufReader {
 
   /// Returns an [Int8List] view of signed 8-bit integers.
   Int8List readInt8View(int index, int length) {
-    var list = getInt8View(index, length);
+    final list = getInt8View(index, length);
     _readIndex += length;
     return list;
   }
@@ -409,7 +396,7 @@ class ByteBufReader {
 
   /// Reads and returns an unsigned 8-bit integer.
   int readUint8() {
-    var v = getUint8(_readIndex);
+    final v = getUint8(_readIndex);
     _readIndex++;
     return v;
   }
@@ -420,10 +407,10 @@ class ByteBufReader {
     return _bytes.sublist(index, index + length);
   }
 
-  /// Reads and Returns an [UintList] of unsigned 8-bit integers,
+  /// Reads and Returns an [Uint8List] of unsigned 8-bit integers,
   /// and advances the [readIndex] by the number of byte read.
   Uint8List readUint8List(int length) {
-    var list = getUint8List(_readIndex, length);
+    final list = getUint8List(_readIndex, length);
     _readIndex += length;
     return list;
   }
@@ -436,7 +423,7 @@ class ByteBufReader {
 
   /// Returns an [Uint8List] view of unsigned 8-bit integers.
   Uint8List readUint8View(int length) {
-    var list = getUint8View(_readIndex, length);
+    final list = getUint8View(_readIndex, length);
     _readIndex += length;
     return list;
   }
@@ -451,7 +438,7 @@ class ByteBufReader {
 
   /// Returns an unsigned 8-bit integer.
   int readInt16() {
-    var v = getInt16(_readIndex);
+    final v = getInt16(_readIndex);
     _readIndex += 2;
     return v;
   }
@@ -463,8 +450,8 @@ class ByteBufReader {
     if ((index ~/ 2) == 0) {
       return _bytes.buffer.asInt16List(index, length).sublist(0);
     } else {
-      var list = new Int16List(length);
-      for (int i = 0; i < length; i++) list[i] = getInt16(index);
+      final list = new Int16List(length);
+      for (var i = 0; i < length; i++) list[i] = getInt16(index);
       return list;
     }
   }
@@ -472,7 +459,7 @@ class ByteBufReader {
   /// Reads and Returns an [Int16List] of signed 16-bit integers,
   /// and advances the [readIndex] by the number of byte read.
   Int16List readInt16List(int length) {
-    var list = getInt16List(_readIndex, length);
+    final list = getInt16List(_readIndex, length);
     _readIndex += length * 2;
     return list;
   }
@@ -484,17 +471,17 @@ class ByteBufReader {
       return _bytes.buffer.asInt16List(index, length);
     } else {
       // getInt32List(index, length)
-      var list = new Int16List(length);
-      for (int i = 0; i < length; i++) list[i] = getInt16(index);
+      final list = new Int16List(length);
+      for (var i = 0; i < length; i++) list[i] = getInt16(index);
       return list;
     }
   }
 
   /// Returns an [Int16List] view of unsigned 8-bit integers.
   Int16List readInt16View(int length) {
-    var view = getInt16View(_readIndex, length);
+	  final v = getInt16View(_readIndex, length);
     _readIndex += length * 2;
-    return view;
+    return v;
   }
 
   //*** Uint16 get, Read Methods ***
@@ -508,7 +495,7 @@ class ByteBufReader {
   /// Returns an unsigned 16-bit integer.
   int readUint16() {
     // log.debug('readUint16: _readIndex($_readIndex)');
-    var v = getUint16(_readIndex);
+    final v = getUint16(_readIndex);
     // log.debug('readUint16: v($v)');
     _readIndex += 2;
     return v;
@@ -521,8 +508,8 @@ class ByteBufReader {
     if ((index ~/ 2) == 0) {
       return _bytes.buffer.asUint16List(index, index + length).sublist(0);
     } else {
-      var list = new Uint16List(length);
-      for (int i = 0; i < length; i++) list[i] = getUint16(index);
+      final list = new Uint16List(length);
+      for (var i = 0; i < length; i++) list[i] = getUint16(index);
       return list;
     }
   }
@@ -531,7 +518,7 @@ class ByteBufReader {
   /// and advances the [readIndex] by the number of byte read.
   Uint16List readUint16List(int length) {
     // log.debug('readUint16List: length($length');
-    var list = getUint16List(_readIndex, length);
+    final list = getUint16List(_readIndex, length);
     _readIndex += length * 2;
     return list;
   }
@@ -543,8 +530,8 @@ class ByteBufReader {
       return _bytes.buffer.asUint16List(index, length);
     } else {
       // getInt32List(index, length)
-      var list = new Uint16List(length);
-      for (int i = 0; i < length; i++) list[i] = getUint16(index);
+      final list = new Uint16List(length);
+      for (var i = 0; i < length; i++) list[i] = getUint16(index);
       return list;
     }
   }
@@ -552,7 +539,7 @@ class ByteBufReader {
   /// Reads and Returns an [Uint16List] of unsigned 16-bit integers,
   /// and advances the [readIndex] by the number of byte read.
   Uint16List readUint16View(int length) {
-    var list = getUint16View(_readIndex, length);
+    final list = getUint16View(_readIndex, length);
     _readIndex += length * 2;
     return list;
   }
@@ -567,7 +554,7 @@ class ByteBufReader {
 
   /// Returns an signed 32-bit integer.
   int readInt32() {
-    var v = getInt32(_readIndex);
+    final v = getInt32(_readIndex);
     _readIndex += 4;
     return v;
   }
@@ -579,13 +566,11 @@ class ByteBufReader {
     if ((index ~/ 4) == 0) {
       return _bytes.buffer.asInt32List(index, length).sublist(0);
     } else {
-      var list = new Int32List(length);
+      final list = new Int32List(length);
       var offset = index;
-      for (int i = 0; i < length; i++) {
+      for (var i = 0; i < length; i++) {
         offset = index + (i * 4);
-        //log.debug('offset=$offset');
-        int foo = getInt32(offset);
-        //log.debug('foo=$foo');
+        final foo = getInt32(offset);
         list[i] = foo;
       }
       return list;
@@ -595,7 +580,7 @@ class ByteBufReader {
   /// Reads and Returns an [Int32List] of signed 32-bit integers,
   /// and advances the [readIndex] by the number of byte read.
   Int32List readInt32List(int length) {
-    var list = getInt32List(_readIndex, length);
+    final list = getInt32List(_readIndex, length);
     _readIndex += length * 4;
     return list;
   }
@@ -608,8 +593,8 @@ class ByteBufReader {
       return _bytes.buffer.asInt32List(index, length);
     } else {
       // getInt32List(index, length)
-      var list = new Int32List(length);
-      for (int i = 0; i < length; i++) list[i] = getInt32(index);
+      final list = new Int32List(length);
+      for (var i = 0; i < length; i++) list[i] = getInt32(index);
       return list;
     }
   }
@@ -617,7 +602,7 @@ class ByteBufReader {
   /// Reads and Returns an [Int32List] view of signed 32-bit integers,
   /// and advances the [readIndex] by the number of byte read.
   Int32List readInt32View(int length) {
-    var list = getInt32View(_readIndex, length);
+    final list = getInt32View(_readIndex, length);
     _readIndex += length * 4;
     return list;
   }
@@ -632,7 +617,7 @@ class ByteBufReader {
 
   /// Returns an unsigned 32-bit integer.
   int readUint32() {
-    var v = getUint32(_readIndex);
+    final v = getUint32(_readIndex);
     _readIndex += 4;
     return v;
   }
@@ -645,8 +630,8 @@ class ByteBufReader {
       checkReadIndex(index, length * 4);
       return _bytes.buffer.asUint32List(index, length).sublist(0);
     } else {
-      var list = new Uint32List(length);
-      for (int i = 0; i < length; i++) list[i] = getUint32(index);
+      final list = new Uint32List(length);
+      for (var i = 0; i < length; i++) list[i] = getUint32(index);
       return list;
     }
   }
@@ -654,7 +639,7 @@ class ByteBufReader {
   /// Reads and Returns an [Uint32List] of unsigned 32-bit integers,
   /// and advances the [readIndex] by the number of byte read.
   Uint32List readUint32List(int length) {
-    var list = getUint32List(_readIndex, length);
+    final list = getUint32List(_readIndex, length);
     _readIndex += length * 4;
     return list;
   }
@@ -667,8 +652,8 @@ class ByteBufReader {
       checkReadIndex(index, length * 4);
       return _bytes.buffer.asUint32List(index, length);
     } else {
-      var list = new Uint32List(length);
-      for (int i = 0; i < length; i++) list[i] = getUint32(index);
+      final list = new Uint32List(length);
+      for (var i = 0; i < length; i++) list[i] = getUint32(index);
       return list;
     }
   }
@@ -676,7 +661,7 @@ class ByteBufReader {
   /// Reads and Returns an [Uint32List] view of unsigned 32-bit integers,
   /// and advances the [readIndex] by the number of byte read.
   Uint32List readUint32View(int length) {
-    var list = getUint32View(_readIndex, length);
+    final list = getUint32View(_readIndex, length);
     _readIndex += length * 4;
     return list;
   }
@@ -691,7 +676,7 @@ class ByteBufReader {
 
   /// Returns an signed 64-bit integer.
   int readInt64() {
-    var v = getInt64(_readIndex);
+    final v = getInt64(_readIndex);
     _readIndex += 8;
     return v;
   }
@@ -704,8 +689,8 @@ class ByteBufReader {
       checkReadIndex(index, length * 8);
       return _bytes.buffer.asInt64List(index, length).sublist(0);
     } else {
-      var list = new Int64List(length);
-      for (int i = 0; i < length; i++) list[i] = getInt64(index);
+      final list = new Int64List(length);
+      for (var i = 0; i < length; i++) list[i] = getInt64(index);
       return list;
     }
   }
@@ -713,7 +698,7 @@ class ByteBufReader {
   /// Reads and Returns an [Int64List] of signed 64-bit integers,
   /// and advances the [readIndex] by the number of byte read.
   Int64List readInt64List(int length) {
-    var list = getInt64List(_readIndex, length);
+    final list = getInt64List(_readIndex, length);
     _readIndex += length * 8;
     return list;
   }
@@ -725,8 +710,8 @@ class ByteBufReader {
       checkReadIndex(index, length * 8);
       return _bytes.buffer.asInt64List(index, length);
     } else {
-      var list = new Int64List(length);
-      for (int i = 0; i < length; i++) list[i] = getInt64(index);
+      final list = new Int64List(length);
+      for (var i = 0; i < length; i++) list[i] = getInt64(index);
       return list;
     }
   }
@@ -734,7 +719,7 @@ class ByteBufReader {
   /// Reads and Returns an [Int64List] view of signed 64-bit integers,
   /// and advances the [readIndex] by the number of byte read.
   Int64List readInt64View(int length) {
-    var list = getInt64View(_readIndex, length);
+    final list = getInt64View(_readIndex, length);
     _readIndex += length * 8;
     return list;
   }
@@ -749,7 +734,7 @@ class ByteBufReader {
 
   /// Returns an unsigned 64-bit integer.
   int readUint64() {
-    var v = getUint64(_readIndex);
+    final v = getUint64(_readIndex);
     _readIndex += 8;
     return v;
   }
@@ -761,8 +746,8 @@ class ByteBufReader {
       checkReadIndex(index, length * 8);
       return _bytes.buffer.asUint64List(index, length).sublist(0);
     } else {
-      var list = new Uint64List(length);
-      for (int i = 0; i < length; i++) list[i] = getUint64(index);
+      final list = new Uint64List(length);
+      for (var i = 0; i < length; i++) list[i] = getUint64(index);
       return list;
     }
   }
@@ -770,7 +755,7 @@ class ByteBufReader {
   /// Reads and Returns an [Uint64List] of unsigned 64-bit integers,
   /// and advances the [readIndex] by the number of byte read.
   Uint64List readUint64List(int length) {
-    var list = getUint64List(_readIndex, length);
+    final list = getUint64List(_readIndex, length);
     _readIndex += length * 8;
     return list;
   }
@@ -784,7 +769,7 @@ class ByteBufReader {
   /// Reads and Returns an [Uint64List] view of unsigned 64-bit integers,
   /// and advances the [readIndex] by the number of byte read.
   Uint64List readUint64View(int length) {
-    var list = getUint64View(_readIndex, length);
+    final list = getUint64View(_readIndex, length);
     _readIndex += length * 8;
     return list;
   }
@@ -799,7 +784,7 @@ class ByteBufReader {
 
   /// Returns an signed 32-bit floating point number.
   double readFloat32() {
-    var v = getFloat32(_readIndex);
+    final v = getFloat32(_readIndex);
     _readIndex += 4;
     return v;
   }
@@ -813,8 +798,8 @@ class ByteBufReader {
       return _bytes.buffer.asFloat32List(index, length).sublist(0);
     } else {
       // Makes a copy
-      Float32List list = new Float32List(length);
-      for (int i = 0; i < length; i++) list[i] = getFloat32(index);
+      final list = new Float32List(length);
+      for (var i = 0; i < length; i++) list[i] = getFloat32(index);
       return list;
     }
   }
@@ -822,7 +807,7 @@ class ByteBufReader {
   /// Reads and Returns an [Float32List] of signed 32-bit floating point numbers,
   /// and advances the [readIndex] by the number of byte read.
   Float32List readFloat32List(int length) {
-    var list = getFloat32List(_readIndex, length);
+    final list = getFloat32List(_readIndex, length);
     _readIndex += length * 4;
     return list;
   }
@@ -836,7 +821,7 @@ class ByteBufReader {
   /// Reads and Returns an [Float64List] view of signed 64-bit floating point numbers,
   /// and advances the [readIndex] by the number of byte read.
   Float32List readFloat32View(int length) {
-    var list = getFloat32View(_readIndex, length);
+    final list = getFloat32View(_readIndex, length);
     _readIndex += length * 8;
     return list;
   }
@@ -851,7 +836,7 @@ class ByteBufReader {
 
   /// Returns an signed 64-bit floating point number.
   double readFloat64() {
-    var v = getFloat64(_readIndex);
+    final v = getFloat64(_readIndex);
     _readIndex += 8;
     return v;
   }
@@ -863,8 +848,8 @@ class ByteBufReader {
     if ((index ~/ 4) == 0) {
       return _bytes.buffer.asFloat64List(index, length).sublist(0);
     } else {
-      Float64List list = new Float64List(length);
-      for (int i = 0; i < length; i++) list[i] = getFloat64(index);
+      final list = new Float64List(length);
+      for (var i = 0; i < length; i++) list[i] = getFloat64(index);
       return list;
     }
   }
@@ -872,7 +857,7 @@ class ByteBufReader {
   /// Reads and Returns an [Float64List] of signed 64-bit floating point numbers,
   /// and advances the [readIndex] by the number of byte read.
   Float64List readFloat64List(int length) {
-    var list = getFloat64List(_readIndex, length);
+    final list = getFloat64List(_readIndex, length);
     _readIndex += length * 8;
     return list;
   }
@@ -886,7 +871,7 @@ class ByteBufReader {
   /// Reads and Returns an [Float64List] view of signed 64-bit floating point numbers,
   /// and advances the [readIndex] by the number of byte read.
   Float64List readFloat64View(int length) {
-    var list = getFloat64View(_readIndex, length);
+    final list = getFloat64View(_readIndex, length);
     _readIndex += length * 8;
     return list;
   }
@@ -895,7 +880,7 @@ class ByteBufReader {
   //TODO: add a [Charset charset = UTF8] argument to String methods.
   //      See dart encode encoding.
 
-  /// Returns a [String] by decoding the bytes from [offset]
+  /// Returns a [String] by decoding the bytes from [index]
   /// to [length] as a UTF-8 string.
   String getString(int index, int length) {
     checkReadIndex(index, length);
@@ -905,26 +890,26 @@ class ByteBufReader {
   /// Returns a [String] by decoding the bytes from [readIndex]
   /// to [length] as a UTF-8 string, and advances the [readIndex] by [length].
   String readString(int length) {
-    var s = getString(_readIndex, length);
+    final s = getString(_readIndex, length);
     _readIndex += length;
     return s;
   }
 
   /// Returns an [List] of [String] by decoding the bytes from [index]
-  /// to [length] as a UTF-8 string, and then uses [delimeter] to
+  /// to [length] as a UTF-8 string, and then uses [delimiter] to
   /// separated the [String] into a [List].
-  List<String> getStringList(int index, int length, [String delimiter = r"\"]) {
+  List<String> getStringList(int index, int length, [String delimiter = r'\']) {
     checkReadIndex(index, length);
-    var s = UTF8.decode(getUint8List(index, length));
+    final s = UTF8.decode(getUint8List(index, length));
     return s.split(delimiter);
   }
 
   /// Returns an [List] of [String] by decoding the bytes from [readIndex]
-  /// to [length] as a UTF-8 string, and then uses [delimeter] to
+  /// to [length] as a UTF-8 string, and then uses [delimiter] to
   /// separated the [String] into a [List]. Finally, the [readIndex] is
   /// advanced by [length].
-  List<String> readStringList(int length, [String delimiter = r"\"]) {
-    var list = getStringList(_readIndex, length, delimiter);
+  List<String> readStringList(int length, [String delimiter = r'\']) {
+    final list = getStringList(_readIndex, length, delimiter);
     _readIndex += length;
     return list;
   }

@@ -8,7 +8,7 @@ part of odw.sdk.convert.binary;
 //TODO: redoc to reflect current state of code
 
 /// The DICOM Prefix 'DICM' as an integer.
-const int kDcmPrefix = 0x44494349;
+const int kDcmPrefix = 0x4449434d;
 
 /// Reads File Meta Information ([Fmi]) and returns a Map<int, Element>
 /// if any [Fmi] [Element]s were present; otherwise, returns null.
@@ -36,6 +36,10 @@ bool _readFmi(String path, DecodingParameters dParams) {
 	  _hadParsingErrors = true;
 	  throw new ShortFileError();
   }
+
+  _tsUid = _rootDS.transferSyntax;
+  log.info('TS: $_tsUid');
+  _isEVR = !_tsUid.isImplicitLittleEndian;
   if (!system.isSupportedTransferSyntax(_tsUid.asString)) {
     _rIndex = 0;
     _hadParsingErrors = true;
@@ -45,14 +49,11 @@ bool _readFmi(String path, DecodingParameters dParams) {
 
   if (dParams.targetTS != null && _tsUid != dParams.targetTS)
 	  invalidTransferSyntax(_tsUid, dParams.targetTS);
-
-  _tsUid = _rootDS.transferSyntax;
-  _isEVR = !_tsUid.isImplicitLittleEndian;
   return true;
 }
 
 /// Reads the Preamble (128 bytes) and Prefix ('DICM') of a PS3.10 DICOM File Format.
-/// Returns [true] if a valid Preamble and Prefix where read.
+/// Returns true if a valid Preamble and Prefix where read.
 bool _readPrefix(String path, bool checkPreamble) {
   // try {
   final sb = new StringBuffer();
@@ -75,6 +76,7 @@ bool _readPrefix(String path, bool checkPreamble) {
 /// Read as 32-bit integer. This is faster
 bool isDcmPrefixPresent() {
   final prefix = _rootBD.getUint32(128);
+  print('prefix: ${prefix.toRadixString(16).padLeft(8, '0')}');
   if (prefix == kDcmPrefix) {
     _rIndex = 132;
     return true;

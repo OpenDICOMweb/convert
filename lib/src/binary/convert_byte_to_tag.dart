@@ -4,25 +4,26 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:element/element.dart';
-
-import 'package:dcm_convert/src/byte/byte_reader.dart';
+import 'package:dataset/byte_dataset.dart';
+import 'package:dataset/tag_dataset.dart';
+import 'package:element/byte_element.dart';
+import 'package:element/tag_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
+
+import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
 
 typedef Element<V> Maker<K, V>(K id, List<V> values,
     [int vfLength, VFFragments fragments]);
 
-BDataset currentBDS;
-TagDataset currentTDS;
+Dataset currentBDS;
+Dataset currentTDS;
 int nElements = 0;
 
-RootTagDataset convertByteDSToTagDS(RootDatasetBytes rootBDS) {
-
-
+RootDatasetTag convertByteDSToTagDS<V>(RootDatasetByte rootBDS) {
   log.level = Level.warn1;
   currentBDS = rootBDS;
-  RootTagDataset rootTDS = new RootTagDataset.fromByteData(rootBDS.bd);
+  final rootTDS = new RootDatasetTag.from(rootBDS);
   log.debug('tRoot.isRoot: ${rootTDS.isRoot}');
 
   convertDataset(rootBDS, rootTDS);
@@ -30,35 +31,34 @@ RootTagDataset convertByteDSToTagDS(RootDatasetBytes rootBDS) {
   // Fix: can't compare datasets because Elements values are unprocessed
   // Uint8List.
   // if (rootBDS != rootTDS) log.error('**** rootBDS != rootTDS');
-  if (rootBDS.total != rootTDS.total ||
-      rootBDS.dupTotal != rootTDS.dupTotal)
+  if (rootBDS.total != rootTDS.total || rootBDS.dupTotal != rootTDS.dupTotal)
     _error(0, '**** rootBDS != rootTDS');
   log.info0(_exceptions);
   return rootTDS;
 }
 
-TagDataset convertDataset(ByteDataset byteDS, TagDataset tagDS) {
+Dataset convertDataset(Dataset byteDS, Dataset tagDS) {
   currentBDS = byteDS;
   currentTDS = tagDS;
-  for (Element e in byteDS.elements) {
-    TagElement te = convertElement(e);
+  for (var e in byteDS.elements) {
+    final te = convertElement(e);
     if (te == null) throw 'null TE';
   }
-  for (Element e in byteDS.duplicates) {
-    TagElement te = convertElement(e);
+  for (var e in byteDS.elements.duplicates) {
+    final te = convertElement(e);
     if (te == null) throw 'null TE';
   }
   return tagDS;
 }
 
-Map<String, TagElement> pcElements = <String, TagElement>{};
+Map<String, Element> pcElements = <String, Element>{};
 
 //Urgent fix
-TagElement convertElement(Element be) {
+Element convertElement(Element be) {
   log.level = Level.info;
   var vrCode = be.vrCode;
 
-  var tag = getTag(be);
+  final tag = be.tag;
   if (be.vr == VR.kUN && tag.vr != VR.kUN)
     _warn(be.code, 'e.vr of ${be.vr} was changed to ${tag.vr}');
   if (tag.vr == VR.kUN && be.vr != VR.kUN) {
@@ -67,26 +67,23 @@ TagElement convertElement(Element be) {
     _warn(be.code, 'VR of $tag was changed to ${be.vr}');
   }
 
-  TagElement te;
-  if (be.isSequence) {
+  Element te;
+  if (be is SQbyte) {
     te = convertSQ(be);
-  } else if (tag is PTag) {
-    if (tag.code == kPixelData) {
-      te = ByteReader.makeTagPixelData(be);
-      log.info0('PixelData\n  $be\n  $te');
-    } else {
-      te = be.tagElementFromBytes;
-    }
-  } else if (tag is PCTag) {
+  } else if (be is PixelData) {
+    te = ByteReader.makeTagElement(be.eBytes, be.vrIndex, be.fragments);
+    log.info0('PixelData\n  $be\n  $te');
+  } else if (be is ByteElement) {
+    te = makeTagElementFromEBytes(be.eBytes);
+  } else if (be is PrivateCreator) {
     if (be.vr != VR.kLO)
       _warn(be.code, 'Private Creator e.vr(${be.vr}) should be VR.kLO');
-    if (vrCode != VR.kLO.code)
-      throw 'Invalid Tag VR: ${tag.vr} should be VR.kLO';
-    te = be.tagElementFromBytes;
+    if (vrCode != VR.kLO.code) throw 'Invalid Tag VR: ${tag.vr} should be VR.kLO';
     assert(tag is PCTag && tag.name == be.asString);
+    te = makeTagElementFromEBytes(be.eBytes);
     pcElements[be.asString] = te;
   } else if (tag is PDTag) {
-    te = be.tagElementFromBytes;
+    te = makeTagElementFromEBytes(be.eBytes);
   } else {
     throw 'Invalid Tag: $tag';
   }
@@ -103,25 +100,22 @@ TagElement convertElement(Element be) {
   return te;
 }
 
-SQ convertSQ(Element e) {
-  assert(e.isSequence);
-  SequenceMixin sq = e as SequenceMixin;
-  var tItems = new List<TagItem>(sq.items.length);
-  var parentBDS = currentBDS;
-  var parentTDS = currentTDS;
-  for (int i = 0; i < sq.items.length; i++) {
+SQ convertSQ(SQ sq) {
+  final tItems = new List<ItemTag>(sq.items.length);
+  final parentBDS = currentBDS;
+  final parentTDS = currentTDS;
+  for (var i = 0; i < sq.items.length; i++) {
     currentBDS = sq.items[i];
-    currentTDS = new TagItem.fromDecoder(currentBDS.bd, parentTDS,
-        currentBDS.dsLength, <int, TagElement>{}, <int, TagElement>{});
+    currentTDS = new ItemTag(parentTDS, currentBDS.dsBytes);
     tItems[i] = convertDataset(currentBDS, currentTDS);
   }
   currentBDS = parentBDS;
   currentTDS = parentTDS;
-  var tagSQ = new SQ(sq.tag, currentTDS, tItems, sq.dsLength);
+  final tagSQ = new SQtag(sq.tag, currentTDS, tItems, sq.length);
 
 //  print('byteSQ: ${byteSQ.info}');
 //  print('tagSQ: ${tagSQ.info}');
-  for (TagItem item in tItems) item.addSQ(tagSQ);
+  for (var item in tItems) item.add(tagSQ);
 //  print('convertSQ: nElements: $nElements');
   return tagSQ;
 }
@@ -129,21 +123,20 @@ SQ convertSQ(Element e) {
 final Map<int, PCTag> pcTags = <int, PCTag>{};
 
 Tag getTag(Element be) {
-  int code = be.code;
-  VR vr = be.vr;
+  final code = be.code;
+  final vr = be.vr;
   Tag tag;
   if (Tag.isPublicCode(code)) {
     tag = PTag.lookupByCode(code, vr);
   } else if (Tag.isPrivateCreatorCode(code)) {
-    var name = be.asString;
-    if (be.vr != VR.kLO)
-      _warn(be.code, 'Creator $name with vr($vr) != VR.kLO: $be');
+    final name = be.asString;
+    if (be.vr != VR.kLO) _warn(be.code, 'Creator $name with vr($vr) != VR.kLO: $be');
     log.debug2('   Creator: $name');
     tag = new PCTag(code, VR.kLO, name);
     pcTags[code] = tag;
   } else if (Tag.isPrivateDataCode(code)) {
-    int creatorCode = pcCodeFromPDCode(code);
-    PCTag creator = pcTags[creatorCode];
+    final creatorCode = pcCodeFromPDCode(code);
+    final creator = pcTags[creatorCode];
     tag = new PDTag(code, vr, creator);
   } else {
     throw 'couldn\'t get tag: ${be.info}';
@@ -154,23 +147,23 @@ Tag getTag(Element be) {
 
 // TODO: integrate this into /dictionary/tag
 int pcCodeFromPDCode(int pdCode) {
-  int group = Group.fromTag(pdCode);
-  int elt = Elt.fromTag(pdCode);
-  int cElt = elt >> 8;
-  int pcCode = (group << 16) + cElt;
+  final group = Group.fromTag(pdCode);
+  final elt = Elt.fromTag(pdCode);
+  final cElt = elt >> 8;
+  final pcCode = (group << 16) + cElt;
   return pcCode;
 }
 
 List<String> _exceptions = <String>[];
 
-void _warn(int code, String msg)  {
-  var s = '**   Warning ${dcm(code)}  $msg';
+void _warn(int code, String msg) {
+  final s = '**   Warning ${dcm(code)}  $msg';
   _exceptions.add(s);
   log.warn(s);
 }
 
-void _error(int code, String msg)  {
-  var s = '**** Error: ${dcm(code)} $msg';
+void _error(int code, String msg) {
+  final s = '**** Error: ${dcm(code)} $msg';
   _exceptions.add(s);
   log.error(s);
 }

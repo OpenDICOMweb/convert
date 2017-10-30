@@ -10,7 +10,6 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -27,6 +26,7 @@ import 'package:dcm_convert/src/encoding_parameters.dart';
 
 //TODO: rewrite all comments to reflect current state of code
 
+/*
 String _path;
 ByteData _rootBD;
 bool _isEVR;
@@ -37,11 +37,14 @@ Dataset _currentDS;
 ElementList _elements;
 var _bytesUnread = 0;
 
+/// The current read index.
+var _rIndex = 0;
+*/
+
+ByteData _rootBD;
 EncodingParameters _eParams;
 ElementOffsets _offsets;
 
-/// The current read index.
-var _rIndex = 0;
 /// A library for encoding [Dataset]s in the DICOM File Format.
 ///
 /// Supports encoding all LITTLE ENDIAN [TransferSyntax]es.
@@ -57,7 +60,7 @@ abstract class DcmWriter extends DcmWriterInterface {
   /// The default [ByteData] buffer length, if none is provided.
   static const int defaultBufferLength = 200 * k1MB;
 
-  /// If [reUseBD] is [true] the [ByteData] buffer is stored here.
+  /// If [reUseBD] is true the [ByteData] buffer is stored here.
   static ByteData _reuse;
 
   /// The target output [path] for the encoded data. [file] has
@@ -68,10 +71,10 @@ abstract class DcmWriter extends DcmWriterInterface {
   /// precedence over [path].
   final File file;
 
-  /// The [TransferSyntax] for the encoded output. If [null]
+  /// The [TransferSyntax] for the encoded output. If null
   /// the output will have the same [TransferSyntax] as the Root
   /// [Dataset]. If the [TransferSyntax] of the Root [Dataset] is
-  /// [null] then it defaults to [Explicit VR Little Endian].
+  /// null then it defaults to [Explicit VR Little Endian].
   final TransferSyntax targetTS;
 
   // The length of the initial output ByteData buffer.
@@ -81,12 +84,13 @@ abstract class DcmWriter extends DcmWriterInterface {
 
   final EncodingParameters eParams;
 
-  final ElementOffsets elementList = new ElementOffsets();
+  @override
+  final ElementOffsets offsets = new ElementOffsets();
 
   /// The current dataset.  This changes as Sequences are written.
   Dataset _currentDS;
 
-  /// Return [true] if input is Explicit VR, [false] if Implicit VR.
+  /// Return true if input is Explicit VR, false if Implicit VR.
   bool _isEVR;
   TransferSyntax _ts;
 
@@ -137,7 +141,7 @@ abstract class DcmWriter extends DcmWriterInterface {
   /// Returns the underlying [ByteBuffer].
   ByteBuffer get buffer => rootBD.buffer;
 
-  /// Returns [true] if there is space left in the write buffer.
+  /// Returns true if there is space left in the write buffer.
   bool get isWriteable => _isWritable;
 
   /// The root Dataset being encoded.
@@ -148,23 +152,23 @@ abstract class DcmWriter extends DcmWriterInterface {
   /// The current dataset.  This changes as Sequences and Items are encoded.
 //  Dataset currentDS;
 
-  /// The current [length] in bytes of [this].
+  /// The current [length] in bytes of this [DcmWriter].
   int get lengthInBytes => _wIndex;
 
-  /// The current [length] in bytes of [this].
+  /// The current [length] in bytes of this [DcmWriter].
   int get length => lengthInBytes;
 
   bool get removeUndefinedLengths => eParams.doConvertUndefinedLengths;
-  /// Returns [info] about [this].
+
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
   /// Writes (encodes) only the FMI in the root [Dataset] in 'application/dicom'
   /// media type, writes it to a Uint8List, and returns the [Uint8List].
-  Future<Uint8List> dcmWriteFMI({bool hadFmi}) async {
+  Uint8List dcmWriteFMI({bool hadFmi}) {
     _writeFMI(hadFmi);
     final bytes = rootBD.buffer.asUint8List(0, _wIndex);
-    await _writeFileOrPath(bytes);
+    _writeFileOrPath(bytes);
     return bytes;
   }
 
@@ -188,9 +192,9 @@ abstract class DcmWriter extends DcmWriterInterface {
     return rootBD.buffer.asUint8List(rootBD.offsetInBytes, rootBD.lengthInBytes);
   }
 
-  //TODO: make this work for [async] == [true] and make that the default.
-  /// Writes [bytes] to [file] if it is not [null]; otherwise, writes to
-  /// [path] if it is not null. If both are [null] nothing is written.
+  //TODO: make this work for [async] == true and make that the default.
+  /// Writes [bytes] to [file] if it is not null; otherwise, writes to
+  /// [path] if it is not null. If both are null nothing is written.
   void _writeFileOrPath(Uint8List bytes) {
 	  final f = (file == null && path != '') ? new File(path) : file;
     if (f != null) {
@@ -300,7 +304,7 @@ abstract class DcmWriter extends DcmWriterInterface {
         _writeSimpleElement(e);
       }
     }
-    elementList.add(eStart, _wIndex, e);
+    offsets.add(eStart, _wIndex, e);
     _nElements++;
     if (e.isPrivate) _nPrivateElements++;
   }
@@ -410,7 +414,7 @@ abstract class DcmWriter extends DcmWriterInterface {
   int _wIndex = 0;
   // int get endOfBD => rootBD.lengthInBytes;
 
-  /// Returns [true] if there is space left in the write buffer.
+  /// Returns true if there is space left in the write buffer.
   bool get _isWritable => _wIndex < rootBD.lengthInBytes;
 
   /// Moves the [_wIndex] forward [n] bytes, or backward if [n] is negative.
@@ -420,24 +424,6 @@ abstract class DcmWriter extends DcmWriterInterface {
     // _checkRange(v);
     _wIndex = v;
   }
-
-/* Keep for debugging
-  void _checkRange(int v) {
-    int max = rootBD.lengthInBytes;
-    if (v < 0 || v >= max) throw new RangeError.range(v, 0, max);
-  }
-*/
-
-  // The Writers
-
-/* Flush if not needed
-  /// Writes a byte (Uint8) value to the output [rootBD].
-  void _writeUint8(int value) {
-    assert(value >= 0 && value <= 255, 'Value out of range: $value');
-    _maybeGrow(1);
-    rootBD.setUint8(_wIndex, value);
-    _wIndex++;
-  }*/
 
   /// Writes a 16-bit unsigned integer (Uint16) value to the output [rootBD].
   void _writeUint16(int value) {

@@ -4,3 +4,12 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
+import 'dart:io';
+
+import 'package:path/path.dart' as path;
+
+String getTempFile(String infile, String extension) {
+	final name = path.basenameWithoutExtension(infile);
+	final dir = Directory.systemTemp.path;
+	return '$dir/$name.$extension';
+}

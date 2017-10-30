@@ -14,11 +14,9 @@ Uint8List toUtf8(String s) => UTF8.encode(s);
 
 String stringFromBytes(Uint8List bytes) => UTF8.decode(bytes);
 
-ByteBufReader readerFromString(String s) {
-  return new ByteBufReader(toUtf8(s));
-}
+ByteBufReader readerFromString(String s) => new ByteBufReader(toUtf8(s));
 
 ByteBuf byteBufFromString(String s) {
-  Uint8List v = UTF8.encode(s);
+  final v = UTF8.encode(s);
   return new ByteBuf.reader(v);
 }

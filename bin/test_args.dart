@@ -5,8 +5,6 @@
 // See the AUTHORS file for other contributors.
 
 import 'dart:io';
-import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:dcm_convert/tools.dart';
 

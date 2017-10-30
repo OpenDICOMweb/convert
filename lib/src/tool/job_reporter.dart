@@ -54,7 +54,7 @@ class JobReporter {
       : this.shortInterval = (short == null) ? getShortInterval(total) : short,
         this.log = (logIt) ? new Logger('JobReporter') : null,
         this.timer = new Timer(start: false) {
-    this.longInterval = (long == null) ? 10 * shortInterval : long;
+    longInterval = (long == null) ? 10 * shortInterval : long;
     print('short: $short');
     print('shortInterval: $shortInterval');
     print('long: $long');
@@ -63,14 +63,14 @@ class JobReporter {
 
   String operator +(int v) {
     _count++;
-    return (_count % shortInterval == 0) ? report : "";
+    return (_count % shortInterval == 0) ? report : '';
   }
 
   Level get level => log.level;
 
   set level(Level level) => log.level = level;
 
-  String get _from => (from == null) ? "" : "from $from";
+  String get _from => (from == null) ? '' : 'from $from';
 
   DateTime get startTime => _startTime;
 
@@ -102,7 +102,7 @@ class JobReporter {
   }
 
   //TODO: need a better name for this
-  String report(bool wasSuccessful, String path, {bool force = false}) {
+  String report(String path, {bool wasSuccessful, bool force = false}) {
     _count++;
     if (wasSuccessful) {
       _success++;
@@ -110,18 +110,18 @@ class JobReporter {
     } else if (!wasSuccessful && doReportFailure) {
       _failure++;
       failuresList.add(path);
-      var n = '$_count'.padLeft(countWidth);
-      var msg = '$n: ** Failure $path';
+      final n = '$_count'.padLeft(countWidth);
+      final msg = '$n: ** Failure $path';
       return maybePrint(msg);
     }
-    return "";
+    return '';
   }
 
   String shortMsg(String path) {
-    var n = '$_count'.padLeft(countWidth);
-    var p = (showPath) ? path : "";
+    final n = '$_count'.padLeft(countWidth);
+    final p = (showPath) ? path : '';
     var elapsed = timer.elapsed.toString();
-    var dotPos = elapsed.indexOf('.');
+    final dotPos = elapsed.indexOf('.');
     elapsed = elapsed.substring(0, dotPos);
     return '$n: ${timer.split} $elapsed $p';
   }
@@ -133,9 +133,9 @@ class JobReporter {
   }
 
   String get failures {
-    var out = "Failures($_failure):";
-    for (String s in failuresList) out += '  $s\n';
-    return out;
+    final sb  =  new StringBuffer('Failures($_failure):');
+    for (var s in failuresList) sb.write('  $s\n');
+    return sb.toString();
   }
 
   String get _startMsg => '''Reading $total files '$_from'
@@ -154,4 +154,4 @@ $failures
 ''';
 }
 
-const dcmExtensions = const <String>["dcm", ""];
+const List<String> dcmExtensions = const <String>['dcm', ''];

@@ -25,7 +25,7 @@ void main(List<String> args) {
   Server.initialize(name: 'read_write_file', level: Level.error, throwOnError: true);
 
   /// The processed arguments for this program.
-  JobArgs jobArgs = new JobArgs(args);
+  final jobArgs = new JobArgs(args);
 
   if (jobArgs.showHelp) showHelp(jobArgs);
 
@@ -35,7 +35,7 @@ void main(List<String> args) {
 
 /// The help message
 void showHelp(JobArgs jobArgs) {
-  var msg = '''
+  final msg = '''
 Usage: readdir <input-directory> [<options>]
 
 Tries to read each each file in the <directory> tree. If successful, infomation

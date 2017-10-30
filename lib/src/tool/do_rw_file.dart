@@ -8,35 +8,42 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/dcm.dart';
+import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
+
+import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
+
+import 'package:dcm_convert/src/binary/byte/byte_writer.dart';
+import 'package:dcm_convert/src/tool/job_utils.dart';
+import 'package:dcm_convert/src/errors.dart';
+
 
 /// Read a file then write it to a buffer.
 Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) async {
   log.level = Level.error;
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
-  var pad = "".padRight(5);
+  final pad = ''.padRight(5);
 
   try {
-  	  Uint8List bytes = await f.readAsBytes();
-  	  ByteData bd = bytes.buffer.asByteData();
-    var reader0 = new ByteReader(bd, fast: true);
-    RootDatasetBytes rds0 = reader0.readRootDataset();
+  	  final Uint8List bytes = await f.readAsBytes();
+  	  final bd = bytes.buffer.asByteData();
+    final reader0 = new ByteReader(bd, fast: true);
+    final rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
       log.info0('Bad File: ${f.path}');
       return false;
     }
     if (rds0.parseInfo == null) throw 'Bad File - No ParseInfo: $f';
-    var bytes0 = reader0.buffer;
+    final bytes0 = reader0.buffer;
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');
     if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.info}');
 
     // TODO: move into dataset.warnings.
-    Element e = rds0[kPixelData];
+    final e = rds0[kPixelData];
     if (e == null) {
       log.warn('$pad ** Pixel Data Element not present');
     } else {
@@ -49,13 +56,14 @@ $pad    TS: ${rds0.transferSyntax}''');
       // Just write bytes don't write the file
       writer = new ByteWriter(rds0);
     } else {
+    	final outPath = getTempFile(f.path, 'dcmout');
       writer = new ByteWriter.toPath(rds0, outPath, fast: true);
     }
-    Uint8List bytes1 = writer.writeRootDataset();
+    final bytes1 = writer.writeRootDataset();
     log.debug('$pad    Encoded ${bytes1.length} bytes');
 
    // Urgent Jim if file has dups then no test is done. Fix it.
-    bool same = true;
+    var same = true;
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
@@ -72,3 +80,4 @@ $pad    TS: ${rds0.transferSyntax}''');
   }
   return false;
 }
+

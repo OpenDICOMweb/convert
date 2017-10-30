@@ -6,7 +6,7 @@
 
 import 'dart:io';
 
-import 'package:dcm_convert/dcm.dart';
+import 'package:dcm_convert/byte_convert.dart';
 import 'package:path/path.dart' as p;
 import 'package:timer/timer.dart';
 import 'package:system/server.dart';
@@ -23,28 +23,26 @@ void main() {
   Server.initialize(name: 'read_write_file', level: Level.error);
 
   /// *** Change directory path name here
-  String path = 'C:/odw/test_data/sfd/MR/Patient_20_-_FMRI_brain/1_DICOM_Original';
-  Directory dir = new Directory(path);
-
-  List<FileSystemEntity> fList = dir.listSync(recursive: true);
-  var fsEntityCount = fList.length;
+  final path = 'C:/odw/test_data/sfd/MR/Patient_20_-_FMRI_brain/1_DICOM_Original';
+  final dir = new Directory(path);
+  final fList = dir.listSync(recursive: true);
+  final fsEntityCount = fList.length;
   print('List: $fsEntityCount');
   log.debug('FSEntity count: $fsEntityCount');
 
-  List<String> files = <String>[];
-  for (FileSystemEntity fse in fList) {
+  final files = <String>[];
+  for (var fse in fList) {
     if (fse is! File) continue;
-      var path = fse.path;
-      var ext = p.extension(path);
-      if (ext == '.dcm' || ext == "") {
-        log.debug('File: $fse');
-        files.add(fse.path);
-      }
+    final path = fse.path;
+    final ext = p.extension(path);
+    if (ext == '.dcm' || ext == '') {
+      log.debug('File: $fse');
+      files.add(fse.path);
+    }
   }
 
-  var timer = new Timer();
+  final timer = new Timer();
   log.config('Reading ${files.length} files from ${dir.path}:');
-  var reader = new FileListReader(files, fmiOnly: true, printEvery: 100);
-  reader.read;
+  new FileListReader(files, fmiOnly: true, printEvery: 100)..read;
   log.config('Elapsed time: ${timer.elapsed}');
 }

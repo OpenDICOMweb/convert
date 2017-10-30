@@ -24,7 +24,7 @@ class ByteDataBuffer {
   factory ByteDataBuffer.view(ByteDataBuffer bd, [int start = 0, int end]) {
     if (start < 0 || start >= bd.lengthInBytes)
       throw new RangeError.index(start, bd);
-    if (end == null) end = bd.lengthInBytes;
+    end ??= bd.lengthInBytes;
     if (end < 0 || end >= bd.lengthInBytes) throw new RangeError.index(end, bd);
     return new ByteDataBuffer._(
         bd.buffer.asByteData(bd.offsetInBytes + start, bd.offsetInBytes + end));
@@ -55,13 +55,13 @@ class ByteDataBuffer {
   bool get isWriteable => _isWritable;
 
   void skip(int n) {
-    int v = _wIndex + n;
+    final v = _wIndex + n;
     _checkRange(v);
     _wIndex = v;
   }
 
   void _checkRange(int v) {
-    int max = _bd.lengthInBytes;
+    final max = _bd.lengthInBytes;
     if (v < 0 || v >= max) throw new RangeError.range(v, 0, max);
   }
 
@@ -104,9 +104,9 @@ class ByteDataBuffer {
   void writeBytes(Uint8List bytes) => _writeBytes(bytes);
 
   void _writeBytes(Uint8List bytes) {
-    int length = bytes.length;
+    final length = bytes.length;
     _maybeGrow(length);
-    for (int i = 0, j = _wIndex; i < length; i++, j++) _bd.setUint8(j, bytes[i]);
+    for (var i = 0, j = _wIndex; i < length; i++, j++) _bd.setUint8(j, bytes[i]);
     _wIndex = _wIndex + length;
   }
 
@@ -159,14 +159,14 @@ class ByteDataBuffer {
   /// capacity of the current buffer.
   void _grow([int capacity]) {
     print('start _grow: ${_bd.lengthInBytes}');
-    int oldLength = _bd.lengthInBytes;
-    int newLength = oldLength * 2;
+    final oldLength = _bd.lengthInBytes;
+    var newLength = oldLength * 2;
     if (capacity != null && capacity > newLength) newLength = capacity;
 
     _isValidBufferLength(newLength);
     if (newLength < oldLength) return;
-    var newBuffer = new ByteData(newLength);
-    for (int i = 0; i < oldLength; i++) newBuffer.setUint8(i, _bd.getUint8(i));
+    final newBuffer = new ByteData(newLength);
+    for (var i = 0; i < oldLength; i++) newBuffer.setUint8(i, _bd.getUint8(i));
     _bd = newBuffer;
     print('end _grow ${_bd.lengthInBytes}');
   }

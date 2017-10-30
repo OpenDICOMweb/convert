@@ -7,46 +7,46 @@
 import 'package:uid/uid.dart';
 
 class DecodingParameters {
-  /// if [true] Datasets will be allowed to be encoded in IVRLE.
-  /// The default is [false].
+  /// if true Datasets will be allowed to be encoded in IVRLE.
+  /// The default is false.
   final bool allowImplicitLittleEndian;
 
-  /// If [true] and Preamble is not all zeros, abort reading.
+  /// If true and Preamble is not all zeros, abort reading.
   final bool checkPreambleAllZeros;
 
-  /// If [true] and Preamble and Prefix are not present, abort reading.
+  /// If true and Preamble and Prefix are not present, abort reading.
   final bool allowMissingPrefix;
 
-  /// If [true] and File Meta Information (FMI) is not present, abort reading.
+  /// If true and File Meta Information (FMI) is not present, abort reading.
   final bool allowMissingFMI;
 
-  /// If [true], then duplicate Elements will be stored.
+  /// If true, then duplicate Elements will be stored.
   final bool allowDuplicates;
 
   /// Only read the file if it has the same [TransferSyntax] as [targetTS].
   final TransferSyntax targetTS;
 
-  /// If [true] Elements with VR.kUN will be check to see if they
+  /// If true Elements with VR.kUN will be check to see if they
   /// are Sequences.
   final bool checkForUNSequence;
 
-  /// If [true] elements with VR.kUN will be converted to correct VR if known.
+  /// If true elements with VR.kUN will be converted to correct VR if known.
   final bool doConvertUndefinedVR;
 
-  /// If [true] Elements will be checked for valid VR by looking up Tag.
+  /// If true Elements will be checked for valid VR by looking up Tag.
   final bool doCheckVR;
 
-  /// If [true], ODW FMI (with clean preamble) will be added or replaced,
+  /// If true, ODW FMI (with clean preamble) will be added or replaced,
   /// undefined lengths will be removed, if RootDS is in Implicit VR it
   /// will be converted to Explicit VR, all fragments will be removed.
   final bool doConvertToNormalForm;
 
-  /// If [true], a DICOM File Prefix (PS3.10) will be written, and
+  /// If true, a DICOM File Prefix (PS3.10) will be written, and
   /// DICOM File Meta Information (PS3.10) will be written
   /// even if it wasn't present when the Dataset was decoded (parsed).
   final bool doAddMissingFMI;
 
-  /// If [true] write ODW FMI into encoded output.
+  /// If true write ODW FMI into encoded output.
   final bool doUpdateFMI;
 
   /// If the Root Dataset had a non-zero preamble, replace it with all zeros.

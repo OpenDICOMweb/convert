@@ -11,7 +11,7 @@ part of odw.sdk.convert.binary;
 /// 32-bits will be a kSequenceDelimitationItem32Bit; or it is not
 /// empty, in which case the next 32 bits will be an kItem32Bit value.
 /// The [kPixelData] [Element] also has these characteristics,
-/// and we return [false] if [code] is [kPixelData].
+/// and we return false if [code] is [kPixelData].
 bool _isSequence(int code, int vrIndex) {
   if (vrIndex != VR.kUN.index || code == kPixelData) return false;
   final delimiter = _getUint32(_rIndex);
@@ -27,6 +27,7 @@ bool _isSequence(int code, int vrIndex) {
 // reading the value field of these [Element]s. Returns an [SQ] [Element].
 
 Element _readSequence(int code, int eStart, EBytesMaker maker) {
+	if (_isEVR) _skip(2);
   final vfLengthField = _readUint32();
   return (vfLengthField == kUndefinedLength)
       ? _readUSQ(code, eStart, maker, vfLengthField)
@@ -68,7 +69,7 @@ Element _makeSequence(
   //  log.debug1('$rmm   eLength($eLength), makeSQ');
   final bd = _rootBD.buffer.asByteData(eStart, _rIndex - eStart);
   final eb = ebMaker(bd);
-  final SQ sq = makeSequence(eb, _currentDS, items);
+  final sq = sequenceMaker(eb, _currentDS, items);
   _currentDS.elements.add(sq);
   if (Tag.isPrivateCode(code)) _nPrivateSequencesRead++;
   _nSequencesRead++;
@@ -76,21 +77,22 @@ Element _makeSequence(
   return sq;
 }
 
-/// Returns [true] if the sequence delimiter is found at [_rIndex].
+/// Returns true if the sequence delimiter is found at [_rIndex].
 bool _isSequenceDelimiter() => _checkForDelimiter(kSequenceDelimitationItem32BitLE);
 
-/// Returns [true] if the kItemDelimitationItem32Bit delimiter is found.
+/// Returns true if the kItemDelimitationItem32Bit delimiter is found.
 bool _checkForItemDelimiter() => _checkForDelimiter(kItemDelimitationItem32BitLE);
 
-final String kItem = hex32(kItem32BitLE);
+final String kItemAsString = hex32(kItem32BitLE);
 
 /// Returns an [Item] or Fragment.
 Item _readItem() {
   assert(_hasRemaining(8));
-  final Item item = makeItem(_currentDS);
+  final item = itemMaker(_currentDS);
   final itemStart = _rIndex;
   // read 32-bit kItem code
   final delimiter = _readUint32();
+  print('delim: ${hex(delimiter)}, kItem: $kItemAsString');
   assert(delimiter == kItem32BitLE, 'Invalid Item code: ${dcm(delimiter)}');
   final vfLengthField = _readUint32();
 
@@ -140,7 +142,7 @@ Item _readItem() {
   return item;
 }
 
-/// Returns [true] if the [target] delimiter is found. If the target
+/// Returns true if the [target] delimiter is found. If the target
 /// delimiter is found [_rIndex] is advanced past the Value Length Field;
 /// otherwise, readIndex does not change
 bool _checkForDelimiter(int target) {

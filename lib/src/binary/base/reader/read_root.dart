@@ -7,14 +7,14 @@ part of odw.sdk.convert.binary;
 
 //TODO: redoc to reflect current state of code
 
-/// Reads a Root [Dataset] from [this] and returns it.
-/// If an error is encountered and [system].throwOnError is [true],
-/// an Error will be thrown; otherwise, returns [null].
+/// Reads a Root [Dataset] and returns it.
+/// If an error is encountered and [system].throwOnError is true,
+/// an Error will be thrown; otherwise, returns null.
 RootDataset _readRootDataset(String path, DecodingParameters dParam) {
   final eStart = _rIndex;
-
+  log.debug('Reading RootDS: start: $eStart length: ${_rootBD.lengthInBytes}');
   try {
-    _currentDS = _rootDS;
+      _currentDS = _rootDS;
     _hadFmi = _readFmi(path, dParam);
     if (!_hadFmi && !dParam.allowMissingFMI) return _rootDS;
 
@@ -23,22 +23,25 @@ RootDataset _readRootDataset(String path, DecodingParameters dParam) {
 
     //  log.debug1('$rbb readDataset: isExplicitVR(${_isEVR})');
     while (_hasRemaining(8)) {
-      assert(identical(_currentDS, _rootDS));
+      log.debug('_rIndex: $_rIndex, eStart: $eStart');
+      assert(identical(_currentDS, _rootDS), '$_currentDS\n$_rootDS');
       _lastTopLevelElementRead = _readElement();
       //  log.debug1('$ree end readDataset: isExplicitVR(${_isEVR})');
       assert(identical(_currentDS, _rootDS));
     }
-    //  log.debug('rootDS: $rootDS');
-    //  log.debug('RootDS.TS: ${rootDS.transferSyntax}');
+    //  log.debug('_rootDS: $_rootDS');
+    //  log.debug('RootDS.TS: ${_rootDS.transferSyntax}');
     //  log.debug('elementList(${elementList.length})');
-  } on ShortFileError catch (e) {
+  } on ShortFileError catch (x) {
     _hadParsingErrors = true;
     _rootDS = null;
-    _error(failedFMIErrorMsg(path, e));
+    _error(failedFMIErrorMsg(path, x));
+    if (throwOnError) rethrow;
   } on EndOfDataError catch (e) {
     _hadParsingErrors = true;
     _endOfDataError = true;
     log.error(e);
+    if (throwOnError) rethrow;
   } on InvalidTransferSyntax catch (e) {
     _warn(failedTSErrorMsg(path, e));
   } on RangeError catch (ex) {
@@ -50,13 +53,15 @@ RootDataset _readRootDataset(String path, DecodingParameters dParam) {
     _rIndex = eStart;
     _hadParsingErrors = true;
     _error(failedFMIErrorMsg(path, x));
+    rethrow;
   } finally {
     bdRead = _rootBD.buffer.asByteData(0, _endOfLastValueRead);
     //      assert(_rIndex == _endOfLastValueRead,
     //          '_rIndex($_rIndex), _endOfLastValueRead($_endOfLastValueRead)');
     _bytesUnread = _rootBD.lengthInBytes - _rIndex;
     _hadTrailingBytes = _bytesUnread > 0;
-    _hadTrailingZeros = _checkAllZeros(_endOfLastValueRead, _rootBD.lengthInBytes);
+    if (_hadTrailingBytes)
+      _hadTrailingZeros = _checkAllZeros(_endOfLastValueRead, _rootBD.lengthInBytes);
     _dsLengthInBytes = _endOfLastValueRead;
     assert(_dsLengthInBytes == bdRead.lengthInBytes);
   }
@@ -74,7 +79,7 @@ RootDataset _readRootDataset(String path, DecodingParameters dParam) {
 
   _rootDS.parseInfo = getParseInfo();
   final _rootDSTotal = _rootDS.total + _rootDS.dupTotal;
-  if (_nElementsRead != _rootDSTotal) readerInconsistencyError(_rootDS);
+//  if (_nElementsRead != _rootDSTotal) readerInconsistencyError(_rootDS);
   return _rootDS;
 }
 

@@ -8,18 +8,18 @@ import 'dart:io';
 
 import 'package:system/core.dart';
 import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/dcm.dart';
+import 'package:dcm_convert/byte_convert.dart';
 import 'package:dcm_convert/src/utilities/file_list_reader.dart';
 
 void main() {
- // readFile(path0);
+  // readFile(path0);
 
   readFiles(testPaths0);
 }
 
 void readFile(String path) {
-  File input = new File(path);
-  RootTagDataset rds = TagReader.readFile(input);
+  final input = new File(path);
+  final rds = TagReader.readFile(input);
   if (rds == null) {
     log.error('Null Instance $path');
     return null;
@@ -28,34 +28,13 @@ void readFile(String path) {
   // if (log.level == Level.debug) formatDataset(rds);
 }
 
-void formatDataset(RootDatasetBytes rds, [bool includePrivate = true]) {
-  var z = new Formatter(maxDepth: 146);
+void formatDataset(RootDatasetByte rds, {bool includePrivate = true}) {
+  final z = new Formatter(maxDepth: 146);
   log.debug(rds.format(z));
-  for (PrivateGroup pg in rds.privateGroups)
-    log.debug(pg.info);
+  for (var pg in rds.privateGroups) log.debug(pg.info);
 }
 
 void readFiles(List<String> paths) {
   log.info0('Reading $paths Files:');
-  var reader = new FileListReader(paths);
-  reader.read;
+  new FileListReader(paths)..read;
 }
-
-/* Flush if not needed
-RootDatasetBytes _readFile(File file) {
-  Uint8List bytes = file.readAsBytesSync();
-  if (bytes.length < 8 * 1024)
-    log.warn('***** Short file length: ${bytes.length} - ${file.path}');
-  log.debug('Reading file: $file, length: ${bytes.length}');
-  RootDatasetBytes rds;
-  try {
-    rds = ByteReader.readBytes(bytes, path: file.path);
-  } on InvalidTransferSyntaxError catch(e) {
-    log.debug(e);
-    return null;
-  } catch(e) {
-    log.info0('Failed read Dataset, now trying FMI');
-    rds = ByteReader.readBytes(bytes, path: file.path, fmiOnly: true);
-  }
-  return rds;
-}*/

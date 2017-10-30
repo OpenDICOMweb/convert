@@ -7,11 +7,11 @@
 import 'dart:async' hide Timer;
 import 'dart:io';
 
-import 'package:dcm_convert/dcm.dart';
 import 'package:system/core.dart';
 
-import 'job_args.dart';
-import 'job_reporter.dart';
+import 'package:dcm_convert/src/tool/job_args.dart';
+import 'package:dcm_convert/src/tool/job_reporter.dart';
+import 'package:dcm_convert/src/io_utils.dart';
 
 // **** change this name when testing
 const String defaultDirName = 'C:/odw/test_data/mweb';
@@ -26,7 +26,7 @@ Directory getDirectory(JobArgs args) {
     dirName = args.argResults.arguments[0];
   }
 
-  final dir = toDirectory(dirName);
+  final dir = pathToDirectory(dirName);
   if (dir == null) {
     if (dirName[0] == '-') {
       stderr.write('Error: Missing directory argument - "$dir"');
@@ -103,7 +103,7 @@ class JobRunner {
       if (throwOnError)
       	rethrow;
     }
-    return reporter.report(success, path);
+    return reporter.report(path, wasSuccessful: success);
   }
 
   static void _greeting() => stdout.writeln('Job Runner:');

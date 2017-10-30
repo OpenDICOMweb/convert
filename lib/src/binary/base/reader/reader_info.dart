@@ -65,10 +65,10 @@ part of odw.sdk.convert.binary;
   VR _pixelDataVR;
   int _pixelDataStart;
   int _pixelDataEnd;
-  int _lastElementCode;
+  int _lastElementCode = 0;
   Element _lastTopLevelElementRead;
   Element _lastElementRead;
-  int _endOfLastValueRead;
+  int _endOfLastValueRead = 0;
   bool _beyondPixelData = false;
   bool _endOfDataError = false;
 

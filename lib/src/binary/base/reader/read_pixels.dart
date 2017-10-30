@@ -5,27 +5,36 @@
 // See the AUTHORS file for other contributors.
 part of odw.sdk.convert.binary;
 
-Element _readPixelData(int eStart, int vfLengthField, int vrIndex, int eLength) {
+// _rIndex is at end of Value Field
+Element _readPixelDataDefined(int code, int eStart, int vrIndex, int vfLengthField, int
+eLength) {
+	_rIndex = _rIndex + vfLengthField;
+	return _makePixelData(eStart, eLength, vrIndex);
+}
+
+// _rIndex is Just after length field
+Element _readPixelDataUndefined(
+    int code, int eStart, int vrIndex, int vfLengthField, int eLength) {
   assert(vrIndex == VR.kOB.index || vrIndex == VR.kOW.index || vrIndex == VR.kUN.index);
-  _pixelDataStart = _rIndex;
-  _pixelDataVR = VR.lookup(vrIndex);
-  int eLength;
   Element e;
   final item = _getUint32(_rIndex);
   if (item == kItem32BitLE) {
     e = _readFragmentedPixelData(eStart, vfLengthField, vrIndex);
   } else {
-    e = _makePixelData(eStart, eLength, vrIndex);
+	  _rIndex = _rIndex + vfLengthField;
+	  e = _makePixelData(eStart, eLength, vrIndex);
   }
   _beyondPixelData = true;
   _pixelDataEnd = _rIndex;
   return e;
 }
 
+
+
 /// Reads an encapsulated (compressed) [kPixelData] [Element].
 Element _readFragmentedPixelData(int eStart, int vfLengthField, int vrIndex) {
   if (vrIndex != VR.kOB.index && vrIndex != VR.kUN.index) {
-    final vr = VR.lookup(vrIndex);
+    final vr = VR.lookupByIndex(vrIndex);
     _warn('Invalid VR($vr) for Encapsulated TS: $_tsUid $_rrr');
     _hadParsingErrors = true;
   }
@@ -54,14 +63,13 @@ VFFragments _readFragments() {
   return new VFFragments(fragments);
 }
 
-Element _makePixelData(int eStart, int eLength, int vrIndex, [VFFragments fragments]) {
-	final bd = _rootBD.buffer.asByteData(eStart, eLength);
-	final eb = (_isEVR) ? new EvrLong(bd) : new Ivr(bd);
-  final e = makePixelData(eb, vrIndex, fragments);
-	_currentDS.elements.add(e);
+Element _makePixelData(int eStart, int eLength, int vrIndex,
+    [VFFragments fragments]) {
+  final bd = _rootBD.buffer.asByteData(eStart, eLength);
+  final eb = (_isEVR) ? new EvrLong(bd) : new Ivr(bd);
+  final e = makeBEPixelDataFromEBytes(eb, vrIndex, _tsUid, fragments);
+  _currentDS.elements.add(e);
   assert(_checkRIndex());
+  log.debug('_rIndex: $_rIndex');
   return e;
 }
-
-// Temp Placeholder
-Element makePixelData(EBytes ebd, int vrIndex, VFFragments fragments) {}

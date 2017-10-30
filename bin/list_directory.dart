@@ -7,12 +7,12 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dcm_convert/src/byte/io_utils.dart';
+import 'package:dcm_convert/src/io_utils.dart';
 
 Future main() async {
-  var dir = new Directory('C:/odw/test_data');
-  var stat = await dir.stat();
-  var length = dir.listSync(recursive: true).length;
+  final  dir = new Directory('C:/odw/test_data');
+  final  stat = await dir.stat();
+  final  length = dir.listSync(recursive: true).length;
   print(stat);
   print('length: $length');
 
@@ -33,8 +33,8 @@ void printIt(FileSystemEntity e, [int level = 0]) {
     type = 'Unknown';
   }
 
-  var p = cleanPath(e.path);
-  var spaces = ''.padRight(level * 2);
+  final  p = cleanPath(e.path);
+  final  spaces = ''.padRight(level * 2);
   print('$level $spaces $type: $p');
 }
 

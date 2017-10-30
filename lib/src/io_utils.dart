@@ -26,7 +26,8 @@ void checkRootDataset(Dataset dataset) {
 /// Checks that [file] is not empty.
 void checkFile(File file, {bool overwrite = false}) {
   if (file == null) throw new ArgumentError('null File');
-  if (file.existsSync() && !overwrite) throw new ArgumentError('$file already exists');
+  if (file.existsSync() && (file.lengthSync() == 0))
+  	throw new ArgumentError('$file has zero length');
 }
 
 /// Checks that [path] is not empty.

@@ -7,7 +7,7 @@
 import 'dart:io';
 
 import 'package:dcm_convert/data/test_directories.dart';
-import 'package:dcm_convert/dcm.dart';
+import 'package:dcm_convert/byte_convert.dart';
 import 'package:path/path.dart' as p;
 import 'package:system/core.dart';
 import 'package:timer/timer.dart';
@@ -15,7 +15,7 @@ import 'package:timer/timer.dart';
 import 'package:dcm_convert/src/binary/byte_read_utils.dart';
 
 
-var dir0 =
+final String dir0 =
     'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/'
     'Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/';
 String outRoot0 = 'test/output/root0';
@@ -28,8 +28,8 @@ String outRoot4 = 'test/output/root4';
 // 1. dirname
 // 2. reportIncrement
 void main() {
-  int success = 0;
-  int failure = 0;
+  var success = 0;
+  var failure = 0;
 
   system.log.level = Level.error;
 
@@ -38,40 +38,40 @@ void main() {
   //TODO: add asyn argument and async I/O to handle multiple files at the same
   // time.
   /// *** Change directory path name here
-  int reportEveryNFiles = 100;
-  String path = sfdMG;
-  Directory dir = new Directory(path);
+  final reportEveryNFiles = 100;
+  final path = sfdMG;
+  final dir = new Directory(path);
 
-  List<FileSystemEntity> fList = dir.listSync(recursive: true);
-  int fsEntityCount = fList.length;
+  final fList = dir.listSync(recursive: true);
+  final fsEntityCount = fList.length;
   log.debug('FSEntity count: $fsEntityCount');
 
-  List<String> files = <String>[];
-  for (FileSystemEntity fse in fList) {
+  final files = <String>[];
+  for (var fse in fList) {
     if (fse is! File) continue;
-    var path = fse.path;
-    var ext = p.extension(path);
-    if (ext == '.dcm' || ext == "") {
+    final path = fse.path;
+    final ext = p.extension(path);
+    if (ext == '.dcm' || ext == '') {
       log.debug('File: $fse');
       files.add(fse.path.replaceAll('\\', '/'));
     }
   }
 
-  Uri program = Platform.script;
-  DateTime startTime = new DateTime.now();
+  final program = Platform.script;
+  final startTime = new DateTime.now();
   print('$program');
   print('Reading ${files.length} files from ${dir.path}:');
   print('Started at $startTime');
 
-  int width = '${files.length}'.length;
+  final width = '${files.length}'.length;
 
-  var timer = new Timer();
-  for (int i = 0; i < files.length; i++) {
+  final timer = new Timer();
+  for (var i = 0; i < files.length; i++) {
     if (i % reportEveryNFiles == 0) {
-      var n = '$i'.padLeft(width);
+	    final n = '$i'.padLeft(width);
       print('$n: ${timer.split} ${files[i]}');
     }
-    if (byteReadWriteFileChecked(files[i], i, width, true, true)) {
+    if (byteReadWriteFileChecked(files[i], fileNumber:  i, width: width, fast: true)) {
       success++;
     } else {
       failure++;
@@ -79,8 +79,8 @@ void main() {
   }
   timer.stop();
 
-  DateTime endTime = new DateTime.now();
-  Duration totalElapsed = endTime.difference(startTime);
+  final endTime = new DateTime.now();
+  final totalElapsed = endTime.difference(startTime);
   print('Ended at $endTime');
   print('Total Elapsed: $totalElapsed (wall clock');
   print('Timer.elapsed: ${timer.elapsed}');

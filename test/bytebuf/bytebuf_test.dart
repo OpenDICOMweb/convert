@@ -7,75 +7,71 @@
 import 'dart:typed_data';
 
 import 'package:system/server.dart';
-import "package:test/test.dart";
+import 'package:test/test.dart';
 
 import '../../lib/src/bytebuf/bytebuf.dart';
 import 'test_utilities.dart';
 
-String magicAsString = "DICOM-MD";
-Uint8List magic = magicAsString.codeUnits;
+String magicAsString = 'DICOM-MD';
+final Uint8List magic = magicAsString.codeUnits;
 
 void main() {
   Server.initialize(name: 'bytebuf_test.dart', level: Level.info0);
-  test("Read MetadataFile Magic value", () {
-    var s = "DICOM-MD";
-    Uint8List list = toUtf8(s);
+  test('Read MetadataFile Magic value', () {
+	  final s = 'DICOM-MD';
+    final list = toUtf8(s);
 
-    var buf = new ByteBuf.fromList(list);
-    String name = buf.readString(8);
-    expect(name, equals("DICOM-MD"));
+    final buf = new ByteBuf.fromList(list);
+    final name = buf.readString(8);
+    expect(name, equals('DICOM-MD'));
   });
 
-  test("Create ByteBuf Read String", () {
-    List<String> listIn = ["foo", "bar", "baz"];
-    String strings = listIn.join("\\");
-    ByteBuf buf = byteBufFromString(strings);
+  test('Create ByteBuf Read String', () {
+    final listIn = ['foo', 'bar', 'baz'];
+    final strings = listIn.join('\\');
+    final buf = byteBufFromString(strings);
 
-    String s = buf.readString(strings.length);
+    final s = buf.readString(strings.length);
     expect(s, equals(strings));
 
-    var listOut = s.split(r'\');
+    final listOut = s.split(r'\');
     expect(listOut, listIn);
   });
 
-  test("Write then Read String", () {
-    List<String> listIn = ["foo", "bar", "baz"];
-    String sIn = listIn.join("\\");
-    ByteBuf buf = new ByteBuf();
-
-    buf.writeString(sIn);
-    String sOut = buf.readString(sIn.length);
+  test('Write then Read String', () {
+    final listIn = ['foo', 'bar', 'baz'];
+    final sIn = listIn.join('\\');
+    final buf = new ByteBuf()..writeString(sIn);
+    final sOut = buf.readString(sIn.length);
     expect(sOut, equals(sIn));
 
-    var listOut = sIn.split(r'\');
+    final listOut = sIn.split(r'\');
     expect(listOut, equals(listIn));
   });
 
-  test("Write then Read String List", () {
-    List<String> listIn = ["foo", "bar", "baz"];
-    var s = listIn.join(r'\');
-    ByteBuf buf = new ByteBuf();
-
-    buf.writeStringList(listIn);
-    List<String> listOut = buf.readStringList(s.length);
+  test('Write then Read String List', () {
+    final listIn = ['foo', 'bar', 'baz'];
+    final s = listIn.join(r'\');
+    final buf = new ByteBuf()..writeStringList(listIn);
+    final listOut = buf.readStringList(s.length);
     expect(listOut, equals(listIn));
   });
 
-  test("Read String List", () {
-    List<String> list = ["foo", "bar", "baz"];
-    String strings = list.join("\\");
-    ByteBuf buf = byteBufFromString(strings);
-    List<String> l1 = buf.readStringList(strings.length);
+  test('Read String List', () {
+    final list = ['foo', 'bar', 'baz'];
+    final strings = list.join('\\');
+    final buf = byteBufFromString(strings);
+    final l1 = buf.readStringList(strings.length);
     expect(l1, equals(list));
   });
 
-  test("Read Int8 Values", () {
-    List<int> ints = [0, -1, 2, -3, 4];
-    Int8List int8list = new Int8List.fromList(ints);
-    Uint8List bytes = int8list.buffer.asUint8List();
-    ByteBuf reader = new ByteBuf.reader(bytes);
+  test('Read Int8 Values', () {
+    final ints = [0, -1, 2, -3, 4];
+    final int8list = new Int8List.fromList(ints);
+    final bytes = int8list.buffer.asUint8List();
+    final reader = new ByteBuf.reader(bytes);
 
-    int n = reader.readInt8();
+    var n = reader.readInt8();
     expect(n, equals(ints[0]));
     n = reader.readInt8();
     expect(n, equals(ints[1]));
@@ -85,34 +81,32 @@ void main() {
     expect(n, equals(ints[3]));
   });
 
-  test("Read Int8List Values", () {
-    List<int> ints = [0, -1, 2, -3, 4];
-    Int8List int8list = new Int8List.fromList(ints);
-    Uint8List bytes = int8list.buffer.asUint8List();
-    ByteBuf buf = new ByteBuf.reader(bytes);
+  test('Read Int8List Values', () {
+    final ints = [0, -1, 2, -3, 4];
+    final int8list = new Int8List.fromList(ints);
+    final bytes = int8list.buffer.asUint8List();
+    var buf = new ByteBuf.reader(bytes);
 
-    List<int> list = buf.readInt8List(int8list.lengthInBytes);
+    var list = buf.readInt8List(int8list.lengthInBytes);
     expect(list, equals(ints));
 
-    buf = new ByteBuf();
-    buf.writeInt8List(ints);
+    buf = new ByteBuf()..writeInt8List(ints);
     list = buf.readInt8List(ints.length);
     expect(list, equals(ints));
   });
 
-  test("Read Uint8 Values", () {
-    List<int> uints = <int>[0, 1, 2, 3, 4];
-    Uint8List uint8list = new Uint8List.fromList(uints);
-    Uint8List bytes = uint8list.buffer.asUint8List();
-    var s = "aaaaaaa aaaaaaa aaaaaaa aaaaaaaab";
-    ByteBuf buf = new ByteBuf();
+  test('Read Uint8 Values', () {
+    final uints = <int>[0, 1, 2, 3, 4];
+    final uint8list = new Uint8List.fromList(uints);
+    final bytes = uint8list.buffer.asUint8List();
+    final s = 'aaaaaaa aaaaaaa aaaaaaa aaaaaaaab';
+    final buf = new ByteBuf();
 
-    buf.writeString(s);
-    buf.writeUint8List(bytes);
-    var t = buf.readString(s.length);
+    buf.writeString(s)..writeUint8List(bytes);
+    final t = buf.readString(s.length);
     expect(t, equals(s));
 
-    int n = buf.readUint8();
+    var n = buf.readUint8();
     expect(n, equals(uints[0]));
     n = buf.readUint8();
     expect(n, equals(uints[1]));
@@ -122,25 +116,24 @@ void main() {
     expect(n, equals(uints[3]));
   });
 
-  test("Read Uint8List Values", () {
-    List<int> uints = [0, 1, 2, 3, 4];
-    Uint8List uint8List = new Uint8List.fromList(uints);
-    Uint8List bytes = uint8List.buffer.asUint8List();
-    var s = "01234567";
-    ByteBuf buf = new ByteBuf();
-
-    buf.writeString(s);
-    buf.writeUint8List(bytes);
+  test('Read Uint8List Values', () {
+    final uints = [0, 1, 2, 3, 4];
+    final uint8List = new Uint8List.fromList(uints);
+    final bytes = uint8List.buffer.asUint8List();
+    var s = '01234567';
+    var buf = new ByteBuf()
+      ..writeString(s)
+      ..writeUint8List(bytes);
     var t = buf.readString(s.length);
     expect(t, equals(s));
 
-    List<int> list = buf.readUint8List(bytes.lengthInBytes);
+    var list = buf.readUint8List(bytes.lengthInBytes);
     expect(list, equals(uints));
 
-    s = "aaaaaaaab";
-    buf = new ByteBuf();
-    buf.writeString(s);
-    buf.writeUint8List(bytes);
+    s = 'aaaaaaaab';
+    buf = new ByteBuf()
+      ..writeString(s)
+      ..writeUint8List(bytes);
 
     t = buf.readString(s.length);
     expect(t, equals(s));
@@ -148,19 +141,18 @@ void main() {
     list = buf.readUint8List(uint8List.lengthInBytes);
     expect(list, equals(uints));
 
-    buf = new ByteBuf();
-    buf.writeUint8List(uint8List);
+    buf = new ByteBuf()..writeUint8List(uint8List);
     list = buf.readUint8List(uints.length);
     expect(list, equals(uints));
   });
 
-  test("Read Int16 Values", () {
-    List<int> int16s = [-257, 3401, -2000, 3000, -4000];
-    Int16List int16list = new Int16List.fromList(int16s);
-    Uint8List bytes = int16list.buffer.asUint8List();
-    ByteBuf buf = new ByteBuf.reader(bytes);
+  test('Read Int16 Values', () {
+    final int16s = [-257, 3401, -2000, 3000, -4000];
+    final int16list = new Int16List.fromList(int16s);
+    final bytes = int16list.buffer.asUint8List();
+    final buf = new ByteBuf.reader(bytes);
 
-    int n = buf.readInt16();
+    var n = buf.readInt16();
     expect(n, equals(int16s[0]));
     n = buf.readInt16();
     expect(n, equals(int16s[1]));
@@ -170,28 +162,27 @@ void main() {
     expect(n, equals(int16s[3]));
   });
 
-  test("Read Int16List Values", () {
-    List<int> int16s = [-257, 3401, -2000, 3000, -4000];
-    Int16List int16list = new Int16List.fromList(int16s);
-    Uint8List bytes = int16list.buffer.asUint8List();
-    ByteBuf buf = new ByteBuf.reader(bytes);
+  test('Read Int16List Values', () {
+    final int16s = [-257, 3401, -2000, 3000, -4000];
+    final int16list = new Int16List.fromList(int16s);
+    final bytes = int16list.buffer.asUint8List();
+    var buf = new ByteBuf.reader(bytes);
 
-    List<int> list = buf.readInt16List(int16list.length);
+    var list = buf.readInt16List(int16list.length);
     expect(list, equals(int16s));
 
-    buf = new ByteBuf();
-    buf.writeInt16List(int16s);
+    buf = new ByteBuf()..writeInt16List(int16s);
     list = buf.readInt16List(int16s.length);
     expect(list, equals(int16s));
   });
 
-  test("Read Uint16 Values", () {
-    List<int> uint16s = [257, 3401, 2000, 3000, 4000];
-    Uint16List uint16list = new Uint16List.fromList(uint16s);
-    Uint8List bytes = uint16list.buffer.asUint8List();
-    ByteBuf reader = new ByteBuf.reader(bytes);
+  test('Read Uint16 Values', () {
+    final uint16s = [257, 3401, 2000, 3000, 4000];
+    final uint16list = new Uint16List.fromList(uint16s);
+    final bytes = uint16list.buffer.asUint8List();
+    final reader = new ByteBuf.reader(bytes);
 
-    int n = reader.readUint16();
+    var n = reader.readUint16();
     expect(n, equals(uint16s[0]));
     n = reader.readUint16();
     expect(n, equals(uint16s[1]));
@@ -201,33 +192,32 @@ void main() {
     expect(n, equals(uint16s[3]));
   });
 
-  test("Read Uint16List Values", () {
-    List<int> uint16s = <int>[257, 3401, 2000, 3000, 4000];
+  test('Read Uint16List Values', () {
+    final uint16s = <int>[257, 3401, 2000, 3000, 4000];
     //  print('length0:${uint16s.length}: $uint16s');
-    Uint16List uint16List = new Uint16List.fromList(uint16s);
+    final uint16List = new Uint16List.fromList(uint16s);
     //  print('length1:${uint16List.length}: $uint16List');
-    Uint8List bytes = uint16List.buffer.asUint8List();
+    final bytes = uint16List.buffer.asUint8List();
     //  print('length2:${bytes.length}: $bytes');
-    ByteBuf buf = new ByteBuf.reader(bytes);
+    var buf = new ByteBuf.reader(bytes);
 
     //  print(buf.info);
-    List<int> list = buf.readUint16List(uint16List.length);
+    var list = buf.readUint16List(uint16List.length);
 
     expect(uint16s, equals(uint16s));
 
-    buf = new ByteBuf();
-    buf.writeUint16List(uint16List);
+    buf = new ByteBuf()..writeUint16List(uint16List);
     list = buf.readUint16List(uint16s.length);
     expect(list, equals(uint16s));
   });
 
-  test("Read Int32 Values", () {
-    List<int> int32s = [-257000, 3401000, -2000000, 3000000, -4000000];
-    Int32List int32list = new Int32List.fromList(int32s);
-    Uint8List bytes = int32list.buffer.asUint8List();
-    ByteBuf buf = new ByteBuf.reader(bytes);
+  test('Read Int32 Values', () {
+    final int32s = [-257000, 3401000, -2000000, 3000000, -4000000];
+    final int32list = new Int32List.fromList(int32s);
+    final bytes = int32list.buffer.asUint8List();
+    final buf = new ByteBuf.reader(bytes);
 
-    int n = buf.readInt32();
+    var n = buf.readInt32();
     expect(n, equals(int32s[0]));
     n = buf.readInt32();
     expect(n, equals(int32s[1]));
@@ -237,28 +227,26 @@ void main() {
     expect(n, equals(int32s[3]));
   });
 
-  test("Read Int32List Values", () {
-    List<int> int32s = [-257000, 3401000, -2000000, 3000000, -4000000];
-    Int32List int32List = new Int32List.fromList(int32s);
-    Uint8List bytes = int32List.buffer.asUint8List();
-    ByteBuf buf = new ByteBuf.reader(bytes);
-
-    List<int> list = buf.readInt32List(int32List.length);
+  test('Read Int32List Values', () {
+    final int32s = [-257000, 3401000, -2000000, 3000000, -4000000];
+    final int32List = new Int32List.fromList(int32s);
+    final bytes = int32List.buffer.asUint8List();
+    var buf = new ByteBuf.reader(bytes);
+    var list = buf.readInt32List(int32List.length);
     expect(list, equals(int32s));
 
-    buf = new ByteBuf();
-    buf.writeInt32List(int32List);
+    buf = new ByteBuf()..writeInt32List(int32List);
     list = buf.readInt32List(int32s.length);
     expect(list, equals(int32s));
   });
 
-  test("Read Uint32 Values", () {
-    List<int> uint32s = [2570000, 34010000, 20000000, 30000000, 400000000];
-    Uint32List uint32list = new Uint32List.fromList(uint32s);
-    Uint8List bytes = uint32list.buffer.asUint8List();
-    ByteBuf buf = new ByteBuf.reader(bytes);
+  test('Read Uint32 Values', () {
+    final uint32s = [2570000, 34010000, 20000000, 30000000, 400000000];
+    final uint32list = new Uint32List.fromList(uint32s);
+    final bytes = uint32list.buffer.asUint8List();
+    final buf = new ByteBuf.reader(bytes);
 
-    int n = buf.readUint32();
+    var n = buf.readUint32();
     expect(n, equals(uint32s[0]));
     n = buf.readUint32();
     expect(n, equals(uint32s[1]));
@@ -268,34 +256,32 @@ void main() {
     expect(n, equals(uint32s[3]));
   });
 
-  test("Read Uint32List Values", () {
-    List<int> uint32s = [2570000, 34010000, 20000000, 30000000, 40000000];
-    Uint32List uint32list = new Uint32List.fromList(uint32s);
-    Uint8List bytes = uint32list.buffer.asUint8List();
-    ByteBuf buf = new ByteBuf.reader(bytes);
-
-    List<int> list = buf.readUint32List(uint32list.length);
+  test('Read Uint32List Values', () {
+    final uint32s = [2570000, 34010000, 20000000, 30000000, 40000000];
+    final uint32list = new Uint32List.fromList(uint32s);
+    final bytes = uint32list.buffer.asUint8List();
+    var buf = new ByteBuf.reader(bytes);
+    var list = buf.readUint32List(uint32list.length);
     expect(list, equals(uint32s));
 
-    buf = new ByteBuf();
-    buf.writeUint32List(uint32s);
+    buf = new ByteBuf()..writeUint32List(uint32s);
     list = buf.readUint32List(uint32s.length);
     expect(list, equals(uint32s));
   });
 
-  test("Read Int64 Values", () {
-    List<int> int64s = [
+  test('Read Int64 Values', () {
+    final int64s = [
       -25700000000,
       34010000000,
       -200000000000,
       300000000000,
       -4000000000000
     ];
-    Int64List int64list = new Int64List.fromList(int64s);
-    Uint8List bytes = int64list.buffer.asUint8List();
-    ByteBuf buf = new ByteBuf.reader(bytes);
+    final int64list = new Int64List.fromList(int64s);
+    final bytes = int64list.buffer.asUint8List();
+    final buf = new ByteBuf.reader(bytes);
 
-    int n = buf.readInt64();
+    var n = buf.readInt64();
     expect(n, equals(int64s[0]));
     n = buf.readInt64();
     expect(n, equals(int64s[1]));
@@ -305,40 +291,32 @@ void main() {
     expect(n, equals(int64s[3]));
   });
 
-  test("Read Int64List Values", () {
-    List<int> int64s = [
+  test('Read Int64List Values', () {
+    final int64s = [
       -25700000000,
       34010000000,
       -200000000000,
       300000000000,
       -4000000000000
     ];
-    Int64List int64list = new Int64List.fromList(int64s);
-    Uint8List bytes = int64list.buffer.asUint8List();
-    ByteBuf buf = new ByteBuf.reader(bytes);
-
-    List<int> list = buf.readInt64List(int64list.length);
+    final int64list = new Int64List.fromList(int64s);
+    final bytes = int64list.buffer.asUint8List();
+    var buf = new ByteBuf.reader(bytes);
+    var list = buf.readInt64List(int64list.length);
     expect(list, equals(int64s));
 
-    buf = new ByteBuf();
-    buf.writeInt64List(int64s);
+    buf = new ByteBuf()..writeInt64List(int64s);
     list = buf.readInt64List(int64s.length);
     expect(list, equals(int64s));
   });
 
-  test("Read Uint64 Values", () {
-    List<int> uint64s = [
-      25700000000,
-      34010000000,
-      200000000000,
-      300000000000,
-      4000000000000
-    ];
-    Uint64List uint64list = new Uint64List.fromList(uint64s);
-    Uint8List bytes = uint64list.buffer.asUint8List();
-    ByteBuf buf = new ByteBuf.reader(bytes);
+  test('Read Uint64 Values', () {
+    final uint64s = [25700000000, 34010000000, 200000000000, 300000000000, 4000000000000];
+    final uint64list = new Uint64List.fromList(uint64s);
+    final bytes = uint64list.buffer.asUint8List();
+    final buf = new ByteBuf.reader(bytes);
 
-    int n = buf.readUint64();
+    var n = buf.readUint64();
     expect(n, equals(uint64s[0]));
     n = buf.readUint64();
     expect(n, equals(uint64s[1]));
@@ -348,34 +326,27 @@ void main() {
     expect(n, equals(uint64s[3]));
   });
 
-  test("Read Uint64List Values", () {
-    List<int> uint64s = [
-      25700000000,
-      34010000000,
-      200000000000,
-      300000000000,
-      4000000000000
-    ];
-    Uint64List uint64list = new Uint64List.fromList(uint64s);
-    Uint8List bytes = uint64list.buffer.asUint8List();
-    ByteBuf buf = new ByteBuf.reader(bytes);
+  test('Read Uint64List Values', () {
+    final uint64s = [25700000000, 34010000000, 200000000000, 300000000000, 4000000000000];
+    final uint64list = new Uint64List.fromList(uint64s);
+    final bytes = uint64list.buffer.asUint8List();
+    var buf = new ByteBuf.reader(bytes);
 
-    List<int> list = buf.readUint64List(uint64list.length);
+    var list = buf.readUint64List(uint64list.length);
     expect(list, equals(uint64s));
 
-    buf = new ByteBuf();
-    buf.writeUint64List(uint64s);
+    buf = new ByteBuf()..writeUint64List(uint64s);
     list = buf.readUint64List(uint64s.length);
     expect(list, equals(uint64s));
   });
 
-  test("Read Float32 Values", () {
-    List<double> floats = [0.0, -1.1, 2.2, -3.3, 4.4];
-    Float32List float32List = new Float32List.fromList(floats);
-    Uint8List float8List = float32List.buffer.asUint8List();
-    ByteBuf buf = new ByteBuf.reader(float8List);
+  test('Read Float32 Values', () {
+    final floats = [0.0, -1.1, 2.2, -3.3, 4.4];
+    final float32List = new Float32List.fromList(floats);
+    final float8List = float32List.buffer.asUint8List();
+    final buf = new ByteBuf.reader(float8List);
 
-    double a = buf.readFloat32();
+    var a = buf.readFloat32();
     expect(a, equals(float32List[0]));
     a = buf.readFloat32();
     expect(a, equals(float32List[1]));
@@ -385,28 +356,27 @@ void main() {
     expect(a, equals(float32List[3]));
   });
 
-  test("Read Float32List Values", () {
-    List<double> floats = [0.0, -1.1, 2.2, -3.3, 4.4];
-    Float32List float32List = new Float32List.fromList(floats);
-    Uint8List float8List = float32List.buffer.asUint8List();
-    ByteBuf buf = new ByteBuf.reader(float8List);
+  test('Read Float32List Values', () {
+    final floats = [0.0, -1.1, 2.2, -3.3, 4.4];
+    final float32List = new Float32List.fromList(floats);
+    final float8List = float32List.buffer.asUint8List();
+    var buf = new ByteBuf.reader(float8List);
 
-    List<double> list = buf.readFloat32List(float32List.length);
+    var list = buf.readFloat32List(float32List.length);
     expect(list, equals(float32List));
 
-    buf = new ByteBuf();
-    buf.writeFloat32List(float32List);
+    buf = new ByteBuf()..writeFloat32List(float32List);
     list = buf.readFloat32List(floats.length);
     expect(list, equals(float32List));
   });
 
-  test("Read Float64 Values", () {
-    List<double> floats = [0.0, -1.1e10, 2.2e11, -3.3e12, 4.4e13];
-    Float64List float64List = new Float64List.fromList(floats);
-    Uint8List float8List = float64List.buffer.asUint8List();
-    ByteBuf buf = new ByteBuf.reader(float8List);
+  test('Read Float64 Values', () {
+    final floats = [0.0, -1.1e10, 2.2e11, -3.3e12, 4.4e13];
+    final float64List = new Float64List.fromList(floats);
+    final float8List = float64List.buffer.asUint8List();
+    final buf = new ByteBuf.reader(float8List);
 
-    double a = buf.readFloat64();
+    var a = buf.readFloat64();
     expect(a, equals(float64List[0]));
     a = buf.readFloat64();
     expect(a, equals(float64List[1]));
@@ -416,17 +386,15 @@ void main() {
     expect(a, equals(float64List[3]));
   });
 
-  test("Read Float64List Values", () {
-    List<double> floats = [0.0, -1.1e10, 2.2e11, -3.3e12, 4.4e13];
-    Float64List float64List = new Float64List.fromList(floats);
-    Uint8List float8List = float64List.buffer.asUint8List();
-    ByteBuf buf = new ByteBuf.reader(float8List);
-
-    List<double> list = buf.readFloat64List(float64List.length);
+  test('Read Float64List Values', () {
+    final floats = [0.0, -1.1e10, 2.2e11, -3.3e12, 4.4e13];
+    final float64List = new Float64List.fromList(floats);
+    final float8List = float64List.buffer.asUint8List();
+    var buf = new ByteBuf.reader(float8List);
+    var list = buf.readFloat64List(float64List.length);
     expect(list, equals(float64List));
 
-    buf = new ByteBuf();
-    buf.writeFloat64List(floats);
+    buf = new ByteBuf()..writeFloat64List(floats);
     list = buf.readFloat64List(floats.length);
     expect(list, equals(float64List));
   });

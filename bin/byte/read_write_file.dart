@@ -5,7 +5,7 @@
 // See the   AUTHORS file for other contributors.
 
 import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/dcm.dart';
+import 'package:dcm_convert/byte_convert.dart';
 import 'package:system/server.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
@@ -16,7 +16,7 @@ void main() {
   Server.initialize(name: 'read_write_file', level: Level.debug);
 
   // *** Modify the [path0] value to read/write a different file
-  var path = testPaths1[1];
+  final path = testPaths1[1];
 
-  byteReadWriteFileChecked(path, 1, 5, true, true);
+  byteReadWriteFileChecked(path, fileNumber:  1,width:  5, fast: true);
 }

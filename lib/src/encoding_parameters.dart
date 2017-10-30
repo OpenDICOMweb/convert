@@ -8,27 +8,27 @@ import 'package:uid/uid.dart';
 
 //Urgent: test
 class EncodingParameters {
-  /// if [true] Datasets will be allowed to be encoded in IVRLE.
-  /// The default is [false].
+  /// if true Datasets will be allowed to be encoded in IVRLE.
+  /// The default is false.
   final bool allowImplicitLittleEndian;
 
   final TransferSyntax targetTS;
   /// Encodes the Root Dataset even if it does not have any FMI.
   final bool allowMissingFMI;
 
-  /// If [true] Elements will be checked for valid VR by looking up Tag.
+  /// If true Elements will be checked for valid VR by looking up Tag.
   final bool doCheckVR;
-  /// If [true], ODW FMI (with clean preamble) will be added or replaced,
+  /// If true, ODW FMI (with clean preamble) will be added or replaced,
   /// undefined lengths will be removed, if RootDS is in Implicit VR it
   /// will be converted to Explicit VR, all fragments will be removed.
   final bool doConvertToNormalForm;
 
-  /// If [true], a DICOM File Prefix (PS3.10) will be written, and
+  /// If true, a DICOM File Prefix (PS3.10) will be written, and
   /// DICOM File Meta Information (PS3.10) will be written
   /// even if it wasn't present when the Dataset was decoded (parsed).
   final bool doAddMissingFMI;
 
-  /// If [true] write ODW FMI into encoded output.
+  /// If true write ODW FMI into encoded output.
   final bool doUpdateFMI;
 
   /// If the Root Dataset had a non-zero preamble, replace it with all zeros.

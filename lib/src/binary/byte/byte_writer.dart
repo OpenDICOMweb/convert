@@ -92,11 +92,10 @@ class ByteWriter extends DcmWriter {
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
-  Future<Uint8List> writeFMI({bool checkPreamble = false}) =>
+  Uint8List writeFMI({bool checkPreamble = false}) =>
 		  dcmWriteFMI(hadFmi: _rootDS.hasFmi);
 
-  /// Reads a [RootDatasetByte] from [this], stores it in [rootDS],
-  /// and returns it.
+  /// Reads a [RootDatasetByte], and stores it in [rootDS], and returns it.
   Uint8List writeRootDataset({bool allowMissingFMI = false}) => dcmWriteRootDataset();
 
   /// Writes the [RootDatasetByte] to a [Uint8List], and returns the [Uint8List].

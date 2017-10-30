@@ -11,11 +11,11 @@ import 'package:dataset/byte_dataset.dart';
 
 /// The type of the different Value Field readers.  Each [ElementMaker]
 /// reads the Value Field for a particular Value Representation.
-typedef Element ElementMaker<V>(ByteData bd);
 
-typedef Element SequenceMaker<V>(ByteData bd, Dataset parent, List<Dataset> items);
-
-typedef Element PixelDataMaker<V>(ByteData bd, Dataset parent, List<Dataset> items);
+typedef Element ElementMaker(EBytes eb, int vrIndex, [VFFragments fragments]);
+typedef SQ SequenceMaker(EBytes eb, Dataset parent, List<Item>items);
+typedef Item ItemMaker(Dataset parent);
+typedef Element PixelDataMaker<V>(EBytes eb, int vrIndex, [VFFragments fragments]);
 
 const int shortFileThreshold = 1024;
 
@@ -35,8 +35,16 @@ abstract class DcmReaderInterface {
   /// The current duplicate [List<Element>].
   List<Element> get duplicates => currentDS.elements.duplicates;
 
+/*
+  ElementMaker get makeElement;
+  SequenceMaker get makeSequence;
+  ItemMaker get makeItem;
+*/
+
+
+/*
   /// Returns a new Element.
-  Element makeElement(EBytes eb, int vrIndex);
+  Element makeElement(EBytes eb, int vrIndex, [VFFragments fragments]);
 
   /// Returns a new Sequence.
   /// [eb] is the complete [EBytes] for the Sequence.
@@ -48,6 +56,7 @@ abstract class DcmReaderInterface {
 
   /// Returns a new [Item].
   Item makeItem(Dataset parent, {ElementList elements, SQ sequence, DSBytes eb});
+*/
 
   /// Returns a new [Item].
 //  Item makeItemFromBytes(IDSBytes dsBytes, Dataset parent, ElementList elements,
@@ -56,12 +65,10 @@ abstract class DcmReaderInterface {
   /// Returns a subtype of [Element].
  // Element makePixelData(EBytes eb, int vrIndex, [VFFragments fragments]);
 
-/*
   /// Interface for logging
   String itemInfo(Item item);
 
   /// Interface for logging
   String elementInfo(Element e);
-*/
 
 }

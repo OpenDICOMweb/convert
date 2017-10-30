@@ -7,28 +7,28 @@
 import 'dart:io';
 
 import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/dcm.dart';
+import 'package:dcm_convert/byte_convert.dart';
 import 'package:system/core.dart';
 
-/// A Program that reads a [File], decodes it into a [RootDatasetBytes],
-/// and then converts that into a [RootTagDataset].
+/// A Program that reads a [File], decodes it into a [RootDatasetByte],
+/// and then converts that into a [RootDataset].
 void main() {
   system.log.level = Level.info;
 
   // Edit this line
-  var path = path0;
+  final path = path0;
 
-  File f = toFile(path, mustExist: true);
+  final f = pathToFile(path, mustExist: true);
   log.debug2('Reading: $f');
-  RootDatasetBytes rds = ByteReader.readFile(f, fast: true);
-  log.debug('bRoot.isRoot: ${rds.isRoot}');
+  final rds = ByteReader.readFile(f, fast: true);
+  final eList = rds.remove(kPatientID);
+  log..debug('bRoot.isRoot: ${rds.isRoot}')
+  ..info0('patientID: "${rds.patientId}"')
 
-  log.info0('patientID: "${rds.patientId}"');
-  Element eList = rds.remove(kPatientID);
-  log.info0('removed: $eList');
+  ..info0('removed: $eList');
   if (rds[kPatientID] != null)
-    log.error('kPatientID not removed: $eList');
-  log.info0('patientID: "${rds[kPatientID]}"');
-  log.info0('patientID: "${rds.patientId}"');
+    log..error('kPatientID not removed: $eList')
+  ..info0('patientID: "${rds[kPatientID]}"')
+  ..info0('patientID: "${rds.patientId}"');
 
 }

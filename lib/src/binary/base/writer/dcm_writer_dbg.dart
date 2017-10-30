@@ -21,7 +21,7 @@ import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/src/binary/byte/byte_data_buffer.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/element_offsets.dart';
+import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 
 //TODO: remove log.debug when working
@@ -43,7 +43,7 @@ abstract class DcmWriter {
   /// The default [ByteData] buffer length, if none is provided.
   static const int defaultBufferLength = 200 * k1MB;
 
-  /// If [reUseBD] is [true] the [ByteData] buffer is stored here.
+  /// If [reUseBD] is true the [ByteData] buffer is stored here.
   static ByteData _reuse;
 
   /// The target output [path] for the encoded data. [file] has
@@ -54,10 +54,10 @@ abstract class DcmWriter {
   /// precedence over [path].
   final File file;
 
-  /// The [TransferSyntax] for the encoded output. If [null]
+  /// The [TransferSyntax] for the encoded output. If null
   /// the output will have the same [TransferSyntax] as the Root
   /// [Dataset]. If the [TransferSyntax] of the Root [Dataset] is
-  /// [null] then it defaults to [Explicit VR Little Endian].
+  /// null then it defaults to [Explicit VR Little Endian].
   final TransferSyntax targetTS;
 
   // The length of the initial output ByteData buffer.
@@ -72,7 +72,7 @@ abstract class DcmWriter {
   /// The current dataset.  This changes as Sequences are written.
   Dataset _currentDS;
 
-  /// Return [true] if input is Explicit VR, [false] if Implicit VR.
+  /// Return true if input is Explicit VR, false if Implicit VR.
   bool _isEVR;
   TransferSyntax _ts;
 
@@ -120,7 +120,7 @@ abstract class DcmWriter {
   /// Returns the underlying [ByteBuffer].
   ByteBuffer get buffer => _bd.buffer;
 
-  /// Returns [true] if there is space left in the write buffer.
+  /// Returns true if there is space left in the write buffer.
   bool get isWriteable => _isWritable;
 
   /// The root Dataset being encoded.
@@ -134,13 +134,13 @@ abstract class DcmWriter {
   /// Sets the [currentDS] to [ds].
   set currentDS(Dataset ds) => _currentDS = ds;
 
-  /// The current [length] in bytes of [this].
+  /// The current [length] in bytes of this [DcmWriter].
   int get lengthInBytes => _wIndex;
 
-  /// The current [length] in bytes of [this].
+  /// The current [length] in bytes of this [DcmWriter].
   int get length => lengthInBytes;
 
-  /// Returns [info] about [this].
+  /// Returns [info] about this [DcmWriter].
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
@@ -182,9 +182,9 @@ abstract class DcmWriter {
     return encoding;
   }
 
-  //TODO: make this work for [async] == [true] and make that the default.
-  /// Writes [bytes] to [file] if it is not [null]; otherwise, writes to
-  /// [path] if it is not null. If both are [null] nothing is written.
+  //TODO: make this work for [async] == true and make that the default.
+  /// Writes [bytes] to [file] if it is not null; otherwise, writes to
+  /// [path] if it is not null. If both are null nothing is written.
   void _writeFileOrPath(Uint8List bytes) {
     final f = (file == null && path != '') ? new File(path) : file;
     if (f != null) {
@@ -418,7 +418,7 @@ abstract class DcmWriter {
   /// The [_wIndex] is advanced 8 bytes.
   /// Note: There are four [Element]s ([SQ], [OB], [OW], and [UN]) plus
   /// Items that might have an Undefined Length value(0xFFFFFFFF).
-  /// if [eParams.removeUndefinedLengths] is true this method should not be called.
+  /// if [eParams].removeUndefinedLengths is true this method should not be called.
   void _writeDelimiter(int delimiter, [int lengthInBytes = 0]) {
     //TODO: handle doRemoveNoZeroDelimiterLengths
     assert(eParams.doConvertUndefinedLengths == false);
@@ -439,7 +439,7 @@ abstract class DcmWriter {
   int _wIndex = 0;
   // int get endOfBD => _bd.lengthInBytes;
 
-  /// Returns [true] if there is space left in the write buffer.
+  /// Returns true if there is space left in the write buffer.
   bool get _isWritable => _wIndex < _bd.lengthInBytes;
 
   /// Moves the [_wIndex] forward [n] bytes, or backward if [n] is negative.
@@ -449,24 +449,6 @@ abstract class DcmWriter {
     // _checkRange(v);
     _wIndex = v;
   }
-
-/* Keep for debugging
-  void _checkRange(int v) {
-    int max = _bd.lengthInBytes;
-    if (v < 0 || v >= max) throw new RangeError.range(v, 0, max);
-  }
-*/
-
-  // The Writers
-
-/* Flush if not needed
-  /// Writes a byte (Uint8) value to the output [_bd].
-  void _writeUint8(int value) {
-    assert(value >= 0 && value <= 255, 'Value out of range: $value');
-    _maybeGrow(1);
-    _bd.setUint8(_wIndex, value);
-    _wIndex++;
-  }*/
 
   /// Writes a 16-bit unsigned integer (Uint16) value to the output [_bd].
   void _writeUint16(int value) {

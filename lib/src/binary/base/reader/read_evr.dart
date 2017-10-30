@@ -8,65 +8,95 @@ part of odw.sdk.convert.binary;
 //TODO: redoc to reflect current state of code
 
 Tag _tag;
-int _vrCode;
 
 /// For EVR Datasets, all Elements are read by this method.
 Element _readEvrElement() {
   final eStart = _rIndex;
   final code = _readCode();
   final vrCode = _readUint16();
-  final vr = VR.lookup(vrCode);
+  final vr = VR.lookupByCode(vrCode);
   if (vr == null) {
     _warn('VR is Null: vrCode(${hex16(vrCode)}) $_rrr');
     _showNext(_rIndex - 4);
   }
-  final vrIndex = (_dParams.doCheckVR) ? _checkVR(code, vrCode) : vr.index;
+  final vrIndex = (_dParams.doCheckVR) ? _checkVR(code, vr.index) : vr.index;
 
   Element e;
   if (vr.hasShortVF) {
     e = _readShortElement(code, eStart, vrIndex);
   } else {
     e = (vrIndex == VR.kSQ.index || _isSequence(code, vrIndex))
-        ? _readEvrSequence(code, eStart)
-        : _readLongEvrElement(code, eStart, vrIndex);
+        ? _readSequence(code, eStart, _evrSQMaker)
+        : _readEvrMaybeUndefined(code, eStart, vrIndex);
   }
   assert(_checkRIndex());
   return _finishReadElement(code, eStart, e);
 }
 
-Element _readShortElement(int code, int eStart, int vrIndex) {
-  _rIndex = _rIndex + _readUint16();
-  final eLength = _rIndex - eStart;
-  final bd = _rootBD.buffer.asByteData(eStart, eLength);
-  final eb = new EvrShort(bd);
-  return makeElement(code, eb, vrIndex);
+/// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have
+/// kUndefinedValue.
+Element _readEvrMaybeUndefined(int code, int eStart, int vrIndex) {
+	_skip(2);
+	final vfLengthField = _readUint32();
+  if (vfLengthField == kUndefinedLength) {
+    return _readEvrLongUndefined(code, eStart, vrIndex, vfLengthField);
+  } else {
+    return _readEvrLongElement(code, eStart, vrIndex, vfLengthField);
+  }
 }
 
+Element _readEvrLongUndefined(int code, int eStart, int vrIndex, int vfLengthField) {
+	final endOfVF = _findEndOfULengthVF();
+	final eLength = endOfVF - eStart;
+	_rIndex = endOfVF + 8;
+	if (code == kPixelData) {
+		return _readPixelDataUndefined(code, eStart,  vrIndex, vfLengthField, eLength);
+	} else {
+		final bd = _rootBD.buffer.asByteData(eStart, eLength);
+		final eb = new EvrLong(bd);
+		return elementMaker(eb, vrIndex);
+	}
+}
+/// Read an Element (not SQ) with a 32-bit [vfLengthField], but that cannot
+/// have kUndefinedValue.
 /// Reads a VR of OB, OD, OF, OL, OW, UC, UN, UR, or UT.
 /// Only OB, OW, and UN can have Undefined Length.
-Element _readLongEvrElement(int code, int eStart, int vrIndex) {
-  _skip(2);
-  return _readLong(code, eStart, vrIndex, _readUint32());
+Element _readEvrLongElement(int code, int eStart, int vrIndex, int vfLengthField) {
+  _rIndex = _rIndex + vfLengthField;
+  final eLength = _rIndex - eStart;
+  if (code == kPixelData) {
+    return _readPixelDataDefined(code, eStart,  vrIndex, vfLengthField, eLength);
+  } else {
+    final bd = _rootBD.buffer.asByteData(eStart, eLength);
+    final eb = new EvrLong(bd);
+    return elementMaker(eb, vrIndex);
+  }
 }
 
-SQ _readEvrSequence(int code, int eStart) {
-  _skip(2);
-  return _readSequence(code, eStart, _evrSQMaker);
+Element _readShortElement(int code, int eStart, int vrIndex) {
+	final vfLength = _readUint16();
+	_rIndex = _rIndex + vfLength;
+	final eLength = _rIndex - eStart;
+	final bd = _rootBD.buffer.asByteData(eStart, eLength);
+	final eb = new EvrShort(bd);
+	return elementMaker(eb, vrIndex);
 }
+
 
 EBytes _evrSQMaker(ByteData bd) => new EvrLong(bd);
 
 //TODO: add VR.kSSUS, etc. to dictionary
 /// checks that code & vrCode are compatible
-int _checkVR(int code, int vrCode, [bool warnOnUN = false]) {
+int _checkVR(int code, int vrIndex, [bool warnOnUN = false]) {
   _tag = Tag.lookupByCode(code);
+  var index = vrIndex;
   if (_tag == null) {
     _warn('Unknown Tag Code(${dcm(code)}) $_rrr');
-  } else if (vrCode == VR.kUN.code && _tag.vr != VR.kUN) {
+  } else if (vrIndex == VR.kUN.code && _tag.vr != VR.kUN) {
     //Enhancement remove PTags with VR.kUN and add multi-values VRs
-    _warn('${dcm(code)} VR.kUN($vrCode) should be ${_tag.vr} $_rrr');
-    _vrCode = _tag.vr.code;
-  } else if (vrCode != VR.kUN.code && _tag.vr.code == VR.kUN.code) {
+    _warn('${dcm(code)} VR.kUN($vrIndex) should be ${_tag.vr} $_rrr');
+    index = _tag.vr.index;
+  } else if (vrIndex != VR.kUN.index && _tag.vr.index == VR.kUN.index) {
     if (code != kPixelData && warnOnUN == true) {
       if (_tag is PDTag && _tag is! PDTagKnown) {
         log.info0('$pad ${dcm(code)} VR.kUN: Unknown Private Data');
@@ -76,10 +106,13 @@ int _checkVR(int code, int vrCode, [bool warnOnUN = false]) {
         log.info0('$pad ${dcm(code)} VR.kUN: $_tag');
       }
     }
-  } else if (vrCode != VR.kUN.code && vrCode != _tag.vr.code) {
-    final vr0 = VR.lookup(vrCode);
-    _warn('${dcm(code)} Wrong VR $vr0($vrCode) '
+  } else if (vrIndex != VR.kUN.code && vrIndex != _tag.vr.index) {
+    final vr0 = VR.lookupByIndex(vrIndex);
+    _warn('${dcm(code)} Wrong VR $vr0($vrIndex) '
         'should be ${_tag.vr} $_rrr');
   }
-  return _vrCode;
+  return index;
 }
+
+
+

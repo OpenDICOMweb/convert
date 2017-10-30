@@ -9,7 +9,7 @@ import 'dart:io';
 import 'package:dcm_convert/tools.dart';
 import 'package:system/core.dart';
 
-var dir0 =
+final String dir0 =
     'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/';
 String outRoot0 = 'test/output/root0';
 String outRoot1 = 'test/output/root1';
@@ -27,7 +27,7 @@ void main(List<String> args) {
 //TODO: update doc
   /// The help message
   void showHelp() {
-    var msg = '''
+    final msg = '''
 Usage: dirTest <input-directory> [<options>]
 
 For each application/dicom file in the <directory> tree:
@@ -51,10 +51,9 @@ ${jobArgs.parser.usage}
 
   if (jobArgs.showHelp) showHelp();
 
-  //Urgent fix logger
   system.log.level = jobArgs.baseLevel;
 
-  File f = new File('C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/'
+  final f = new File('C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/'
       'Sop/1.2.392.200036.9123.100.12.11.3.dcm');
 
   JobRunner.fileList([f], doRWRByteFile, level: Level.info);

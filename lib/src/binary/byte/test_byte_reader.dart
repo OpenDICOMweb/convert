@@ -11,6 +11,7 @@ import 'package:dataset/byte_dataset.dart';
 import 'package:element/byte_element.dart';
 import 'package:uid/uid.dart';
 
+import 'package:dcm_convert/src/binary/base/reader/reader.dart';
 import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 
@@ -25,29 +26,10 @@ class TestByteReader extends ByteReader {
       TransferSyntax targetTS,
       bool reUseBD = true})
       : super(bd, path: path, fmiOnly: fmiOnly, reUseBD: reUseBD);
-
-/* Flush
-  /// Creates a new [DcmByteReader]  where [_rIndex] = [writeIndex] = 0.
-  factory TestByteReader.fromBytes(Uint8List bytes,
-      {String path = "",
-      bool fmiOnly = false,
-      bool throwOnError = true,
-      bool allowMissingFMI = false,
-      TransferSyntax targetTS,
-      bool reUseBD = true}) {
-    var bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
-    return new ByteReader(bd,
-        path: path,
-        fmiOnly: fmiOnly,
-        throwOnError: throwOnError,
-        allowMissingFMI: allowMissingFMI,
-        targetTS: targetTS,
-        reUseBD: reUseBD);
-  }*/
-
+  
 // **** These methods should not be used in the code above ****
 
-  /// Returns [true] if the File Meta Information was present and
+  /// Returns true if the File Meta Information was present and
   /// read successfully.
   TransferSyntax xReadFmi({bool checkPreamble = true, bool allowMissingPrefix = false}) {
     readFMI(checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
@@ -72,7 +54,7 @@ class TestByteReader extends ByteReader {
   // Reads
   RootDatasetByte xReadDataset() {
     while (isReadable) {
-      Element e = readElement();
+      var e = readElement();
       rootDS.add(e);
       e = rootDS[e.code];
       assert(e == e);

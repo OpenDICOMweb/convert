@@ -8,8 +8,7 @@ import 'dart:async' hide Timer;
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:core/core.dart';
-import 'package:dcm_convert/dcm.dart';
+import 'package:dcm_convert/byte_convert.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as p;
 import 'package:system/core.dart';
@@ -30,7 +29,12 @@ class FileTiming {
   Duration stop;
 
   FileTiming(this.file, this.start, this.stop,
-      [this.readBD, this.readDS0, this.writeDS, this.readDS1, this.compareDS, this.compareBD]);
+      [this.readBD,
+      this.readDS0,
+      this.writeDS,
+      this.readDS1,
+      this.compareDS,
+      this.compareBD]);
 
   String get path => file.path;
 
@@ -39,7 +43,7 @@ class FileTiming {
   Duration get elapsed => stop - start;
 
   String get kbRate {
-    var kbs = ((kKB / elapsed.inMicroseconds) * 1000000);
+    final kbs = ((kKB / elapsed.inMicroseconds) * 1000000);
     return kbs.toStringAsFixed(2).padLeft(5, ' ');
   }
 
@@ -62,7 +66,7 @@ Timings for ${file.path}
 
 class FileResult {
   File file;
-  RootDatasetBytes rds;
+  RootDatasetByte rds;
   bool fmiOnly;
   TransferSyntax targetTS;
   FileTiming times;
@@ -78,25 +82,25 @@ class FileResult {
   FileResult(this.file, this.rds,
       {this.fmiOnly = false, this.targetTS, this.times, this.hasProblem = false}) {
     path = file.path;
-    length = rds.dsLength;
+    length = rds.length;
     ts = rds.transferSyntax;
     hasDuplicates = rds.hasDuplicates;
     isShort = rds.parseInfo.wasShortFile;
     ts = rds.transferSyntax;
   }
 
-  String get duplicates =>
-      (rds.duplicates.length == 0)
-          ? ""
-          : "      Duplicates: ${rds.duplicates.length}\n";
+  String get duplicates => (rds.elements.duplicates.isEmpty)
+      ? ''
+      : '      Duplicates: ${rds.elements.duplicates.length}\n';
 
-  String get parseErrors => (rds.parseInfo.hadParsingErrors) ? "No\n" : "Yes\n";
-  String get isShortFile => (rds.parseInfo.wasShortFile) ? "" : "      Short file: $isShort\n";
-  String get problems => (hasProblem) ? "" : "  Has Problem(s): $hasProblem\n";
+  String get parseErrors => (rds.parseInfo.hadParsingErrors) ? 'No\n' : 'Yes\n';
+  String get isShortFile =>
+      (rds.parseInfo.wasShortFile) ? '' : '      Short file: $isShort\n';
+  String get problems => (hasProblem) ? '' : '  Has Problem(s): $hasProblem\n';
 
-  String get timing => (times == null) ? "" : '$times';
+  String get timing => (times == null) ? '' : '$times';
 
-  String get info => '''File Result for "${file.path}":
+  String get info => '''File Result for '${file.path}':
         FMI only: $fmiOnly
           Length: $length
               TS: ${rds.transferSyntax}
@@ -104,7 +108,7 @@ class FileResult {
 $duplicates$parseErrors$isShortFile$problems''';
 
   @override
-  String toString() => '''File Result for "${file.path}":
+  String toString() => '''File Result for '${file.path}':
         FMI only: $fmiOnly
           Length: $length
     Parse errors: ${rds.parseInfo.hadParsingErrors}
@@ -184,9 +188,9 @@ Test ResultSet for $type
   }
 
   void addFileByTS(FileResult r) {
-    var ts = '"${r.rds.transferSyntax.asString}"';
-    var path = '"${r.path}"';
-    List<String> fList = tsMap[ts];
+    final ts = '"${r.rds.transferSyntax.asString}"';
+    final path = '"${r.path}"';
+    final fList = tsMap[ts];
     if (fList == null) {
       tsMap[ts] = [path];
     } else {
@@ -195,8 +199,8 @@ Test ResultSet for $type
   }
 
   void writeTSMap([String path = 'transfer_syntax_map.dart']) {
-    File file = new File(path);
-    var s = JSON.encode(tsMap);
+    final file = new File(path);
+    final s = JSON.encode(tsMap);
     file.writeAsStringSync(s);
   }
 
@@ -209,16 +213,15 @@ Test ResultSet for $type
 
 FileResult readFileWithResult(File file,
     {bool fmiOnly = false, TransferSyntax targetTS, bool timing: true}) {
-  Timer timer = new Timer();
-  var start = timer.split;
-  var bytes = file.readAsBytesSync();
-  var readBD = timer.split;
-  var rds = ByteReader.readBytes(bytes,
-      path: file.path, fmiOnly: fmiOnly, targetTS: targetTS, fast: true);
+  final timer = new Timer();
+  final start = timer.split;
+  final bytes = file.readAsBytesSync();
+  final readBD = timer.split;
+  final rds = ByteReader.readBytes(bytes, path: file.path, fmiOnly: fmiOnly, fast: true);
   timer.stop();
   if (rds == null) return null;
-  var stop = timer.elapsed;
-  var times = new FileTiming(file, start, stop, readBD);
+  final stop = timer.elapsed;
+  final times = new FileTiming(file, start, stop, readBD);
   return new FileResult(file, rds, fmiOnly: fmiOnly, targetTS: targetTS, times: times);
 }
 
@@ -229,10 +232,9 @@ ResultSet readDirectorySync(String path,
     bool timing = true,
     int printEvery = 100,
     bool throwOnError = false,
-    String fileExt = ""}) {
-  Directory dir = new Directory(path);
-  var fseList = dir.listSync(recursive: true);
-  fseList.retainWhere((fse) => fse is File);
+    String fileExt = ''}) {
+  final dir = new Directory(path);
+  final fseList = dir.listSync(recursive: true)..retainWhere((fse) => fse is File);
   return readFileList(fseList);
 }
 
@@ -243,17 +245,19 @@ Future<ResultSet> readDirectoryAsync(String path,
     bool timing = true,
     int printEvery = 100,
     bool throwOnError = false,
-    String fileExt = ""}) async {
-  int unReadable = 0;
+    String fileExt = ''}) async {
+  var unReadable = 0;
 
-  Directory dir = new Directory(path);
-  Stream<FileSystemEntity> fseList = dir.list(recursive: true);
+  final dir = new Directory(path);
+  final fseList = dir.list(recursive: true);
 
-  ResultSet rSet = new ResultSet(dir, -1, fmiOnly: fmiOnly, shortFileThreshold: shortFileThreshold);
+  final rSet =
+      new ResultSet(dir, -1, fmiOnly: fmiOnly, shortFileThreshold: shortFileThreshold);
 
   await for (FileSystemEntity fse in fseList) {
     if (fse is File) {
-      FileResult r = readFileWithResult(fse, fmiOnly: fmiOnly, targetTS: targetTS, timing: timing);
+      final r =
+          readFileWithResult(fse, fmiOnly: fmiOnly, targetTS: targetTS, timing: timing);
       if (r == null)
         unReadable++;
       else
@@ -271,23 +275,24 @@ ResultSet readFileList(List<File> files,
     bool timing = true,
     int printEvery = 100,
     bool throwOnError = false,
-    String fileExt = ""}) {
-  int fseCount = files.length;
-  ResultSet results =
-      new ResultSet(null, files.length, fmiOnly: fmiOnly, shortFileThreshold: shortFileThreshold);
+    String fileExt = ''}) {
+  final fseCount = files.length;
+  final results = new ResultSet(null, files.length,
+      fmiOnly: fmiOnly, shortFileThreshold: shortFileThreshold);
 
-  DateTime startTime = new DateTime.now();
+  final startTime = new DateTime.now();
 
   log.debug('Reading ${files.length} files ...\n'
       '    with $fseCount entities\n'
       '    at $startTime');
 
-  for (File f in files) {
+  for (var f in files) {
     if (f is File) {
-      var path = f.path;
-      var ext = p.extension(path);
-      if (fileExt == "" || ext == fileExt) {
-        var r = readFileWithResult(f, fmiOnly: fmiOnly, targetTS: targetTS, timing: timing);
+      final path = f.path;
+      final ext = p.extension(path);
+      if (fileExt == '' || ext == fileExt) {
+        final r =
+            readFileWithResult(f, fmiOnly: fmiOnly, targetTS: targetTS, timing: timing);
         results.add(r);
       }
     }
@@ -295,7 +300,7 @@ ResultSet readFileList(List<File> files,
   return results;
 }
 
-void formatDataset(RootDatasetBytes rds, [bool includePrivate = true]) {
-  var z = new Formatter(maxDepth: 146);
+void formatDataset(RootDatasetByte rds, {bool includePrivate = true}) {
+  final z = new Formatter(maxDepth: 146);
   log.debug(rds.format(z));
 }

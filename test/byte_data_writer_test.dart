@@ -4,28 +4,27 @@
 // Author: Binayak Behera <binayak.b@mwebware.com> -
 // See the AUTHORS file for other contributors.
 
-import 'package:dcm_convert/src/byte/byte_data_buffer.dart';
 import 'package:system/server.dart';
 import 'package:test/test.dart';
 
+import 'package:dcm_convert/src/binary/byte/byte_data_buffer.dart';
+
 void main() {
-	Server.initialize(name: 'byte_date_writer.dart', level: Level.info0);
+  Server.initialize(name: 'byte_date_writer.dart', level: Level.info0);
 
-  group("ByteDataBuffer", () {
-    test("Buffer Growing Test", () {
-      int startSize = 1;
-      int iterations = 1024 * 1024;
-      log.debug('iterations: $iterations');
-      var buf = new ByteDataBuffer(startSize);
-      log.debug('maxLength: ${buf.maxLength}');
-      log.debug('length: ${buf.lengthInBytes}');
+  group('ByteDataBuffer', () {
+    test('Buffer Growing Test', () {
+      final startSize = 1;
+      final iterations = 1024 * 1024;
+      final buf = new ByteDataBuffer(startSize);
+      log
+        ..debug('iterations: $iterations')
+        ..debug('maxLength: ${buf.maxLength}')
+        ..debug('length: ${buf.lengthInBytes}');
       expect(buf.lengthInBytes == startSize, true);
-      for (int i = 0; i < iterations - 1; i++) {
-        int v = i % 128;
+      for (var i = 0; i < iterations - 1; i++) {
+        final v = i % 128;
         buf.writeInt8(v);
-
-
-
       }
       log.debug('length: ${buf.lengthInBytes}');
       expect(buf.lengthInBytes == iterations, true);

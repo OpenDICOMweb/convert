@@ -20,14 +20,14 @@ import 'package:system/server.dart';
 // TODO: print out the version numbers of the different packages.
 //TODO: better doc
 
-const defaultDirectory = 'C:/odw/test_data/sfd/MG';
+const String defaultDirectory = 'C:/odw/test_data/sfd/MG';
 
 /// A program for doing read/write/read testing on DICOM files.
 void main(List<String> args) {
   Server.initialize(name: 'read_write_file', level: Level.error);
 
   /// The processed arguments for this program.
-  var jobArgs = new JobArgs(args);
+  final jobArgs = new JobArgs(args);
 
   if (jobArgs.showHelp) showHelp(jobArgs);
 
@@ -37,7 +37,7 @@ void main(List<String> args) {
 
 /// The help message
 void showHelp(JobArgs jobArgs) {
-  var msg = '''
+	final msg = '''
 Usage: rwrdir <input-directory> [<options>]
 
 For each application/dicom file in the <directory> tree:

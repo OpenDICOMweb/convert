@@ -7,26 +7,27 @@
 import 'dart:async' hide Timer;
 import 'dart:typed_data';
 
-import 'package:dcm_convert/dcm.dart';
+import 'package:dcm_convert/byte_convert.dart';
 import 'package:system/core.dart';
 import 'package:timer/timer.dart';
 import 'package:uid/uid.dart';
 
-Future<Uint8List> writeFile(RootDatasetBytes rds, String path,
+Future<Uint8List> writeFile(RootDatasetByte rds, String path,
     {bool fmiOnly = false, TransferSyntax outputTS}) {
-  var timer = new Timer();
-  var total = rds.total;
+  final timer = new Timer();
+  final total = rds.total;
   log.debug('writing ${rds.runtimeType} to "$path"\n'
       '    with $total Elements\n'
       '    at: ${timer.lastStart} ...');
   if (fmiOnly) log.debug('    fmiOnly: $fmiOnly');
 
   //  timer.start();
-  Future<Uint8List> bytes = ByteWriter.writePath(rds, path, fmiOnly: fmiOnly);
+  final bytes = ByteWriter.writePath(rds, path, fmiOnly: fmiOnly);
   timer.stop();
 
-  log.debug('  Elapsed time: ${timer.elapsed}');
-  int msPerElement = (timer.elapsedMicroseconds ~/ total) ~/ 1000;
-  log.debug('  $msPerElement ms per Element: ');
+  final msPerElement = (timer.elapsedMicroseconds ~/ total) ~/ 1000;
+  log
+    ..debug('  Elapsed time: ${timer.elapsed}')
+    ..debug('  $msPerElement ms per Element: ');
   return bytes;
 }

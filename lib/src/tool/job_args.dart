@@ -11,10 +11,13 @@ import 'package:logger/logger.dart';
 class JobArgs {
   /// The name of the program that is running
   String program;
+
   /// The
   String logPath;
+
   /// The location of the summary file, which describes the results.
   String summary;
+
   /// The location to put error log files
   String outDir;
 
@@ -22,14 +25,18 @@ class JobArgs {
   int shortMsgEvery;
 
   int longMsgEvery = 50000;
+
   /// The log Level for first run
   Level baseLevel;
+
   /// The Error Level for logging error run.
   //TODO: finish
   Level errorLevel;
+
   /// The parser's [ArgResults].
   ArgResults argResults;
-  /// If [true] displays a help message and exits.
+
+  /// If true displays a help message and exits.
   bool showHelp = false;
 
   /// The argument processor for Job arguments.
@@ -44,9 +51,9 @@ class JobArgs {
   int get length => argResults.arguments.length;
 
   String get programName {
-	  final path = Platform.script.pathSegments;
-	  final end = path.last.lastIndexOf(".");
-	  final name = path.last.substring(0, end);
+    final path = Platform.script.pathSegments;
+    final end = path.last.lastIndexOf('.');
+    final name = path.last.substring(0, end);
     return name;
   }
 
@@ -70,41 +77,33 @@ class JobArgs {
     ..addOption('logFile',
         abbr: 'f',
         defaultsTo: './$program.log',
-        callback: (v) => logPath = v,
+        callback: (dynamic v) => logPath = v,
         help: 'The log file- defaults to ./logger.log')
     ..addOption('results',
         abbr: 'r',
         defaultsTo: './results.txt',
-        callback: (results) => summary = results,
+        callback: (dynamic results) => summary = results,
         help: 'The results file')
     ..addOption('outDir',
         abbr: 'o',
         defaultsTo: './output',
-        callback: (v) => outDir = v,
+        callback: (dynamic v) => outDir = v,
         help: 'The output directory - created files have same name as source')
     //TODO: need better name
     ..addOption('every',
         abbr: 'e',
         defaultsTo: '100',
-        callback: (v) => parseInt(v),
+        callback: (dynamic v) => parseInt(v),
         help: 'print a progress message every n files processed"')
     // These next options are for the logger Level
     ..addOption('Level',
         abbr: 'l',
         allowed: [
-          'error',
-          'config',
-          'warn0',
-          'warn1',
-          'info0',
-          'info1',
-          'debug0',
-          'debug1',
-          'debug2',
-          'debug3'
+          'error', 'config', 'warn0', 'warn1', 'info0', 'info1',
+          'debug0', 'debug1', 'debug2', 'debug3' //No Reformat
         ],
         defaultsTo: 'error',
-        callback: (mode) => baseLevel = Level.lookup(mode),
+        callback: (dynamic mode) => baseLevel = Level.lookup(mode),
         help: 'The logging mode - defaults to info')
     ..addFlag('silent', abbr: 's', callback: (v) {
       if (v) baseLevel ??= Level.error;
@@ -132,7 +131,7 @@ class JobArgs {
         help: 'prints some helpful information about this program');
 
   static JobArgs parse(List<String> args) {
-	  final jArgs = new JobArgs(args);
+    final jArgs = new JobArgs(args);
     return jArgs;
   }
 

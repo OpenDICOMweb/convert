@@ -19,25 +19,42 @@ import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/errors.dart';
 import 'package:dcm_convert/src/io_utils.dart';
 
+
+/// Returns a new ByteSequence.
+SQ _makeSequence(EBytes eb, Dataset parent, List<Item> items) =>
+    new SQbyte.fromBytes(eb, parent, items);
+
+RootDataset _makeRootDataset(RDSBytes dsBytes, Dataset parent,
+        [ElementList elements, String path]) =>
+    new RootDatasetByte(dsBytes, elements: elements, path: path);
+
+/// Returns a new [ItemByte].
+Item _makeItem(Dataset parent, {ElementList elements, SQ sequence, DSBytes eb}) =>
+    new ItemByte(parent);
+
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootDatasetByte].
 class ByteReader extends DcmReader {
   @override
-  final RootDataset<int> rootDS;
-  Dataset _currentDS;
+//  final RootDataset<int> rootDS;
+//  Dataset _currentDS;
 
   /// Creates a new [ByteReader], which is decoder for Binary DICOM
   /// (application/dicom).
   ByteReader(ByteData bd,
       {String path = '',
       //TODO: make async work and be the default
-      bool async = false,
+      bool async = true,
       bool fast = true,
       bool fmiOnly = false,
       bool reUseBD = true,
       DecodingParameters dParams = DecodingParameters.kNoChange})
-      : rootDS = new RootDatasetByte(new RDSBytes(bd), path: path),
-        super(bd, path: path, dParams: dParams);
+      : super(bd, new RootDatasetByte(new RDSBytes(bd), path: path),
+            path: path, dParams: dParams) {
+    elementMaker = makeBEFromEBytes;
+    sequenceMaker = _makeSequence;
+    itemMaker = _makeItem;
+  }
 
   /// Creates a [ByteReader] from the contents of the [file].
   factory ByteReader.fromFile(File file,
@@ -70,8 +87,6 @@ class ByteReader extends DcmReader {
   // **** DcmReaderInterface ****
 
   /// The current [Dataset] being read.  This changes as Sequences are reAD.
-  @override
-  Dataset get currentDS => _currentDS;
   // @override
   // set currentDS(Dataset ds) => _currentDS = ds;
 
@@ -79,42 +94,21 @@ class ByteReader extends DcmReader {
   ElementList get elements => currentDS.elements;
 
   @override
-  Element makeElement(EBytes eb, int vrIndex, [VFFragments fragments]) =>
-      makeFromEBytes(eb, vrIndex, fragments);
-
-  /// Returns a new ByteSequence.
-  @override
-  SQ makeSequence(EBytes eb, Dataset parent, List<Item> items) =>
-      new SQbyte.fromBytes(eb, parent, items);
-
-  @override
-  RootDataset makeRootDataset(RDSBytes dsBytes, Dataset parent,
-          [ElementList elements, String path]) =>
-      new RootDatasetByte(dsBytes, elements: elements, path: path);
-
-  /// Returns a new [ItemByte].
-//  @override
-//  Item makeItem(Dataset parent, {ElementList elements, SQ sequence, DSBytes eb}) {}
-
-  /// Returns a new [ItemByte].
-  @override
-  Item makeItem(Dataset parent, {ElementList elements, SQ sequence, DSBytes eb}) =>
-      new ItemByte(parent);
-
   String elementInfo(Element e) => (e == null) ? 'Element e = null' : e.info;
 
+  @override
   String itemInfo(Item item) => (item == null) ? 'Item item = null' : item.info;
 
   // **** End DcmReaderInterface ****
 
   RootDataset readFMI({bool checkPreamble = false, bool allowMissingPrefix = false}) {
-	  final hadFmi =
+    final hadFmi =
         dcmReadFMI(checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
     rootDS.parseInfo = getParseInfo();
     return (hadFmi) ? rootDS : null;
   }
 
-  /// Reads a [RootDataset] from [this], stores it in [rootDS],
+  /// Reads a [RootDataset], and stores it in [rootDS],
   /// and returns it.
   RootDataset readRootDataset() {
     final rds = readRoot();
@@ -137,8 +131,8 @@ class ByteReader extends DcmReader {
   // **** DcmReaderInterface ****
 
   //Urgent: flush or fix
-  static Element makeTagElement<V>(EBytes eb, int vrIndex, VFFragments fragments) =>
-      makeTagElementFromEBytes<V>(eb, vrIndex, fragments);
+  static Element makeTagElement(EBytes eb, [int vrIndex, VFFragments fragments]) =>
+      makeTagElementFromEBytes(eb, vrIndex, fragments);
 
   /// Reads the [RootDataset] from a [Uint8List].
   static RootDataset readBytes(Uint8List bytes,

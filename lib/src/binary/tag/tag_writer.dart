@@ -16,8 +16,9 @@ import 'dart:typed_data';
 import 'package:dataset/tag_dataset.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/byte_reader.dart';
-import 'package:dcm_convert/src/binary/writer/dcm_writer.dart';
+import 'package:dcm_convert/src/binary/base/writer/dcm_writer.dart';
+import 'package:dcm_convert/src/encoding_parameters.dart';
+import 'package:dcm_convert/src/io_utils.dart';
 
 /// A [class] for writing a [RootDatasetTag] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
@@ -42,15 +43,12 @@ class TagWriter extends DcmWriter {
       bool removeUndefinedLengths = false,
       bool reUseBD = true,
       EncodingParameters encoding})
-      : super(_rootDS,
+      : assert(_rootDS.transferSyntax != null),
+			  super(_rootDS,
             bufferLength: bufferLength,
             path: path,
-            outputTS: outputTS,
-            throwOnError: throwOnError,
             reUseBD: reUseBD,
-            eParams: encoding) {
-    assert(_rootDS.transferSyntax != null);
-  }
+            eParams: encoding);
 
   /// Writes the [RootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
@@ -90,16 +88,13 @@ class TagWriter extends DcmWriter {
   Dataset get currentDS => _currentDS;
 
   @override
-  set currentDS(Dataset ds) => _currentDS = ds;
-
-  @override
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
-  Uint8List writeFMI({bool hadFmi, bool addPreamble = false}) =>
+  Uint8List writeFMI({bool hadFmi}) =>
       dcmWriteFMI(hadFmi: hadFmi);
 
-  /// Reads a [RootDataset] from [this], stores it in [rootDS],
+  /// Reads a [RootDataset], and stores it in [rootDS],
   /// and returns it.
   Uint8List writeRootDataset({bool addMissingFMI = false}) => dcmWriteRootDataset();
 

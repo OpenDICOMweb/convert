@@ -4,7 +4,6 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See /[package]/AUTHORS file for other contributors.
 
-import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
@@ -35,7 +34,7 @@ class TestByteWriter extends ByteWriter {
             encoding: encoding);
 
   /// Returns a [Uint8List] containing the encoded FMI.
-  Future<Uint8List> xWriteFmi(RootDatasetByte rds) {
+  Uint8List xWriteFmi(RootDatasetByte rds) {
     if (!rds.hasFmi || !rds.hasSupportedTransferSyntax) return null;
     return writeFMI();
   }

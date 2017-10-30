@@ -11,7 +11,7 @@ import 'package:system/server.dart';
 
 //import 'package:dcm_convert/data/test_directories.dart';
 
-/// [rwdir] is a fast correctness checker for the [convert] package.
+/// rwdir is a fast correctness checker for the convert package.
 ///
 /// It first reads and parshes a DICOM file into a buffer, writes it
 /// to a second buffer, and the does a byte by byte comparison of the two buffers.
@@ -23,7 +23,7 @@ void main(List<String> args) {
   Server.initialize(name: 'rwdir', level: Level.error);
 
   /// The processed arguments for this program.
-  var jobArgs = new JobArgs(args);
+  final jobArgs = new JobArgs(args);
 
   if (jobArgs.showHelp) showHelp(jobArgs);
 
@@ -33,7 +33,7 @@ void main(List<String> args) {
 
 /// The help message
 void showHelp(JobArgs jobArgs) {
-  var msg = '''
+  final msg = '''
 Usage: rwrdir <input-directory> [<options>]
 
 For each application/dicom file in the <directory> tree:

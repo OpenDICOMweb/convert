@@ -7,26 +7,22 @@
 //Urgent: finish
 ///
 class ReaderParameters {
-  /// If [true] duplicate [Element]s are allowed; if [false] either an
-  /// [Error] will be thrown (if [throwOnError] is [true]; otherwise, the
-  /// the [Element] with the more precise [VR] will be stored and the other
+  /// If true duplicate Elements are allowed; if false either an
+  /// [Error] will be thrown (if [throwOnError] is true; otherwise, the
+  /// the Element with the more precise VR will be stored and the other
   /// discarded.
   final bool allowDuplicates;
 
-  /// If [true] any duplicate characters will be removed.
+  /// If true any duplicate characters will be removed.
   final bool removeDuplicates;
 
-  /// If [true] the Reader will de-identify the [Dataset] before returning it.
+  /// If true the Reader will de-identify the Dataset before returning it.
   final bool deIdentify;
 
-  /// If [true] no warning or errors will be generated for
+  /// If true no warning or errors will be generated for
   /// bad padding characters.
   final bool allowBadPaddingChars;
 
-  /// If [false] no [Issue] checking will NOT be done, and the following
-  /// flags will be ignored: [checkIssuesWhileDecoding],
-  /// [checkIssuesAfterDecoding], [checkIssuesOnAccess], and
-  /// [checkIssuesOnCreation].
   final bool checkIssues;
   final bool checkIssuesWhileDecoding;
   final bool checkIssuesAfterDecoding;
@@ -51,7 +47,7 @@ class ReaderParameters {
     this.shortFileThreshold
 });
 
-  static const normal = const ReaderParameters(
+  static const ReaderParameters normal = const ReaderParameters(
     deIdentify: false,
     allowDuplicates: true,
       removeDuplicates: false,

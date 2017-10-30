@@ -8,9 +8,11 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/dcm.dart';
 import 'package:system/core.dart';
 
+import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
+import 'package:dcm_convert/src/errors.dart';
+import 'package:dcm_convert/src/io_utils.dart';
 
 Future<Uint8List> readFileFast(File f, {bool fast = true}) async =>
 	(fast) ? await f.readAsBytes() : 		f.readAsBytesSync();
@@ -19,7 +21,7 @@ Future<Uint8List> readFileFast(File f, {bool fast = true}) async =>
 
 
 Future<Uint8List> readFileAsync(File f) async {
-  var bytes = await f.readAsBytes();
+  final bytes = await f.readAsBytes();
   print(bytes.length);
   return bytes;
 }
@@ -32,14 +34,14 @@ Future<bool> doReadByteFile(File f,
   system.log.level = Level.error;
   //TODO: improve output
 //  var n = getPaddedInt(fileNumber, width);
-  var pad = "".padRight(5);
-  var path = cleanPath(f.path);
+  final pad = ''.padRight(5);
+  final path = cleanPath(f.path);
 
   try {
-    Uint8List bytes = await f.readAsBytes();
-    ByteData bd = bytes.buffer.asByteData();
-    var reader0 = new ByteReader(bd);
-    RootDatasetBytes rds0 = reader0.readRootDataset();
+	  final Uint8List bytes = await f.readAsBytes();
+	  final bd = bytes.buffer.asByteData();
+	  final reader0 = new ByteReader(bd);
+	  final rds0 = reader0.readRootDataset();
     if (rds0 == null) {
       log.info0('Unreadable File: $path');
       return false;
@@ -51,7 +53,7 @@ Future<bool> doReadByteFile(File f,
     if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.info}');
 
 // TODO: move into dataset.warnings.
-    Element e = rds0[kPixelData];
+	  final e = rds0[kPixelData];
     if (e == null) {
       log.warn('$pad ** Pixel Data Element not present');
     } else {

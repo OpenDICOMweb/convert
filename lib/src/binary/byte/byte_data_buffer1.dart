@@ -13,7 +13,7 @@ class ByteDataBuffer {
   factory ByteDataBuffer.view(ByteDataBuffer bd, [int start = 0, int end]) {
     if (start < 0 || start >= bd.lengthInBytes)
       throw new RangeError.index(start, bd);
-    if (end == null) end = bd.lengthInBytes;
+     end ??= bd.lengthInBytes;
     if (end < 0 || end >= bd.lengthInBytes) throw new RangeError.index(end, bd);
     return new ByteDataBuffer._(
         bd.buffer.asByteData(bd.offsetInBytes + start, bd.offsetInBytes + end));
@@ -31,7 +31,7 @@ class ByteDataBuffer {
 
   /// Returns the underlying [ByteBuffer].
   ///
-  /// The returned buffer may be replaced by operations that change the [length]
+  /// The returned buffer may be replaced by operations that change the length
   /// of this list.
   ///
   /// The buffer may be larger than [lengthInBytes] bytes, but never smaller.
@@ -75,12 +75,12 @@ class ByteDataBuffer {
   /// least that size. It will always have at least have double the
   /// capacity of the current buffer.
   void _grow([int capacity]) {
-    int oldLength = _buffer.lengthInBytes;
-    int newLength = oldLength * 2;
+	  final oldLength = _buffer.lengthInBytes;
+	  var newLength = oldLength * 2;
     if (capacity != null && capacity > newLength) newLength = capacity;
     if (newLength < oldLength) return;
-    var newBuffer = new ByteData(newLength);
-    for (int i = 0; i < oldLength; i++)
+	  final newBuffer = new ByteData(newLength);
+    for (var i = 0; i < oldLength; i++)
       newBuffer.setUint8(i, _buffer.getUint8(i));
     _buffer = newBuffer;
   }

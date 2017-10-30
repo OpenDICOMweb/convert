@@ -5,7 +5,7 @@
 // See the AUTHORS file for other contributors.
 
 import 'package:dataset/dataset.dart';
-import 'package:dcm_convert/byte_reader.dart';
+import 'package:dcm_convert/byte_convert.dart';
 import 'package:system/core.dart';
 
 class FileListReader {
@@ -42,7 +42,7 @@ class FileListReader {
 
       log.info0('$i Reading: $path ');
       try {
-        success = byteReadWriteFileChecked(path, i);
+        success = byteReadWriteFileChecked(path, fileNumber: i);
 //        log.info0('${rds.parseInfo}');
 //        log.info0('  Dataset: $rds');
         if (success == false) {
@@ -51,7 +51,7 @@ class FileListReader {
           log.debug('Dataset: ${rds.info}');
           successful.add('"$path "');
         }
-      } on InvalidTransferSyntaxError catch (e) {
+      } on InvalidTransferSyntax catch (e) {
         log
           ..info0(e)
           ..reset;

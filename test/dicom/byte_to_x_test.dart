@@ -10,7 +10,7 @@ import 'package:test/test.dart';
 void main() {
 	Server.initialize(name: 'bytebuf.test', level: Level.info0);
 
-  test("Simple BytesToX Test", () {
+  test('Simple BytesToX Test', () {
     int v;
 
     v = _bytesToWords(0);
@@ -62,15 +62,15 @@ void main() {
   });
 }
 
-/// Converts [lengthInBytes] to [length] for 2-byte value types.
+/// Converts lengthInBytes to length for 2-byte value types.
 int _bytesToWords(int lengthIB) =>
     ((lengthIB & 0x1) == 0) ? lengthIB >> 1 : null;
 
-/// Converts [lengthInBytes] to [length] for 4-byte value types.
+/// Converts lengthInBytes to length for 4-byte value types.
 int _bytesToLongs(int lengthIB) =>
     ((lengthIB & 0x3) == 0) ? lengthIB >> 2 : null;
 
-/// Converts [lengthInBytes] to [length] for 4-byte value types.
+/// Converts lengthInBytes to length for 4-byte value types.
 int _bytesToDoubles(int lengthIB) =>
     ((lengthIB & 0x7) == 0) ? lengthIB >> 3 : null;
 

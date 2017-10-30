@@ -6,15 +6,13 @@
 
 import 'package:logger/logger.dart';
 import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/dcm.dart';
+import 'package:dcm_convert/byte_convert.dart';
 
-final Logger log = new Logger("io/bin/read_files.dart", Level.info);
+final Logger log = new Logger('io/bin/read_files.dart', Level.info);
 
 void main() {
-  var path = path1; //test6684_02;
+  final path = path1; //test6684_02;
   log.info0('TagReader: $path');
-  RootTagDataset rds0 = TagReader.readPath(path);
-  log.info0('${rds0.parseInfo}');
-  log.info0('TagDataset: ${rds0.info}');
+  final rds0 = TagReader.readPath(path);
+  log..info0('${rds0.parseInfo}')..info0('TagDataset: ${rds0.info}');
 }
-

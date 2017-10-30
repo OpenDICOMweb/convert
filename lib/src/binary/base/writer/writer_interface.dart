@@ -9,6 +9,8 @@ import 'dart:typed_data';
 import 'package:element/byte_element.dart';
 import 'package:dataset/byte_dataset.dart';
 
+import 'package:dcm_convert/src/element_offsets.dart';
+
 /// The type of the different Value Field readers.  Each [ElementMaker]
 /// reads the Value Field for a particular Value Representation.
 typedef Element ElementMaker<V>(ByteData bd);
@@ -34,6 +36,8 @@ abstract class DcmWriterInterface {
 
   /// The current duplicate [List<Element>].
   List<Element> get duplicates => currentDS.elements.duplicates;
+
+  ElementOffsets get offsets;
 
 /*
   /// Returns a new Element.

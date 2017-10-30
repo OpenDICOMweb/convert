@@ -6,22 +6,21 @@
 
 import 'dart:io';
 
+import 'package:dataset/tag_dataset.dart';
 import 'package:system/server.dart';
 import 'package:tag/vr.dart';
 
 import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/dcm.dart';
-import 'package:dcm_convert/src/binary/convert_byte_to_tag.dart';
+import 'package:dcm_convert/byte_convert.dart';
 import 'package:dcm_convert/tools.dart';
 
-
-/// A Program that reads a [File], decodes it into a [RootDatasetBytes],
-/// and then converts that into a [RootTagDataset].
+/// A Program that reads a [File], decodes it into a [ RootDatasetByte ],
+/// and then converts that into a [RootDatasetTag].
 void main(List<String> args) {
   Server.initialize(name: 'convert', level: Level.info0);
 
   /// The processed arguments for this program.
-   JobArgs jobArgs = new JobArgs(args);
+  final jobArgs = new JobArgs(args);
   if (jobArgs.showHelp) showHelp(jobArgs);
 
   //TODO: move this into JobRunner
@@ -29,14 +28,14 @@ void main(List<String> args) {
   print('${Platform.script}');
   print('Logger Root Level: ${log.level} Log Level: ${log.level}');
 
-    system.log.level = jobArgs.baseLevel;
+  system.log.level = jobArgs.baseLevel;
   // Short circuiting args for testing
-  var pathList = [path0];
+  final pathList = [path0];
 
-  RootTagDataset rds;
-  for (String path in pathList) {
+  RootDatasetTag rds;
+  for (var path in pathList) {
     try {
-      rds = convertFile(path, fmiOnly: false);
+      rds = convertPath(path, fmiOnly: false);
     } catch (e) {
       print('Error: $e');
       rethrow;
@@ -45,28 +44,41 @@ void main(List<String> args) {
   stdout.write(rds.summary);
 }
 
-RootTagDataset convertFile(dynamic file, {int reps = 1, bool fmiOnly = false}) {
-  File f = toFile(file, mustExist: true);
-  Logger log = new Logger('convertFile', Level.info);
-  log.level = Level.warn1;
-  log.debug2('Reading: $file');
-  RootDatasetBytes bRoot = ByteReader.readFile(f, fast: true);
+RootDatasetTag convertPath(String path, {int reps = 1, bool fmiOnly = false}) {
+  final f = pathToFile(path, mustExist: true);
+  return convertFile(f, reps: reps, fmiOnly: fmiOnly);
+}
+
+RootDatasetTag convertFile(File file, {int reps = 1, bool fmiOnly = false}) {
+  final log = new Logger('convertFile', Level.info)
+    ..level = Level.warn1
+    ..debug2('Reading: $file');
+  final bRoot = ByteReader.readFile(file, fast: true);
   print('TS: ${bRoot.transferSyntax}');
-  log.debug('bRoot.isRoot: ${bRoot.isRoot}');
-  log.debug1(bRoot.parseInfo.info);
+  log
+    ..debug('bRoot.isRoot: ${bRoot.isRoot}')
+    ..debug1(bRoot.parseInfo.info);
   if (bRoot == null) return null;
 
-  RootTagDataset tRoot = convertByteDSToTagDS(bRoot);
-  log.info0('tRoot: $tRoot');
-
+  final tRoot = convertByteDSToTagDS<int>(bRoot);
   // Test dataset equality
-  log.info0('Byte DS: $bRoot');
-  log.info0('Tag DS$tRoot');
-  if (bRoot.length != tRoot.length) throw "Unequal Top Level";
-  if (bRoot.total != tRoot.total) throw "Unequal Total";
+  log..info0('tRoot: $tRoot')..info0('Byte DS: $bRoot')..info0('Tag DS$tRoot');
+  if (bRoot.length != tRoot.length) {
+    log
+      ..error('map.length Not equal')
+      ..info0('  rds0.map.length: ${bRoot.length}')
+      ..info0('  rds1.map.length: ${tRoot.length}');
+    throw 'Unequal Top Level';
+  }
+  if (bRoot.total != tRoot.total) {
+    log
+      ..error('total Not equal')
+      ..info0('  rds0.total: ${bRoot.total}')
+      ..info0('  rds1.total: ${tRoot.total}');
+    throw 'Unequal Total';
+  }
 
-  log.info0('Byte DS: ${bRoot.summary}');
-  log.info0(' Tag DS: ${tRoot.summary}');
+  log..info0('Byte DS: ${bRoot.summary}')..info0(' Tag DS: ${tRoot.summary}');
   // write out converted dataset and compare the bytes
   // Urgent: make this work
   // Uint8List bytes1 = DcmWriter.writeBytes(rds1, reUseBD: true);
@@ -74,39 +86,32 @@ RootTagDataset convertFile(dynamic file, {int reps = 1, bool fmiOnly = false}) {
   //  bytesEqual(bytes0, bytes1);
 
   if (bRoot.parent != tRoot.parent) {
-    log.error('Parents Not equal');
-    log.warn0('  rds0.parent: ${bRoot.parent}');
-    log.warn0('  rds1.parent: ${tRoot.parent}');
+    log
+      ..error('Parents Not equal')
+      ..warn0('  rds0.parent: ${bRoot.parent}')
+      ..warn0('  rds1.parent: ${tRoot.parent}');
   }
   if (bRoot.hadULength != tRoot.hadULength) {
-    log.error('hadULength Not equal');
-    log.info0('  rds0.hadULength: ${bRoot.hadULength}');
-    log.info0('  rds1.hadULength: ${tRoot.hadULength}');
-  }
-  if (bRoot.length != tRoot.length) {
-    log.error('map.length Not equal');
-    log.info0('  rds0.map.length: ${bRoot.length}');
-    log.info0('  rds1.map.length: ${tRoot.length}');
-  }
-  if (bRoot.total != tRoot.total) {
-    log.error('total Not equal');
-    log.info0('  rds0.total: ${bRoot.total}');
-    log.info0('  rds1.total: ${tRoot.total}');
+    log
+      ..error('hadULength Not equal')
+      ..info0('  rds0.hadULength: ${bRoot.hadULength}')
+      ..info0('  rds1.hadULength: ${tRoot.hadULength}');
   }
 
-  for (int code in bRoot.map.keys) {
-    Element be = bRoot.map[code];
-    TagElement te = tRoot.map[code];
+  for (var code in bRoot.elements.keys) {
+    final be = bRoot.lookup(code);
+    final te = tRoot.lookup(code);
 
-    bool error = false;
+    var error = false;
     if (be.code != te.code) {
       error = true;
       log.error('Code Not Equal be.code(${be.code}) != te.code(${te.code})');
     }
     if (be.vr != te.vr) {
       if (be.vr == VR.kUN && be.isPrivate) {
-        log.info0('--- ${dcm(be.code)} was ${be.vr} now ${te.vr}');
-        log.info0('     ${te.tag}');
+        log
+          ..info0('--- ${dcm(be.code)} was ${be.vr} now ${te.vr}')
+          ..info0('     ${te.tag}');
       } else {
         error = true;
         log.error('VR Not Equal be.vr($be) != te.vr($te)');
@@ -123,10 +128,11 @@ RootTagDataset convertFile(dynamic file, {int reps = 1, bool fmiOnly = false}) {
       }
     }
     if (error) {
-      log.error('***: ${bRoot.map[code]}\n'
-          '        !=: ${tRoot.map[code]}');
-      log.info0('be: ${be.info}');
-      log.info0('te: ${te.info}');
+      log
+        ..error('***: ${bRoot.lookup(code)}\n'
+            '        !=: ${tRoot.lookup(code)}')
+        ..info0('be: ${be.info}')
+        ..info0('te: ${te.info}');
     }
   }
 
@@ -138,7 +144,7 @@ RootTagDataset convertFile(dynamic file, {int reps = 1, bool fmiOnly = false}) {
 
 /// The help message
 void showHelp(JobArgs jobArgs) {
-  var msg = '''
+  final msg = '''
 Usage: converter <input-file> [<options>]
 
 Opens the <input-file> and then:

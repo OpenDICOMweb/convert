@@ -8,23 +8,25 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dataset/byte_dataset.dart';
-import 'package:dcm_convert/dcm.dart';
-import 'package:element/element.dart';
-import 'package:entity/entity.dart';
+import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 
-Future<bool> doRWRByteFile(File f, [bool fast = true]) async {
+import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
+import 'package:dcm_convert/src/binary/byte/byte_writer.dart';
+import 'package:dcm_convert/src/tool/job_utils.dart';
+import 'package:dcm_convert/src/errors.dart';
+
+Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
   log.level = Level.error;
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
-  var pad = "".padRight(5);
+  final pad = ''.padRight(5);
 
   try {
     final Uint8List bytes = await f.readAsBytes();
     final bd = bytes.buffer.asByteData();
     final reader0 = new ByteReader(bd, fast: true);
-    RootDatasetBytes rds0 = reader0.readRootDataset();
+    final rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
       log.info0('Bad File: ${f.path}');
@@ -47,6 +49,7 @@ $pad    TS: ${rds0.transferSyntax}''');
 
     // Write the Root Dataset
     ByteWriter writer;
+    final outPath = getTempFile(f.path, 'dcmout');
     if (fast) {
       // Just write bytes don't write the file
       writer = new ByteWriter(rds0);
@@ -69,7 +72,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       reader1 = new ByteReader.fromPath(outPath);
     }
-    var rds1 = reader1.readRootDataset();
+    final rds1 = reader1.readRootDataset();
     //   RootDatasetBytes rds1 = ByteReader.readPath(outPath);
     log
       ..debug('$pad Read ${reader1.rootBD.lengthInBytes} bytes')
@@ -89,7 +92,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!fast || !rds0.hasDuplicates) {
       // Compare [ElementOffsets]s
-      if (reader0.elementList == writer.elementList) {
+      if (reader0.offsets == writer.offsets) {
         log.debug('$pad ElementOffsetss are identical.');
       } else {
         log.warn('$pad ElementOffsetss are different!');
@@ -107,7 +110,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
-      final bool same = bytesEqual(bytes0, bytes1);
+      final same = bytesEqual(bytes0, bytes1);
       if (same == true) {
         log.debug('$pad Files bytes are identical.');
       } else {
