@@ -21,82 +21,67 @@ Element _readEvrElement() {
   }
   final vrIndex = (_dParams.doCheckVR) ? _checkVR(code, vr.index) : vr.index;
 
-  if (vrIndex == 0) {
-    return _readEvrSequence(code, eStart);
-  } else if (vrIndex >= kVRMaybeUndefinedIndexMin &&
-      vrIndex <= kVRMaybeUndefinedIndexMax) {
-    return _readEvrMaybeUndefined(code, eStart, vrIndex);
-  } else if (vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax) {
-    return _readEvrLong(code, eStart, vrIndex);
-  } else if (vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax) {
-    return _readEvrShort(code, eStart, vrIndex);
+  Element e;
+  if (vr.hasShortVF) {
+    e = _readShortElement(code, eStart, vrIndex);
   } else {
-    return invalidVRIndexError(vrIndex);
+    e = (vrIndex == VR.kSQ.index || _isSequence(code, vrIndex))
+        ? _readEvrSequence(code, eStart, _evrSQMaker)
+        : _readEvrMaybeUndefined(code, eStart, vrIndex);
   }
-}
-
-Element _readEvrSequence(int code, int eStart) {
-  if (_isEVR) _skip(2);
-  return _readSequence(code, eStart, _evrSQMaker);
+  assert(_checkRIndex());
+  return _finishReadElement(code, eStart, e);
 }
 
 /// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have
 /// kUndefinedValue.
 Element _readEvrMaybeUndefined(int code, int eStart, int vrIndex) {
-  _skip(2);
-  final vfLengthField = _readUint32();
+	_skip(2);
+	final vfLengthField = _readUint32();
   if (vfLengthField == kUndefinedLength) {
     return _readEvrLongUndefined(code, eStart, vrIndex, vfLengthField);
   } else {
-    return _readEvrLongDefined(code, eStart, vrIndex, vfLengthField);
+    return _readEvrLongElement(code, eStart, vrIndex, vfLengthField);
   }
 }
 
 Element _readEvrLongUndefined(int code, int eStart, int vrIndex, int vfLengthField) {
-  if (code == kPixelData) {
-    return _readPixelDataUndefined(code, eStart, vrIndex, vfLengthField);
-  } else {
-	  final endOfElement = _findEndOfULengthVF();
-	  final eLength = (endOfElement - 8) - eStart;
-    final bd = _rootBD.buffer.asByteData(eStart, eLength);
-    final eb = new EvrLong(bd);
-    final e = elementMaker(eb, vrIndex);
-    return _finishReadElement(code, eStart, e);
-  }
+	final endOfVF = _findEndOfULengthVF();
+	final eLength = endOfVF - eStart;
+	_rIndex = endOfVF + 8;
+	if (code == kPixelData) {
+		return _readPixelDataUndefined(code, eStart,  vrIndex, vfLengthField, eLength);
+	} else {
+		final bd = _rootBD.buffer.asByteData(eStart, eLength);
+		final eb = new EvrLong(bd);
+		return elementMaker(eb, vrIndex);
+	}
 }
-
-Element _readEvrLongDefined(int code, int eStart, int vrIndex, int vfLengthField) {
-  _rIndex = _rIndex + vfLengthField;
-  final eLength = _rIndex - eStart;
-  if (code == kPixelData) {
-    return _readPixelDataDefined(code, eStart, vrIndex, vfLengthField, eLength);
-  } else {
-    final bd = _rootBD.buffer.asByteData(eStart, eLength);
-    final eb = new EvrLong(bd);
-    final e = elementMaker(eb, vrIndex);
-    return _finishReadElement(code, eStart, e);
-  }
-}
-
-/// Read an Element (not SQ) with a 32-bit vfLengthField, but that cannot
+/// Read an Element (not SQ) with a 32-bit [vfLengthField], but that cannot
 /// have kUndefinedValue.
 /// Reads a VR of OB, OD, OF, OL, OW, UC, UN, UR, or UT.
 /// Only OB, OW, and UN can have Undefined Length.
-Element _readEvrLong(int code, int eStart, int vrIndex) {
-  _skip(2);
-  final vfLengthField = _readUint32();
-  return _readEvrLongDefined(code, eStart, vrIndex, vfLengthField);
+Element _readEvrLongElement(int code, int eStart, int vrIndex, int vfLengthField) {
+  _rIndex = _rIndex + vfLengthField;
+  final eLength = _rIndex - eStart;
+  if (code == kPixelData) {
+    return _readPixelDataDefined(code, eStart,  vrIndex, vfLengthField, eLength);
+  } else {
+    final bd = _rootBD.buffer.asByteData(eStart, eLength);
+    final eb = new EvrLong(bd);
+    return elementMaker(eb, vrIndex);
+  }
 }
 
-Element _readEvrShort(int code, int eStart, int vrIndex) {
-  final vfLength = _readUint16();
-  _rIndex = _rIndex + vfLength;
-  final eLength = _rIndex - eStart;
-  final bd = _rootBD.buffer.asByteData(eStart, eLength);
-  final eb = new EvrShort(bd);
-  final e = elementMaker(eb, vrIndex);
-  return _finishReadElement(code, eStart, e);
+Element _readShortElement(int code, int eStart, int vrIndex) {
+	final vfLength = _readUint16();
+	_rIndex = _rIndex + vfLength;
+	final eLength = _rIndex - eStart;
+	final bd = _rootBD.buffer.asByteData(eStart, eLength);
+	final eb = new EvrShort(bd);
+	return elementMaker(eb, vrIndex);
 }
+
 
 EBytes _evrSQMaker(ByteData bd) => new EvrLong(bd);
 
@@ -128,3 +113,6 @@ int _checkVR(int code, int vrIndex, [bool warnOnUN = false]) {
   }
   return index;
 }
+
+
+

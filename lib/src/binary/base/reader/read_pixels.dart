@@ -8,38 +8,45 @@ part of odw.sdk.convert.binary;
 // _rIndex is at end of Value Field
 Element _readPixelDataDefined(int code, int eStart, int vrIndex, int vfLengthField, int
 eLength) {
+	log.debug2('$rbb _readPixelData');
 	_rIndex = _rIndex + vfLengthField;
 	return _makePixelData(eStart, eLength, vrIndex);
 }
 
-// _rIndex is Just after length field
+/// There are only three VRs that use this: OB, OW, UN
+// _rIndex is Just after vflengthField
 Element _readPixelDataUndefined(
-    int code, int eStart, int vrIndex, int vfLengthField, int eLength) {
-  assert(vrIndex == VR.kOB.index || vrIndex == VR.kOW.index || vrIndex == VR.kUN.index);
+    int code, int eStart, int vrIndex, int vfLengthField) {
+	assert(vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax);
+ // assert(vrIndex == kOBIndex || vrIndex == kOWIndex || vrIndex == kUNIndex);
+  log.debug2('$rbb _readPixelData');
   Element e;
   final item = _getUint32(_rIndex);
   if (item == kItem32BitLE) {
     e = _readFragmentedPixelData(eStart, vfLengthField, vrIndex);
   } else {
-	  _rIndex = _rIndex + vfLengthField;
+	  final eLength = _rIndex - eStart;
 	  e = _makePixelData(eStart, eLength, vrIndex);
   }
   _beyondPixelData = true;
   _pixelDataEnd = _rIndex;
-  return e;
+  return _finishReadElement(code, eStart, e);
 }
 
 
 
 /// Reads an encapsulated (compressed) [kPixelData] [Element].
 Element _readFragmentedPixelData(int eStart, int vfLengthField, int vrIndex) {
-  if (vrIndex != VR.kOB.index && vrIndex != VR.kUN.index) {
+	assert(vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax);
+	if (vrIndex != VR.kOB.index && vrIndex != VR.kUN.index) {
     final vr = VR.lookupByIndex(vrIndex);
     _warn('Invalid VR($vr) for Encapsulated TS: $_tsUid $_rrr');
     _hadParsingErrors = true;
   }
+	log.debug2('$rbb _readFragments');
   final fragments = _readFragments();
   final eLength = _rIndex - eStart;
+	log.debug2('$ree _readFragments');
   return _makePixelData(eStart, eLength, vrIndex, fragments);
 }
 
@@ -70,6 +77,6 @@ Element _makePixelData(int eStart, int eLength, int vrIndex,
   final e = makeBEPixelDataFromEBytes(eb, vrIndex, _tsUid, fragments);
   _currentDS.elements.add(e);
   assert(_checkRIndex());
-  log.debug('_rIndex: $_rIndex');
+  log.debug2('$ree _makePixelData');
   return e;
 }

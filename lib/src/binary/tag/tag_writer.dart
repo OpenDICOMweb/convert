@@ -13,10 +13,15 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dataset/byte_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
+import 'package:element/byte_element.dart';
+import 'package:element/tag_element.dart';
+import 'package:system/core.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/binary/base/writer/dcm_writer.dart';
+
+import 'package:dcm_convert/src/binary/base/writer/writer.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 import 'package:dcm_convert/src/io_utils.dart';
 
@@ -91,12 +96,18 @@ class TagWriter extends DcmWriter {
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
+  @override
+  String elementInfo(Element e) => (e == null) ? 'Element e = null' : e.info;
+
+  @override
+  String itemInfo(Item item) => (item == null) ? 'Item item = null' : item.info;
+
   Uint8List writeFMI({bool hadFmi}) =>
       dcmWriteFMI(hadFmi: hadFmi);
 
   /// Reads a [RootDataset], and stores it in [rootDS],
   /// and returns it.
-  Uint8List writeRootDataset({bool addMissingFMI = false}) => dcmWriteRootDataset();
+  Uint8List writeRootDataset({bool addMissingFMI = false}) => writeRootDS();
 
   /// Writes the [RootDataset] to a [Uint8List], and returns the [Uint8List].
   static Uint8List writeBytes(RootDataset ds,

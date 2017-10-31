@@ -9,6 +9,7 @@
 // that can be found in the LICENSE file.
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
+library odw.sdk.convert.binary.base.writer;
 
 import 'dart:convert';
 import 'dart:io';
@@ -25,6 +26,9 @@ import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 
 //TODO: rewrite all comments to reflect current state of code
+part 'package:dcm_convert/src/binary/base/writer/write_evr.dart';
+part 'package:dcm_convert/src/binary/base/writer/write_fmi.dart';
+part 'package:dcm_convert/src/binary/base/writer/write_vf.dart';
 
 /*
 String _path;
@@ -41,9 +45,20 @@ var _bytesUnread = 0;
 var _rIndex = 0;
 */
 
+/*
 ByteData _rootBD;
+RootDataset _rootDS;
+Dataset _currentDS;
+String _path;
+bool _isEVR;
 EncodingParameters _eParams;
 ElementOffsets _offsets;
+*/
+
+/// The current dataset.  This changes as Sequences are written.
+Dataset _currentDS;
+bool _isEVR;
+TransferSyntax _ts;
 
 /// A library for encoding [Dataset]s in the DICOM File Format.
 ///
@@ -87,12 +102,7 @@ abstract class DcmWriter extends DcmWriterInterface {
   @override
   final ElementOffsets offsets = new ElementOffsets();
 
-  /// The current dataset.  This changes as Sequences are written.
-  Dataset _currentDS;
-
   /// Return true if input is Explicit VR, false if Implicit VR.
-  bool _isEVR;
-  TransferSyntax _ts;
 
   //TODO: these should be reported in an EncodeData structure (like ParseData)
   int _nElements = 0;
@@ -112,10 +122,12 @@ abstract class DcmWriter extends DcmWriterInterface {
         _wIndex = 0,
         rootBD = (reUseBD)
             ? _reuseBuffer(bufferLength)
-            : new ByteData(
-                (bufferLength == null) ? defaultBufferLength : bufferLength) {
+            : new ByteData((bufferLength == null) ? defaultBufferLength : bufferLength) {
+	  _currentDS = rootDS;
+  	/*	  _eParams = eParams;
 	  _rootBD = rootBD;
-	  _eParams = eParams;
+	  _rootDS = rootDS;
+	  _path = path;*/
   }
 
   /// Returns the [targetTS] for the encoded output.
@@ -129,8 +141,8 @@ abstract class DcmWriter extends DcmWriterInterface {
     }
   }
 
-  /// The [ByteData] buffer being written.
-  ByteData get bd => rootBD;
+  @override
+  Dataset get currentDS => _currentDS;
 
   /// Returns a [Uint8List] view of the [ByteData] buffer at the current time
   Uint8List get bytes => rootBD.buffer.asUint8List(0, _wIndex);
@@ -174,20 +186,19 @@ abstract class DcmWriter extends DcmWriterInterface {
 
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].
-  Uint8List dcmWriteRootDataset() {
+  Uint8List writeRootDS() {
     //TODO: handle doSeparateBulkdata
     _currentDS = rootDS;
     _ts = (targetTS == null) ? rootDS.transferSyntax : targetTS;
     if (_ts == null) throw 'no TS';
     //TODO: figure out the correct way to writeFMI
     // _writeFMI();
-    _writePrefix();
+    _writeExistingPrefix();
 
     _isEVR = rootDS.isEVR;
     _writeDataset(rootDS);
     final encoding = rootBD.buffer.asUint8List(0, _wIndex);
-    if (encoding == null || encoding.length < 256)
-      throw 'Invalid bytes error: $encoding';
+    if (encoding == null || encoding.length < 256) throw 'Invalid bytes error: $encoding';
     _writeFileOrPath(encoding);
     return rootBD.buffer.asUint8List(rootBD.offsetInBytes, rootBD.lengthInBytes);
   }
@@ -196,7 +207,7 @@ abstract class DcmWriter extends DcmWriterInterface {
   /// Writes [bytes] to [file] if it is not null; otherwise, writes to
   /// [path] if it is not null. If both are null nothing is written.
   void _writeFileOrPath(Uint8List bytes) {
-	  final f = (file == null && path != '') ? new File(path) : file;
+    final f = (file == null && path != '') ? new File(path) : file;
     if (f != null) {
       f.writeAsBytesSync(bytes);
     }
@@ -222,7 +233,6 @@ abstract class DcmWriter extends DcmWriterInterface {
   /// The end of reading an [Element] or [Item]
   String get wee => '< $www';
 
-
   // **** Private methods
 
   /// Writes File Meta Information (FMI) to the output.
@@ -232,14 +242,14 @@ abstract class DcmWriter extends DcmWriterInterface {
     if (_currentDS != rootDS) log.error('Not rootDS');
 
     // Check to see if we should write FMI if missing
-    if (!hadFmi && eParams.allowMissingFMI) {
+    if (!hadFmi && !eParams.allowMissingFMI) {
       log.error('Dataset $rootDS is missing FMI elements');
       return false;
-    } else if (eParams.doUpdateFMI && (!hadFmi && eParams.doAddMissingFMI)) {
-      _writeODWFMI();
+    } else if (eParams.doUpdateFMI || (!hadFmi && eParams.doAddMissingFMI)) {
+      return writeOdwFMI();
     } else {
       assert(hadFmi);
-      _writeExistingFMI();
+      return _writeExistingFmi();
     }
     _isEVR = rootDS.isEVR;
     return true;
@@ -247,7 +257,7 @@ abstract class DcmWriter extends DcmWriterInterface {
 
   void _writeExistingFMI() {
     _isEVR = true;
-    _writePrefix();
+    _writeExistingPrefix();
     for (var e in rootDS.elements) {
       if (e.code < 0x00030000) {
         _writeElement(e);
@@ -257,16 +267,11 @@ abstract class DcmWriter extends DcmWriterInterface {
     }
   }
 
-  /// Writes a new Open DICOMweb FMI.
-  void _writeODWFMI() {
-    //Urgent finish
-  }
-
   //TODO: redoc
   /// Writes a DICOM Preamble and Prefix (see PS3.10) as the
   /// beginning of the encoding.
-  void _writePrefix() {
-	  final pInfo = rootDS.parseInfo;
+  void _writeExistingPrefix() {
+    final pInfo = rootDS.parseInfo;
     assert(pInfo.hadPrefix == false || !eParams.doAddMissingFMI);
     if (pInfo.preambleWasZeros || eParams.doCleanPreamble) {
       for (var i = 0; i < 128; i++) rootBD.setUint8(i, 0);
@@ -294,7 +299,7 @@ abstract class DcmWriter extends DcmWriterInterface {
   }
 
   void _writeElement(Element e) {
-	  final eStart = _wIndex;
+    final eStart = _wIndex;
     if (e is SQ) {
       _writeSequence(e);
     } else {
@@ -324,10 +329,10 @@ abstract class DcmWriter extends DcmWriterInterface {
   /// Writes an EVR (short == 8 bytes, long == 12 bytes) or IVR (8 bytes)
   /// header.
   void _writeHeader(Element e) {
-	  final length = (e.vfLength == null || eParams.doConvertUndefinedLengths)
+    final length = (e.vfLength == null || eParams.doConvertUndefinedLengths)
         ? e.vfBytes.lengthInBytes
         : e.vfLength;
-	  final start = _wIndex;
+    final start = _wIndex;
     // Write Tag
     _writeTagCode(e.code);
     if (_isEVR) {
@@ -419,7 +424,7 @@ abstract class DcmWriter extends DcmWriterInterface {
 
   /// Moves the [_wIndex] forward [n] bytes, or backward if [n] is negative.
   void _skip(int n) {
-	  final v = _wIndex + n;
+    final v = _wIndex + n;
     // Note: keep next line for debugging
     // _checkRange(v);
     _wIndex = v;
@@ -445,10 +450,9 @@ abstract class DcmWriter extends DcmWriterInterface {
   void _writeBytes(Uint8List bytes) => __writeBytes(bytes);
 
   void __writeBytes(Uint8List bytes) {
-	  final length = bytes.lengthInBytes;
+    final length = bytes.lengthInBytes;
     _maybeGrow(length);
-    for (var i = 0, j = _wIndex; i < length; i++, j++)
-      rootBD.setUint8(j, bytes[i]);
+    for (var i = 0, j = _wIndex; i < length; i++, j++) rootBD.setUint8(j, bytes[i]);
     _wIndex = _wIndex + length;
   }
 
@@ -466,8 +470,7 @@ abstract class DcmWriter extends DcmWriterInterface {
 
   //TODO: doFixPaddingErrors
   /// Writes an [ASCII] [String] to the output [rootBD].
-  void _writeAsciiString(String s,
-          [int offset = 0, int limit, int padChar = kSpace]) =>
+  void _writeAsciiString(String s, [int offset = 0, int limit, int padChar = kSpace]) =>
       _writeStringBytes(ASCII.encode(s), padChar);
 
   /// Writes an [UTF8] [String] to the output [rootBD].
@@ -476,13 +479,11 @@ abstract class DcmWriter extends DcmWriterInterface {
 
   /// Ensures that [rootBD] is at least [index] + [remaining] long,
   /// and grows the buffer if necessary, preserving existing data.
-  void ensureRemaining(int index, int remaining) =>
-      ensureCapacity(index + remaining);
+  void ensureRemaining(int index, int remaining) => ensureCapacity(index + remaining);
 
   /// Ensures that [rootBD] is at least [capacity] long, and grows
   /// the buffer if necessary, preserving existing data.
-  void ensureCapacity(int capacity) =>
-      (capacity > rootBD.lengthInBytes) ? _grow() : null;
+  void ensureCapacity(int capacity) => (capacity > rootBD.lengthInBytes) ? _grow() : null;
 
   /// Grow the buffer if the index is at, or beyond, the end of the current
   /// buffer.
@@ -490,24 +491,6 @@ abstract class DcmWriter extends DcmWriterInterface {
     if (_wIndex + size >= rootBD.lengthInBytes) _grow();
   }
 
-  /// Creates a new buffer at least double the size of the current buffer,
-  /// and copies the contents of the current buffer into it.
-  ///
-  /// If [capacity] is null the new buffer will be twice the size of the
-  /// current buffer. If [capacity] is not null, the new buffer will be at
-  /// least that size. It will always have at least have double the
-  /// capacity of the current buffer.
-  void _grow([int capacity]) {
-	  final oldLength = rootBD.lengthInBytes;
-	  var newLength = oldLength * 2;
-    if (capacity != null && capacity > newLength) newLength = capacity;
-
-    _isValidBufferLength(newLength);
-    if (newLength < oldLength) return;
-	  final newBuffer = new ByteData(newLength);
-    for (var i = 0; i < oldLength; i++) newBuffer.setUint8(i, rootBD.getUint8(i));
-    rootBD = newBuffer;
-  }
 
   static ByteData _reuseBuffer([int size]) {
     size ??= defaultBufferLength;
@@ -521,7 +504,7 @@ abstract class DcmWriter extends DcmWriterInterface {
   }
 }
 
-const int defaultLength = 16;
+const int kDefaultLength = 16;
 const int k1GB = 1024 * 1024 * 1024;
 
 int _isValidBufferLength(int length, [int maxLength = k1GB]) {

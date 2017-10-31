@@ -6,7 +6,6 @@
 part of odw.sdk.convert.binary;
 
 //TODO: redoc to reflect current state of code
-
 /// The DICOM Prefix 'DICM' as an integer.
 const int kDcmPrefix = 0x4449434d;
 

@@ -71,7 +71,7 @@ Element convertElement(Element be) {
   if (be is SQbyte) {
     te = convertSQ(be);
   } else if (be is PixelData) {
-    te = ByteReader.makeTagElement(be.eBytes, be.vrIndex, be.fragments);
+    te = ByteReader.makeTagElement(be.eBytes, be.vrIndex);
     log.info0('PixelData\n  $be\n  $te');
   } else if (be is ByteElement) {
     te = makeTagElementFromEBytes(be.eBytes);

@@ -20,10 +20,8 @@ import 'package:dcm_convert/src/errors.dart';
 import 'package:dcm_convert/src/binary/base/reader/reader_interface.dart';
 
 part 'package:dcm_convert/src/binary/base/reader/read_evr.dart';
-part 'package:dcm_convert/src/binary/base/reader/read_evr_new_vr.dart';
 part 'package:dcm_convert/src/binary/base/reader/read_fmi.dart';
 part 'package:dcm_convert/src/binary/base/reader/reader_info.dart';
-part 'package:dcm_convert/src/binary/base/reader/read_ivr_new.dart';
 part 'package:dcm_convert/src/binary/base/reader/read_ivr.dart';
 part 'package:dcm_convert/src/binary/base/reader/read_pixels.dart';
 part 'package:dcm_convert/src/binary/base/reader/read_root.dart';
@@ -104,7 +102,8 @@ abstract class DcmReader extends DcmReaderInterface {
       this.fmiOnly = false,
       this.reUseBD = true,
       this.dParams = DecodingParameters.kNoChange})
-      : wasShortFile = rootBD.lengthInBytes < shortFileThreshold {
+      : currentDS = rootDS,
+			  wasShortFile = rootBD.lengthInBytes < shortFileThreshold {
     _wasShortFile = wasShortFile;
     //  log.debug('ByteData length: ${rootBD.lengthInBytes}');
     if (wasShortFile) {
@@ -112,7 +111,6 @@ abstract class DcmReader extends DcmReaderInterface {
       _warn('$s $_rrr');
       if (throwOnError) throw new ShortFileError('Length($rootBD.lengthInBytes) $path');
     }
-    currentDS = rootDS;
     _dParams = dParams;
     _rootBD = rootBD;
     _rootDS = rootDS;
@@ -132,6 +130,7 @@ abstract class DcmReader extends DcmReaderInterface {
   Uint8List get rootBytes =>
       rootBD.buffer.asUint8List(rootBD.offsetInBytes, rootBD.lengthInBytes);
 
+  @override
   ElementOffsets get offsets => _offsets;
 
   String get info => '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${currentDS.info}';
@@ -156,7 +155,7 @@ Failed to read FMI: "$path"\nException: $x\n $_rrr
     File length: ${_rootBD.lengthInBytes}\n$ree readFMI catch: $x
 ''';
 
-String failedFMIErrorMsg(String path, dynamic x) => '''
+String failedFMIErrorMsg(String path, Object x) => '''
 Failed to read FMI: "$path"\nException: $x\n'
 	  File length: ${_rootBD.lengthInBytes}\n$ree readFMI catch: $x');
 ''';

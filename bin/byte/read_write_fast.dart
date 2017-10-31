@@ -6,21 +6,22 @@
 
 import 'dart:io';
 
-import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/byte_convert.dart';
-import 'package:dcm_convert/src/binary/byte_read_utils.dart';
-import 'package:logger/logger.dart';
 import 'package:path/path.dart' as p;
+import 'package:system/server.dart';
 import 'package:timer/timer.dart';
-//import 'package:dcm_convert/data/test_files.dart';
 
-final Logger log = new Logger(' convert/bin/read_write_files1.dart', Level.config);
+import 'package:dcm_convert/data/test_directories.dart';
+import 'package:dcm_convert/data/test_files.dart';
+
 
 void main() {
-  //readWriteFileFast(new File(path0), reps: 1, fmiOnly: false);
+	Server.initialize(name: 'read_write_file.dart', level: Level.debug);
+
+  readWriteFileFast(new File(path0), reps: 1, fmiOnly: false);
   // readFMI(paths, fmiOnly: true);
   //  readWriteFiles(paths, fmiOnly: false);
-  readWriteDirectory(mrStudy, fmiOnly: true);
+  //readWriteDirectory(mrStudy, fmiOnly: true);
   //targetTS: TransferSyntax.kImplicitVRLittleEndian);
 }
 

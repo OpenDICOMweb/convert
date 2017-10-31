@@ -131,8 +131,8 @@ class ByteReader extends DcmReader {
   // **** DcmReaderInterface ****
 
   //Urgent: flush or fix
-  static Element makeTagElement(EBytes eb, [int vrIndex, VFFragments fragments]) =>
-      makeTagElementFromEBytes(eb, vrIndex, fragments);
+  static Element makeTagElement(EBytes eb, [int vrIndex]) =>
+      makeTagElementFromEBytes(eb, vrIndex);
 
   /// Reads the [RootDataset] from a [Uint8List].
   static RootDataset readBytes(Uint8List bytes,

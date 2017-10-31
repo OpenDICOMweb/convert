@@ -42,11 +42,26 @@ class JobArgs {
   /// The argument processor for Job arguments.
   ArgParser parser;
 
+
   JobArgs(List<String> args) {
-    program = programName;
-    parser = getParser();
-    argResults = parser.parse(args);
+	  program = programName;
+	  parser = getParser();
+	  argResults = parser.parse(args);
   }
+
+  void setLogPath(Object path) => (path is String) ? logPath = path : null;
+
+  void setSummary(Object results) => (results is String) ? summary = results : null;
+
+  void setOutDir(Object dir) => (dir is String) ? outDir = dir : null;
+
+  void setShortInterval(Object count) =>
+      (count is String) ? shortMsgEvery = parseInt(count) : null;
+
+  void setLongInterval(Object count) =>
+		  (count is String) ? longMsgEvery = parseInt(count) : null;
+
+  void setDebugLevel(Object mode) => baseLevel = Level.lookup(mode);
 
   int get length => argResults.arguments.length;
 
@@ -77,23 +92,23 @@ class JobArgs {
     ..addOption('logFile',
         abbr: 'f',
         defaultsTo: './$program.log',
-        callback: (dynamic v) => logPath = v,
+        callback: setLogPath,
         help: 'The log file- defaults to ./logger.log')
     ..addOption('results',
         abbr: 'r',
         defaultsTo: './results.txt',
-        callback: (dynamic results) => summary = results,
+        callback: setSummary,
         help: 'The results file')
     ..addOption('outDir',
         abbr: 'o',
         defaultsTo: './output',
-        callback: (dynamic v) => outDir = v,
+        callback: setOutDir,
         help: 'The output directory - created files have same name as source')
     //TODO: need better name
     ..addOption('every',
         abbr: 'e',
         defaultsTo: '100',
-        callback: (dynamic v) => parseInt(v),
+        callback: setShortInterval,
         help: 'print a progress message every n files processed"')
     // These next options are for the logger Level
     ..addOption('Level',
@@ -103,7 +118,7 @@ class JobArgs {
           'debug0', 'debug1', 'debug2', 'debug3' //No Reformat
         ],
         defaultsTo: 'error',
-        callback: (dynamic mode) => baseLevel = Level.lookup(mode),
+        callback: setDebugLevel,
         help: 'The logging mode - defaults to info')
     ..addFlag('silent', abbr: 's', callback: (v) {
       if (v) baseLevel ??= Level.error;

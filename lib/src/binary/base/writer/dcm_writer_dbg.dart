@@ -128,11 +128,13 @@ abstract class DcmWriter {
 
   TransferSyntax get ts => rootDS.transferSyntax;
 
+/*
   /// The current dataset.  This changes as Sequences and Items are encoded.
   Dataset get currentDS => _currentDS;
 
   /// Sets the [currentDS] to [ds].
   set currentDS(Dataset ds) => _currentDS = ds;
+*/
 
   /// The current [length] in bytes of this [DcmWriter].
   int get lengthInBytes => _wIndex;

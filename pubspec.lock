@@ -373,12 +373,18 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.12.26"
+  test_tools:
+    description:
+      path: "C:/odw/sdk/test_tools"
+      relative: false
+    source: path
+    version: "0.6.5"
   timer:
     description:
       path: "C:/odw/sdk/timer"
       relative: false
     source: path
-    version: "0.6.1"
+    version: "0.6.5"
   typed_data:
     description:
       name: typed_data

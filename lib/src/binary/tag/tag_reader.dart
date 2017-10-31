@@ -72,8 +72,8 @@ class TagReader extends DcmReader {
 */
 
  // @override
-  Element makeElement(EBytes eb, int vrIndex, [VFFragments fragments]) =>
-      makeTagElementFromEBytes(eb, vrIndex, fragments);
+  Element makeElement(EBytes eb, int vrIndex) =>
+      makeTagElementFromEBytes(eb, vrIndex);
 
   /// Returns a new ByteSequence.
 //  @override

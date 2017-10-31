@@ -23,8 +23,8 @@ RootDataset _readRootDataset(String path, DecodingParameters dParam) {
 
     //  log.debug1('$rbb readDataset: isExplicitVR(${_isEVR})');
     while (_hasRemaining(8)) {
-      log.debug('_rIndex: $_rIndex, eStart: $eStart');
-      assert(identical(_currentDS, _rootDS), '$_currentDS\n$_rootDS');
+     // log.debug('_rIndex: $_rIndex, eStart: $eStart');
+      assert(_currentDS == _rootDS, '$_currentDS\n$_rootDS');
       _lastTopLevelElementRead = _readElement();
       //  log.debug1('$ree end readDataset: isExplicitVR(${_isEVR})');
       assert(identical(_currentDS, _rootDS));
@@ -63,6 +63,7 @@ RootDataset _readRootDataset(String path, DecodingParameters dParam) {
     if (_hadTrailingBytes)
       _hadTrailingZeros = _checkAllZeros(_endOfLastValueRead, _rootBD.lengthInBytes);
     _dsLengthInBytes = _endOfLastValueRead;
+    log.debug('Trailing Bytes($_bytesUnread) All Zeros: $_hadTrailingZeros');
     assert(_dsLengthInBytes == bdRead.lengthInBytes);
   }
 
@@ -79,6 +80,7 @@ RootDataset _readRootDataset(String path, DecodingParameters dParam) {
 
   _rootDS.parseInfo = getParseInfo();
   final _rootDSTotal = _rootDS.total + _rootDS.dupTotal;
+  //Urgent: fix
 //  if (_nElementsRead != _rootDSTotal) readerInconsistencyError(_rootDS);
   return _rootDS;
 }

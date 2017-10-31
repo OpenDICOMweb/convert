@@ -10,6 +10,7 @@ environment:
   sdk: '>=1.24.2 <2.1.0'
 
 dependencies:
+  args: any
   dataset:
     path: C:/odw/sdk/dataset
     version: ^0.6.5
@@ -35,7 +36,11 @@ dependencies:
 
 dev_dependencies:
   benchmark_harness: ^1.0.4
-  grinder: ^0.8.0
-  test:  ^0.12.0
+  grinder: ^0.8.0+2
+  test:  ^0.12.24
+  test_tools:
+    path: C:/odw/sdk/test_tools
+    version: ^0.6.5
+
 
 

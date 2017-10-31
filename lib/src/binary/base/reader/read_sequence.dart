@@ -7,6 +7,7 @@ part of odw.sdk.convert.binary;
 
 //TODO: redoc to reflect current state of code
 
+/*
 /// If this is a Sequence, it is either empty, in which case the next
 /// 32-bits will be a kSequenceDelimitationItem32Bit; or it is not
 /// empty, in which case the next 32 bits will be an kItem32Bit value.
@@ -19,16 +20,16 @@ bool _isSequence(int code, int vrIndex) {
       ? true
       : false;
 }
+*/
 
 // There are four [Element]s that might have an Undefined Length value
 // (0xFFFFFFFF), [SQ], [OB], [OW], [UN]. If the length is the Undefined,
 // then it searches for the matching [kSequenceDelimitationItem32Bit] to
 // determine the length. Returns a [kUndefinedLength], which is used for
 // reading the value field of these [Element]s. Returns an [SQ] [Element].
-
 Element _readSequence(int code, int eStart, EBytesMaker maker) {
-	if (_isEVR) _skip(2);
   final vfLengthField = _readUint32();
+  log.debug2('vfLengthField: $vfLengthField ${dcm(vfLengthField)}');
   return (vfLengthField == kUndefinedLength)
       ? _readUSQ(code, eStart, maker, vfLengthField)
       : _readDSQ(code, eStart, maker, vfLengthField);
@@ -92,7 +93,7 @@ Item _readItem() {
   final itemStart = _rIndex;
   // read 32-bit kItem code
   final delimiter = _readUint32();
-  print('delim: ${hex(delimiter)}, kItem: $kItemAsString');
+  log.debug2('delim: ${hex(delimiter)}, kItem: $kItemAsString');
   assert(delimiter == kItem32BitLE, 'Invalid Item code: ${dcm(delimiter)}');
   final vfLengthField = _readUint32();
 
@@ -121,7 +122,7 @@ Item _readItem() {
     rethrow;
   } catch (e) {
     _hadParsingErrors = true;
-    _error(e);
+    _error(e.toString());
     log.reset;
     rethrow;
   } finally {

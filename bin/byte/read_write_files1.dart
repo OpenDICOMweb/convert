@@ -74,7 +74,7 @@ bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
   log.info0('$rds0 == $rds1: $areDatasetsEqual');
   final areBytesEqual = _bytesEqual(bytes0, bytes1, true);
   log.info0('bytes0 == bytes1: $areBytesEqual');
-  return null;
+  return areDatasetsEqual && areBytesEqual;
 }
 
 FileResult readWritePathTiming(String path, {int reps = 1, bool fmiOnly = false}) {

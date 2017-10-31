@@ -4,6 +4,8 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See the AUTHORS file for other contributors.
 
+// Urgent: put all the strings on one line
+// ignore_for_file: no_adjacent_strings_in_list
 const String test6684_01 = 'C:/odw/test_data/36_4485_6684/IM-0001-0001-0001.dcm';
 const String test6684_02 = 'C:/odw/test_data/36_4485_6684/IM-0001-0001-0002.dcm';
 
@@ -101,6 +103,7 @@ const List<String> testPaths0 = const <String>[
 ];
 
 const List<String> testPaths1 = const <String>[
+	// IVR
   'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.128.1.dcm',
   'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.2.dcm',
   'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840.10008.5.1.4.1.1.4.dcm',

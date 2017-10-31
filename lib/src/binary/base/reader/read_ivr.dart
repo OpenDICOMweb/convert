@@ -9,24 +9,27 @@ part of odw.sdk.convert.binary;
 Element _readIvrElement() {
   final eStart = _rIndex;
   final code = _readCode();
-  Tag tag;
-  VR vr;
-  int vrIndex;
-  if (Tag.isPublicCode(code)) {
-    tag = Tag.lookup(code, VR.kUN);
-    vr = (tag == null) ? VR.kUN : tag.vr;
-    vrIndex = vr.index;
-  } else {
-    tag = Tag.lookup(code, VR.kUN);
-    vr = (tag == null) ? VR.kUN : tag.vr;
-    vrIndex = vr.index;
-  }
-  final e = (vrIndex == VR.kSQ.index || _isSequence(code, vrIndex))
-      ? _readSequence(code, eStart, _ivrSQMaker)
-      : _readIvrMaybeUndefined(code, eStart, vrIndex);
-  assert(_checkRIndex());
+  // No VR get Tag
+  final tag = Tag.lookup(code);
+  final vr = (tag == null) ? VR.kUN : tag.vr;
+  var vrIndex = vr.index;
+  log.debug1('$rbb $eStart: ${dcm(code)} ${vr.info}');
+ // log.debug2('  $tag');
 
-  return _finishReadElement(code, eStart, e);
+  if (vrIndex >= kVRSpecialIndexMin && vrIndex <= kVRSpecialIndexMax) {
+  	vrIndex = VR.kUN.index;
+  	log.debug('** vrIndex changed to VR.kUN.index');
+  }
+  if (vrIndex == kVRIndexMin) {
+    return _readSequence(code, eStart, _ivrSQMaker);
+  } else if (vrIndex >= kVRMaybeUndefinedIndexMin &&
+      vrIndex <= kVRMaybeUndefinedIndexMax) {
+    return _readIvrMaybeUndefined(code, eStart, vrIndex);
+  } else if (vrIndex >= kVRIvrIndexMin && vrIndex <= kVRIvrIndexMax) {
+    return _readIvr(code, eStart, vrIndex);
+  } else {
+    return invalidVRIndexError(vrIndex);
+  }
 }
 
 /// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have
@@ -44,14 +47,11 @@ Element _readIvrMaybeUndefined(int code, int eStart, int vrIndex) {
 Element _readIvrUndefined(int code, int eStart, int vrIndex, int vfLengthField) {
   final endOfVF = _findEndOfULengthVF();
   final eLength = endOfVF - eStart;
-  if (code == kPixelData) {
-	  return _readPixelDataUndefined(code, eStart, vrIndex, vfLengthField, eLength);
-  } else {
-  	_rIndex = endOfVF + 8;
-	  final bd = _rootBD.buffer.asByteData(eStart, eLength);
-	  final eb = new EvrLong(bd);
-	  return elementMaker(eb, vrIndex);
-  }
+  _rIndex = endOfVF + 8;
+  final bd = _rootBD.buffer.asByteData(eStart, eLength);
+  final eb = new Ivr(bd);
+  final e = elementMaker(eb, vrIndex);
+  return _finishReadElement(code, eStart, e);
 }
 
 /// Read an IVR Element (not SQ) with a 32-bit [vfLengthField], but that cannot
@@ -60,12 +60,21 @@ Element _readIvrDefined(int code, int eStart, int vrIndex, int vfLengthField) {
   _rIndex = _rIndex + vfLengthField;
   final eLength = _rIndex - eStart;
   if (code == kPixelData) {
-	  return _makePixelData(eStart, eLength, vrIndex);
+    final e = _makePixelData(eStart, eLength, vrIndex);
+    return _finishReadElement(code, eStart, e);
   } else {
-	  final bd = _rootBD.buffer.asByteData(eStart, eLength);
-	  final eb = new Ivr(bd);
-	  return elementMaker(eb, vrIndex);
+    final bd = _rootBD.buffer.asByteData(eStart, eLength);
+    final eb = new Ivr(bd);
+    final e = elementMaker(eb, vrIndex);
+    return _finishReadElement(code, eStart, e);
   }
+}
+
+/// Read an IVR Element (not SQ) with a 32-bit vfLengthField, but that cannot
+/// have kUndefinedValue.
+Element _readIvr(int code, int eStart, int vrIndex) {
+  final vfLengthField = _readUint32();
+  return _readIvrDefined(code, eStart, vrIndex, vfLengthField);
 }
 
 EBytes _ivrSQMaker(ByteData bd) => new Ivr(bd);

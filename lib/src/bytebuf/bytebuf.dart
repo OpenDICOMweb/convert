@@ -10,6 +10,8 @@ import 'dart:typed_data';
 
 import 'package:system/core.dart';
 
+// ignore_for_file: avoid_returning_this
+
 //TODO:
 // 1. Put all index checking and moving into same section and eliminate redundancy
 // 2. Aggregate errors in one section

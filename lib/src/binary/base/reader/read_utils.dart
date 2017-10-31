@@ -10,7 +10,7 @@ int _readCode() {
   if (code == 0) {
     _skip(-4); // undo readTagCode
     _zeroEncountered(code);
-    return null;
+    return 0;
   }
   if (code > 0x3000 && Tag.isGroupLengthCode(code)) _hadGroupLengths = true;
   return code;
@@ -66,10 +66,10 @@ int _findEndOfULengthVF() {
   }
   final delimiterLength = _readUint32();
   if (delimiterLength != 0) _delimiterLengthWarning(delimiterLength);
-  final endOfVF = _rIndex - 8;
+  final endOfElement = _rIndex;
   //  log.debug1('$ree   endOfVR($endOfVF) eEnd($_rIndex) @end');
   log.up;
-  return endOfVF;
+  return endOfElement;
 }
 
 Element _finishReadElement(int code, int eStart, Element e) {
@@ -87,7 +87,7 @@ Element _finishReadElement(int code, int eStart, Element e) {
     _lastElementCode = code;
     if ((code >> 16).isOdd) _nPrivateElementsRead++;
   }
-  log.info('element: $e');
+  log.info('$rrr $e');
   return e;
 }
 
@@ -167,7 +167,9 @@ void _error(String msg) {
 
 // **** these next four are utilities for logger
 /// The current readIndex as a string.
-String get _rrr => 'R@$_rIndex';
+String get _rrr => 'R@${_rIndex.toString().padLeft(5, '0')}';
+
+String get rrr => '$_rrr';
 
 /// The beginning of reading an [Element] or [Item].
 String get rbb => '> $_rrr';
@@ -218,7 +220,8 @@ int _getCode(int start) {
     final elt = _getUint16(start);
     return group << 16 & elt;
   }
-  return null;
+  // Zero is not a valid code
+  return 0;
 }
 
 void _showShortEVR(int start) {

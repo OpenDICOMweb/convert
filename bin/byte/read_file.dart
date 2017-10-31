@@ -12,19 +12,18 @@ import 'package:dcm_convert/byte_convert.dart';
 import 'package:path/path.dart' as path;
 import 'package:system/server.dart';
 
-const String pathx = 'c:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
-const String pathy = 'C:/odw/test_data/sfd/MR/PID_BREASTMR/1_DICOM_Original/'
+const String evrULength = 'c:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
+
+const String ivrClean = 'C:/odw/test_data/sfd/MR/PID_BREASTMR/1_DICOM_Original/'
     'EFC524F2.dcm';
-const String pathz = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy/'
+const String ivrCleanMR = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy/'
     '1.2.840.113619.2.5.1762583153.215519.978957063.99.dcm';
 
 //Urgent: bug with path20
 Future main() async {
-  Server.initialize(name: 'ReadFile', level: Level.debug2, throwOnError: true);
-  system.level = Level.debug2;
-  system.log.level = Level.debug2;
+  Server.initialize(name: 'ReadFile', level: Level.debug, throwOnError: true);
 
-  final fPath = pathz;
+  final fPath = ivrCleanMR;
   print('path: $fPath');
   print(' out: ${getTempFile(fPath, 'dcmout')}');
   final url = new Uri.file(fPath);
