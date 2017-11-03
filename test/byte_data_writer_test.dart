@@ -7,7 +7,7 @@
 import 'package:system/server.dart';
 import 'package:test/test.dart';
 
-import 'package:dcm_convert/src/binary/byte/byte_data_buffer.dart';
+import 'package:dcm_convert/src/binary/base/writer/byte_list_writer.dart';
 
 void main() {
   Server.initialize(name: 'byte_date_writer.dart', level: Level.info0);
@@ -16,7 +16,7 @@ void main() {
     test('Buffer Growing Test', () {
       final startSize = 1;
       final iterations = 1024 * 1024;
-      final buf = new ByteDataBuffer(startSize);
+      final buf = new ByteListWriter(startSize);
       log
         ..debug('iterations: $iterations')
         ..debug('maxLength: ${buf.maxLength}')

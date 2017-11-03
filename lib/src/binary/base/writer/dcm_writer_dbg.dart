@@ -19,7 +19,7 @@ import 'package:element/element.dart';
 import 'package:system/core.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/binary/byte/byte_data_buffer.dart';
+import 'package:dcm_convert/src/binary/base/writer/byte_list_writer.dart';
 
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
@@ -180,20 +180,11 @@ abstract class DcmWriter {
     final encoding = _bd.buffer.asUint8List(0, _wIndex);
     if (encoding == null || encoding.length < 256)
       throw 'Invalid bytes error: $encoding';
-    _writeFileOrPath(encoding);
+    _writeFileOrPath(encoding.getFile);
     return encoding;
   }
 
-  //TODO: make this work for [async] == true and make that the default.
-  /// Writes [bytes] to [file] if it is not null; otherwise, writes to
-  /// [path] if it is not null. If both are null nothing is written.
-  void _writeFileOrPath(Uint8List bytes) {
-    final f = (file == null && path != '') ? new File(path) : file;
-    if (f != null) {
-      f.writeAsBytesSync(bytes);
-      log.debug('Wrote ${bytes.length} bytes to "$path"');
-    }
-  }
+
 
   /// Writes a [Dataset] to the buffer.
   void writeDataset(Dataset ds) => _writeDataset(ds);
@@ -373,48 +364,7 @@ abstract class DcmWriter {
     log.debug('$wee writeHeader', -1);
   }
 
-  void _writeSequence(SQ sq) {
-    //TODO: handle replacing undefined lengths
-    log.debug('$wbb SQ $sq', 1);
-    _writeHeader(sq);
-    if (sq.items.isNotEmpty) _writeItems(sq);
-    if (sq.hadULength) _writeDelimiter(kSequenceDelimitationItem);
-    _nSequences++;
-    if (sq.isPrivate) _nPrivateSequences++;
-    log.debug('$wee SQ', -1);
-  }
 
-  void _writeItems(SQ sq) {
-    //TODO: handle replacing undefined lengths
-    final items = sq.items;
-    for (var item in items) {
-      log.debug('$wbb Writing Item: $item', 1);
-      _writeDelimiter(kItem, item.vfLength);
-      item.forEach(_writeElement);
-      if (item.hasULength) _writeDelimiter(kItemDelimitationItem);
-      log.debug('$wee Wrote Item: $item', -1);
-    }
-  }
-
-  /// Write encapsulated (compressed) [kPixelData] from [Element] [pd].
-  void _writePixelData(PixelData pd) {
-    log.debug('$wbb PixelData: $pd');
-    //TODO: handle replacing undefined lengths
-    //TODO: handle doRemoveFragments
-
-    if (pd.fragments != null) {
-      _writeHeader(pd);
-      for (var fragment in pd.fragments.fragments) {
-        _writeTagCode(kItem);
-        _writeUint32(fragment.lengthInBytes);
-        _writeBytes(fragment);
-      }
-      _writeDelimiter(kSequenceDelimitationItem);
-      log.debug('$wee  @end');
-    } else {
-      _writeSimpleElement(pd);
-    }
-  }
 
   /// Writes the [delimiter] and a zero length field for the [delimiter].
   /// The [_wIndex] is advanced 8 bytes.
@@ -435,7 +385,7 @@ abstract class DcmWriter {
 
   // **** Buffer management
 
-  /// The [ByteDataBuffer] buffer being written.
+  /// The [ByteListWriter] buffer being written.
   ByteData _bd;
 
   int _wIndex = 0;

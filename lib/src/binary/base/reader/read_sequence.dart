@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file.
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
-part of odw.sdk.convert.binary;
+part of odw.sdk.convert.binary.reader;
 
 //TODO: redoc to reflect current state of code
 
@@ -28,7 +28,7 @@ bool _isSequence(int code, int vrIndex) {
 // determine the length. Returns a [kUndefinedLength], which is used for
 // reading the value field of these [Element]s. Returns an [SQ] [Element].
 Element _readSequence(int code, int eStart, EBytesMaker maker) {
-  final vfLengthField = _readUint32();
+  final vfLengthField = _rb.uint32;
   log.debug2('vfLengthField: $vfLengthField ${dcm(vfLengthField)}');
   return (vfLengthField == kUndefinedLength)
       ? _readUSQ(code, eStart, maker, vfLengthField)
@@ -53,7 +53,7 @@ Element _readDSQ(int code, int eStart, EBytesMaker ebMaker, int vfLengthField) {
   final eEnd = _rIndex + vfLengthField;
   while (_rIndex < eEnd) {
     items.add(_readItem());
-    _checkRIndex();
+  //  _checkRIndex();
   }
   return _makeSequence(code, eStart, ebMaker, items);
 }
@@ -68,7 +68,7 @@ Element _makeSequence(
   // Keep, but only use for debugging.
   //_showNext(_rIndex);
   //  log.debug1('$rmm   eLength($eLength), makeSQ');
-  final bd = _rootBD.buffer.asByteData(eStart, _rIndex - eStart);
+  final bd = _rb.buffer.asByteData(eStart, _rIndex - eStart);
   final eb = ebMaker(bd);
   final sq = sequenceMaker(eb, _currentDS, items);
   _currentDS.elements.add(sq);
@@ -92,10 +92,10 @@ Item _readItem() {
   final item = itemMaker(_currentDS);
   final itemStart = _rIndex;
   // read 32-bit kItem code
-  final delimiter = _readUint32();
+  final delimiter = _rb.uint32;
   log.debug2('delim: ${hex(delimiter)}, kItem: $kItemAsString');
   assert(delimiter == kItem32BitLE, 'Invalid Item code: ${dcm(delimiter)}');
-  final vfLengthField = _readUint32();
+  final vfLengthField = _rb.uint32;
 
   // Save parent [Dataset], and make [item] is new parent [Dataset].
   final RootDataset parentDS = _currentDS;
@@ -122,7 +122,7 @@ Item _readItem() {
     rethrow;
   } catch (e) {
     _hadParsingErrors = true;
-    _error(e.toString());
+    _rb.error(e.toString());
     log.reset;
     rethrow;
   } finally {
@@ -134,12 +134,12 @@ Item _readItem() {
     //  _showNext(_rIndex);
   }
 
-  final bd = _rootBD.buffer.asByteData(itemStart, itemEnd - itemStart);
+  final bd = _rb.buffer.asByteData(itemStart, itemEnd - itemStart);
   final dsBytes = new IDSBytes(bd);
   item.dsBytes = dsBytes;
   _nItemsRead++;
   //  log.debug('$ree   ${showItem(item)} @end', -1);
-  _checkRIndex();
+ // checkRIndex();
   return item;
 }
 
@@ -147,10 +147,10 @@ Item _readItem() {
 /// delimiter is found [_rIndex] is advanced past the Value Length Field;
 /// otherwise, readIndex does not change
 bool _checkForDelimiter(int target) {
-  final delimiter = _getUint32(_rIndex);
+  final delimiter = _rb.uint32;
   if (delimiter == target) {
-    _skip(4);
-    final delimiterLength = _readUint32();
+    _rb.move(4);
+    final delimiterLength = _rb.uint32;
     if (delimiterLength != 0) {
       _delimiterLengthWarning(delimiterLength);
     }
@@ -161,7 +161,7 @@ bool _checkForDelimiter(int target) {
 
 void _delimiterLengthWarning(int dLength) {
   _nonZeroDelimiterLengths++;
-  _warn('Encountered non-zero delimiter length($dLength) $_rrr');
+  _rb.warn('Encountered non-zero delimiter length($dLength) ${_rb.rrr}');
 }
 
 // **** Debugging utilities

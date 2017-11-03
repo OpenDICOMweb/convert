@@ -3,8 +3,7 @@
 // that can be found in the LICENSE file.
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
-part of odw.sdk.convert.binary;
-
+part of odw.sdk.convert.binary.reader;
 
 //TODO: redoc to reflect current state of code
 
@@ -29,7 +28,7 @@ part of odw.sdk.convert.binary;
   /// If [true] elements with VR.kUN will be converted to correct VR if known.
   final bool doConvertUndefinedVR;
 
-  /// If [true] the [ByteData] buffer ([_rootBD] will be reused.
+  /// If [true] the [ByteData] buffer ([_rb] will be reused.
   final bool reUseBD;
 
   final DecodingParameters decoding;
@@ -101,7 +100,7 @@ ParseInfo getParseInfo() => new ParseInfo(
 		_lastElementCode,
 		_endOfLastValueRead,
 		_dsLengthInBytes,
-		_rootBD.lengthInBytes,
+		_rb.lengthInBytes,
 		shortFileThreshold,
 		exceptions,
 		isEVR: _isEVR,
@@ -115,7 +114,7 @@ ParseInfo getParseInfo() => new ParseInfo(
 		hadTrailingZeros: _hadTrailingZeros);
 
 
-String get stats => '''$rmm Statistics
+String get stats => '''${_rb.rmm} Statistics
           nElementsRead: $_nElementsRead
          nSequencesRead: $_nSequencesRead
             nDSequences: $_nDSequencesRead
@@ -126,7 +125,7 @@ String get stats => '''$rmm Statistics
 lastTopLevelElementRead: $_lastTopLevelElementRead
         lastElementRead: $_lastElementRead
         lastElementCode: ${dcm(_lastElementCode)}
-        bdLengthInBytes: ${_rootBD.lengthInBytes}
+        bdLengthInBytes: ${_rb.lengthInBytes}
         dsLengthInBytes: $_dsLengthInBytes
          endOfDataError: $_endOfDataError
            bytesUnread: $_bytesUnread
@@ -162,7 +161,7 @@ ParseInfo _getParseInfo() => new ParseInfo(
 		_lastElementCode,
 		_endOfLastValueRead,
 		_dsLengthInBytes,
-		_rootBD.lengthInBytes,
+		_rb.lengthInBytes,
 		shortFileThreshold,
 		exceptions,
 		isEVR: _isEVR,

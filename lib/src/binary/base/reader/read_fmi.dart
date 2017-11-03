@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file.
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
-part of odw.sdk.convert.binary;
+part of odw.sdk.convert.binary.reader;
 
 //TODO: redoc to reflect current state of code
 /// The DICOM Prefix 'DICM' as an integer.
@@ -24,7 +24,7 @@ bool _readFmi(String path, DecodingParameters dParams) {
   //  log.debug1('$rmm readFMI: prefix($_hadPrefix) $rootDS');
 
   while (_isReadable()) {
-    final code = _peekTagCode();
+    final code = _rb.peekCode;
     if (code == 0) _zeroEncountered(code);
     if (code >= 0x00030000) break;
     _readEvrElement();
@@ -58,29 +58,29 @@ bool _readPrefix(String path, bool checkPreamble) {
   final sb = new StringBuffer();
   if (_rIndex != 0) sb.writeln('Attempt to read DICOM Prefix at ByteData[$_rIndex]');
   if (_hadPrefix != null) sb.writeln('Attempt to re-read DICOM Preamble and Prefix.');
-  if (_rootBD.lengthInBytes <= 132)
-    sb.writeln('ByteData length(${_rootBD.lengthInBytes}) < 132');
+  if (_rb.lengthInBytes <= 132)
+    sb.writeln('ByteData length(${_rb.lengthInBytes}) < 132');
   if (sb.isNotEmpty) {
-    _error(sb.toString());
+    _rb.error(sb.toString());
     return false;
   }
   if (checkPreamble) {
     _preambleWasZeros = true;
-    _preamble = _rootBD.buffer.asUint8List(0, 128);
-    for (var i = 0; i < 128; i++) if (_rootBD.getUint8(i) != 0) _preambleWasZeros = false;
+    _preamble = _rb.buffer.asUint8List(0, 128);
+    for (var i = 0; i < 128; i++) if (_rb.getUint8(i) != 0) _preambleWasZeros = false;
   }
   return isDcmPrefixPresent();
 }
 
 /// Read as 32-bit integer. This is faster
 bool isDcmPrefixPresent() {
-  final prefix = _rootBD.getUint32(128);
+  final prefix = _rb.getUint32(128);
   print('prefix: ${prefix.toRadixString(16).padLeft(8, '0')}');
   if (prefix == kDcmPrefix) {
     _rIndex = 132;
     return true;
   } else {
-    _warn('No DICOM Prefix present @$_rrr');
+    _rb.warn('No DICOM Prefix present @${_rb.rrr}');
     _rIndex = 0;
     return false;
   }
@@ -88,14 +88,14 @@ bool isDcmPrefixPresent() {
 
 /// Read as ASCII String
 bool isAsciiPrefixPresent() {
-  final chars = _rootBD.buffer.asUint8List(128, 4);
+  final chars = _rb.buffer.asUint8List(128, 4);
   _rIndex += 4;
   final prefix = ASCII.decode(chars);
   if (prefix == 'DICM') {
     _rIndex = 132;
     return true;
   } else {
-    _warn('No DICOM Prefix present @$_rrr');
+    _rb.warn('No DICOM Prefix present @${_rb.rrr}');
     _rIndex = 0;
     return false;
   }

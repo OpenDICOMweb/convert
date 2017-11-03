@@ -49,7 +49,7 @@ class ByteWriter extends DcmWriter {
             bufferLength: bufferLength,
             path: path,
             outputTS: outputTS,
-            reUseBD: reUseBD,
+            reUseBLWriter: reUseBD,
             eParams: encoding);
 
   /// Writes the [RootDatasetByte] to a [Uint8List], and then writes the
@@ -173,3 +173,31 @@ class ByteWriter extends DcmWriter {
         targetTS: targetTS);
   }
 }
+
+void _writeValueField(TypedData vfBytes, int vrIndex) {
+	_evrVFWriters[vrIndex](vfBytes);
+}
+
+/*
+final _evrVFWriters = <EvrVFWriter>[
+	_sqError, // stop reformat
+	// Maybe Undefined Lengths
+	OBWriteVF, OWWriteVF, UNWriteVF,
+
+	// EVR Long
+	ODWriteVF, OFWriteVF, OLWriteVF,
+	UCWriteVF, URWriteVF, UTWriteVF,
+
+	// EVR Short
+	AEWriteVF, ASWriteVF, ATWriteVF,
+	CSWriteVF, DAWriteVF, DSWriteVF,
+	DTWriteVF, FDWriteVF, FLWriteVF,
+	ISWriteVF, LOWriteVF, LTWriteVF,
+	PNWriteVF, SHWriteVF, SLWriteVF,
+	SSWriteVF, STWriteVF, TMWriteVF,
+	UIWriteVF, ULWriteVF, USWriteVF,
+];
+*/
+
+
+

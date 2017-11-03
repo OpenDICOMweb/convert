@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file.
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
-library odw.sdk.convert.binary;
+library odw.sdk.convert.binary.reader;
 
 import 'dart:convert';
 import 'dart:typed_data';
@@ -18,6 +18,7 @@ import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/errors.dart';
 import 'package:dcm_convert/src/binary/base/reader/reader_interface.dart';
+import 'package:dcm_convert/src/binary/base/reader/byte_list_reader.dart';
 
 part 'package:dcm_convert/src/binary/base/reader/read_evr.dart';
 part 'package:dcm_convert/src/binary/base/reader/read_fmi.dart';
@@ -39,8 +40,8 @@ typedef Item ItemMaker(Dataset _currentDS);
 /// The current read index.
 var _rIndex = 0;
 
-bool _hasRemaining(int n) => (_rIndex + n) <= _rootBD.lengthInBytes;
-bool _isReadable() => _rIndex < _rootBD.lengthInBytes;
+bool _hasRemaining(int n) => (_rIndex + n) <= _rb.lengthInBytes;
+bool _isReadable() => _rIndex < _rb.lengthInBytes;
 
 Element readElement({bool isEVR = true}) =>
     (isEVR) ? _readEvrElement() : _readIvrElement();
@@ -51,7 +52,7 @@ ElementMaker elementMaker;
 PixelDataMaker pixelDataMaker;
 SequenceMaker sequenceMaker;
 ItemMaker itemMaker;
-ByteData _rootBD;
+ByteListReader _rb;
 RootDataset _rootDS;
 Dataset _currentDS;
 String _path;
@@ -80,7 +81,7 @@ abstract class DcmReader extends DcmReaderInterface {
 
   /// The [ByteData] being read.
   @override
-  final ByteData rootBD;
+  final ByteListReader rb;
   @override
   final RootDataset rootDS;
   final bool async;
@@ -88,14 +89,14 @@ abstract class DcmReader extends DcmReaderInterface {
   final bool fmiOnly;
   final bool wasShortFile;
 
-  /// If true the [ByteData] buffer ([rootBD] will be reused.
+  /// If true the [ByteData] buffer ([rb] will be reused.
   final bool reUseBD;
   final DecodingParameters dParams;
   @override
   Dataset currentDS;
 
   /// Creates a new [DcmReader]  where [_rIndex] = writeIndex = 0.
-  DcmReader(this.rootBD, this.rootDS,
+  DcmReader(this.rb, this.rootDS,
       {this.path = '',
       this.async = true,
       this.fast: true,
@@ -103,16 +104,16 @@ abstract class DcmReader extends DcmReaderInterface {
       this.reUseBD = true,
       this.dParams = DecodingParameters.kNoChange})
       : currentDS = rootDS,
-			  wasShortFile = rootBD.lengthInBytes < shortFileThreshold {
+			  wasShortFile = rb.lengthInBytes < shortFileThreshold {
     _wasShortFile = wasShortFile;
-    //  log.debug('ByteData length: ${rootBD.lengthInBytes}');
+    //  log.debug('ByteData length: ${rb.lengthInBytes}');
     if (wasShortFile) {
-      final s = 'Short file error: length(${rootBD.lengthInBytes}) $path';
-      _warn('$s $_rrr');
-      if (throwOnError) throw new ShortFileError('Length($rootBD.lengthInBytes) $path');
+      final s = 'Short file error: length(${rb.lengthInBytes}) $path';
+      rb.warn('$s ${rb.rrr}');
+      if (throwOnError) throw new ShortFileError('Length($rb.lengthInBytes) $path');
     }
     _dParams = dParams;
-    _rootBD = rootBD;
+    _rb = rb;
     _rootDS = rootDS;
     _currentDS = rootDS;
     _path = path;
@@ -122,18 +123,26 @@ abstract class DcmReader extends DcmReaderInterface {
 
   bool get isEVR => _isEVR;
 
-  bool get isReadable => _isReadable();
-
-  Uint8List get buffer =>
-      rootBD.buffer.asUint8List(rootBD.offsetInBytes, rootBD.lengthInBytes);
+  bool get isReadable => rb.isReadable;
 
   Uint8List get rootBytes =>
-      rootBD.buffer.asUint8List(rootBD.offsetInBytes, rootBD.lengthInBytes);
+      rb.buffer.asUint8List(rb.offsetInBytes, rb.lengthInBytes);
 
   @override
   ElementOffsets get offsets => _offsets;
 
   String get info => '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${currentDS.info}';
+
+  int _readCode() {
+	  final code = rb.code;
+	  if (code == 0) {
+		  rb.skip(-4); // undo readTagCode
+		  _zeroEncountered(code);
+		  return 0;
+	  }
+	  if (code > 0x3000 && Tag.isGroupLengthCode(code)) _hadGroupLengths = true;
+	  return code;
+  }
 
   bool hasRemaining(int n) => _hasRemaining(n);
 
@@ -151,11 +160,11 @@ abstract class DcmReader extends DcmReaderInterface {
 }
 
 String failedTSErrorMsg(String path, Error x) => '''
-Failed to read FMI: "$path"\nException: $x\n $_rrr
-    File length: ${_rootBD.lengthInBytes}\n$ree readFMI catch: $x
+Failed to read FMI: "$path"\nException: $x\n ${_rb.rrr}
+    File length: ${_rb.lengthInBytes}\n${_rb.rrr} readFMI catch: $x
 ''';
 
 String failedFMIErrorMsg(String path, Object x) => '''
 Failed to read FMI: "$path"\nException: $x\n'
-	  File length: ${_rootBD.lengthInBytes}\n$ree readFMI catch: $x');
+	  File length: ${_rb.lengthInBytes}\n${_rb.rrr} readFMI catch: $x');
 ''';

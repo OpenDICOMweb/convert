@@ -10,6 +10,7 @@ import 'package:element/byte_element.dart';
 import 'package:dataset/byte_dataset.dart';
 
 import 'package:dcm_convert/src/element_offsets.dart';
+import 'package:dcm_convert/src/binary/base/reader/byte_list_reader.dart';
 
 /// The Types of the different Value Field readers.  Each [ElementMaker]
 /// reads the Value Field for a particular Value Representation.
@@ -22,7 +23,7 @@ const int shortFileThreshold = 1024;
 
 abstract class DcmReaderInterface {
   /// Returns the [ByteData] for the entire Root [Dataset].
-  ByteData get rootBD;
+  ByteListReader get rb;
 
   /// Returns the Root [Dataset].
   RootDataset get rootDS;

@@ -11,7 +11,6 @@
 // See the AUTHORS file for other contributors.
 library odw.sdk.convert.binary.base.writer;
 
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -21,18 +20,19 @@ import 'package:system/core.dart';
 import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/src/binary/base/writer/writer_interface.dart';
-import 'package:dcm_convert/src/binary/byte/byte_data_buffer.dart';
+import 'package:dcm_convert/src/binary/base/writer/byte_list_writer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 
 //TODO: rewrite all comments to reflect current state of code
 part 'package:dcm_convert/src/binary/base/writer/write_evr.dart';
+part 'package:dcm_convert/src/binary/base/writer/write_ivr.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_fmi.dart';
+part 'package:dcm_convert/src/binary/base/writer/write_utils.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_vf.dart';
 
 /*
 String _path;
-ByteData _rootBD;
 bool _isEVR;
 bool _wasShortFile;
 
@@ -46,19 +46,32 @@ var _rIndex = 0;
 */
 
 /*
-ByteData _rootBD;
+ByteData _bl;
 RootDataset _rootDS;
 Dataset _currentDS;
-String _path;
+
 bool _isEVR;
-EncodingParameters _eParams;
-ElementOffsets _offsets;
+
 */
+String _path;
+ByteListWriter _blw;
+RootDataset _rootDS;
 
 /// The current dataset.  This changes as Sequences are written.
 Dataset _currentDS;
+EncodingParameters _eParams;
+bool _keepUndefinedLengths;
+
+ElementOffsets _offsets;
+Function _writeElement;
+
 bool _isEVR;
 TransferSyntax _ts;
+
+int _nElements = 0;
+int _nSequences = 0;
+int _nPrivateElements = 0;
+int _nPrivateSequences = 0;
 
 /// A library for encoding [Dataset]s in the DICOM File Format.
 ///
@@ -72,11 +85,6 @@ TransferSyntax _ts;
 // There are four [Element]s that might have an Undefined Length value
 // (0xFFFFFFFF), [SQ], [OB], [OW], [UN].
 abstract class DcmWriter extends DcmWriterInterface {
-  /// The default [ByteData] buffer length, if none is provided.
-  static const int defaultBufferLength = 200 * k1MB;
-
-  /// If [reUseBD] is true the [ByteData] buffer is stored here.
-  static ByteData _reuse;
 
   /// The target output [path] for the encoded data. [file] has
   /// precedence over [path].
@@ -92,42 +100,40 @@ abstract class DcmWriter extends DcmWriterInterface {
   /// null then it defaults to [Explicit VR Little Endian].
   final TransferSyntax targetTS;
 
-  // The length of the initial output ByteData buffer.
-  final int bufferLength;
 
-  final bool reUseBD;
+  final bool reUseBLWriter;
 
   final EncodingParameters eParams;
 
   @override
   final ElementOffsets offsets = new ElementOffsets();
 
+  @override
+  final ByteListWriter blw;
+
   /// Return true if input is Explicit VR, false if Implicit VR.
 
   //TODO: these should be reported in an EncodeData structure (like ParseData)
-  int _nElements = 0;
-  int _nSequences = 0;
-  int _nPrivateElements = 0;
-  int _nPrivateSequences = 0;
 
-  /// Creates a new [DcmWriter], where [_wIndex] = [wIndex] = 0.
+
+  /// Creates a new [DcmWriter], where [wIndex] = 0.
   DcmWriter(Dataset rootDS,
       {this.path,
       this.file,
       TransferSyntax outputTS,
-      this.bufferLength,
-      this.reUseBD = true,
+      int length = ByteListWriter.kDefaultLength,
+      this.reUseBLWriter = true,
       this.eParams = EncodingParameters.kNoChange})
       : targetTS = getOutputTS(rootDS, outputTS),
-        _wIndex = 0,
-        rootBD = (reUseBD)
-            ? _reuseBuffer(bufferLength)
-            : new ByteData((bufferLength == null) ? defaultBufferLength : bufferLength) {
-	  _currentDS = rootDS;
-  	/*	  _eParams = eParams;
-	  _rootBD = rootBD;
-	  _rootDS = rootDS;
-	  _path = path;*/
+        blw = (reUseBLWriter)
+            ? _reuseByteListWriter(length)
+            : new ByteListWriter((length == null) ? defaultBufferLength : length) {
+    _currentDS = rootDS;
+    _eParams = eParams;
+    _blw = blw;
+    _rootDS = rootDS;
+    _path = path;
+    _keepUndefinedLengths = !_eParams.doConvertUndefinedLengths;
   }
 
   /// Returns the [targetTS] for the encoded output.
@@ -145,27 +151,21 @@ abstract class DcmWriter extends DcmWriterInterface {
   Dataset get currentDS => _currentDS;
 
   /// Returns a [Uint8List] view of the [ByteData] buffer at the current time
-  Uint8List get bytes => rootBD.buffer.asUint8List(0, _wIndex);
+  Uint8List get asUint8List => blw.asUint8ListView;
 
-  /// Return's the current position of the write index ([_wIndex]).
-  int get wIndex => _wIndex;
-
-  /// Returns the underlying [ByteBuffer].
-  ByteBuffer get buffer => rootBD.buffer;
-
-  /// Returns true if there is space left in the write buffer.
-  bool get isWriteable => _isWritable;
+  /// Return's the current position of the write index ([wIndex]).
+  int get wIndex => blw.wIndex;
 
   /// The root Dataset being encoded.
-//  RootDataset get rootDS;
+  //  RootDataset get rootDS;
 
   TransferSyntax get ts => rootDS.transferSyntax;
 
   /// The current dataset.  This changes as Sequences and Items are encoded.
-//  Dataset currentDS;
+  //  Dataset currentDS;
 
   /// The current [length] in bytes of this [DcmWriter].
-  int get lengthInBytes => _wIndex;
+  int get lengthInBytes => blw.wIndex;
 
   /// The current [length] in bytes of this [DcmWriter].
   int get length => lengthInBytes;
@@ -174,15 +174,6 @@ abstract class DcmWriter extends DcmWriterInterface {
 
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
-
-  /// Writes (encodes) only the FMI in the root [Dataset] in 'application/dicom'
-  /// media type, writes it to a Uint8List, and returns the [Uint8List].
-  Uint8List dcmWriteFMI({bool hadFmi}) {
-    _writeFMI(hadFmi);
-    final bytes = rootBD.buffer.asUint8List(0, _wIndex);
-    _writeFileOrPath(bytes);
-    return bytes;
-  }
 
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].
@@ -195,22 +186,37 @@ abstract class DcmWriter extends DcmWriterInterface {
     // _writeFMI();
     _writeExistingPrefix();
 
+    // Set the Element reader based on the Transfer Syntax.
+    _writeElement = (_isEVR) ? _writeEvr : _writeIvr;
+
+
     _isEVR = rootDS.isEVR;
     _writeDataset(rootDS);
-    final encoding = rootBD.buffer.asUint8List(0, _wIndex);
-    if (encoding == null || encoding.length < 256) throw 'Invalid bytes error: $encoding';
-    _writeFileOrPath(encoding);
-    return rootBD.buffer.asUint8List(rootBD.offsetInBytes, rootBD.lengthInBytes);
+
+    if (blw == null || blw.length < ByteListWriter.kMinByteListLength)
+    	throw 'Invalid bytes error: $blw';
+    _writeFile(blw.asUint8ListView, file);
+    return blw.asUint8ListView;
   }
 
+  void writeElement(Element e, {bool isEVR = true}) =>
+		  (_isEVR) ? _writeEvr(e) : _writeIvr(e);
+
   //TODO: make this work for [async] == true and make that the default.
-  /// Writes [bytes] to [file] if it is not null; otherwise, writes to
+  /// Writes [bd] to [file] if it is not null; otherwise, writes to
   /// [path] if it is not null. If both are null nothing is written.
-  void _writeFileOrPath(Uint8List bytes) {
-    final f = (file == null && path != '') ? new File(path) : file;
-    if (f != null) {
+  void _writeFileSync(ByteData bd, File f) {
+    if (f.existsSync()) {
+      final bytes = bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes);
       f.writeAsBytesSync(bytes);
+    } else {
+      return pathDoesNotExist(file.path);
     }
+  }
+
+  void _writePathSync(ByteData bd, String path) {
+    path ??= '';
+    if (path.isNotEmpty) _writeFileSync(bd, new File(path));
   }
 
   /// Writes a [Dataset] to the buffer.
@@ -219,69 +225,8 @@ abstract class DcmWriter extends DcmWriterInterface {
   /// Testing interface
   void xWriteElement(Element e) => _writeElement(e);
 
-  // **** Aids to pretty printing - these may go away.
-
-  /// The current readIndex as a string.
-  String get www => 'W@$wIndex';
-
-  /// The beginning of reading an [Element] or [Item].
-  String get wbb => '> $www';
-
-  /// In the middle of reading an [Element] or [Item]
-  String get wmm => '| $www';
-
-  /// The end of reading an [Element] or [Item]
-  String get wee => '< $www';
 
   // **** Private methods
-
-  /// Writes File Meta Information (FMI) to the output.
-  /// _Note_: FMI is always Explicit Little Endian
-  bool _writeFMI(bool hadFmi) {
-    //  if (encoding.doUpdateFMI) return writeODWFMI();
-    if (_currentDS != rootDS) log.error('Not rootDS');
-
-    // Check to see if we should write FMI if missing
-    if (!hadFmi && !eParams.allowMissingFMI) {
-      log.error('Dataset $rootDS is missing FMI elements');
-      return false;
-    } else if (eParams.doUpdateFMI || (!hadFmi && eParams.doAddMissingFMI)) {
-      return writeOdwFMI();
-    } else {
-      assert(hadFmi);
-      return _writeExistingFmi();
-    }
-    _isEVR = rootDS.isEVR;
-    return true;
-  }
-
-  void _writeExistingFMI() {
-    _isEVR = true;
-    _writeExistingPrefix();
-    for (var e in rootDS.elements) {
-      if (e.code < 0x00030000) {
-        _writeElement(e);
-      } else {
-        break;
-      }
-    }
-  }
-
-  //TODO: redoc
-  /// Writes a DICOM Preamble and Prefix (see PS3.10) as the
-  /// beginning of the encoding.
-  void _writeExistingPrefix() {
-    final pInfo = rootDS.parseInfo;
-    assert(pInfo.hadPrefix == false || !eParams.doAddMissingFMI);
-    if (pInfo.preambleWasZeros || eParams.doCleanPreamble) {
-      for (var i = 0; i < 128; i++) rootBD.setUint8(i, 0);
-    } else {
-      assert(pInfo.preamble != null && !eParams.doCleanPreamble);
-      for (var i = 0; i < 128; i++) rootBD.setUint8(i, pInfo.preamble[i]);
-    }
-    _skip(128);
-    _writeAsciiString('DICM');
-  }
 
   void _writeDataset(Dataset ds) {
     assert(ds != null);
@@ -298,216 +243,37 @@ abstract class DcmWriter extends DcmWriterInterface {
     _currentDS = previousDS;
   }
 
-  void _writeElement(Element e) {
-    final eStart = _wIndex;
-    if (e is SQ) {
-      _writeSequence(e);
-    } else {
-      if (e.code == kPixelData) {
-        _writePixelData(e);
-      } else {
-        _writeSimpleElement(e);
-      }
-    }
-    offsets.add(eStart, _wIndex, e);
-    _nElements++;
-    if (e.isPrivate) _nPrivateElements++;
-  }
-
-  // Simple, i.e. not a sequence or Pixel Data.
-  void _writeSimpleElement(Element e) {
-    //TODO: handle replacing undefined lengths
-    //TODO: doFixPaddingErrors
-    _writeHeader(e);
-    _writeBytes(e.vfBytes);
-    if (e.hadULength) {
-      assert(kUndefinedLengthVRCodes.contains(e.vrCode));
-      _writeDelimiter(kSequenceDelimitationItem);
-    }
-  }
-
-  /// Writes an EVR (short == 8 bytes, long == 12 bytes) or IVR (8 bytes)
-  /// header.
-  void _writeHeader(Element e) {
-    final length = (e.vfLength == null || eParams.doConvertUndefinedLengths)
-        ? e.vfBytes.lengthInBytes
-        : e.vfLength;
-    final start = _wIndex;
-    // Write Tag
-    _writeTagCode(e.code);
-    if (_isEVR) {
-      // Write VR
-      _writeUint16(e.vrCode);
-      if (e.vr.hasShortVF) {
-        // Write short EVR VF Length
-        _writeUint16(e.vfLength);
-        assert(_wIndex == start + 8);
-      } else {
-        // Write long EVR VF Length
-        _writeUint16(0);
-        _writeUint32(length);
-        assert(_wIndex == start + 12);
-      }
-    } else {
-      // Write IVR VF Length
-      _writeUint32(length);
-      assert(_wIndex == start + 8);
-    }
-  }
-
-  void _writeSequence(SQ e) {
-    //TODO: handle replacing undefined lengths
-    _writeHeader(e);
-    final sq = e;
-    if (sq.items.isNotEmpty) _writeItems(e);
-    if (e.hadULength) _writeDelimiter(kSequenceDelimitationItem);
-    _nSequences++;
-    if (e.isPrivate) _nPrivateSequences++;
-  }
-
-  void _writeItems(SQ sq) {
-    //TODO: handle replacing undefined lengths
-
-    final items = sq.items;
-    for (var item in items) {
-      _writeDelimiter(kItem, item.vfLength);
-      item.elements.forEach(_writeElement);
-      if (item.hasULength) _writeDelimiter(kItemDelimitationItem);
-    }
-  }
-
-  /// Write encapsulated (compressed) [kPixelData] from [PixelData] [pd].
-  void _writePixelData(PixelData pd) {
-    //TODO: handle replacing undefined lengths
-    //TODO: handle doRemoveFragments
-    if (pd.fragments != null) {
-      _writeHeader(pd);
-      for (var fragment in pd.fragments.fragments) {
-        _writeTagCode(kItem);
-        _writeUint32(fragment.lengthInBytes);
-        _writeBytes(fragment);
-      }
-      _writeDelimiter(kSequenceDelimitationItem);
-    } else {
-      _writeSimpleElement(pd);
-    }
-  }
-
-  /// Writes the [delimiter] and a zero length field for the [delimiter].
-  /// The [_wIndex] is advanced 8 bytes.
-  /// Note: There are four [Element]s ([SQ], [OB], [OW], and [UN]) plus
-  /// Items that might have an Undefined Length value(0xFFFFFFFF).
-  /// if [removeUndefinedLengths] is true this method should not be called.
-  void _writeDelimiter(int delimiter, [int lengthInBytes = 0]) {
-    //TODO: handle doRemoveNoZeroDelimiterLengths
-    assert(eParams.doConvertUndefinedLengths == false);
-    _writeTagCode(delimiter);
-    _writeUint32(lengthInBytes);
-  }
-
-  void _writeTagCode(int code) {
-    _writeUint16(code >> 16);
-    _writeUint16(code & 0xFFFF);
-  }
-
-  // **** Buffer management
-
-  /// The [ByteDataBuffer] buffer being written.
-  @override
-  ByteData rootBD;
-
-  int _wIndex = 0;
-  // int get endOfBD => rootBD.lengthInBytes;
-
-  /// Returns true if there is space left in the write buffer.
-  bool get _isWritable => _wIndex < rootBD.lengthInBytes;
-
-  /// Moves the [_wIndex] forward [n] bytes, or backward if [n] is negative.
-  void _skip(int n) {
-    final v = _wIndex + n;
-    // Note: keep next line for debugging
-    // _checkRange(v);
-    _wIndex = v;
-  }
-
-  /// Writes a 16-bit unsigned integer (Uint16) value to the output [rootBD].
-  void _writeUint16(int value) {
-    assert(value >= 0 && value <= 0xFFFF, 'Value out of range: $value');
-    _maybeGrow(2);
-    rootBD.setUint16(_wIndex, value, Endianness.HOST_ENDIAN);
-    _wIndex += 2;
-  }
-
-  /// Writes a 32-bit unsigned integer (Uint32) value to the output [rootBD].
-  void _writeUint32(int value) {
-    assert(value >= 0 && value <= 0xFFFFFFFF, 'Value out if range: $value');
-    _maybeGrow(4);
-    rootBD.setUint32(_wIndex, value, Endianness.HOST_ENDIAN);
-    _wIndex += 4;
-  }
-
-  /// Writes [bytes] to the output [rootBD].
-  void _writeBytes(Uint8List bytes) => __writeBytes(bytes);
-
-  void __writeBytes(Uint8List bytes) {
-    final length = bytes.lengthInBytes;
-    _maybeGrow(length);
-    for (var i = 0, j = _wIndex; i < length; i++, j++) rootBD.setUint8(j, bytes[i]);
-    _wIndex = _wIndex + length;
-  }
-
-  /// Writes [bytes], which contains Code Units to the output [rootBD],
-  /// ensuring that an even number of bytes are written, by adding
-  /// a padding character if necessary.
-  void _writeStringBytes(Uint8List bytes, [int padChar = kSpace]) {
-    //TODO: doFixPaddingErrors
-    _writeBytes(bytes);
-    if (bytes.length.isOdd) {
-      rootBD.setUint8(_wIndex, padChar);
-      _wIndex++;
-    }
-  }
-
-  //TODO: doFixPaddingErrors
-  /// Writes an [ASCII] [String] to the output [rootBD].
-  void _writeAsciiString(String s, [int offset = 0, int limit, int padChar = kSpace]) =>
-      _writeStringBytes(ASCII.encode(s), padChar);
-
-  /// Writes an [UTF8] [String] to the output [rootBD].
-  void writeUtf8String(String s, [int offset = 0, int limit]) =>
-      _writeStringBytes(UTF8.encode(s), kSpace);
-
-  /// Ensures that [rootBD] is at least [index] + [remaining] long,
-  /// and grows the buffer if necessary, preserving existing data.
-  void ensureRemaining(int index, int remaining) => ensureCapacity(index + remaining);
-
-  /// Ensures that [rootBD] is at least [capacity] long, and grows
-  /// the buffer if necessary, preserving existing data.
-  void ensureCapacity(int capacity) => (capacity > rootBD.lengthInBytes) ? _grow() : null;
-
-  /// Grow the buffer if the index is at, or beyond, the end of the current
-  /// buffer.
-  void _maybeGrow([int size = 1]) {
-    if (_wIndex + size >= rootBD.lengthInBytes) _grow();
+  void _writeValueField(Element e) {
+  	final bytes = e.vfBytes;
+  	_blw.uint8List(bytes);
+  	if (bytes.length.isOdd) {
+  		if (e.padChar.isNegative)
+  			return invalidValueFieldLength(e);
+  		_blw.writeUint8(e.padChar);
+	  }
   }
 
 
-  static ByteData _reuseBuffer([int size]) {
-    size ??= defaultBufferLength;
-    if (_reuse == null) return _reuse = new ByteData(size);
-    if (size > _reuse.lengthInBytes) {
-      _reuse = new ByteData(size + 1024);
-      log.warn('**** DcmWriter creating new Reuse BD of Size: ${_reuse
-          .lengthInBytes}');
-    }
-    return _reuse;
+
+
+
+
+
+
+  /// The default [ByteData] buffer length, if none is provided.
+  static const int defaultBufferLength = 200 * k1MB;
+
+  /// If [reUseBLWriter] is true the [ByteData] buffer is stored here.
+  static ByteListWriter _reuse;
+
+  static ByteListWriter _reuseByteListWriter([int size]) {
+	  size ??= defaultBufferLength;
+	  if (_reuse == null) return _reuse = new ByteListWriter(size);
+	  if (size > _reuse.lengthInBytes) {
+		  _reuse = new ByteListWriter(size + 1024);
+		  log.warn('**** DcmWriter creating new Reuse BD of Size: ${_reuse
+				  .lengthInBytes}');
+	  }
+	  return _reuse;
   }
-}
-
-const int kDefaultLength = 16;
-const int k1GB = 1024 * 1024 * 1024;
-
-int _isValidBufferLength(int length, [int maxLength = k1GB]) {
-  RangeError.checkValidRange(1, length, maxLength);
-  return length;
 }

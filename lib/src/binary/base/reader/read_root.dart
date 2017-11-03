@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file.
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
-part of odw.sdk.convert.binary;
+part of odw.sdk.convert.binary.reader;
 
 //TODO: redoc to reflect current state of code
 
@@ -12,7 +12,7 @@ part of odw.sdk.convert.binary;
 /// an Error will be thrown; otherwise, returns null.
 RootDataset _readRootDataset(String path, DecodingParameters dParam) {
   final eStart = _rIndex;
-  log.debug('Reading RootDS: start: $eStart length: ${_rootBD.lengthInBytes}');
+  log.debug('Reading RootDS: start: $eStart length: ${_rb.lengthInBytes}');
   try {
       _currentDS = _rootDS;
     _hadFmi = _readFmi(path, dParam);
@@ -35,7 +35,7 @@ RootDataset _readRootDataset(String path, DecodingParameters dParam) {
   } on ShortFileError catch (x) {
     _hadParsingErrors = true;
     _rootDS = null;
-    _error(failedFMIErrorMsg(path, x));
+    _rb.error(failedFMIErrorMsg(path, x));
     if (throwOnError) rethrow;
   } on EndOfDataError catch (e) {
     _hadParsingErrors = true;
@@ -43,25 +43,25 @@ RootDataset _readRootDataset(String path, DecodingParameters dParam) {
     log.error(e);
     if (throwOnError) rethrow;
   } on InvalidTransferSyntax catch (e) {
-    _warn(failedTSErrorMsg(path, e));
+    _rb.warn(failedTSErrorMsg(path, e));
   } on RangeError catch (ex) {
-    _error('$ex\n $stats');
-    if (_beyondPixelData) log.info0('$_rrr Beyond Pixel Data');
+    _rb.error('$ex\n $stats');
+    if (_beyondPixelData) log.info0('${_rb.rrr} Beyond Pixel Data');
     // Keep: *** Keep, but only use for debugging.
     if (throwOnError) rethrow;
   } catch (x) {
     _rIndex = eStart;
     _hadParsingErrors = true;
-    _error(failedFMIErrorMsg(path, x));
+    _rb.error(failedFMIErrorMsg(path, x));
     rethrow;
   } finally {
-    bdRead = _rootBD.buffer.asByteData(0, _endOfLastValueRead);
+    bdRead = _rb.buffer.asByteData(0, _endOfLastValueRead);
     //      assert(_rIndex == _endOfLastValueRead,
     //          '_rIndex($_rIndex), _endOfLastValueRead($_endOfLastValueRead)');
-    _bytesUnread = _rootBD.lengthInBytes - _rIndex;
+    _bytesUnread = _rb.lengthInBytes - _rIndex;
     _hadTrailingBytes = _bytesUnread > 0;
     if (_hadTrailingBytes)
-      _hadTrailingZeros = _checkAllZeros(_endOfLastValueRead, _rootBD.lengthInBytes);
+      _hadTrailingZeros = _rb.checkAllZeros(_endOfLastValueRead, _rb.lengthInBytes);
     _dsLengthInBytes = _endOfLastValueRead;
     log.debug('Trailing Bytes($_bytesUnread) All Zeros: $_hadTrailingZeros');
     assert(_dsLengthInBytes == bdRead.lengthInBytes);
@@ -69,13 +69,13 @@ RootDataset _readRootDataset(String path, DecodingParameters dParam) {
 
   //  log.debug1(stats);
   if (_rIndex != bdRead.lengthInBytes) {
-    _warn('End of Data with _rIndex($_rIndex) != bdRead.length'
-        '(${bdRead.lengthInBytes}) $_rrr');
+    _rb.warn('End of Data with _rIndex($_rIndex) != bdRead.length'
+        '(${bdRead.lengthInBytes}) ${_rb.rrr}');
     _dsLengthInBytes = _rIndex;
     _endOfLastValueRead = _rIndex;
-    _hadTrailingBytes = (bdRead.lengthInBytes != _rootBD.lengthInBytes);
+    _hadTrailingBytes = (bdRead.lengthInBytes != _rb.lengthInBytes);
     if (_hadTrailingBytes)
-      _hadTrailingZeros = _checkAllZeros(_rIndex, _rootBD.lengthInBytes);
+      _hadTrailingZeros = _rb.checkAllZeros(_rIndex, _rb.lengthInBytes);
   }
 
   _rootDS.parseInfo = getParseInfo();
@@ -103,7 +103,7 @@ Inconsistent Elements Error: '
    _rootDS.duplicates(${_rootDS.dupTotal})  
    Total with duplciates: $all = ${rds.total} + ${rds.dupTotal}';
 ''';
-  _error(msg);
+  _rb.error(msg);
   if (throwOnError) throw new ReaderInconsistencyError(msg);
   return rds;
 }

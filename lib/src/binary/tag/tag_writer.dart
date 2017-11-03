@@ -52,7 +52,7 @@ class TagWriter extends DcmWriter {
 			  super(_rootDS,
             bufferLength: bufferLength,
             path: path,
-            reUseBD: reUseBD,
+            reUseBLWriter: reUseBD,
             eParams: encoding);
 
   /// Writes the [RootDataset] to a [Uint8List], and then writes the
