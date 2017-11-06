@@ -171,12 +171,10 @@ abstract class DcmWriter extends DcmWriterInterface {
     // Set the Element reader based on the Transfer Syntax.
     _isEvr = rds.isEvr;
     if (_isEvr) {
-	    _writeEvrRootDataset(
-	    );
+      _writeEvrRootDataset(rds, eParams);
     } else {
-    	_writeIvrRootDataset();
+      _writeIvrRootDataset(rds, eParams);
     }
-
 
     if (wb == null || wb.length < ByteWriter.kMinByteListLength)
       throw 'Invalid bytes error: $wb';
@@ -189,12 +187,12 @@ abstract class DcmWriter extends DcmWriterInterface {
       (_isEvr) ? _writeEvr(e) : _writeIvr(e);
 
   /// Writes a [Dataset] to the buffer.
-  void writeDataset(Dataset ds) {
-  	if (_isEvr) {
-  		_writeEvrDataset(ds);
-	  } else {
-		  _writeDataset(ds, eParams);
-	  }
+  void writeDataset(Dataset ds, EncodingParameters eParams) {
+    if (_isEvr) {
+      _writeEvrDataset(ds, eParams);
+    } else {
+      _writeIvrDataset(ds, eParams);
+    }
   }
 
   /// Testing interface
@@ -218,8 +216,6 @@ abstract class DcmWriter extends DcmWriterInterface {
   }
 }
 // **** Private methods
-
-
 
 void _writeValueField(Element e) {
   final bytes = e.vfBytes;

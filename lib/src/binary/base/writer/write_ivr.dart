@@ -5,6 +5,22 @@
 // See the AUTHORS file for other contributors.
 part of odw.sdk.convert.binary.base.writer;
 
+void _writeIvrRootDataset(RootDataset rds, EncodingParameters eParams) {
+	_rds = rds;
+	_cds = rds;
+	_writeEvrDataset(rds, eParams);
+}
+
+void _writeIvrDataset(Dataset ds, EncodingParameters _eParams) {
+	assert(ds != null);
+	final previousDS = _cds;
+	_cds = ds;
+
+
+	ds.elements.forEach(_writeElement);
+	_cds = previousDS;
+}
+
 void _writeIvr(Element e) {
   final eStart = _wb.wIndex;
   final vrIndex = e.vrIndex;

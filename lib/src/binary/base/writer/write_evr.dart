@@ -16,10 +16,10 @@ void _writeEvrDataset(Dataset ds, EncodingParameters _eParams) {
 	final previousDS = _cds;
 	_cds = ds;
 
-	if (_isEvr);
 	ds.elements.forEach(_writeElement);
 	_cds = previousDS;
 }
+
 void _writeEvr(Element e) {
 	log.debug('${_wb.wbb} $e :${_wb.remaining}');
   final eStart = _wb.wIndex;
