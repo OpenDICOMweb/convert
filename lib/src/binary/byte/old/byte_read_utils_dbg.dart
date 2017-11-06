@@ -77,7 +77,7 @@ $pad    ${rds0.parseInfo.info}''');
     final rds1 = reader1.readRootDataset();
     //   RootDatasetByte rds1 = ByteReader.readPath(outPath);
     log
-      ..debug('$pad Read ${reader1.rootBD.lengthInBytes} bytes')
+      ..debug('$pad Read ${reader1.rootBytes.lengthInBytes} bytes')
       ..debug1('$pad DS1: $rds1');
 
     if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');

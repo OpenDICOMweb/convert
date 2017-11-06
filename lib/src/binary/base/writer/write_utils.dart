@@ -5,7 +5,7 @@
 // See the AUTHORS file for other contributors.
 part of odw.sdk.convert.binary.base.writer;
 
-bool _isSequenceVR(int vrIndex) => vrIndex >= 0;
+bool _isSequenceVR(int vrIndex) => vrIndex == 0;
 
 /*
 bool _isSpecialVR(int vrIndex) =>
@@ -29,42 +29,42 @@ bool _isIvrVR(int vrIndex) =>
 void _writeItems(SQ sq) {
 	final items = sq.items;
 	for (var item in items) {
-		log.debug('${_blw.wbb} Writing Item: $item', 1);
+		log.debug('${_wb.wbb} Writing Item: $item', 1);
 		if (item.hasULength && _keepUndefinedLengths) {
 			_writeUndefinedLengthItem(item);
 		} else {
 			_writeDefinedLengthItem(item);
 		}
-		log.debug('${_blw.wee} Wrote Item: $item', -1);
+		log.debug('${_wb.wee} Wrote Item: $item', -1);
 	}
 }
 
 void _writeDefinedLengthItem(Item item) {
-	_blw..writeUint32(kItem32BitLE)..writeUint32(item.lengthInBytes);
+	_wb..uint32(kItem32BitLE)..uint32(item.lengthInBytes);
 	item.forEach(_writeElement);
 }
 
 void _writeUndefinedLengthItem(Item item) {
-	_blw..writeUint32(kItem32BitLE)..writeUint32(kUndefinedLength);
+	_wb..uint32(kItem32BitLE)..uint32(kUndefinedLength);
 	item.forEach(_writeElement);
-	_blw..writeUint32(kItemDelimitationItem)
-	..writeUint32(0);
+	_wb..uint32(kItemDelimitationItem)
+	..uint32(0);
 }
 /// Writes the [delimiter] and a zero length field for the [delimiter].
-/// The [wIndex] is advanced 8 bytes.
+/// The Write Index is advanced 8 bytes.
 /// Note: There are four [Element]s ([SQ], [OB], [OW], and [UN]) plus
 /// Items that might have an Undefined Length value(0xFFFFFFFF).
-/// if [removeUndefinedLengths] is true this method should not be called.
+/// if [_eParams].removeUndefinedLengths is true this method should not be called.
 void _writeDelimiter(int delimiter, [int lengthInBytes = 0]) {
 	//TODO: handle doRemoveNoZeroDelimiterLengths
 	assert(_eParams.doConvertUndefinedLengths == false);
 	_writeTagCode(delimiter);
-	_blw.writeUint32(lengthInBytes);
+	_wb.uint32(lengthInBytes);
 }
 
 void _writeTagCode(int code) {
-	_blw..writeUint16(code >> 16)
-	..writeUint16(code & 0xFFFF);
+	_wb..uint16(code >> 16)
+	..uint16(code & 0xFFFF);
 }
 
 //TODO: make this work for [async] == true and make that the default.

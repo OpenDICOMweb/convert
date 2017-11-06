@@ -34,14 +34,9 @@ part of odw.sdk.convert.binary.reader;
   final DecodingParameters decoding;
 */
 
+/*
   // **** stats and debugging
-  final bool statisticsEnabled = true;
-  final bool elementOffsetsEnabled = true;
-  final List<String> exceptions = <String>[];
 
-  /// Returns the [ByteData] that was actually read, i.e. from 0 to
-  /// end of last [Element] read.
-  ByteData bdRead;
   // ParseInfo values
   int _nElementsRead = 0;
   int _nSequencesRead = 0;
@@ -67,7 +62,7 @@ part of odw.sdk.convert.binary.reader;
   int _lastElementCode = 0;
   Element _lastTopLevelElementRead;
   Element _lastElementRead;
-  int _endOfLastValueRead = 0;
+  int _endOfLastElementRead = 0;
   bool _beyondPixelData = false;
   bool _endOfDataError = false;
 
@@ -76,102 +71,122 @@ part of odw.sdk.convert.binary.reader;
 
   bool _hadTrailingBytes = false;
   bool _hadTrailingZeros = false;
+*/
 
-ParseInfo getParseInfo() => new ParseInfo(
-		_nElementsRead,
+ParseInfo getParseInfo(RootDataset rds) {
+	/*		_nElementsRead,
 		_nSequencesRead,
 		_nPrivateElementsRead,
-		_nPrivateSequencesRead,
-		_rootDS.total,
-		_rootDS.length,
-		_rootDS.elements.duplicates.length,
-		0,
-		0,
-		0,
-		_path,
-		_preamble,
-		_nonZeroDelimiterLengths,
-		_nOddLengthValueFields,
-		_tsUid,
-		_pixelDataVR,
-		_pixelDataStart,
-		_pixelDataEnd,
-		_lastTopLevelElementRead,
-		_lastElementCode,
-		_endOfLastValueRead,
-		_dsLengthInBytes,
-		_rb.lengthInBytes,
-		shortFileThreshold,
-		exceptions,
-		isEVR: _isEVR,
-		wasShortFile: _wasShortFile,
-		hadFmi: _hadFmi,
-		hadPrefix: _hadPrefix,
-		preambleWasZeros: _preambleWasZeros,
-		hadParsingErrors: _hadParsingErrors,
-		hadGroupLengths: _hadGroupLengths,
-		hadTrailingBytes: _hadTrailingBytes,
-		hadTrailingZeros: _hadTrailingZeros);
+		_nPrivateSequencesRead,*/
+	rds.total
+	;
+	rds
+			.
+	length
+	;
+	rds
+			.
+	elements
+			.
+	duplicates
+			.
+	length
+	;
+	0
+	;
+	0
+	;
+	0
+	;
+	_path
+	;
+	_preamble
+	;
+	_nonZeroDelimiterLengths
+	;
+	_nOddLengthValueFields
+	;
+	_tsUid
+	;
+	_pixelDataVR
+	;
+	_pixelDataStart
+	;
+	_pixelDataEnd
+	;
+	_lastTopLevelElementRead
+	;
+	_lastElementCode
+	;
+	_endOfLastElementRead
+	;
+	_dsLengthInBytes
+	;
+	_rb
+			.
+	lengthInBytes
+	;
+	shortFileThreshold
+	;
+	exceptions
+	;
+	isEVR
+			:
+	_isEVR
+	;
+	wasShortFile
+			:
+	_wasShortFile
+	;
+	hadFmi
+			:
+	_hadFmi
+	;
+	hadPrefix
+			:
+	_hadPrefix
+	;
+	preambleWasZeros
+			:
+	_preambleWasZeros
+	;
+	hadParsingErrors
+			:
+	_hadParsingErrors
+	;
+	hadGroupLengths
+			:
+	_hadGroupLengths
+	;
+	hadTrailingBytes
+			:
+	_hadTrailingBytes
+	;
+	hadTrailingZeros
+	:
+	_hadTrailingZeros;
+}
 
-
-String get stats => '''${_rb.rmm} Statistics
-          nElementsRead: $_nElementsRead
-         nSequencesRead: $_nSequencesRead
-            nDSequences: $_nDSequencesRead
-            nUSequences: $_nUSequencesRead
-             nItemsRead: $_nItemsRead
-   nPrivateElementsRead: $_nPrivateElementsRead
-  nPrivateSequencesRead: $_nPrivateSequencesRead
-lastTopLevelElementRead: $_lastTopLevelElementRead
-        lastElementRead: $_lastElementRead
-        lastElementCode: ${dcm(_lastElementCode)}
-        bdLengthInBytes: ${_rb.lengthInBytes}
-        dsLengthInBytes: $_dsLengthInBytes
-         endOfDataError: $_endOfDataError
-           bytesUnread: $_bytesUnread
-            rootDSTotal: ${_rootDS.total}
-         rootDSTopLevel ${_rootDS.length}
-        rootDSSequences: ${_rootDS.elements.sequences}
-        rootDSDupLength: ${_rootDS.elements.duplicates.length}
-        currentDSLength: ${_rootDS.elements.length}
-     currentDSDupLength: ${_currentDS.elements.duplicates.length}
-     currentDSSequences: ${_currentDS.elements.sequences}
-                totalDS: ${_rootDS.total + _rootDS.dupTotal}''';
-
-ParseInfo _getParseInfo() => new ParseInfo(
-		_nElementsRead,
-		_nSequencesRead,
-		_nPrivateElementsRead,
-		_nPrivateSequencesRead,
-		_rootDS.total,
-		_rootDS.length,
-		_rootDS.elements.duplicates.length,
-		0,
-		0,
-		0,
-		_path,
-		_preamble,
-		_nonZeroDelimiterLengths,
-		_nOddLengthValueFields,
-		_tsUid,
-		_pixelDataVR,
-		_pixelDataStart,
-		_pixelDataEnd,
-		_lastTopLevelElementRead,
-		_lastElementCode,
-		_endOfLastValueRead,
-		_dsLengthInBytes,
-		_rb.lengthInBytes,
-		shortFileThreshold,
-		exceptions,
-		isEVR: _isEVR,
-		wasShortFile: _wasShortFile,
-		hadFmi: _hadFmi,
-		hadPrefix: _hadPrefix,
-		preambleWasZeros: _preambleWasZeros,
-		hadParsingErrors: _hadParsingErrors,
-		hadGroupLengths: _hadGroupLengths,
-		hadTrailingBytes: _hadTrailingBytes,
-		hadTrailingZeros: _hadTrailingZeros);
-
-
+String stats(ParseInfo pInfo) => '''${_rb.rmm} Statistics
+          nElementsRead: ${pInfo.nElementsRead}
+         nSequencesRead: ${pInfo.nSequencesRead}
+            nDSequences: ${pInfo.nDSequencesRead}
+            nUSequences: ${pInfo.nUSequencesRead}
+             nItemsRead: ${pInfo.nItemsRead}
+   nPrivateElementsRead: ${pInfo.nPrivateElementsRead}
+  nPrivateSequencesRead: ${pInfo.nPrivateSequencesRead}
+lastTopLevelElementRead: ${pInfo.lastTopLevelElementRead}
+        lastElementRead: ${pInfo.lastElementRead}
+        lastElementCode: ${dcm(pInfo.lastElementCode)}
+        bdLengthInBytes: ${rb.lengthInBytes}
+        dsLengthInBytes: ${pInfo.dsLengthInBytes}
+         endOfDataError: ${pInfo.endOfDataError}
+            bytesUnread: ${pInfo.bytesUnread}
+            rootDSTotal: ${rds.total}
+         rootDSTopLevel: ${rds.length}
+        rootDSSequences: ${rds.elements.sequences}
+        rootDSDupLength: ${rds.elements.duplicates.length}
+        currentDSLength: ${rds.elements.length}
+     currentDSDupLength: ${currentDS.elements.duplicates.length}
+     currentDSSequences: ${currentDS.elements.sequences}
+                totalDS: ${rds.total + rds.dupTotal}''';

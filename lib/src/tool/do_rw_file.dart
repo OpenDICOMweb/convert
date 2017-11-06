@@ -12,7 +12,6 @@ import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 
 import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
-
 import 'package:dcm_convert/src/binary/byte/byte_writer.dart';
 import 'package:dcm_convert/src/tool/job_utils.dart';
 import 'package:dcm_convert/src/errors.dart';
@@ -36,7 +35,7 @@ Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) asy
       return false;
     }
     if (rds0.parseInfo == null) throw 'Bad File - No ParseInfo: $f';
-    final bytes0 = reader0.buffer;
+    final bytes0 = reader0.rootBytes;
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');

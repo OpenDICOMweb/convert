@@ -11,7 +11,6 @@ import 'package:dataset/byte_dataset.dart';
 import 'package:element/byte_element.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/reader.dart';
 import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 
@@ -26,44 +25,45 @@ class TestByteReader extends ByteReader {
       TransferSyntax targetTS,
       bool reUseBD = true})
       : super(bd, path: path, fmiOnly: fmiOnly, reUseBD: reUseBD);
-  
+
 // **** These methods should not be used in the code above ****
 
   /// Returns true if the File Meta Information was present and
   /// read successfully.
-  TransferSyntax xReadFmi({bool checkPreamble = true, bool allowMissingPrefix = false}) {
-    readFMI(checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
-    if (!rootDS.hasFmi || !rootDS.hasSupportedTransferSyntax) return null;
-    return rootDS.transferSyntax;
+  TransferSyntax xReadFmi(RootDataset rds,
+      {bool checkPreamble = true, bool allowMissingPrefix = false}) {
+    readFmi(rds, checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
+    if (!rds.hasFmi || !rds.hasSupportedTransferSyntax) return null;
+    return rds.transferSyntax;
   }
 
-  Element xReadPublicElement() => readElement();
+  Element xReadPublicElement() => readElement(rds);
 
   // External Interface for testing
-  Element xReadPGLength() => readElement();
+  Element xReadPGLength() => readElement(rds);
 
   // External Interface for testing
-  Element xReadPrivateIllegal(int code) => readElement();
+  Element xReadPrivateIllegal(int code) => readElement(rds);
 
   // External Interface for testing
-  Element xReadPrivateCreator() => readElement();
+  Element xReadPrivateCreator() => readElement(rds);
 
   // External Interface for testing
-  Element xReadPrivateData(Element pc) => readElement();
+  Element xReadPrivateData(Element pc) => readElement(rds);
 
   // Reads
   RootDatasetByte xReadDataset() {
     while (isReadable) {
-      var e = readElement();
-      rootDS.add(e);
-      e = rootDS[e.code];
+      var e = readElement(rds);
+      rds.add(e);
+      e = rds[e.code];
       assert(e == e);
     }
     return currentDS;
   }
 
   /// Reads only the File Meta Information (FMI), if present.
-  static Dataset readBytes(Uint8List bytes, Dataset rootDS,
+  static Dataset readBytes(Uint8List bytes, Dataset rds,
       {String path = '',
       bool async = true,
       bool fast = true,
@@ -78,10 +78,10 @@ class TestByteReader extends ByteReader {
         fmiOnly: fmiOnly,
         reUseBD: reUseBD,
         dParams: dParams);
-    return reader.readRootDataset();
+    return reader.read(dParams);
   }
 
-  static RootDatasetByte readFile(File file, RootDatasetByte rootDS,
+  static RootDatasetByte readFile(File file, RootDatasetByte rds,
       {String path = '',
       bool async = true,
       bool fast = true,
@@ -89,7 +89,7 @@ class TestByteReader extends ByteReader {
       bool reUseBD = true,
       DecodingParameters dParams = DecodingParameters.kNoChange}) {
     final bytes = file.readAsBytesSync();
-    return readBytes(bytes, rootDS,
+    return readBytes(bytes, rds,
         path: file.path,
         async: async,
         fast: fast,
@@ -99,14 +99,14 @@ class TestByteReader extends ByteReader {
   }
 
   /// Reads only the File Meta Information (FMI), if present.
-  static RootDatasetByte readFileFmiOnly(File file, RootDatasetByte rootDS,
+  static RootDatasetByte readFileFmiOnly(File file, RootDatasetByte rds,
           {String path = '',
           bool async = true,
           bool fast = true,
           bool fmiOnly = false,
           bool reUseBD = true,
           DecodingParameters dParams = DecodingParameters.kNoChange}) =>
-      readFile(file, rootDS,
+      readFile(file, rds,
           path: path,
           async: async,
           fast: fast,

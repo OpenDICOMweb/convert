@@ -13,7 +13,7 @@ String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 // Problem Files
 //   1. fileList2
 void main() {
-  Server.initialize(name: 'read_write_file', level: Level.debug);
+  Server.initialize(name: 'read_write_file', level: Level.debug3);
 
   // *** Modify the [path0] value to read/write a different file
   final path = testPaths1[1];

@@ -8,8 +8,8 @@ export 'package:dataset/byte_dataset.dart';
 export 'package:element/byte_element.dart';
 export 'package:entity/entity.dart';
 
-export 'package:dcm_convert/src/binary/base/reader/reader.dart';
-export 'package:dcm_convert/src/binary/base/writer/writer.dart';
+export 'package:dcm_convert/src/binary/base/reader/dcm_reader.dart';
+export 'package:dcm_convert/src/binary/base/writer/dcm_writer.dart';
 export 'package:dcm_convert/src/binary/byte/byte_reader.dart';
 export 'package:dcm_convert/src/binary/byte/byte_writer.dart';
 export 'package:dcm_convert/src/binary/byte_read_utils.dart';

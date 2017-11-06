@@ -15,7 +15,7 @@ import 'package:system/server.dart';
 //Urgent: use badFileList2 - fix indentation
 
 void main() {
-	Server.initialize(name: 'read_files.dart', level: Level.debug);
+	Server.initialize(name: 'read_files.dart', level: Level.debug3);
   print('Read Files');
   system.log.level = Level.info;
   final paths = testPaths0;

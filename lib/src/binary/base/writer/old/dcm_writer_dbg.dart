@@ -177,11 +177,11 @@ abstract class DcmWriter {
     ..debug('$wmm _nPrivateSequences: $_nPrivateSequences')
     ..debug('$wmm writeRootDataset: ${rootDS.info}')
     ..debug('$wee Returning ${rootDS.length} elements in $_wIndex bytes');
-    final encoding = _bd.buffer.asUint8List(0, _wIndex);
-    if (encoding == null || encoding.length < 256)
-      throw 'Invalid bytes error: $encoding';
-    _writeFileOrPath(encoding.getFile);
-    return encoding;
+    final bytes = _bd.buffer.asUint8List(0, _wIndex);
+    if (bytes == null || bytes.length < 256)
+      throw 'Invalid bytes error: $bytes';
+    _writeFileOrPath(bytes.path);
+    return bytes;
   }
 
 

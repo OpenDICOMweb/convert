@@ -14,19 +14,20 @@ import 'package:element/tag_element.dart';
 import 'package:system/core.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/reader.dart';
+import 'package:dcm_convert/src/binary/base/reader/dcm_reader.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/errors.dart';
 import 'package:dcm_convert/src/io_utils.dart';
-
 
 /// Returns a new ByteSequence.
 SQ _makeSequence(EBytes eb, Dataset parent, List<Item> items) =>
     new SQbyte.fromBytes(eb, parent, items);
 
-RootDataset _makeRootDataset(RDSBytes dsBytes, Dataset parent,
+/*
+RootDataset makeRootDataset(RDSBytes dsBytes, Dataset parent,
         [ElementList elements, String path]) =>
     new RootDatasetByte(dsBytes, elements: elements, path: path);
+*/
 
 /// Returns a new [ItemByte].
 Item _makeItem(Dataset parent, {ElementList elements, SQ sequence, DSBytes eb}) =>
@@ -35,22 +36,24 @@ Item _makeItem(Dataset parent, {ElementList elements, SQ sequence, DSBytes eb}) 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootDatasetByte].
 class ByteReader extends DcmReader {
-  @override
-//  final RootDataset<int> rootDS;
-//  Dataset _currentDS;
-
   /// Creates a new [ByteReader], which is decoder for Binary DICOM
   /// (application/dicom).
   ByteReader(ByteData bd,
       {String path = '',
-      //TODO: make async work and be the default
       bool async = true,
       bool fast = true,
       bool fmiOnly = false,
       bool reUseBD = true,
+      bool showStats = false,
       DecodingParameters dParams = DecodingParameters.kNoChange})
       : super(bd, new RootDatasetByte(new RDSBytes(bd), path: path),
-            path: path, dParams: dParams) {
+            path: path,
+            async: async,
+            fast: fast,
+            fmiOnly: fmiOnly,
+            reUseBD: reUseBD,
+            showStats: showStats,
+            dParams: dParams) {
     elementMaker = makeBEFromEBytes;
     sequenceMaker = _makeSequence;
     itemMaker = _makeItem;
@@ -84,12 +87,6 @@ class ByteReader extends DcmReader {
       new ByteReader.fromFile(new File(path),
           async: async, fast: fast, fmiOnly: fmiOnly, reUseBD: reUseBD, dParams: dParams);
 
-  // **** DcmReaderInterface ****
-
-  /// The current [Dataset] being read.  This changes as Sequences are reAD.
-  // @override
-  // set currentDS(Dataset ds) => _currentDS = ds;
-
   @override
   ElementList get elements => currentDS.elements;
 
@@ -99,40 +96,11 @@ class ByteReader extends DcmReader {
   @override
   String itemInfo(Item item) => (item == null) ? 'Item item = null' : item.info;
 
-  // **** End DcmReaderInterface ****
-
-  RootDataset readFMI({bool checkPreamble = false, bool allowMissingPrefix = false}) {
-    final hadFmi =
-        dcmReadFMI(checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
-    rootDS.parseInfo = getParseInfo();
-    return (hadFmi) ? rootDS : null;
-  }
-
-  /// Reads a [RootDataset], and stores it in [rootDS],
-  /// and returns it.
-  RootDataset readRootDataset() {
-    final rds = readRoot();
-    rootDS.dsBytes = new RDSBytes(rootBD);
-    return rds;
-  }
-
-  void debugStart(Object o, String msg) {
-    log.debug('$rbb $o $msg');
-  }
-
-  void debug(Object o, Level level) {
-    log.debug('$rmm $o');
-  }
-
-  void debugEnd(Object o, Level level) {
-    log.debug('$rbb $o');
-  }
-
   // **** DcmReaderInterface ****
 
   //Urgent: flush or fix
   static Element makeTagElement(EBytes eb, [int vrIndex]) =>
-      makeTagElementFromEBytes(eb, vrIndex);
+      makeBEFromEBytes(eb, vrIndex);
 
   /// Reads the [RootDataset] from a [Uint8List].
   static RootDataset readBytes(Uint8List bytes,
@@ -141,22 +109,18 @@ class ByteReader extends DcmReader {
       bool fast = true,
       bool fmiOnly = false,
       bool reUseBD = true,
+      bool showStats = false,
       DecodingParameters dParams = DecodingParameters.kNoChange}) {
-    RootDataset rds;
-    try {
-      final bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
-      final reader = new ByteReader(bd,
-          path: path,
-          async: async,
-          fast: fast,
-          fmiOnly: fmiOnly,
-          reUseBD: reUseBD,
-          dParams: dParams);
-      rds = reader.readRoot();
-    } on ShortFileError catch (e) {
-      log.warn('Short File: $e');
-    }
-    return rds;
+    final bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
+    final reader = new ByteReader(bd,
+        path: path,
+        async: async,
+        fast: fast,
+        fmiOnly: fmiOnly,
+        reUseBD: reUseBD,
+        showStats: showStats,
+        dParams: dParams);
+    return reader.read(dParams);
   }
 
   /// Reads the [RootDataset] from a [File].
@@ -165,6 +129,7 @@ class ByteReader extends DcmReader {
       bool fast = true,
       bool fmiOnly = false,
       bool reUseBD: true,
+      bool showStats = false,
       DecodingParameters dParams = DecodingParameters.kNoChange}) {
     checkFile(file);
     return readBytes(file.readAsBytesSync(),
@@ -173,6 +138,7 @@ class ByteReader extends DcmReader {
         fast: fast,
         fmiOnly: fmiOnly,
         reUseBD: reUseBD,
+        showStats: showStats,
         dParams: dParams);
   }
 
@@ -182,10 +148,16 @@ class ByteReader extends DcmReader {
       bool fast = true,
       bool fmiOnly = false,
       bool reUseBD = true,
+      bool showStats = false,
       DecodingParameters dParams = DecodingParameters.kNoChange}) {
     checkPath(path);
     return readFile(new File(path),
-        async: async, fast: fast, fmiOnly: fmiOnly, reUseBD: reUseBD, dParams: dParams);
+        async: async,
+        fast: fast,
+        fmiOnly: fmiOnly,
+        reUseBD: reUseBD,
+        showStats: showStats,
+        dParams: dParams);
   }
 
   /// Reads only the File Meta Information (FMI), if present.
@@ -196,6 +168,7 @@ class ByteReader extends DcmReader {
           bool throwOnError = true,
           TransferSyntax targetTS,
           bool reUseBD = true,
+          bool showStats = false,
           DecodingParameters dParams = DecodingParameters.kNoChange}) =>
       readFile(file,
           async: async, fast: fast, fmiOnly: true, reUseBD: reUseBD, dParams: dParams);
@@ -206,7 +179,13 @@ class ByteReader extends DcmReader {
           bool fast = true,
           bool fmiOnly = false,
           bool reUseBD = true,
+          bool showStats = false,
           DecodingParameters dParams = DecodingParameters.kNoChange}) =>
       readPath(path,
-          async: async, fast: fast, fmiOnly: true, reUseBD: reUseBD, dParams: dParams);
+          async: async,
+          fast: fast,
+          fmiOnly: true,
+          reUseBD: reUseBD,
+          showStats: showStats,
+          dParams: dParams);
 }

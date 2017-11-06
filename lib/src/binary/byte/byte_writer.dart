@@ -18,10 +18,9 @@ import 'package:dataset/byte_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
 import 'package:element/byte_element.dart';
 import 'package:element/tag_element.dart';
-import 'package:system/core.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/binary/base/writer/writer.dart';
+import 'package:dcm_convert/src/binary/base/writer/dcm_writer.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 import 'package:dcm_convert/src/io_utils.dart';
 
@@ -43,13 +42,13 @@ class ByteWriter extends DcmWriter {
       File file,
       TransferSyntax outputTS,
       bool throwOnError = true,
-      bool reUseBD = true,
+      bool reUseBuffer = true,
       EncodingParameters encoding = EncodingParameters.kNoChange})
       : super(_rootDS,
-            bufferLength: bufferLength,
+            length: bufferLength,
             path: path,
             outputTS: outputTS,
-            reUseBLWriter: reUseBD,
+            reUseBuffer: reUseBuffer,
             eParams: encoding);
 
   /// Writes the [RootDatasetByte] to a [Uint8List], and then writes the
@@ -62,7 +61,7 @@ class ByteWriter extends DcmWriter {
       TransferSyntax targetTS}) {
     checkFile(file, overwrite: overwrite);
     return new ByteWriter(ds,
-        bufferLength: bufferLength, path: file.path, reUseBD: fast, outputTS: targetTS);
+        bufferLength: bufferLength, path: file.path, reUseBuffer: fast, outputTS: targetTS);
   }
 
   /// Creates a new empty [File] from [path], writes the [RootDatasetByte]
@@ -76,7 +75,7 @@ class ByteWriter extends DcmWriter {
       TransferSyntax targetTS}) {
     checkPath(path);
     return new ByteWriter(ds,
-        bufferLength: bufferLength, path: path, reUseBD: fast, outputTS: targetTS);
+        bufferLength: bufferLength, path: path, reUseBuffer: fast, outputTS: targetTS);
   }
 
   // The following Getters and Setters provide the correct [Type]s
@@ -102,11 +101,8 @@ class ByteWriter extends DcmWriter {
   @override
   String itemInfo(Item item) => (item == null) ? 'Item item = null' : item.info;
 
-  Uint8List writeFMI({bool checkPreamble = false}) =>
-		  dcmWriteFMI(hadFmi: _rootDS.hasFmi);
-
   /// Reads a [RootDatasetByte], and stores it in [rootDS], and returns it.
-  Uint8List writeRootDataset({bool allowMissingFMI = false}) => writeRootDS();
+  Uint8List writeRootDataset({bool allowMissingFMI = false}) => writeRootDS(rootDS);
 
   /// Writes the [RootDatasetByte] to a [Uint8List], and returns the [Uint8List].
   static Uint8List writeBytes(RootDatasetByte ds,
@@ -119,7 +115,7 @@ class ByteWriter extends DcmWriter {
       }) {
     checkRootDataset(ds);
     final writer = new ByteWriter(ds,
-        bufferLength: bufferLength, path: path, reUseBD: reUseBD, outputTS: outputTS);
+        bufferLength: bufferLength, path: path, reUseBuffer: reUseBD, outputTS: outputTS);
     return writer.writeRootDataset();
   }
 
@@ -159,7 +155,7 @@ class ByteWriter extends DcmWriter {
   /// Creates a new empty [File] at [path], writes the [RootDatasetByte]
   /// to a [Uint8List], then writes the [Uint8List] to the [File],
   /// and returns the [Uint8List].
-  static Future<Uint8List> writeFmi(RootDatasetByte ds, String path,
+  static Future<Uint8List> writeFmiPath(RootDatasetByte ds, String path,
       {int bufferLength,
       bool overwrite = false,
       bool fast = false,
@@ -174,30 +170,6 @@ class ByteWriter extends DcmWriter {
   }
 }
 
-void _writeValueField(TypedData vfBytes, int vrIndex) {
-	_evrVFWriters[vrIndex](vfBytes);
-}
-
-/*
-final _evrVFWriters = <EvrVFWriter>[
-	_sqError, // stop reformat
-	// Maybe Undefined Lengths
-	OBWriteVF, OWWriteVF, UNWriteVF,
-
-	// EVR Long
-	ODWriteVF, OFWriteVF, OLWriteVF,
-	UCWriteVF, URWriteVF, UTWriteVF,
-
-	// EVR Short
-	AEWriteVF, ASWriteVF, ATWriteVF,
-	CSWriteVF, DAWriteVF, DSWriteVF,
-	DTWriteVF, FDWriteVF, FLWriteVF,
-	ISWriteVF, LOWriteVF, LTWriteVF,
-	PNWriteVF, SHWriteVF, SLWriteVF,
-	SSWriteVF, STWriteVF, TMWriteVF,
-	UIWriteVF, ULWriteVF, USWriteVF,
-];
-*/
 
 
 

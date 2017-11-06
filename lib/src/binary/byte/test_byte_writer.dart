@@ -30,20 +30,20 @@ class TestByteWriter extends ByteWriter {
             path: path,
             outputTS: outputTS,
             throwOnError: throwOnError,
-            reUseBD: reUseBD,
+            reUseBuffer: reUseBD,
             encoding: encoding);
 
   /// Returns a [Uint8List] containing the encoded FMI.
   Uint8List xWriteFmi(RootDatasetByte rds) {
     if (!rds.hasFmi || !rds.hasSupportedTransferSyntax) return null;
-    return writeFMI();
+    return writeFmi(rootDS, eParams, cleanPreamble: true);
   }
 
   /// Returns a [Uint8List] containing the encoded [Dataset].
   void xWriteDataset(RootDatasetByte ds) {
-    log.debug('$wbb writeDataset: isExplicitVR(${ds.isEVR})', 1);
+    log.debug('${wb.wbb} writeDataset: isExplicitVR(${ds.isEVR})', 1);
     new ByteWriter(ds, bufferLength: ds.length)..writeDataset(ds);
-    log.debug('$wee end writeDataset: isExplicitVR(${ds.isEVR})', -1);
+    log.debug('${wb.wee} end writeDataset: isExplicitVR(${ds.isEVR})', -1);
   }
 
   /// Writes an element to the [currentDS].

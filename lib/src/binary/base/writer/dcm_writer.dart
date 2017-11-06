@@ -20,11 +20,10 @@ import 'package:system/core.dart';
 import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/src/binary/base/writer/writer_interface.dart';
-import 'package:dcm_convert/src/binary/base/writer/byte_list_writer.dart';
+import 'package:dcm_convert/src/binary/base/writer/byte_writer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 
-//TODO: rewrite all comments to reflect current state of code
 part 'package:dcm_convert/src/binary/base/writer/write_evr.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_ivr.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_fmi.dart';
@@ -54,7 +53,7 @@ bool _isEVR;
 
 */
 String _path;
-ByteListWriter _blw;
+ByteWriter _wb;
 RootDataset _rootDS;
 
 /// The current dataset.  This changes as Sequences are written.
@@ -85,7 +84,6 @@ int _nPrivateSequences = 0;
 // There are four [Element]s that might have an Undefined Length value
 // (0xFFFFFFFF), [SQ], [OB], [OW], [UN].
 abstract class DcmWriter extends DcmWriterInterface {
-
   /// The target output [path] for the encoded data. [file] has
   /// precedence over [path].
   final String path;
@@ -100,8 +98,7 @@ abstract class DcmWriter extends DcmWriterInterface {
   /// null then it defaults to [Explicit VR Little Endian].
   final TransferSyntax targetTS;
 
-
-  final bool reUseBLWriter;
+  final bool reUseBuffer;
 
   final EncodingParameters eParams;
 
@@ -109,30 +106,32 @@ abstract class DcmWriter extends DcmWriterInterface {
   final ElementOffsets offsets = new ElementOffsets();
 
   @override
-  final ByteListWriter blw;
+  final ByteWriter wb;
 
   /// Return true if input is Explicit VR, false if Implicit VR.
 
   //TODO: these should be reported in an EncodeData structure (like ParseData)
 
-
   /// Creates a new [DcmWriter], where [wIndex] = 0.
-  DcmWriter(Dataset rootDS,
+  DcmWriter(RootDataset rootDS,
       {this.path,
       this.file,
       TransferSyntax outputTS,
-      int length = ByteListWriter.kDefaultLength,
-      this.reUseBLWriter = true,
+      int length = ByteWriter.kDefaultLength,
+      this.reUseBuffer = true,
       this.eParams = EncodingParameters.kNoChange})
       : targetTS = getOutputTS(rootDS, outputTS),
-        blw = (reUseBLWriter)
+        wb = (reUseBuffer)
             ? _reuseByteListWriter(length)
-            : new ByteListWriter((length == null) ? defaultBufferLength : length) {
+            : new ByteWriter((length == null) ? defaultBufferLength : length) {
     _currentDS = rootDS;
     _eParams = eParams;
-    _blw = blw;
+    _wb = wb;
     _rootDS = rootDS;
     _path = path;
+    _isEVR = rootDS.isEVR;
+    //if (elementOffsetsEnabled) _offsets = new ElementOffsets();
+    _offsets = new ElementOffsets();
     _keepUndefinedLengths = !_eParams.doConvertUndefinedLengths;
   }
 
@@ -151,10 +150,10 @@ abstract class DcmWriter extends DcmWriterInterface {
   Dataset get currentDS => _currentDS;
 
   /// Returns a [Uint8List] view of the [ByteData] buffer at the current time
-  Uint8List get asUint8List => blw.asUint8ListView;
+  Uint8List get asUint8List => wb.uint8View(0, wb.wIndex);
 
   /// Return's the current position of the write index ([wIndex]).
-  int get wIndex => blw.wIndex;
+  int get wIndex => wb.wIndex;
 
   /// The root Dataset being encoded.
   //  RootDataset get rootDS;
@@ -165,7 +164,7 @@ abstract class DcmWriter extends DcmWriterInterface {
   //  Dataset currentDS;
 
   /// The current [length] in bytes of this [DcmWriter].
-  int get lengthInBytes => blw.wIndex;
+  int get lengthInBytes => wb.wIndex;
 
   /// The current [length] in bytes of this [DcmWriter].
   int get length => lengthInBytes;
@@ -175,49 +174,39 @@ abstract class DcmWriter extends DcmWriterInterface {
   String get info =>
       '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
 
+  /// Writes (encodes) only the FMI in the root [Dataset] in 'application/dicom'
+  /// media type, writes it to a Uint8List, and returns the [Uint8List].
+  Uint8List writeFmi(RootDataset rootDS, EncodingParameters eParams,
+                     {bool cleanPreamble = true}) {
+	  _writeFmi(rootDS, eParams, cleanPreamble);
+	  final bytes = wb.close();
+	  _writeFile(bytes, file);
+	  return bytes;
+  }
+
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].
-  Uint8List writeRootDS() {
+  Uint8List writeRootDS(RootDataset rootDS, {bool cleanPreamble = true}) {
     //TODO: handle doSeparateBulkdata
     _currentDS = rootDS;
     _ts = (targetTS == null) ? rootDS.transferSyntax : targetTS;
     if (_ts == null) throw 'no TS';
-    //TODO: figure out the correct way to writeFMI
-    // _writeFMI();
-    _writeExistingPrefix();
+    _writeFmi(rootDS, eParams, cleanPreamble);
 
     // Set the Element reader based on the Transfer Syntax.
-    _writeElement = (_isEVR) ? _writeEvr : _writeIvr;
-
-
     _isEVR = rootDS.isEVR;
+    _writeElement = (_isEVR) ? _writeEvr : _writeIvr;
     _writeDataset(rootDS);
 
-    if (blw == null || blw.length < ByteListWriter.kMinByteListLength)
-    	throw 'Invalid bytes error: $blw';
-    _writeFile(blw.asUint8ListView, file);
-    return blw.asUint8ListView;
+    if (wb == null || wb.length < ByteWriter.kMinByteListLength)
+      throw 'Invalid bytes error: $wb';
+    final bytes = wb.close();
+    _writeFile(bytes, file);
+    return bytes;
   }
 
   void writeElement(Element e, {bool isEVR = true}) =>
-		  (_isEVR) ? _writeEvr(e) : _writeIvr(e);
-
-  //TODO: make this work for [async] == true and make that the default.
-  /// Writes [bd] to [file] if it is not null; otherwise, writes to
-  /// [path] if it is not null. If both are null nothing is written.
-  void _writeFileSync(ByteData bd, File f) {
-    if (f.existsSync()) {
-      final bytes = bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes);
-      f.writeAsBytesSync(bytes);
-    } else {
-      return pathDoesNotExist(file.path);
-    }
-  }
-
-  void _writePathSync(ByteData bd, String path) {
-    path ??= '';
-    if (path.isNotEmpty) _writeFileSync(bd, new File(path));
-  }
+      (_isEVR) ? _writeEvr(e) : _writeIvr(e);
 
   /// Writes a [Dataset] to the buffer.
   void writeDataset(Dataset ds) => _writeDataset(ds);
@@ -225,55 +214,58 @@ abstract class DcmWriter extends DcmWriterInterface {
   /// Testing interface
   void xWriteElement(Element e) => _writeElement(e);
 
-
-  // **** Private methods
-
-  void _writeDataset(Dataset ds) {
-    assert(ds != null);
-    final previousDS = _currentDS;
-    _currentDS = ds;
-
-    _isEVR = true;
-    for (var e in ds.elements) {
-      //Urgent Jim: figure out how to move this outside loop.
-      //  should fmi be a separate map in the rootDS?
-      if (e.code > 0x30000) _isEVR = rootDS.isEVR;
-      _writeElement(e);
-    }
-    _currentDS = previousDS;
-  }
-
-  void _writeValueField(Element e) {
-  	final bytes = e.vfBytes;
-  	_blw.uint8List(bytes);
-  	if (bytes.length.isOdd) {
-  		if (e.padChar.isNegative)
-  			return invalidValueFieldLength(e);
-  		_blw.writeUint8(e.padChar);
-	  }
-  }
-
-
-
-
-
-
-
-
   /// The default [ByteData] buffer length, if none is provided.
   static const int defaultBufferLength = 200 * k1MB;
 
-  /// If [reUseBLWriter] is true the [ByteData] buffer is stored here.
-  static ByteListWriter _reuse;
+  /// If [_reuse] is true the [ByteData] buffer is stored here.
+  static ByteWriter _reuse;
 
-  static ByteListWriter _reuseByteListWriter([int size]) {
+  static ByteWriter _reuseByteListWriter([int size]) {
 	  size ??= defaultBufferLength;
-	  if (_reuse == null) return _reuse = new ByteListWriter(size);
+	  if (_reuse == null) return _reuse = new ByteWriter(size);
 	  if (size > _reuse.lengthInBytes) {
-		  _reuse = new ByteListWriter(size + 1024);
+		  _reuse = new ByteWriter(size + 1024);
 		  log.warn('**** DcmWriter creating new Reuse BD of Size: ${_reuse
 				  .lengthInBytes}');
 	  }
 	  return _reuse;
   }
 }
+// **** Private methods
+
+void _writeDataset(Dataset ds) {
+  assert(ds != null);
+  final previousDS = _currentDS;
+  _currentDS = ds;
+
+  _isEVR = true;
+  for (var e in ds.elements) {
+    //Urgent Jim: figure out how to move this outside loop.
+    //  should fmi be a separate map in the rootDS?
+    if (e.code > 0x30000) _isEVR = _rootDS.isEVR;
+    _writeElement(e);
+  }
+  _currentDS = previousDS;
+}
+
+void _writeValueField(Element e) {
+  final bytes = e.vfBytes;
+  _wb.bytes(bytes);
+  if (bytes.length.isOdd) {
+    if (e.padChar.isNegative) return invalidVFLength(e.vfBytes.length, -1);
+    _wb.uint8(e.padChar);
+  }
+}
+
+//TODO: make this work for [async] == true and make that the default.
+/// Writes [bd] to [file] if it is not null or empty.
+void _writeFileSync(ByteData bd, File file) {
+  final bytes = bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes);
+  file.writeAsBytesSync(bytes);
+}
+
+void _writePathSync(ByteData bd, String path) {
+  assert(path != null && path.isNotEmpty);
+  if (path.isNotEmpty) _writeFileSync(bd, new File(path));
+}
+

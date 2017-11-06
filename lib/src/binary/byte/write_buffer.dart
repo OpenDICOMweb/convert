@@ -145,8 +145,8 @@ class ByteDataBuffer {
   /// Grow the buffer if the index is at, or beyond, the end of the current
   /// buffer.
   void _maybeGrow([int size = 1]) {
-/*    print('_wIndex: $_wIndex');
-    print('lengthInBytes: ${_bd.lengthInBytes}');*/
+/*    log.debug('_wIndex: $_wIndex');
+    log.debug('lengthInBytes: ${_bd.lengthInBytes}');*/
     if (_wIndex + size >= _bd.lengthInBytes) _grow();
   }
 
@@ -158,7 +158,7 @@ class ByteDataBuffer {
   /// least that size. It will always have at least have double the
   /// capacity of the current buffer.
   void _grow([int capacity]) {
-    print('start _grow: ${_bd.lengthInBytes}');
+    log.debug('start _grow: ${_bd.lengthInBytes}');
     final oldLength = _bd.lengthInBytes;
     var newLength = oldLength * 2;
     if (capacity != null && capacity > newLength) newLength = capacity;
@@ -168,7 +168,7 @@ class ByteDataBuffer {
     final newBuffer = new ByteData(newLength);
     for (var i = 0; i < oldLength; i++) newBuffer.setUint8(i, _bd.getUint8(i));
     _bd = newBuffer;
-    print('end _grow ${_bd.lengthInBytes}');
+    log.debug('end _grow ${_bd.lengthInBytes}');
   }
 }
 
@@ -176,7 +176,7 @@ const int defaultLength = 16;
 const int k1GB = 1024 * 1024 * 1024;
 
 int _isValidBufferLength(int length, [int maxLength = k1GB]) {
-  print('isValidlength: $length');
+  log.debug('isValidlength: $length');
   RangeError.checkValidRange(1, length, maxLength);
   return length;
 }

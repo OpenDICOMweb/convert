@@ -59,9 +59,9 @@ bool compareUnequalLengths(Uint8List b0, Uint8List b1) {
       (b0.lengthInBytes < b1.lengthInBytes) ? b0.lengthInBytes : b1.lengthInBytes;
   for (var i = 0; i < length; i++) {
     if (b0[i] != b1[i]) {
-      print('  diff @$i');
-      print('  b0: ${b0.sublist(i, i + 20)}');
-      print('  b1: ${b1.sublist(i, i + 20)}');
+      log.debug('  diff @$i');
+      log.debug('  b0: ${b0.sublist(i, i + 20)}');
+      log.debug('  b1: ${b1.sublist(i, i + 20)}');
       return false;
     }
   }
@@ -69,19 +69,19 @@ bool compareUnequalLengths(Uint8List b0, Uint8List b1) {
 }
 
 void showBytes(Uint8List b0, Uint8List b1, int offset) {
-  print('offset: $offset');
+  log.debug('offset: $offset');
   final b0x = b0.buffer.asUint8List(offset, offset + 16);
   final b1x = b1.buffer.asUint8List(offset, offset + 16);
-  print(b0x);
-  print(b1x);
+  log.debug(b0x);
+  log.debug(b1x);
   final pos = offset % 4;
   final line = (offset ~/ 4) * 4;
   final startLine = line;
   final endLine = line + 96;
 
-  print('Non-matching bytes at offset: $offset');
-  print('O     B0           B1        B0   B1       B0          B1');
-//print('(gggg,eeee)  (gggg,eeee)  abcf abcd  0123456789  0123456789');
+  log.debug('Non-matching bytes at offset: $offset');
+  log.debug('O     B0           B1        B0   B1       B0          B1');
+//log.debug('(gggg,eeee)  (gggg,eeee)  abcf abcd  0123456789  0123456789');
 
   for (var i = startLine; i < line - 1; i += 4) {
     printLine(i, b0, b1);
@@ -105,9 +105,9 @@ void printLine(int line, Uint8List b0, Uint8List b1, [int pos]) {
   final s0 = toStr(b0, line);
   final s1 = toStr(b1, line);
   if (pos != null) {
-    print('$pos: $dcm0  $dcm1  "$s0"  "$s1"  $dec0 $dec1');
+    log.debug('$pos: $dcm0  $dcm1  "$s0"  "$s1"  $dec0 $dec1');
   } else {
-    print('   $dcm0  $dcm1  "$s0"  "$s1"  $dec0 $dec1');
+    log.debug('   $dcm0  $dcm1  "$s0"  "$s1"  $dec0 $dec1');
   }
 }
 

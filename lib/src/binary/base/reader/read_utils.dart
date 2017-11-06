@@ -5,7 +5,7 @@
 // See the AUTHORS file for other contributors.
 part of odw.sdk.convert.binary.reader;
 
-bool _isSequenceVR(int vrIndex) => vrIndex >= 0;
+bool _isSequenceVR(int vrIndex) => vrIndex == 0;
 
 bool _isSpecialVR(int vrIndex) =>
 		vrIndex >= kVRSpecialIndexMin && vrIndex <= kVRSpecialIndexMax;
@@ -58,64 +58,41 @@ Element _finishLong(int code, int eStart, int vrIndex, int vfLengthField, int eL
   }
 }
 */
-/// Reads the [kUndefinedLength] Value Field until the
-/// kSequenceDelimiter is found. _Note_: Since the Value
-/// Field is 16-bit aligned, it must be checked 16 bits at a time.
-int _findEndOfULengthVF() {
-  log.down;
-  //  log.debug1('$rbb findEndOfULengthVF');
-  while (_rb.isReadable) {
-    if (_rb.uint16 != kDelimiterFirst16Bits) continue;
-    if (_rb.uint16 != kSequenceDelimiterLast16Bits) continue;
-    break;
-  }
-  if (!_isReadable()) {
-    throw new EndOfDataError('_findEndOfVF');
-  }
-  final delimiterLength = _rb.uint32;
-  if (delimiterLength != 0) _delimiterLengthWarning(delimiterLength);
-  final endOfElement = _rIndex;
-  //  log.debug1('$ree   endOfVR($endOfVF) eEnd($_rIndex) @end');
-  log.up;
-  return endOfElement;
-}
 
 Element _finishReadElement(int code, int eStart, Element e) {
-  assert(_rb.checkRIndex());
+  assert(_rb.checkIndex());
   // Elements are always read into the current dataset.
   _currentDS.add(e);
-  _lastElementRead = e;
 
   // Statistics
   if (statisticsEnabled) {
-    _nElementsRead++;
-    _endOfLastValueRead = _rIndex;
-    if (elementOffsetsEnabled) _offsets.add(eStart, _rIndex, e);
-    _lastTopLevelElementRead = e;
-    _lastElementCode = code;
-    if ((code >> 16).isOdd) _nPrivateElementsRead++;
+	  _pInfo.lastElementRead = e;
+    _pInfo.endOfLastElement = _rb.rIndex;
+    if (e.isPrivate) _pInfo.nPrivateElements++;
+    if (elementOffsetsEnabled) _offsets.add(eStart, _rb.rIndex, e);
+    if ((code >> 16).isOdd) _pInfo.nPrivateElements++;
   }
-  log.info('${_rb.rrr} $e');
+  _rb.eMsg(e);
   return e;
 }
 
-//  String _readUtf8String(int length) => UTF8.decode(_readChars(length));
+String failedTSErrorMsg(String path, Error x) => '''
+Invalid Transfer Syntax: "$path"\nException: $x\n ${_rb.rrr}
+    File length: ${_rb.lengthInBytes}\n${_rb.rrr} readFMI catch: $x
+''';
 
-//Enhancement: make this method do more diagnosis.
-/// Returns true if there are only trailing zeros at the end of the
-/// Object being parsed.
-Null _zeroEncountered(int code) {
-  final msg = (_beyondPixelData) ? 'after kPixelData' : 'before kPixelData';
-  _rb.warn('Zero encountered $msg ${_rb.rrr}');
-  throw new EndOfDataError('Zero encountered $msg ${_rb.rrr}');
-}
+String failedFMIErrorMsg(String path, Object x) => '''
+Failed to read FMI: "$path"\nException: $x\n'
+	  File length: ${_rb.lengthInBytes}\n${_rb.rrr} readFMI catch: $x');
+''';
+
 
 // Issue:
 // **** Below this level is all for debugging and can be commented out for
 // **** production.
 
 void _showNext(int start) {
-  if (_isEVR) {
+  if (_isEvr) {
     _showShortEVR(start);
     _showLongEVR(start);
     _showIVR(start);
@@ -129,7 +106,7 @@ void _showNext(int start) {
 }
 
 void _showShortEVR(int start) {
-  if (_hasRemaining(8)) {
+  if (_rb.hasRemaining(8)) {
     final code = _rb.getCode(start);
     final vrCode = _rb.getUint16(start + 4);
     final vr = VR.lookupByCode(vrCode);
@@ -140,7 +117,7 @@ void _showShortEVR(int start) {
 }
 
 void _showLongEVR(int start) {
-  if (_hasRemaining(8)) {
+  if (_rb.hasRemaining(8)) {
     final code = _rb.getCode(start);
     final vrCode = _rb.getUint16(start + 4);
     final vr = VR.lookupByCode(vrCode);
@@ -150,7 +127,7 @@ void _showLongEVR(int start) {
 }
 
 void _showIVR(int start) {
-  if (_hasRemaining(8)) {
+  if (_rb.hasRemaining(8)) {
     final code = _rb.getCode(start);
     final tag = Tag.lookupByCode(code);
     if (tag != null) log.debug(tag);

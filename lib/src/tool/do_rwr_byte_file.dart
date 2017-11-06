@@ -33,7 +33,7 @@ Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
       return false;
     }
     if (rds0.parseInfo == null) throw 'Bad File - No ParseInfo: $f';
-    final bytes0 = reader0.buffer;
+    final bytes0 = reader0.rootBytes;
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');
@@ -75,11 +75,10 @@ $pad    TS: ${rds0.transferSyntax}''');
     final rds1 = reader1.readRootDataset();
     //   RootDatasetBytes rds1 = ByteReader.readPath(outPath);
     log
-      ..debug('$pad Read ${reader1.rootBD.lengthInBytes} bytes')
+      ..debug('$pad Read ${reader1.rootBytes.lengthInBytes} bytes')
       ..debug1('$pad DS1: $rds1');
 
-    if (rds0.hasDuplicates)
-    	log.warn('$pad  ** Duplicates Present in rds0');
+    if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
     if (rds0.parseInfo != rds1.parseInfo) {
       log
         ..warn('$pad ** ParseInfo is Different!')
@@ -117,8 +116,7 @@ $pad    TS: ${rds0.transferSyntax}''');
         log.warn('$pad Files bytes are different!');
       }
     }
-    if (same)
-    	log.info0('$pad Success!');
+    if (same) log.info0('$pad Success!');
     return same;
   } on ShortFileError {
     log.warn('$pad ** Short File(${f.lengthSync()} bytes): $f');

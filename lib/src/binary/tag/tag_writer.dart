@@ -17,11 +17,10 @@ import 'package:dataset/byte_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
 import 'package:element/byte_element.dart';
 import 'package:element/tag_element.dart';
-import 'package:system/core.dart';
 import 'package:uid/uid.dart';
 
 
-import 'package:dcm_convert/src/binary/base/writer/writer.dart';
+import 'package:dcm_convert/src/binary/base/writer/dcm_writer.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 import 'package:dcm_convert/src/io_utils.dart';
 
@@ -50,9 +49,9 @@ class TagWriter extends DcmWriter {
       EncodingParameters encoding})
       : assert(_rootDS.transferSyntax != null),
 			  super(_rootDS,
-            bufferLength: bufferLength,
+            length: bufferLength,
             path: path,
-            reUseBLWriter: reUseBD,
+            reUseBuffer: reUseBD,
             eParams: encoding);
 
   /// Writes the [RootDataset] to a [Uint8List], and then writes the
@@ -102,12 +101,12 @@ class TagWriter extends DcmWriter {
   @override
   String itemInfo(Item item) => (item == null) ? 'Item item = null' : item.info;
 
-  Uint8List writeFMI({bool hadFmi}) =>
-      dcmWriteFMI(hadFmi: hadFmi);
+  Uint8List writeFMI({bool cleanPreamble = true}) =>
+      super.writeFmi(rootDS, eParams, cleanPreamble: cleanPreamble);
 
   /// Reads a [RootDataset], and stores it in [rootDS],
   /// and returns it.
-  Uint8List writeRootDataset({bool addMissingFMI = false}) => writeRootDS();
+  Uint8List writeRootDataset({bool addMissingFMI = false}) => writeRootDS(rootDS);
 
   /// Writes the [RootDataset] to a [Uint8List], and returns the [Uint8List].
   static Uint8List writeBytes(RootDataset ds,
@@ -159,7 +158,7 @@ class TagWriter extends DcmWriter {
   /// Creates a new empty [File] at [path], writes the [RootDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File],
   /// and returns the [Uint8List].
-  static Uint8List writeFmi(RootDatasetTag ds, String path,
+  static Uint8List writeFmiPath(RootDatasetTag ds, String path,
       {int bufferLength,
       bool overwrite = false,
       bool fast = false,

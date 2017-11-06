@@ -5,81 +5,69 @@
 // See the AUTHORS file for other contributors.
 part of odw.sdk.convert.binary.base.writer;
 
-//TODO: move to common
-const int kDcmPrefix = 0x4449434d;
-
-/// Writes (encodes) only the FMI in the root [Dataset] in 'application/dicom'
-/// media type, writes it to a Uint8List, and returns the [Uint8List].
-Uint8List writeFmi({bool hadFmi}) {
-  _writeFMI(hadFmi);
-  final bytes = _blw.asUint8ListView;
-  _writePath(bytes, _path);
-  return bytes;
-}
-
 /// Writes File Meta Information (FMI) to the output.
 /// _Note_: FMI is always Explicit Little Endian
-bool _writeFMI(bool hadFmi) {
+bool _writeFmi(RootDataset rootDS, EncodingParameters eParams, bool cleanPreamble) {
   //  if (encoding.doUpdateFMI) return writeODWFMI();
-  if (_currentDS != _rootDS) log.error('Not _rootDS');
-
-  // Check to see if we should write FMI if missing
-  if (!hadFmi && !_eParams.allowMissingFMI) {
-    log.error('Dataset $_rootDS is missing FMI elements');
-    return false;
-  } else if (_eParams.doUpdateFMI || (!hadFmi && _eParams.doAddMissingFMI)) {
-    return writeOdwFMI();
-  } else {
-    assert(hadFmi);
-    return _writeExistingFmi();
+  if (rootDS is! RootDataset) log.error('Not _rootDS');
+  if (!rootDS.hasFmi) {
+  	final pInfo = rootDS.parseInfo;
+    assert(pInfo.hadPrefix == false || !_eParams.doAddMissingFMI);
+    log.warn('Root Dataset does not have FMI: $_rootDS');
+    if (!_eParams.allowMissingFMI || !_eParams.doAddMissingFMI) {
+      log.error('Dataset $_rootDS is missing FMI elements');
+      return false;
+    }
+    if (eParams.doUpdateFMI) return writeOdwFMI(rootDS);
   }
+  assert(rootDS.hasFmi);
+  _writeExistingFmi(rootDS, cleanPreamble);
   _isEVR = _rootDS.isEVR;
   return true;
 }
 
-void _writeExistingFMI() {
+bool writeOdwFMI(RootDataset rootDS) {
+  if (rootDS is! RootDataset) log.error('Not _rootDS');
+  //Urgent finish
+  _writeCleanPrefix();
+  return true;
+}
+
+void _writeExistingFmi(RootDataset rootDS, bool cleanPreamble) {
   _isEVR = true;
-  _writeExistingPrefix();
-  for (var e in _rootDS.elements) {
-    if (e.code < 0x00030000) {
-      _writeElement(e);
-    } else {
-      break;
-    }
+  _writePrefix(rootDS, cleanPreamble);
+  for (var e in rootDS.elements) {
+    if (e.code > 0x00030000) break;
+    _writeEvr(e);
   }
 }
 
 //TODO: redoc
 /// Writes a DICOM Preamble and Prefix (see PS3.10) as the
 /// beginning of the encoding.
-void _writeExistingPrefix() {
-  final pInfo = _rootDS.parseInfo;
-  assert(pInfo.hadPrefix == false || !_eParams.doAddMissingFMI);
-  if (pInfo.preambleWasZeros || _eParams.doCleanPreamble) {
-    for (var i = 0; i < 128; i++) _blw.bd.setUint8(i, 0);
-  } else {
-    assert(pInfo.preamble != null && !_eParams.doCleanPreamble);
-    for (var i = 0; i < 128; i++) _blw.bd.setUint8(i, pInfo.preamble[i]);
-  }
-  _blw
-    ..move(128)
-    ..writeAsciiString('DICM');
+bool _writePrefix(RootDataset rootDS, bool cleanPreamble) {
+  if (rootDS is! RootDataset) log.error('Not _rootDS');
+  final pInfo = rootDS.parseInfo;
+  return (pInfo.preambleWasZeros || _eParams.doCleanPreamble)
+      ? _writeCleanPrefix()
+      : _writeExistingPrefix(pInfo);
 }
 
-bool _writeExistingFmi() {}
-
 /// Writes a new Open DICOMweb FMI.
-bool writeZeroPrefix() {
-  //Urgent finish
-  // Write Preamble
-  for (var i = 0; i < 128; i += 8) _blw.writeUint64(0);
-  // Write Prefix
-  _blw.writeUint32(kDcmPrefix);
+bool _writeCleanPrefix() {
+  for (var i = 0; i < 128; i += 8) _wb.uint64(0);
+  _wb.uint32(kDcmPrefix);
   return true;
 }
 
-bool writeOdwFMI() {}
+/// Writes a new Open DICOMweb FMI.
+bool _writeExistingPrefix(ParseInfo pInfo) {
+  assert(pInfo.preamble != null && !_eParams.doCleanPreamble);
+  for (var i = 0; i < 128; i++) _wb.bd.setUint8(i, pInfo.preamble[i]);
+  _wb.uint32(kDcmPrefix);
+  return true;
+}
 
 void writePrivateInformation(Uid uid, ByteData privateInfo) {
-  _blw.writeAsciiString(uid.asString);
+  _wb.ascii(uid.asString);
 }

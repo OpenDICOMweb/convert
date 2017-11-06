@@ -34,6 +34,9 @@ bool byteReadWriteFileChecked(String path,
     final e = rds0[kPixelData];
     if (e == null) log.warn('$pad ** Pixel Data Element not present');
 
+    log.debug('${rds0.summary}');
+    log.debug('${rds0.parseInfo}');
+
     // Write the Root Dataset
     ByteWriter writer;
     if (fast) {

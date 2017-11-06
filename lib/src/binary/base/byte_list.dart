@@ -8,13 +8,17 @@ import 'dart:collection';
 import 'dart:typed_data';
 
 abstract class ByteList extends ListBase<int> implements TypedData {
-  ByteData get bd;
+  ByteData _bd;
+
+  ByteList(this._bd);
+
+  ByteData get bd => _bd;
 
   // **** List<int> Interface
   @override
-  int operator [](int index) => bd.getUint8(index);
+  int operator [](int index) => _bd.getUint8(index);
   @override
-  void operator []=(int index, int value) => bd.setUint8(index, value);
+  void operator []=(int index, int value) => _bd.setUint8(index, value);
 
   @override
   bool operator ==(Object other) {
@@ -23,7 +27,7 @@ abstract class ByteList extends ListBase<int> implements TypedData {
       if (other is ByteList) {
         if (length != other.length) break block;
         for (var i = 0; i < length; i++)
-          if (bd.getUint8(i) != other.bd.getUint8(i)) break block;
+          if (_bd.getUint8(i) != other._bd.getUint8(i)) break block;
         return true;
       }
     }
@@ -31,10 +35,10 @@ abstract class ByteList extends ListBase<int> implements TypedData {
   }
 
   @override
-  int get hashCode => bd.hashCode;
+  int get hashCode => _bd.hashCode;
 
   @override
-  int get length => bd.lengthInBytes;
+  int get length => _bd.lengthInBytes;
 
   //Urgent: implement
   @override
@@ -42,11 +46,11 @@ abstract class ByteList extends ListBase<int> implements TypedData {
 
   // **** TypedData interface.
   @override
-  int get elementSizeInBytes => bd.elementSizeInBytes;
+  int get elementSizeInBytes => _bd.elementSizeInBytes;
   @override
-  int get offsetInBytes => bd.offsetInBytes;
+  int get offsetInBytes => _bd.offsetInBytes;
   @override
-  int get lengthInBytes => bd.lengthInBytes;
+  int get lengthInBytes => _bd.lengthInBytes;
 
   /// Returns the underlying [ByteBuffer].
   ///
@@ -55,5 +59,5 @@ abstract class ByteList extends ListBase<int> implements TypedData {
   ///
   /// The buffer may be larger than [lengthInBytes] bytes, but never smaller.
   @override
-  ByteBuffer get buffer => bd.buffer;
+  ByteBuffer get buffer => _bd.buffer;
 }
