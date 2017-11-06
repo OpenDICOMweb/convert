@@ -7,34 +7,34 @@ part of odw.sdk.convert.binary.base.writer;
 
 /// Writes File Meta Information (FMI) to the output.
 /// _Note_: FMI is always Explicit Little Endian
-bool _writeFmi(RootDataset rootDS, EncodingParameters eParams, bool cleanPreamble) {
+bool _writeFmi(RootDataset rootDS, EncodingParameters eParams) {
   //  if (encoding.doUpdateFMI) return writeODWFMI();
   if (rootDS is! RootDataset) log.error('Not _rootDS');
   if (!rootDS.hasFmi) {
   	final pInfo = rootDS.parseInfo;
     assert(pInfo.hadPrefix == false || !_eParams.doAddMissingFMI);
-    log.warn('Root Dataset does not have FMI: $_rootDS');
+    log.warn('Root Dataset does not have FMI: $_rds');
     if (!_eParams.allowMissingFMI || !_eParams.doAddMissingFMI) {
-      log.error('Dataset $_rootDS is missing FMI elements');
+      log.error('Dataset $_rds is missing FMI elements');
       return false;
     }
     if (eParams.doUpdateFMI) return writeOdwFMI(rootDS);
   }
   assert(rootDS.hasFmi);
-  _writeExistingFmi(rootDS, cleanPreamble);
-  _isEVR = _rootDS.isEVR;
+  _writeExistingFmi(rootDS, _eParams.doCleanPreamble);
+  _isEvr = _rds.isEvr;
   return true;
 }
 
 bool writeOdwFMI(RootDataset rootDS) {
-  if (rootDS is! RootDataset) log.error('Not _rootDS');
+  if (rootDS is! RootDataset) log.error('Not _rds');
   //Urgent finish
   _writeCleanPrefix();
   return true;
 }
 
 void _writeExistingFmi(RootDataset rootDS, bool cleanPreamble) {
-  _isEVR = true;
+  _isEvr = true;
   _writePrefix(rootDS, cleanPreamble);
   for (var e in rootDS.elements) {
     if (e.code > 0x00030000) break;
@@ -46,7 +46,7 @@ void _writeExistingFmi(RootDataset rootDS, bool cleanPreamble) {
 /// Writes a DICOM Preamble and Prefix (see PS3.10) as the
 /// beginning of the encoding.
 bool _writePrefix(RootDataset rootDS, bool cleanPreamble) {
-  if (rootDS is! RootDataset) log.error('Not _rootDS');
+  if (rootDS is! RootDataset) log.error('Not _rds');
   final pInfo = rootDS.parseInfo;
   return (pInfo.preambleWasZeros || _eParams.doCleanPreamble)
       ? _writeCleanPrefix()

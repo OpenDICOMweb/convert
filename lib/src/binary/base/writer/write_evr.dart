@@ -5,7 +5,23 @@
 // See the AUTHORS file for other contributors.
 part of odw.sdk.convert.binary.base.writer;
 
+void _writeEvrRootDataset(RootDataset rds, EncodingParameters eParams) {
+	_rds = rds;
+	_cds = rds;
+	_writeEvrDataset(rds, eParams);
+}
+
+void _writeEvrDataset(Dataset ds, EncodingParameters _eParams) {
+	assert(ds != null);
+	final previousDS = _cds;
+	_cds = ds;
+
+	if (_isEvr);
+	ds.elements.forEach(_writeElement);
+	_cds = previousDS;
+}
 void _writeEvr(Element e) {
+	log.debug('${_wb.wbb} $e :${_wb.remaining}');
   final eStart = _wb.wIndex;
   final vrIndex = e.vrIndex;
   if (_isEvrShortVR(vrIndex)) {

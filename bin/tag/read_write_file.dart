@@ -30,7 +30,7 @@ void main() {
 
   // Write a File
   final writer = new TagWriter.toPath(tagDS0, outPath);
-  final bytes1 = writer.writeRootDataset();
+  final bytes1 = writer.write();
   log
     ..debug('  Wrote ${bytes1.length} bytes')
     ..info0('Re-reading: $outPath');

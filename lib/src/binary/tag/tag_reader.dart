@@ -19,7 +19,7 @@ import 'package:dcm_convert/src/decoding_parameters.dart';
 SQ _makeSequence(EBytes eb, Dataset parent, List<Item> items) =>
 		new SQtag.fromBytes(eb, parent, items);
 
-/// Returns a new [ItemByte].
+/// Returns a new [Item].
 Item _makeItem(Dataset parent, {ElementList elements, SQ sequence, DSBytes eb}) =>
 		new ItemTag(parent);
 
@@ -76,7 +76,7 @@ class TagReader extends DcmReader {
           async: async, fast: fast, fmiOnly: fmiOnly, reUseBD: reUseBD, dParams: dParams);
 
   @override
-  ElementList get elements => currentDS.elements;
+  ElementList get elements => cds.elements;
 
   @override
   String elementInfo(Element e) => (e == null) ? 'Element e = null' : e.info;
@@ -101,7 +101,7 @@ class TagReader extends DcmReader {
         fmiOnly: fmiOnly,
         reUseBD: reUseBD,
         dParams: dParams);
-    final root = reader.read(dParams);
+    final root = reader.read();
     log.debug(root);
     return root;
   }

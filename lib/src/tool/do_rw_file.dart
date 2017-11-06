@@ -28,7 +28,7 @@ Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) asy
   	  final Uint8List bytes = await f.readAsBytes();
   	  final bd = bytes.buffer.asByteData();
     final reader0 = new ByteReader(bd, fast: true);
-    final rds0 = reader0.readRootDataset();
+    final rds0 = reader0.read();
     //TODO: improve next two errors
     if (rds0 == null) {
       log.info0('Bad File: ${f.path}');
@@ -58,7 +58,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     	final outPath = getTempFile(f.path, 'dcmout');
       writer = new ByteWriter.toPath(rds0, outPath, fast: true);
     }
-    final bytes1 = writer.writeRootDataset();
+    final bytes1 = writer.write();
     log.debug('$pad    Encoded ${bytes1.length} bytes');
 
    // Urgent Jim if file has dups then no test is done. Fix it.

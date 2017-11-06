@@ -62,7 +62,7 @@ Element _finishLong(int code, int eStart, int vrIndex, int vfLengthField, int eL
 Element _finishReadElement(int code, int eStart, Element e) {
   assert(_rb.checkIndex());
   // Elements are always read into the current dataset.
-  _currentDS.add(e);
+  _cds.add(e);
 
   // Statistics
   if (statisticsEnabled) {

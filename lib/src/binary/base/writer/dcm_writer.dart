@@ -30,47 +30,21 @@ part 'package:dcm_convert/src/binary/base/writer/write_fmi.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_utils.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_vf.dart';
 
-/*
-String _path;
-bool _isEVR;
-bool _wasShortFile;
-
-RootDataset _rootDS;
-Dataset _currentDS;
-ElementList _elements;
-var _bytesUnread = 0;
-
-/// The current read index.
-var _rIndex = 0;
-*/
-
-/*
-ByteData _bl;
-RootDataset _rootDS;
-Dataset _currentDS;
-
-bool _isEVR;
-
-*/
-String _path;
+//String _path;
 ByteWriter _wb;
-RootDataset _rootDS;
+RootDataset _rds;
 
 /// The current dataset.  This changes as Sequences are written.
-Dataset _currentDS;
+Dataset _cds;
 EncodingParameters _eParams;
 bool _keepUndefinedLengths;
 
 ElementOffsets _offsets;
 Function _writeElement;
 
-bool _isEVR;
+bool _isEvr;
 TransferSyntax _ts;
-
-int _nElements = 0;
-int _nSequences = 0;
-int _nPrivateElements = 0;
-int _nPrivateSequences = 0;
+ParseInfo _parseInfo;
 
 /// A library for encoding [Dataset]s in the DICOM File Format.
 ///
@@ -84,10 +58,14 @@ int _nPrivateSequences = 0;
 // There are four [Element]s that might have an Undefined Length value
 // (0xFFFFFFFF), [SQ], [OB], [OW], [UN].
 abstract class DcmWriter extends DcmWriterInterface {
+  @override
+  final RootDataset rds;
+
   /// The target output [path] for the encoded data. [file] has
   /// precedence over [path].
   final String path;
 
+  // TODO: Remove file?
   /// The target output [file] for the encoded data. [file] has
   /// precedence over [path].
   final File file;
@@ -108,46 +86,43 @@ abstract class DcmWriter extends DcmWriterInterface {
   @override
   final ByteWriter wb;
 
-  /// Return true if input is Explicit VR, false if Implicit VR.
-
-  //TODO: these should be reported in an EncodeData structure (like ParseData)
-
   /// Creates a new [DcmWriter], where [wIndex] = 0.
-  DcmWriter(RootDataset rootDS,
+  DcmWriter(this.rds,
       {this.path,
       this.file,
       TransferSyntax outputTS,
       int length = ByteWriter.kDefaultLength,
       this.reUseBuffer = true,
       this.eParams = EncodingParameters.kNoChange})
-      : targetTS = getOutputTS(rootDS, outputTS),
+      : targetTS = getOutputTS(rds, outputTS),
         wb = (reUseBuffer)
             ? _reuseByteListWriter(length)
             : new ByteWriter((length == null) ? defaultBufferLength : length) {
-    _currentDS = rootDS;
+    _cds = rds;
     _eParams = eParams;
     _wb = wb;
-    _rootDS = rootDS;
-    _path = path;
-    _isEVR = rootDS.isEVR;
+    _rds = rds;
+//    _path = path;
+    _isEvr = rds.isEvr;
+    _parseInfo = new ParseInfo(rds);
     //if (elementOffsetsEnabled) _offsets = new ElementOffsets();
     _offsets = new ElementOffsets();
     _keepUndefinedLengths = !_eParams.doConvertUndefinedLengths;
   }
 
   /// Returns the [targetTS] for the encoded output.
-  static TransferSyntax getOutputTS(RootDataset rootDS, TransferSyntax outputTS) {
+  static TransferSyntax getOutputTS(RootDataset rds, TransferSyntax outputTS) {
     if (outputTS == null) {
-      return (rootDS.transferSyntax == null)
+      return (rds.transferSyntax == null)
           ? system.defaultTransferSyntax
-          : rootDS.transferSyntax;
+          : rds.transferSyntax;
     } else {
       return outputTS;
     }
   }
 
   @override
-  Dataset get currentDS => _currentDS;
+  Dataset get cds => _cds;
 
   /// Returns a [Uint8List] view of the [ByteData] buffer at the current time
   Uint8List get asUint8List => wb.uint8View(0, wb.wIndex);
@@ -156,12 +131,12 @@ abstract class DcmWriter extends DcmWriterInterface {
   int get wIndex => wb.wIndex;
 
   /// The root Dataset being encoded.
-  //  RootDataset get rootDS;
+  //  RootDataset get rds;
 
-  TransferSyntax get ts => rootDS.transferSyntax;
+  TransferSyntax get ts => rds.transferSyntax;
 
   /// The current dataset.  This changes as Sequences and Items are encoded.
-  //  Dataset currentDS;
+  //  Dataset cds;
 
   /// The current [length] in bytes of this [DcmWriter].
   int get lengthInBytes => wb.wIndex;
@@ -171,32 +146,37 @@ abstract class DcmWriter extends DcmWriterInterface {
 
   bool get removeUndefinedLengths => eParams.doConvertUndefinedLengths;
 
-  String get info =>
-      '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
+  String get info => '$runtimeType: rds: ${rds.info}, cds: ${_cds.info}';
 
   /// Writes (encodes) only the FMI in the root [Dataset] in 'application/dicom'
   /// media type, writes it to a Uint8List, and returns the [Uint8List].
-  Uint8List writeFmi(RootDataset rootDS, EncodingParameters eParams,
-                     {bool cleanPreamble = true}) {
-	  _writeFmi(rootDS, eParams, cleanPreamble);
-	  final bytes = wb.close();
-	  _writeFile(bytes, file);
-	  return bytes;
+  @override
+  Uint8List writeFmi() {
+    _writeFmi(rds, eParams);
+    final bytes = wb.close();
+    _writeFile(bytes, file);
+    return bytes;
   }
 
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].
-  Uint8List writeRootDS(RootDataset rootDS, {bool cleanPreamble = true}) {
+  @override
+  Uint8List write() {
     //TODO: handle doSeparateBulkdata
-    _currentDS = rootDS;
-    _ts = (targetTS == null) ? rootDS.transferSyntax : targetTS;
+    _cds = rds;
+    _ts = (targetTS == null) ? rds.transferSyntax : targetTS;
     if (_ts == null) throw 'no TS';
-    _writeFmi(rootDS, eParams, cleanPreamble);
+    _writeFmi(rds, eParams);
 
     // Set the Element reader based on the Transfer Syntax.
-    _isEVR = rootDS.isEVR;
-    _writeElement = (_isEVR) ? _writeEvr : _writeIvr;
-    _writeDataset(rootDS);
+    _isEvr = rds.isEvr;
+    if (_isEvr) {
+	    _writeEvrRootDataset(
+	    );
+    } else {
+    	_writeIvrRootDataset();
+    }
+
 
     if (wb == null || wb.length < ByteWriter.kMinByteListLength)
       throw 'Invalid bytes error: $wb';
@@ -206,10 +186,16 @@ abstract class DcmWriter extends DcmWriterInterface {
   }
 
   void writeElement(Element e, {bool isEVR = true}) =>
-      (_isEVR) ? _writeEvr(e) : _writeIvr(e);
+      (_isEvr) ? _writeEvr(e) : _writeIvr(e);
 
   /// Writes a [Dataset] to the buffer.
-  void writeDataset(Dataset ds) => _writeDataset(ds);
+  void writeDataset(Dataset ds) {
+  	if (_isEvr) {
+  		_writeEvrDataset(ds);
+	  } else {
+		  _writeDataset(ds, eParams);
+	  }
+  }
 
   /// Testing interface
   void xWriteElement(Element e) => _writeElement(e);
@@ -221,32 +207,19 @@ abstract class DcmWriter extends DcmWriterInterface {
   static ByteWriter _reuse;
 
   static ByteWriter _reuseByteListWriter([int size]) {
-	  size ??= defaultBufferLength;
-	  if (_reuse == null) return _reuse = new ByteWriter(size);
-	  if (size > _reuse.lengthInBytes) {
-		  _reuse = new ByteWriter(size + 1024);
-		  log.warn('**** DcmWriter creating new Reuse BD of Size: ${_reuse
+    size ??= defaultBufferLength;
+    if (_reuse == null) return _reuse = new ByteWriter(size);
+    if (size > _reuse.lengthInBytes) {
+      _reuse = new ByteWriter(size + 1024);
+      log.warn('**** DcmWriter creating new Reuse BD of Size: ${_reuse
 				  .lengthInBytes}');
-	  }
-	  return _reuse;
+    }
+    return _reuse;
   }
 }
 // **** Private methods
 
-void _writeDataset(Dataset ds) {
-  assert(ds != null);
-  final previousDS = _currentDS;
-  _currentDS = ds;
 
-  _isEVR = true;
-  for (var e in ds.elements) {
-    //Urgent Jim: figure out how to move this outside loop.
-    //  should fmi be a separate map in the rootDS?
-    if (e.code > 0x30000) _isEVR = _rootDS.isEVR;
-    _writeElement(e);
-  }
-  _currentDS = previousDS;
-}
 
 void _writeValueField(Element e) {
   final bytes = e.vfBytes;
@@ -268,4 +241,3 @@ void _writePathSync(ByteData bd, String path) {
   assert(path != null && path.isNotEmpty);
   if (path.isNotEmpty) _writeFileSync(bd, new File(path));
 }
-

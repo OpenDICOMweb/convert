@@ -11,23 +11,19 @@ import 'package:dataset/byte_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
 import 'package:element/byte_element.dart';
 import 'package:element/tag_element.dart';
-import 'package:system/core.dart';
 import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/dcm_reader.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
-import 'package:dcm_convert/src/errors.dart';
 import 'package:dcm_convert/src/io_utils.dart';
 
 /// Returns a new ByteSequence.
 SQ _makeSequence(EBytes eb, Dataset parent, List<Item> items) =>
     new SQbyte.fromBytes(eb, parent, items);
 
-/*
 RootDataset makeRootDataset(RDSBytes dsBytes, Dataset parent,
         [ElementList elements, String path]) =>
     new RootDatasetByte(dsBytes, elements: elements, path: path);
-*/
 
 /// Returns a new [ItemByte].
 Item _makeItem(Dataset parent, {ElementList elements, SQ sequence, DSBytes eb}) =>
@@ -88,7 +84,7 @@ class ByteReader extends DcmReader {
           async: async, fast: fast, fmiOnly: fmiOnly, reUseBD: reUseBD, dParams: dParams);
 
   @override
-  ElementList get elements => currentDS.elements;
+  ElementList get elements => cds.elements;
 
   @override
   String elementInfo(Element e) => (e == null) ? 'Element e = null' : e.info;
@@ -120,7 +116,7 @@ class ByteReader extends DcmReader {
         reUseBD: reUseBD,
         showStats: showStats,
         dParams: dParams);
-    return reader.read(dParams);
+    return reader.read();
   }
 
   /// Reads the [RootDataset] from a [File].

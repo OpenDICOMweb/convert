@@ -19,18 +19,22 @@ abstract class DcmWriterInterface {
   ByteWriter get wb;
 
   /// Returns the Root [Dataset].
-  RootDataset get rootDS;
+  RootDataset get rds;
 
   /// The current dataset.  This changes as Sequences are read.
-  Dataset get currentDS;
+  Dataset get cds;
 
   /// The current [Element] [Map].
-  List<Element> get elements => currentDS.elements;
+  List<Element> get elements => cds.elements;
 
   /// The current duplicate [List<Element>].
-  List<Element> get duplicates => currentDS.elements.duplicates;
+  List<Element> get duplicates => cds.elements.duplicates;
 
   ElementOffsets get offsets;
+
+  Uint8List write();
+
+  Uint8List writeFmi();
 
   /// Interface for logging
   String itemInfo(Item item);

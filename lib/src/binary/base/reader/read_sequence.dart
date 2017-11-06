@@ -63,8 +63,8 @@ Element _makeSequence(
   //  log.debug1('$rmm   eLength($eLength), makeSQ');
   final bd = _rb.buffer.asByteData(eStart, _rb.rIndex - eStart);
   final eb = ebMaker(bd);
-  final sq = sequenceMaker(eb, _currentDS, items);
-  _currentDS.elements.add(sq);
+  final sq = sequenceMaker(eb, _cds, items);
+  _cds.elements.add(sq);
 
   _pInfo.nSequences++;
   _pInfo.lastSequenceRead = sq;
@@ -86,15 +86,18 @@ Item _readItem() {
   final delimiter = _rb.uint32;
   _rb.sMsg('readItem', kItem, iStart, vfLength: delimiter);
 
-  log.debug('${dcm(_rb.getUint32(_rb.rIndex - 4))} - ${_rb.getUint32(_rb.rIndex - 4)}');
-  log.debug('${dcm(_rb.getUint32(_rb.rIndex))} - ${_rb.getUint32(_rb.rIndex)}');
-  log.debug('${dcm(_rb.getUint32(_rb.rIndex + 4))} - ${_rb.getUint32(_rb.rIndex + 4)}');
-  log.debug('${dcm(_rb.getUint32(_rb.rIndex + 8))} - ${_rb.getUint32(_rb.rIndex + 8)}');
+/* Urgent Jim: make utility
+   log
+    ..debug('${dcm(_rb.getUint32(_rb.rIndex - 4))} - ${_rb.getUint32(_rb.rIndex - 4)}')
+    ..debug('${dcm(_rb.getUint32(_rb.rIndex))} - ${_rb.getUint32(_rb.rIndex)}')
+    ..debug('${dcm(_rb.getUint32(_rb.rIndex + 4))} - ${_rb.getUint32(_rb.rIndex + 4)}')
+    ..debug('${dcm(_rb.getUint32(_rb.rIndex + 8))} - ${_rb.getUint32(_rb.rIndex + 8)}');
+  */
   assert(delimiter == kItem32BitLE, 'Invalid Item code: ${dcm(delimiter)}');
 
-  final item = itemMaker(_currentDS);
-  final parentDS = _currentDS;
-  _currentDS = item;
+  final item = itemMaker(_cds);
+  final parentDS = _cds;
+  _cds = item;
 
   try {
     // Save parent [Dataset], and make [item] is new parent [Dataset].
@@ -110,13 +113,13 @@ Item _readItem() {
     log.reset;
     rethrow;
   } catch (e) {
-    log.error('${_rb.rrr} Error reading dataset: $_currentDS', -1);
+    log.error('${_rb.rrr} Error reading dataset: $_cds', -1);
     _pInfo.hadParsingErrors = true;
     _rb.error(e.toString());
     log.reset;
     rethrow;
   } finally {
-    _currentDS = parentDS;
+    _cds = parentDS;
   }
 
   final bd = _rb.buffer.asByteData(iStart, _rb.rIndex - iStart);

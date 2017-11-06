@@ -41,7 +41,7 @@ Future<bool> doReadByteFile(File f,
 	  final Uint8List bytes = await f.readAsBytes();
 	  final bd = bytes.buffer.asByteData();
 	  final reader0 = new ByteReader(bd);
-	  final rds0 = reader0.readRootDataset();
+	  final rds0 = reader0.read();
     if (rds0 == null) {
       log.info0('Unreadable File: $path');
       return false;

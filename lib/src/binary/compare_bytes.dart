@@ -59,9 +59,10 @@ bool compareUnequalLengths(Uint8List b0, Uint8List b1) {
       (b0.lengthInBytes < b1.lengthInBytes) ? b0.lengthInBytes : b1.lengthInBytes;
   for (var i = 0; i < length; i++) {
     if (b0[i] != b1[i]) {
-      log.debug('  diff @$i');
-      log.debug('  b0: ${b0.sublist(i, i + 20)}');
-      log.debug('  b1: ${b1.sublist(i, i + 20)}');
+      log
+        ..debug('  diff @$i')
+        ..debug('  b0: ${b0.sublist(i, i + 20)}')
+        ..debug('  b1: ${b1.sublist(i, i + 20)}');
       return false;
     }
   }
@@ -72,15 +73,15 @@ void showBytes(Uint8List b0, Uint8List b1, int offset) {
   log.debug('offset: $offset');
   final b0x = b0.buffer.asUint8List(offset, offset + 16);
   final b1x = b1.buffer.asUint8List(offset, offset + 16);
-  log.debug(b0x);
-  log.debug(b1x);
+  log..debug(b0x)..debug(b1x);
   final pos = offset % 4;
   final line = (offset ~/ 4) * 4;
   final startLine = line;
   final endLine = line + 96;
 
-  log.debug('Non-matching bytes at offset: $offset');
-  log.debug('O     B0           B1        B0   B1       B0          B1');
+  log
+    ..debug('Non-matching bytes at offset: $offset')
+    ..debug('O     B0           B1        B0   B1       B0          B1');
 //log.debug('(gggg,eeee)  (gggg,eeee)  abcf abcd  0123456789  0123456789');
 
   for (var i = startLine; i < line - 1; i += 4) {

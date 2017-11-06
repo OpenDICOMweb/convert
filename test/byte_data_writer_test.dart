@@ -23,7 +23,7 @@ void main() {
         ..debug('length: ${buf.lengthInBytes}');
       expect(buf.lengthInBytes == startSize, true);
       for (var i = 0; i < iterations - 1; i++) {
-        final v = i % 128;
+        final v = i % 127;
         buf.int8(v);
       }
       log.debug('length: ${buf.lengthInBytes}');

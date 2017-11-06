@@ -55,12 +55,12 @@ bool readWritePath(String path, {int reps = 1, bool fmiOnly = false}) {
 bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
   final Uint8List bytes0 = inFile.readAsBytesSync();
   final reader = new ByteReader(bytes0.buffer.asByteData());
-  final rds0 = reader.readRootDataset();
+  final rds0 = reader.read();
 /*  List<int> elementIndex0 = reader.elementIndex;*/
   log..info0(rds0.parseInfo)..info0(rds0.info);
 
   final writer = new ByteWriter(rds0);
-  final bytes1 = writer.writeRootDataset();
+  final bytes1 = writer.write();
 
 /*  List<int> elementIndex1 = writer.elementIndex.sublist(0, writer.nthElement);
   if (reader.nthElement != writer.nthElement)

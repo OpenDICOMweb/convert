@@ -26,7 +26,7 @@ Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
     final Uint8List bytes = await f.readAsBytes();
     final bd = bytes.buffer.asByteData();
     final reader0 = new ByteReader(bd, fast: true);
-    final rds0 = reader0.readRootDataset();
+    final rds0 = reader0.read();
     //TODO: improve next two errors
     if (rds0 == null) {
       log.info0('Bad File: ${f.path}');
@@ -56,7 +56,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       writer = new ByteWriter.toPath(rds0, outPath, fast: true);
     }
-    final bytes1 = writer.writeRootDataset();
+    final bytes1 = writer.write();
     log.debug('$pad    Encoded ${bytes1.length} bytes');
 
     if (!fast) {
@@ -72,7 +72,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       reader1 = new ByteReader.fromPath(outPath);
     }
-    final rds1 = reader1.readRootDataset();
+    final rds1 = reader1.read();
     //   RootDatasetBytes rds1 = ByteReader.readPath(outPath);
     log
       ..debug('$pad Read ${reader1.rootBytes.lengthInBytes} bytes')

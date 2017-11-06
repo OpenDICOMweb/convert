@@ -9,8 +9,8 @@ part of odw.sdk.convert.binary.reader;
 /// if any [Fmi] [Element]s were present; otherwise, returns null.
 bool _readFmi(RootDataset rds, String path, DecodingParameters dParams) {
   try {
-    log.debug('${_rb.rbb} readFmi($_currentDS)', -1);
-    assert(_currentDS == rds);
+    log.debug('${_rb.rbb} readFmi($_cds)', -1);
+    assert(_cds == rds);
     assert(_pInfo.hadPrefix == null, 'hadPrefix was non-null');
     _pInfo.hadPrefix = _readPrefix(path, dParams.checkPreambleAllZeros);
     if (!_pInfo.hadPrefix && !dParams.allowMissingPrefix) {
@@ -24,7 +24,7 @@ bool _readFmi(RootDataset rds, String path, DecodingParameters dParams) {
       _readEvrElement();
     }
 
-    _isEvr = rds.isEVR;
+    _isEvr = rds.isEvr;
     _pInfo.hadFmi = _rds.hasFmi;
 
     if (!_rb.hasRemaining(shortFileThreshold - _rb.rIndex)) {

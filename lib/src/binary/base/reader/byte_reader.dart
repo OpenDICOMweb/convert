@@ -210,7 +210,7 @@ class ByteReader extends ByteList {
   // Note: Since for binary DICOM the Value Field is 16-bit aligned,
   // it must be checked 16 bits at a time.
   int findEndOfULengthVF() {
-    final start = log.down;
+    log.down;
     //  log.debug1('$rbb findEndOfULengthVF');
     while (_isReadable) {
       if (_getUint16 != kDelimiterFirst16Bits) continue;

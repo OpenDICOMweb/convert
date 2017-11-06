@@ -42,8 +42,8 @@ part 'package:dcm_convert/src/binary/base/reader/read_utils.dart';
 typedef Element ElementMaker(EBytes eb, int vrIndex);
 typedef PixelData PixelDataMaker(EBytes eb, int vrIndex,
     [TransferSyntax ts, VFFragments fragments]);
-typedef SQ SequenceMaker(EBytes eb, Dataset _currentDS, List<Item> items);
-typedef Item ItemMaker(Dataset _currentDS);
+typedef SQ SequenceMaker(EBytes eb, Dataset _cds, List<Item> items);
+typedef Item ItemMaker(Dataset _cds);
 
 Function _readElement;
 
@@ -68,7 +68,7 @@ int _count = 0;
 
 // local variables used by _readEvrDataset and _readIvrDataset
 Dataset _parentDS;
-Dataset _currentDS;
+Dataset _cds;
 
 typedef SQ SQMaker();
 SQMaker _sqMaker;
@@ -121,22 +121,22 @@ abstract class DcmReader extends DcmReaderInterface {
   final bool showStats;
   final DecodingParameters dParams;
   @override
-  Dataset currentDS;
+  Dataset cds;
   ParseInfo pInfo;
 
   /// Creates a new [DcmReader]  where [rb].rIndex = 0.
   DcmReader(ByteData bd, this.rds,
       {this.path = '',
-	      //TODO: make async work and be the default
+      //TODO: make async work and be the default
       this.async = true,
       this.fast: true,
       this.fmiOnly = false,
       this.reUseBD = true,
-	      this.showStats,
+      this.showStats = false,
       this.dParams = DecodingParameters.kNoChange})
       : bdLength = bd.lengthInBytes,
         rb = new ByteReader(bd),
-        currentDS = rds,
+        cds = rds,
         pInfo = new ParseInfo(rds) {
     //  log.debug('ByteData length: ${rb.lengthInBytes}');
     if (bdLength <= shortFileThreshold) {
@@ -146,7 +146,7 @@ abstract class DcmReader extends DcmReaderInterface {
     }
     _rb = rb;
     _rds = rds;
-    _currentDS = rds;
+    _cds = rds;
     _dParams = dParams;
     _pInfo = pInfo;
     _hadPrefix = false;
@@ -155,7 +155,7 @@ abstract class DcmReader extends DcmReaderInterface {
     if (elementOffsetsEnabled) _offsets = new ElementOffsets();
   }
 
-  bool get isEvr => rds.isEVR;
+  bool get isEvr => rds.isEvr;
 
   bool get isReadable => rb.isReadable;
 
@@ -164,38 +164,33 @@ abstract class DcmReader extends DcmReaderInterface {
   @override
   ElementOffsets get offsets => _offsets;
 
-  String get info => '$runtimeType: rds: ${rds.info}, currentDS: ${currentDS.info}';
+  String get info => '$runtimeType: rds: ${rds.info}, cds: ${cds.info}';
 
   bool hasRemaining(int n) => _rb.hasRemaining(n);
 
-  RootDataset read(DecodingParameters dParams,
-      {bool checkPreamble = true, bool allowMissingPrefix = false}) {
-    currentDS = rds;
+  RootDataset read() {
+    cds = rds;
     _readRootDS(rds, path, dParams);
     rds.parseInfo = _pInfo;
     if (showStats) showStats;
     return rds;
   }
 
-  RootDataset readFmi(DecodingParameters dParams,
-      {bool checkPreamble = true, bool allowMissingPrefix = false}) {
-    currentDS = rds;
+  RootDataset readFmi() {
+    cds = rds;
     _readFmi(rds, path, dParams);
     rds.parseInfo = _pInfo;
     if (showStats) showStats;
     return (rds.hasFmi) ? rds : null;
   }
 
-/*
-  Element readElement(Dataset ds, {bool isEVR = true}) =>
-      (isEVR) ? _readEvrElement(ds, dParams) : _readIvrDataset(ds, dParams);
-*/
+  Element readElement( {bool isEVR = true}) =>
+      (isEVR) ? _readEvrElement() : _readIvrElement();
 
   @override
-  String toString() => '$runtimeType: rds: $rds, currentDS: $currentDS';
+  String toString() => '$runtimeType: rds: $rds, cds: $cds';
 
-  String get stats =>
-		  '''${_rb.rmm} 
+  String get stats => '''${_rb.rmm} 
  Bytes remaining unread: ${rb.remaining}
   Statistics
                   isEvr: $isEvr
@@ -232,9 +227,7 @@ abstract class DcmReader extends DcmReaderInterface {
         rootDSSequences: ${rds.elements.sequences}
         rootDSDupLength: ${rds.elements.duplicates.length}
         currentDSLength: ${rds.elements.length}
-     currentDSDupLength: ${currentDS.elements.duplicates.length}
-     currentDSSequences: ${currentDS.elements.sequences}
+     currentDSDupLength: ${cds.elements.duplicates.length}
+     currentDSSequences: ${cds.elements.sequences}
                 totalDS: ${rds.total + rds.dupTotal}''';
-
 }
-

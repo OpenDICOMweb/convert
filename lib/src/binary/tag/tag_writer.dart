@@ -28,14 +28,8 @@ import 'package:dcm_convert/src/io_utils.dart';
 /// and then possibly writing it to a [File]. Supports encoding
 /// all LITTLE ENDIAN [TransferSyntax]es.
 class TagWriter extends DcmWriter {
-  /// The root [RootDatasetTag] being written.
-  final RootDataset _rootDS;
-
-  /// The current [Dataset].  This changes as Sequences are written.
-  Dataset _currentDS;
-
   /// Creates a new [TagWriter] where [wIndex] = 0.
-  TagWriter(this._rootDS,
+  TagWriter(RootDatasetTag rds,
       {int bufferLength,
       String path = '',
       TransferSyntax outputTS,
@@ -47,8 +41,8 @@ class TagWriter extends DcmWriter {
       bool removeUndefinedLengths = false,
       bool reUseBD = true,
       EncodingParameters encoding})
-      : assert(_rootDS.transferSyntax != null),
-			  super(_rootDS,
+      : assert(rds.transferSyntax != null),
+			  super(rds,
             length: bufferLength,
             path: path,
             reUseBuffer: reUseBD,
@@ -84,16 +78,9 @@ class TagWriter extends DcmWriter {
   // The following Getters and Setters provide the correct [Type]s
   // for [rootDS] and [currentDS].
 
-  /// Returns the [RootDataset] being written.
-  @override
-  RootDataset get rootDS => _rootDS;
-
-  @override
-  Dataset get currentDS => _currentDS;
-
   @override
   String get info =>
-      '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
+      '$runtimeType: rootDS: ${rds.info}, currentDS: ${cds.info}';
 
   @override
   String elementInfo(Element e) => (e == null) ? 'Element e = null' : e.info;
@@ -101,12 +88,14 @@ class TagWriter extends DcmWriter {
   @override
   String itemInfo(Item item) => (item == null) ? 'Item item = null' : item.info;
 
-  Uint8List writeFMI({bool cleanPreamble = true}) =>
-      super.writeFmi(rootDS, eParams, cleanPreamble: cleanPreamble);
+  @override
+  Uint8List writeFmi({bool cleanPreamble = true}) =>
+      super.writeFmi();
 
-  /// Reads a [RootDataset], and stores it in [rootDS],
+  /// Reads a [RootDataset], and stores it in [rds],
   /// and returns it.
-  Uint8List writeRootDataset({bool addMissingFMI = false}) => writeRootDS(rootDS);
+  @override
+  Uint8List write() => super.write();
 
   /// Writes the [RootDataset] to a [Uint8List], and returns the [Uint8List].
   static Uint8List writeBytes(RootDataset ds,
@@ -119,7 +108,7 @@ class TagWriter extends DcmWriter {
     checkRootDataset(ds);
     final writer = new TagWriter(ds,
         bufferLength: bufferLength, path: path, reUseBD: reUseBD, outputTS: outputTS);
-    return writer.writeRootDataset();
+    return writer.write();
   }
 
   /// Writes the [RootDataset] to a [Uint8List], then writes the

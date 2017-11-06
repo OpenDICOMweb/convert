@@ -24,19 +24,12 @@ import 'package:dcm_convert/src/binary/base/writer/dcm_writer.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 import 'package:dcm_convert/src/io_utils.dart';
 
-
 /// A [class] for writing a [RootDatasetByte] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
 /// all LITTLE ENDIAN [TransferSyntax]es.
 class ByteWriter extends DcmWriter {
-  /// The [RootDatasetByte] being written.
-  final RootDatasetByte _rootDS;
-
-  /// The current [Dataset].  This changes as Sequences are written.
-  Dataset _currentDS;
-
   /// Creates a new [ByteWriter] where [wIndex] = 0.
-  ByteWriter(this._rootDS,
+  ByteWriter(RootDatasetByte rds,
       {int bufferLength = DcmWriter.defaultBufferLength,
       String path = '',
       File file,
@@ -44,7 +37,7 @@ class ByteWriter extends DcmWriter {
       bool throwOnError = true,
       bool reUseBuffer = true,
       EncodingParameters encoding = EncodingParameters.kNoChange})
-      : super(_rootDS,
+      : super(rds,
             length: bufferLength,
             path: path,
             outputTS: outputTS,
@@ -78,31 +71,26 @@ class ByteWriter extends DcmWriter {
         bufferLength: bufferLength, path: path, reUseBuffer: fast, outputTS: targetTS);
   }
 
-  // The following Getters and Setters provide the correct [Type]s
-  // for [rootDS] and [currentDS].
-
-  /// Returns the [RootDataset] being written.
   @override
-  RootDatasetByte get rootDS => _rootDS;
-
-  @override
-  ElementList get elements => currentDS.elements;
-
-  @override
-  Dataset get currentDS => _currentDS;
+  ElementList get elements => rds.elements;
 
   @override
   String get info =>
-      '$runtimeType: rootDS: ${rootDS.info}, currentDS: ${_currentDS.info}';
+      '$runtimeType: rds: ${rds.info}, cds: ${cds.info}';
+
+  /// Reads a [RootDatasetByte], and stores it in [rds], and returns it.
+  @override
+  Uint8List writeFmi() => super.writeFmi();
+
+  /// Reads a [RootDatasetByte], and stores it in [rds], and returns it.
+  @override
+  Uint8List write({bool allowMissingFMI = false}) => super.write();
 
   @override
   String elementInfo(Element e) => (e == null) ? 'Element e = null' : e.info;
 
   @override
   String itemInfo(Item item) => (item == null) ? 'Item item = null' : item.info;
-
-  /// Reads a [RootDatasetByte], and stores it in [rootDS], and returns it.
-  Uint8List writeRootDataset({bool allowMissingFMI = false}) => writeRootDS(rootDS);
 
   /// Writes the [RootDatasetByte] to a [Uint8List], and returns the [Uint8List].
   static Uint8List writeBytes(RootDatasetByte ds,
@@ -116,7 +104,7 @@ class ByteWriter extends DcmWriter {
     checkRootDataset(ds);
     final writer = new ByteWriter(ds,
         bufferLength: bufferLength, path: path, reUseBuffer: reUseBD, outputTS: outputTS);
-    return writer.writeRootDataset();
+    return writer.write();
   }
 
   /// Writes the [RootDatasetByte] to a [Uint8List], and then writes the

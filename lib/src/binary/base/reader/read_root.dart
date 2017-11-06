@@ -13,16 +13,20 @@ part of odw.sdk.convert.binary.reader;
 RootDataset _readRootDS(RootDataset rds, String path, DecodingParameters dParams) {
   final eStart = _rb.rIndex;
   log.debug('Reading RootDS: start: $eStart length: ${_rb.lengthInBytes}');
-  _currentDS = rds;
+  _cds = rds;
   final hadFmi = _readFmi(rds, path, dParams);
   if (!hadFmi && !dParams.allowMissingFMI) return rds;
 
   // Set the Element reader based on the Transfer Syntax.
-  _readElement = (rds.isEVR) ? _readEvrElement : _readIvrElement;
+  _readElement = (rds.isEvr) ? _readEvrElement : _readIvrElement;
 
-  int count;
   try {
-    final rdsX = (_isEvr) ? _readEvrRootDataset() : _readIvrRootDataset();
+    if (_isEvr) {
+      _readEvrRootDataset();
+    } else {
+      _readIvrRootDataset();
+    }
+
   } on EndOfDataError catch (e) {
     addErrorInfo(e);
     log.error(e);

@@ -55,8 +55,8 @@ void _writeUndefinedLengthItem(Item item) {
 /// Note: There are four [Element]s ([SQ], [OB], [OW], and [UN]) plus
 /// Items that might have an Undefined Length value(0xFFFFFFFF).
 /// if [_eParams].removeUndefinedLengths is true this method should not be called.
-void _writeDelimiter(int delimiter, [int lengthInBytes = 0]) {
-	//TODO: handle doRemoveNoZeroDelimiterLengths
+void _writeDelimiter(int delimiter, [int lengthInBytes]) {
+	lengthInBytes ??= 0;
 	assert(_eParams.doConvertUndefinedLengths == false);
 	_writeTagCode(delimiter);
 	_wb.uint32(lengthInBytes);
@@ -84,6 +84,7 @@ void _writePath(Uint8List bytes, String path) {
 
 void _finishWritingElement(int start, int end, Element e) {
 	_offsets.add(start, end, e);
-	_nElements++;
-	if (e.isPrivate) _nPrivateElements++;
+	_parseInfo.nElements++;
+	if (e.isPrivate) _parseInfo.nPrivateElements++;
+	log.debug('${_wb.wee}');
 }

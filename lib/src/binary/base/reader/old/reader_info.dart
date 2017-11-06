@@ -7,7 +7,6 @@ part of odw.sdk.convert.binary.reader;
 
 //TODO: redoc to reflect current state of code
 
-
 /*
   /// If [true] and Preamble and Prefix are not present, abort reading.
   final bool allowMissingPrefix;
@@ -74,97 +73,49 @@ part of odw.sdk.convert.binary.reader;
 */
 
 ParseInfo getParseInfo(RootDataset rds) {
-	/*		_nElementsRead,
+  /*		_nElementsRead,
 		_nSequencesRead,
 		_nPrivateElementsRead,
 		_nPrivateSequencesRead,*/
-	rds.total
-	;
-	rds
-			.
-	length
-	;
-	rds
-			.
-	elements
-			.
-	duplicates
-			.
-	length
-	;
-	0
-	;
-	0
-	;
-	0
-	;
-	_path
-	;
-	_preamble
-	;
-	_nonZeroDelimiterLengths
-	;
-	_nOddLengthValueFields
-	;
-	_tsUid
-	;
-	_pixelDataVR
-	;
-	_pixelDataStart
-	;
-	_pixelDataEnd
-	;
-	_lastTopLevelElementRead
-	;
-	_lastElementCode
-	;
-	_endOfLastElementRead
-	;
-	_dsLengthInBytes
-	;
-	_rb
-			.
-	lengthInBytes
-	;
-	shortFileThreshold
-	;
-	exceptions
-	;
-	isEVR
-			:
-	_isEVR
-	;
-	wasShortFile
-			:
-	_wasShortFile
-	;
-	hadFmi
-			:
-	_hadFmi
-	;
-	hadPrefix
-			:
-	_hadPrefix
-	;
-	preambleWasZeros
-			:
-	_preambleWasZeros
-	;
-	hadParsingErrors
-			:
-	_hadParsingErrors
-	;
-	hadGroupLengths
-			:
-	_hadGroupLengths
-	;
-	hadTrailingBytes
-			:
-	_hadTrailingBytes
-	;
-	hadTrailingZeros
-	:
-	_hadTrailingZeros;
+  rds.total;
+  rds.length;
+  rds.elements.duplicates.length;
+  0;
+  0;
+  0;
+  _path;
+  _preamble;
+  _nonZeroDelimiterLengths;
+  _nOddLengthValueFields;
+  _tsUid;
+  _pixelDataVR;
+  _pixelDataStart;
+  _pixelDataEnd;
+  _lastTopLevelElementRead;
+  _lastElementCode;
+  _endOfLastElementRead;
+  _dsLengthInBytes;
+  _rb.lengthInBytes;
+  shortFileThreshold;
+  exceptions;
+  isEVR:
+  _isEVR;
+  wasShortFile:
+  _wasShortFile;
+  hadFmi:
+  _hadFmi;
+  hadPrefix:
+  _hadPrefix;
+  preambleWasZeros:
+  _preambleWasZeros;
+  hadParsingErrors:
+  _hadParsingErrors;
+  hadGroupLengths:
+  _hadGroupLengths;
+  hadTrailingBytes:
+  _hadTrailingBytes;
+  hadTrailingZeros:
+  _hadTrailingZeros;
 }
 
 String stats(ParseInfo pInfo) => '''${_rb.rmm} Statistics

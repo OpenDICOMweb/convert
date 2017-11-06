@@ -32,34 +32,34 @@ class TestByteReader extends ByteReader {
   /// read successfully.
   TransferSyntax xReadFmi(RootDataset rds,
       {bool checkPreamble = true, bool allowMissingPrefix = false}) {
-    readFmi(rds, checkPreamble: checkPreamble, allowMissingPrefix: allowMissingPrefix);
+    readFmi();
     if (!rds.hasFmi || !rds.hasSupportedTransferSyntax) return null;
     return rds.transferSyntax;
   }
 
-  Element xReadPublicElement() => readElement(rds);
+  Element xReadPublicElement() => readElement();
 
   // External Interface for testing
-  Element xReadPGLength() => readElement(rds);
+  Element xReadPGLength() => readElement();
 
   // External Interface for testing
-  Element xReadPrivateIllegal(int code) => readElement(rds);
+  Element xReadPrivateIllegal(int code) => readElement();
 
   // External Interface for testing
-  Element xReadPrivateCreator() => readElement(rds);
+  Element xReadPrivateCreator() => readElement();
 
   // External Interface for testing
-  Element xReadPrivateData(Element pc) => readElement(rds);
+  Element xReadPrivateData(Element pc) => readElement();
 
   // Reads
   RootDatasetByte xReadDataset() {
     while (isReadable) {
-      var e = readElement(rds);
+      var e = readElement();
       rds.add(e);
       e = rds[e.code];
       assert(e == e);
     }
-    return currentDS;
+    return cds;
   }
 
   /// Reads only the File Meta Information (FMI), if present.
@@ -78,7 +78,7 @@ class TestByteReader extends ByteReader {
         fmiOnly: fmiOnly,
         reUseBD: reUseBD,
         dParams: dParams);
-    return reader.read(dParams);
+    return reader.read();
   }
 
   static RootDatasetByte readFile(File file, RootDatasetByte rds,

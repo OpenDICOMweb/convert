@@ -7,7 +7,7 @@ part of odw.sdk.convert.binary.reader;
 
 void _readEvrRootDataset() {
   _parentDS = _rds;
-  _currentDS = _rds;
+  _cds = _rds;
   _isEvr = true;
 
   log.debug('${_rb.rbb} _readEvrRootDataset ${_rb.rIndex} : ${_rb.remaining}', 1);
@@ -35,7 +35,8 @@ void _readEvrDatasetDefined(Dataset ds, int dsStart, int vfLengthField) {
   log.debug2('${_rb.rbb} _readEvrDatasetDefined $dsStart, $vfLengthField, $deletedElementError(key)', 1);
 
   while (_rb.rIndex < dsEnd) {
-    final e = _readEvrElement();
+    _readEvrElement();
+    // Urgent Jim: remove count everywhere
     _count++;
   }
 
@@ -116,7 +117,7 @@ Element _readEvrShort(int code, int eStart, int vrIndex) {
 Element _readEvrSQ(int code, int eStart) {
   _rb + 2;
   _rb.sMsg('_readEvrSQ', code, eStart);
-  var e = _readSequence(code, eStart, _evrSQMaker);
+  final e = _readSequence(code, eStart, _evrSQMaker);
   return _finishReadElement(code, eStart, e);
 }
 
@@ -149,7 +150,7 @@ Element _readEvrMaybeUndefined(int code, int eStart, int vrIndex) {
   _rb.sMsg('_readEvrMaybeUndefined', code, eStart,
       vrIndex: vrIndex, vfLength: vfLengthField);
 
-  final v = _rb.getUint32(_rb.rIndex);
+ // final v = _rb.getUint32(_rb.rIndex);
 
   if (vrIndex == kUNIndex && (_rb.isItemDelimiter() || _rb.isSequenceDelimiter())) {
     // A UN Sequence
@@ -169,7 +170,6 @@ Element _readEvrMaybeUndefined(int code, int eStart, int vrIndex) {
 // Finish reading an EVR Long Undefined Length Element
 Element __readEvrUndefined(int code, int eStart, int vrIndex, int vfLengthField) {
   _pInfo.nUndefinedElements++;
-  Element e;
   if (code == kPixelData) {
     return _readPixelDataUndefined(code, eStart, vrIndex, vfLengthField);
   } else {
