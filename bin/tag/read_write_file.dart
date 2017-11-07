@@ -50,7 +50,7 @@ void main() {
   }
 
   // Compare [Dataset]s
-  if (reader0.offsets == writer.offsets) {
+  if (reader0.offsets == writer.outputOffsets) {
     log.info0('ElementOffsetss are identical.');
   } else {
     log.info0('ElementOffsetss are different!');

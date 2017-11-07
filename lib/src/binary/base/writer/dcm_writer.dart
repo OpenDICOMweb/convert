@@ -39,7 +39,8 @@ Dataset _cds;
 EncodingParameters _eParams;
 bool _keepUndefinedLengths;
 
-ElementOffsets _offsets;
+ElementOffsets _outputOffsets;
+ElementOffsets _inputOffsets;
 Function _writeElement;
 
 bool _isEvr;
@@ -48,6 +49,7 @@ ParseInfo _pInfo;
 
 int _count;
 int _offset;
+bool _elementOffsetsEnabled;
 
 /// A library for encoding [Dataset]s in the DICOM File Format.
 ///
@@ -83,8 +85,10 @@ abstract class DcmWriter extends DcmWriterInterface {
 
   final EncodingParameters eParams;
 
+  final bool elementOffsetsEnabled;
+  final ElementOffsets inputOffsets;
   @override
-  final ElementOffsets offsets = new ElementOffsets();
+  final ElementOffsets outputOffsets = new ElementOffsets();
 
   @override
   final ByteWriter wb;
@@ -96,7 +100,9 @@ abstract class DcmWriter extends DcmWriterInterface {
       TransferSyntax outputTS,
       int length,
       this.reUseBuffer = true,
-      this.eParams = EncodingParameters.kNoChange})
+      this.eParams = EncodingParameters.kNoChange,
+	      this.elementOffsetsEnabled = false,
+	      this.inputOffsets})
       : targetTS = getOutputTS(rds, outputTS),
         wb = (reUseBuffer)
             ? _reuseByteListWriter(length)
@@ -108,8 +114,10 @@ abstract class DcmWriter extends DcmWriterInterface {
 //    _path = path;
     _isEvr = rds.isEvr;
     _pInfo = new ParseInfo(rds);
-    //if (elementOffsetsEnabled) _offsets = new ElementOffsets();
-    _offsets = new ElementOffsets();
+    _inputOffsets = inputOffsets;
+    _elementOffsetsEnabled = elementOffsetsEnabled;
+    if (_elementOffsetsEnabled) _outputOffsets = new ElementOffsets();
+    _outputOffsets = new ElementOffsets();
     _keepUndefinedLengths = !_eParams.doConvertUndefinedLengths;
   }
 

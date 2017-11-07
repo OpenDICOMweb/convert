@@ -70,7 +70,7 @@ bool byteReadWriteFileChecked(String path,
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       // Compare [ElementOffsets]s
-      if (reader0.offsets != writer.offsets)
+      if (reader0.offsets != writer.outputOffsets)
         log.warn('$pad ElementOffsetss are different!');
     }
 

@@ -91,7 +91,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!fast || !rds0.hasDuplicates) {
       // Compare [ElementOffsets]s
-      if (reader0.offsets == writer.offsets) {
+      if (reader0.offsets == writer.outputOffsets) {
         log.debug('$pad ElementOffsetss are identical.');
       } else {
         log.warn('$pad ElementOffsetss are different!');

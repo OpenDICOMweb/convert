@@ -22,7 +22,7 @@ void _writeEvrDataset(Dataset ds, EncodingParameters _eParams) {
 	_cds = previousDS;
 }
 
-void _writeEvrElement(Element e) {
+void _writeEvrElement(Element e, {ElementOffsets inputOffsets}) {
 	log.debug('${_wb.wbb} _writeEvrElement $e :${_wb.remaining}', 1);
   final eStart = _wb.wIndex;
   final vrIndex = e.vrIndex;
