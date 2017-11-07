@@ -16,14 +16,15 @@ import 'package:dcm_convert/src/binary/byte/byte_writer.dart';
 import 'package:dcm_convert/src/tool/job_utils.dart';
 import 'package:dcm_convert/src/errors.dart';
 
-Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
-  log.level = Level.error;
+/// Read a file then write it to a buffer.
+bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
+  log.level = Level.debug3;
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
   final pad = ''.padRight(5);
 
-  try {
-    final Uint8List bytes = await f.readAsBytes();
+//  try {
+    final Uint8List bytes =  f.readAsBytesSync();
     final bd = bytes.buffer.asByteData();
     final reader0 = new ByteReader(bd, fast: true);
     final rds0 = reader0.read();
@@ -49,76 +50,26 @@ $pad    TS: ${rds0.transferSyntax}''');
 
     // Write the Root Dataset
     ByteWriter writer;
-    final outPath = getTempFile(f.path, 'dcmout');
     if (fast) {
       // Just write bytes don't write the file
       writer = new ByteWriter(rds0);
     } else {
+      final outPath = getTempFile(f.path, 'dcmout');
       writer = new ByteWriter.toPath(rds0, outPath, fast: true);
     }
     final bytes1 = writer.write();
     log.debug('$pad    Encoded ${bytes1.length} bytes');
 
-    if (!fast) {
-      log.debug('Re-reading: ${bytes1.length} bytes');
-    } else {
-      log.debug('Re-reading: ${bytes1.length} bytes from $outPath');
-    }
-    ByteReader reader1;
-    if (fast) {
-      // Just read bytes not file
-      reader1 = new ByteReader(
-          bytes1.buffer.asByteData(bytes1.offsetInBytes, bytes1.lengthInBytes));
-    } else {
-      reader1 = new ByteReader.fromPath(outPath);
-    }
-    final rds1 = reader1.read();
-    //   RootDatasetBytes rds1 = ByteReader.readPath(outPath);
-    log
-      ..debug('$pad Read ${reader1.rootBytes.lengthInBytes} bytes')
-      ..debug1('$pad DS1: $rds1');
-
-    if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
-    if (rds0.parseInfo != rds1.parseInfo) {
-      log
-        ..warn('$pad ** ParseInfo is Different!')
-        ..debug1('$pad rds0: ${rds0.parseInfo.info}')
-        ..debug1('$pad rds1: ${rds1.parseInfo.info}')
-        ..debug2(rds0.format(new Formatter(maxDepth: -1)))
-        ..debug2(rds1.format(new Formatter(maxDepth: -1)));
-    }
-
-    // If duplicates are present the [ElementOffsets]s will not be equal.
-    if (!fast || !rds0.hasDuplicates) {
-      // Compare [ElementOffsets]s
-      if (reader0.offsets == writer.offsets) {
-        log.debug('$pad ElementOffsetss are identical.');
-      } else {
-        log.warn('$pad ElementOffsetss are different!');
-      }
-    }
-
-    // Compare [Dataset]s - only compares the elements in dataset.map.
-    final same = (rds0 == rds1);
-    if (same) {
-      log.debug('$pad Datasets are identical.');
-    } else {
-      log.warn('$pad Datasets are different!');
-    }
-
+    // Urgent Jim if file has dups then no test is done. Fix it.
+    var same = true;
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
-      final same = bytesEqual(bytes0, bytes1);
-      if (same == true) {
-        log.debug('$pad Files bytes are identical.');
-      } else {
-        log.warn('$pad Files bytes are different!');
-      }
+      same = bytesEqual(bytes0, bytes1);
+      if (same != true) log.warn('$pad Files bytes are different!');
     }
-    if (same) log.info0('$pad Success!');
     return same;
-  } on ShortFileError {
+/*  } on ShortFileError {
     log.warn('$pad ** Short File(${f.lengthSync()} bytes): $f');
     rethrow;
   } catch (e) {
@@ -126,6 +77,6 @@ $pad    TS: ${rds0.transferSyntax}''');
     if (throwOnError) rethrow;
     rethrow;
     return false;
-  }
+  }*/
   return false;
 }

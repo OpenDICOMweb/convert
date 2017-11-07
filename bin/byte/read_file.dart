@@ -8,6 +8,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dcm_convert/data/test_files.dart';
+
 import 'package:dcm_convert/byte_convert.dart';
 import 'package:path/path.dart' as path;
 import 'package:system/server.dart';
@@ -33,7 +35,7 @@ const String evrDataAfterPixels =
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
 
-  final fPath = dcmDir;
+  final fPath = testPaths1[0];
 
   print('path: $fPath');
   print(' out: ${getTempFile(fPath, 'dcmout')}');

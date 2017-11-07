@@ -45,8 +45,6 @@ typedef PixelData PixelDataMaker(EBytes eb, int vrIndex,
 typedef SQ SequenceMaker(EBytes eb, Dataset _cds, List<Item> items);
 typedef Item ItemMaker(Dataset _cds);
 
-Function _readElement;
-
 ElementMaker elementMaker;
 PixelDataMaker pixelDataMaker;
 SequenceMaker sequenceMaker;
@@ -59,7 +57,7 @@ DecodingParameters _dParams;
 
 ElementOffsets _offsets;
 ParseInfo _pInfo;
-bool _hadPrefix;
+//bool _hadPrefix;
 bool _beyondPixelData;
 Tag _tag;
 bool _isEvr;
@@ -67,20 +65,26 @@ int _elementCount = 0;
 int _count = 0;
 
 // local variables used by _readEvrDataset and _readIvrDataset
-Dataset _parentDS;
+//Dataset _parentDS;
 Dataset _cds;
 
+/*
 typedef SQ SQMaker();
 SQMaker _sqMaker;
+*/
 
+/*
 typedef int DSReaderDefined(Dataset ds, int dsEnd);
 DSReaderDefined _dsReaderDefined;
 
 typedef int DSReaderUndefined(Dataset ds);
 DSReaderUndefined _dsReaderUndefined;
+*/
 
+/*
 typedef Element EReader();
 EReader _eReader;
+*/
 
 final bool statisticsEnabled = true;
 final bool elementOffsetsEnabled = true;
@@ -148,10 +152,9 @@ abstract class DcmReader extends DcmReaderInterface {
     _rds = rds;
     _cds = rds;
     _dParams = dParams;
-    _pInfo = pInfo;
-    _hadPrefix = false;
-    _pInfo.shortFileThreshold = shortFileThreshold;
-    _pInfo.fileLengthInBytes = bd.lengthInBytes;
+    _pInfo = pInfo
+      ..shortFileThreshold = shortFileThreshold
+      ..fileLengthInBytes = bd.lengthInBytes;
     if (elementOffsetsEnabled) _offsets = new ElementOffsets();
   }
 
@@ -170,7 +173,7 @@ abstract class DcmReader extends DcmReaderInterface {
 
   RootDataset read() {
     cds = rds;
-    _readRootDS(rds, path, dParams);
+    _read(rds, path, dParams);
     rds.parseInfo = _pInfo;
     if (showStats) showStats;
     return rds;
@@ -184,7 +187,7 @@ abstract class DcmReader extends DcmReaderInterface {
     return (rds.hasFmi) ? rds : null;
   }
 
-  Element readElement( {bool isEVR = true}) =>
+  Element readElement({bool isEVR = true}) =>
       (isEVR) ? _readEvrElement() : _readIvrElement();
 
   @override

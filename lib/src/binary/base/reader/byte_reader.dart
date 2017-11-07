@@ -16,17 +16,16 @@ class ByteReader extends ByteList {
   ///
   /// This is always both a List<E> and a TypedData, which we don't have a type
   /// for here. For example, for a `Uint8Buffer`, this is a `Uint8List`.
-  final ByteData _bd;
   int _rIndex = 0;
   int nonZeroDelimiterLengths = 0;
   int nOddLengthValueFields = 0;
   bool beyondPixelData = false;
   bool hadGroupLengths = false;
 
-  ByteReader(this._bd) : super(_bd);
+  ByteReader(ByteData bd) : super(bd);
 
-  factory ByteReader.from(List<int> iList) =>
-      new ByteReader(new Uint8List.fromList(iList).buffer.asByteData());
+  ByteReader.from(List<int> iList)
+      :super(new Uint8List.fromList(iList).buffer.asByteData());
 
   // **** ReadBuffer specific Getters and Methods
 
@@ -44,24 +43,24 @@ class ByteReader extends ByteList {
   }
 
   int _setIndexTo(int index) {
-    if (index < 0 || index > _bd.lengthInBytes)
-      throw new RangeError.range(index, 0, _bd.lengthInBytes);
+    if (index < 0 || index > bd.lengthInBytes)
+      throw new RangeError.range(index, 0, bd.lengthInBytes);
     return _rIndex = index;
   }
 
   @override
-  ByteData get bd => (_isClosed) ? null : _bd;
+  ByteData get bd => (_isClosed) ? null : super.bd;
 
   int get rIndex => _rIndex;
   int get remaining => _remaining;
-  int get _remaining => _bd.lengthInBytes - _rIndex;
+  int get _remaining => bd.lengthInBytes - _rIndex;
   bool hasRemaining(int n) => _hasRemaining(n);
-  bool _hasRemaining(int n) => (_rIndex + n) <= _bd.lengthInBytes;
+  bool _hasRemaining(int n) => (_rIndex + n) <= bd.lengthInBytes;
 
-  int get start => _bd.offsetInBytes;
-  int get end => _bd.lengthInBytes;
+  int get start => bd.offsetInBytes;
+  int get end => bd.lengthInBytes;
   bool get isReadable => _isReadable;
-  bool get _isReadable => _rIndex < _bd.lengthInBytes;
+  bool get _isReadable => _rIndex < bd.lengthInBytes;
 
   @override
   bool get isEmpty => _remaining <= 0;
@@ -70,37 +69,36 @@ class ByteReader extends ByteList {
 
   ByteData bdView([int start = 0, int end]) {
     final offset = _getOffset(start, length);
-    return _bd.buffer.asByteData(start, length ?? _bd.lengthInBytes - offset);
+    return bd.buffer.asByteData(start, length ?? bd.lengthInBytes - offset);
   }
-
-  ByteData readBDView(int length) => bdView(_rIndex, length);
 
   Uint8List uint8View([int start = 0, int length]) {
     final offset = _getOffset(start, length);
-    return _bd.buffer.asUint8List(offset, length ?? _bd.lengthInBytes - offset);
+    return bd.buffer.asUint8List(offset, length ?? bd.lengthInBytes - offset);
   }
 
   Uint8List readUint8View(int length) => uint8View(_rIndex, length);
 
   int _getOffset(int start, int length) {
-    final offset = _bd.offsetInBytes + start;
-    assert(offset >= 0 && offset <= _bd.lengthInBytes);
-    assert(offset + length >= offset && (offset + length) <= _bd.lengthInBytes);
-    return offset;
+	  final offset = bd.offsetInBytes + start;
+	  assert(offset >= 0 && offset <= bd.lengthInBytes);
+	  assert(offset + length >= offset && (offset + length) <= bd.lengthInBytes);
+	  return offset;
   }
+
 
   bool get isClosed => _isClosed;
   bool _isClosed = false;
 
   ByteData close() {
-    _isClosed = true;
     final view = bdView(0, _rIndex);
     if (isNotEmpty) {
       warn('End of Data with _rIndex($rIndex) != length(${view.lengthInBytes})');
       log.debug('$ree, bdLength: $length remaining: $remaining');
-      hadTrailingZeros = _checkAllZeros(_rIndex, _bd.lengthInBytes);
+      hadTrailingZeros = _checkAllZeros(_rIndex, bd.lengthInBytes);
       log.debug('Trailing Bytes($_remaining) All Zeros: $hadTrailingZeros');
     }
+    _isClosed = true;
     return view;
   }
 
@@ -109,60 +107,42 @@ class ByteReader extends ByteList {
   bool hadTrailingZeros;
 
   bool _checkAllZeros(int start, int end) {
-    for (var i = start; i < end; i++) if (_getUint8(i) != 0) return false;
+    for (var i = start; i < end; i++) if (bd.getUint8(i) != 0) return false;
     return true;
   }
 
-  int getUint8(int offset) => _getUint8(offset);
-  int _getUint8(int offset) {
-    assert(_hasRemaining(1));
-    return _bd.getUint8(offset);
-  }
+  @override
+  int getUint8(int offset) => bd.getUint8(offset);
 
-  int get uint8 => _readUint8();
-  int _readUint8() {
-    final v = _getUint8(_rIndex);
+
+  int get uint8 => readUint8();
+
+  int readUint8() {
+    final v = bd.getUint8(_rIndex);
     _rIndex++;
     return v;
   }
 
-  int getUint16(int offset) => _getUint16(offset);
+  int get uint16 => readUint16();
 
-  int _getUint16(int offset) {
-    assert(offset.isEven && _hasRemaining(2));
-    final v = _bd.getUint16(offset, Endianness.LITTLE_ENDIAN);
-    return v;
-  }
-
-  int get uint16 => _readUint16();
-  int _readUint16() {
-    final v = _getUint16(_rIndex);
+  int readUint16() {
+    final v = getUint16(_rIndex);
     _rIndex += 2;
     return v;
   }
 
-  int getUint32(int offset) => _getUint32(offset);
-  int _getUint32(int offset) {
-    assert(offset.isEven && _hasRemaining(4));
-    return _bd.getUint32(offset, Endianness.LITTLE_ENDIAN);
-  }
+  int get uint32 => readUint32();
 
-  int get uint32 => _readUint32();
-  int _readUint32() {
-    final v = _getUint32(_rIndex);
+  int readUint32() {
+    final v = getUint32(_rIndex);
     _rIndex += 4;
     return v;
   }
 
-  int get uint64 => _readUint64();
-  int _getUint64(int offset) {
-    assert(offset.isEven && _hasRemaining(8));
-    return _bd.getUint64(offset, Endianness.LITTLE_ENDIAN);
-  }
+  int get uint64 => readUint64();
 
-  int getUint64(int offset) => _getUint64(offset);
-  int _readUint64() {
-    final v = _getUint64(_rIndex);
+  int readUint64() {
+    final v = getUint64(_rIndex);
     _rIndex += 8;
     return v;
   }
@@ -171,13 +151,12 @@ class ByteReader extends ByteList {
   int get peekCode => _peekCode();
   int _peekCode() {
     assert(_rIndex.isEven && _hasRemaining(4));
-    final group = _getUint16(_rIndex);
-    final elt = _getUint16(_rIndex + 2);
+    final group = getUint16(_rIndex);
+    final elt = getUint16(_rIndex + 2);
     return (group << 16) + elt;
   }
 
-  int getCode(int offset) => _getCode(offset);
-  int _getCode(int start) {
+  int getCode(int start) {
     final code = _peekCode();
     if (code == 0) {
       skip(-4); // undo readTagCode
@@ -190,9 +169,9 @@ class ByteReader extends ByteList {
     return code;
   }
 
-  int get code => _readCode();
-  int _readCode() {
-    final code = _getCode(_rIndex);
+  int get code => readCode();
+  int readCode() {
+    final code = getCode(_rIndex);
     _rIndex += 4;
     return code;
   }
@@ -213,14 +192,14 @@ class ByteReader extends ByteList {
     log.down;
     //  log.debug1('$rbb findEndOfULengthVF');
     while (_isReadable) {
-      if (_getUint16 != kDelimiterFirst16Bits) continue;
-      if (_getUint16 != kSequenceDelimiterLast16Bits) continue;
+      if (uint16 != kDelimiterFirst16Bits) continue;
+      if (uint16 != kSequenceDelimiterLast16Bits) continue;
       break;
     }
     if (!_isReadable) {
       throw new EndOfDataError('_findEndOfVF');
     }
-    final delimiterLength = _getUint32;
+    final delimiterLength = uint32;
     if (delimiterLength != 0) {
       nonZeroDelimiterLengths++;
       warn('Encountered non-zero delimiter length($delimiterLength) $rrr');
@@ -241,7 +220,7 @@ class ByteReader extends ByteList {
   /// delimiter is found [_rIndex] is advanced to the end of the delimiter
   /// field (8 bytes); otherwise, readIndex does not change.
   bool _checkForDelimiter(int target) {
-    final delimiter = _getUint32(_rIndex);
+    final delimiter = getUint32(index);
     if (delimiter == target) {
       log.debug('$rmm **** Delimiter Target: ${dcm(target)} == ${dcm(delimiter)}');
       _indexAdd(4);
@@ -252,7 +231,7 @@ class ByteReader extends ByteList {
   }
 
   void _readAndCheckDelimiterLength() {
-    final length = _readUint32();
+    final length = uint32;
     log.debug('$rmm **** Delimiter Length: $length');
     if (length != 0) {
       nonZeroDelimiterLengths++;
@@ -306,12 +285,11 @@ class ByteReader extends ByteList {
     log.error(s);
   }
 
-  void _checkRange(int v) {
-    final max = _bd.lengthInBytes;
+  void checkRange(int v) {
+    final max = bd.lengthInBytes;
     if (v < 0 || v >= max) throw new RangeError.range(v, 0, max);
   }
 
-  //TODO: put _checkIndex in appropriate places
   bool checkIndex() {
     if (_rIndex.isOdd) {
       final msg = 'Odd Lenth Value Field at @$_rIndex - incrementing';
@@ -323,19 +301,12 @@ class ByteReader extends ByteList {
     return true;
   }
 
-  //Enhancement: make this method do more diagnosis.
   /// Returns true if there are only trailing zeros at the end of the
   /// Object being parsed.
   Null _zeroEncountered(int code) {
     final msg = (beyondPixelData) ? 'after kPixelData' : 'before kPixelData';
     warn('Zero encountered $msg $rrr');
     throw new EndOfDataError('Zero encountered $msg $rrr');
-  }
-
-  int _isValidBufferLength(int length, [int maxLength = k1GB]) {
-    log.debug('isValidlength: $length');
-    RangeError.checkValidRange(1, length, maxLength);
-    return length;
   }
 
   static const int kMinLength = 768;

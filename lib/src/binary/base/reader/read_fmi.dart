@@ -11,7 +11,7 @@ bool _readFmi(RootDataset rds, String path, DecodingParameters dParams) {
   try {
     log.debug('${_rb.rbb} readFmi($_cds)', -1);
     assert(_cds == rds);
-    assert(_pInfo.hadPrefix == null, 'hadPrefix was non-null');
+ //   assert(_pInfo.hadPrefix == null, 'hadPrefix was non-null');
     _pInfo.hadPrefix = _readPrefix(path, dParams.checkPreambleAllZeros);
     if (!_pInfo.hadPrefix && !dParams.allowMissingPrefix) {
       return false;

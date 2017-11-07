@@ -16,7 +16,6 @@ import 'package:dcm_convert/src/binary/byte/byte_writer.dart';
 import 'package:dcm_convert/src/tool/job_utils.dart';
 import 'package:dcm_convert/src/errors.dart';
 
-
 /// Read a file then write it to a buffer.
 Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) async {
   log.level = Level.error;
@@ -25,8 +24,8 @@ Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) asy
   final pad = ''.padRight(5);
 
   try {
-  	  final Uint8List bytes = await f.readAsBytes();
-  	  final bd = bytes.buffer.asByteData();
+    final Uint8List bytes = await f.readAsBytes();
+    final bd = bytes.buffer.asByteData();
     final reader0 = new ByteReader(bd, fast: true);
     final rds0 = reader0.read();
     //TODO: improve next two errors
@@ -55,13 +54,13 @@ $pad    TS: ${rds0.transferSyntax}''');
       // Just write bytes don't write the file
       writer = new ByteWriter(rds0);
     } else {
-    	final outPath = getTempFile(f.path, 'dcmout');
+      final outPath = getTempFile(f.path, 'dcmout');
       writer = new ByteWriter.toPath(rds0, outPath, fast: true);
     }
     final bytes1 = writer.write();
     log.debug('$pad    Encoded ${bytes1.length} bytes');
 
-   // Urgent Jim if file has dups then no test is done. Fix it.
+    // Urgent Jim if file has dups then no test is done. Fix it.
     var same = true;
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
@@ -72,11 +71,12 @@ $pad    TS: ${rds0.transferSyntax}''');
     return same;
   } on ShortFileError {
     log.warn('$pad ** Short File(${f.lengthSync()} bytes): $f');
+    rethrow;
   } catch (e) {
     log.error(e);
     if (throwOnError) rethrow;
+    rethrow;
     return false;
   }
   return false;
 }
-

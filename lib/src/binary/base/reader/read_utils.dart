@@ -13,8 +13,6 @@ bool _isSpecialVR(int vrIndex) =>
 bool _isMaybeUndefinedVR(int vrIndex) =>
 		vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
 
-bool _isPixelDataVR(int vrIndex) => _isMaybeUndefinedVR(vrIndex);
-
 bool _isEvrLongVR(int vrIndex) =>
 		vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
 

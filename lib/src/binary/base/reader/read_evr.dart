@@ -6,7 +6,6 @@
 part of odw.sdk.convert.binary.reader;
 
 void _readEvrRootDataset() {
-  _parentDS = _rds;
   _cds = _rds;
   _isEvr = true;
 
@@ -32,7 +31,8 @@ void __readEvrDataset(Dataset ds, int dsStart, int vfLengthField) =>
 
 void _readEvrDatasetDefined(Dataset ds, int dsStart, int vfLengthField) {
 	final dsEnd = _rb.rIndex + vfLengthField;
-  log.debug2('${_rb.rbb} _readEvrDatasetDefined $dsStart, $vfLengthField, $deletedElementError(key)', 1);
+  log.debug2('${_rb.rbb} _readEvrDatasetDefined $dsStart, $vfLengthField, '
+		             '$deletedElementError(key)', 1);
 
   while (_rb.rIndex < dsEnd) {
     _readEvrElement();
@@ -83,7 +83,7 @@ Element _readEvrElement() {
   if (_isEvrShortVR(vrIndex)) {
     e = _readEvrShort(code, eStart, vrIndex);
   } else if (_isSequenceVR(vrIndex)) {
-    e = _readEvrSQ(code, eStart);
+    e = _readEvrSQ(code, eStart, vrIndex);
   } else if (_isEvrLongVR(vrIndex)) {
     e = _readEvrLong(code, eStart, vrIndex);
   } else if (_isMaybeUndefinedVR(vrIndex)) {
@@ -114,9 +114,10 @@ Element _readEvrShort(int code, int eStart, int vrIndex) {
 }
 
 /// Read and EVR Sequence.
-Element _readEvrSQ(int code, int eStart) {
+Element _readEvrSQ(int code, int eStart, int vrIndex) {
+	assert(vrIndex == 0);
   _rb + 2;
-  _rb.sMsg('_readEvrSQ', code, eStart);
+  _rb.sMsg('_readEvrSQ', code, eStart, vrIndex: vrIndex);
   final e = _readSequence(code, eStart, _evrSQMaker);
   return _finishReadElement(code, eStart, e);
 }

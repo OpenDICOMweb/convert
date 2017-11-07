@@ -7,7 +7,7 @@
 import 'dart:io';
 
 import 'package:dcm_convert/tools.dart';
-import 'package:system/core.dart';
+import 'package:system/server.dart';
 
 final String dir0 =
     'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/';
@@ -23,6 +23,8 @@ String outRoot4 = 'test/output/root4';
 void main(List<String> args) {
   /// The processed arguments for this program.
   JobArgs jobArgs;
+
+  Server.initialize(name: 'file_list_tester.dart', level: Level.debug);
 
 //TODO: update doc
   /// The help message
@@ -53,8 +55,11 @@ ${jobArgs.parser.usage}
 
   system.log.level = jobArgs.baseLevel;
 
+  final ivrClean = new File( 'C:/odw/test_data/sfd/MR/PID_BREASTMR/1_DICOM_Origin'
+		  'al/EFC524F2.dcm');
+
   final f = new File('C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/'
       'Sop/1.2.392.200036.9123.100.12.11.3.dcm');
 
-  JobRunner.fileList([f], doRWRByteFile, level: Level.info);
+  JobRunner.fileList([ivrClean], doRWFile, level: Level.info);
 }

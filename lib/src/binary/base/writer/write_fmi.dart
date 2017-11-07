@@ -38,16 +38,16 @@ void _writeExistingFmi(RootDataset rootDS, bool cleanPreamble) {
   _writePrefix(rootDS, cleanPreamble);
   for (var e in rootDS.elements) {
     if (e.code > 0x00030000) break;
-    _writeEvr(e);
+    _writeEvrElement(e);
   }
 }
 
 //TODO: redoc
 /// Writes a DICOM Preamble and Prefix (see PS3.10) as the
 /// beginning of the encoding.
-bool _writePrefix(RootDataset rootDS, bool cleanPreamble) {
-  if (rootDS is! RootDataset) log.error('Not _rds');
-  final pInfo = rootDS.parseInfo;
+bool _writePrefix(RootDataset rds, bool cleanPreamble) {
+  if (rds is! RootDataset) log.error('Not _rds');
+  final pInfo = rds.parseInfo;
   return (pInfo.preambleWasZeros || _eParams.doCleanPreamble)
       ? _writeCleanPrefix()
       : _writeExistingPrefix(pInfo);

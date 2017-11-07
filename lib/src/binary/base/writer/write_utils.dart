@@ -70,7 +70,7 @@ void _writeTagCode(int code) {
 //TODO: make this work for [async] == true and make that the default.
 /// Writes [bytes] to [file].
 void _writeFile(Uint8List bytes, File file) {
-  if (file == null) throw new ArgumentError('f is not a File');
+  if (file == null) throw new ArgumentError('$file is not a File');
   file.writeAsBytesSync(bytes.buffer.asUint8List());
   log.debug('Wrote ${bytes.lengthInBytes} bytes to "${file.path}"');
 }
@@ -84,7 +84,9 @@ void _writePath(Uint8List bytes, String path) {
 
 void _finishWritingElement(int start, int end, Element e) {
 	_offsets.add(start, end, e);
-	_parseInfo.nElements++;
-	if (e.isPrivate) _parseInfo.nPrivateElements++;
-	log.debug('${_wb.wee}');
+	_pInfo.nElements++;
+	if (e.isPrivate) _pInfo.nPrivateElements++;
+	_count++;
+	_offset = _offset + (end - start);
+	log.debug('${_wb.wee} #$_count $_offset :${_wb.remaining}', -1);
 }

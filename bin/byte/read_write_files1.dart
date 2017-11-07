@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:dcm_convert/byte_convert.dart';
 import 'package:path/path.dart' as p;
-import 'package:system/core.dart';
+import 'package:system/server.dart';
 import 'package:timer/timer.dart';
 import 'package:uid/uid.dart';
 
@@ -23,7 +23,7 @@ import 'package:dcm_convert/src/binary/compare_bytes.dart';
 import 'read_utils.dart';
 
 void main() {
-  system.log.level = Level.info1;
+  Server.initialize(name: 'read_write_file.dart', level: Level.debug);
   // String testFile = test6684_02;
   // String testDir = dir36_4485_6684;
   assert(test6684_02 != null);

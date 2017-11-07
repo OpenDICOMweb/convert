@@ -7,8 +7,11 @@
 import 'dart:collection';
 import 'dart:typed_data';
 
+import 'package:system/core.dart';
+
 abstract class ByteList extends ListBase<int> implements TypedData {
   ByteData _bd;
+  static const Endianness endian = Endianness.LITTLE_ENDIAN;
 
   ByteList(this._bd);
 
@@ -42,7 +45,7 @@ abstract class ByteList extends ListBase<int> implements TypedData {
 
   //Urgent: implement
   @override
-  set length(int v) => throw new UnsupportedError('');
+  set length(int v) => grow(v);
 
   // **** TypedData interface.
   @override
@@ -60,4 +63,66 @@ abstract class ByteList extends ListBase<int> implements TypedData {
   /// The buffer may be larger than [lengthInBytes] bytes, but never smaller.
   @override
   ByteBuffer get buffer => _bd.buffer;
+
+  // The Readers
+  int getInt8(int index) => _bd.getInt8(index);
+  int getUint8(int index) => _bd.getUint8(index);
+  int getUint16(int index) => _bd.getUint16(index, endian);
+  int getInt16(int index) => _bd.getInt16(index, endian);
+  int getUint32(int index) => _bd.getUint32(index, endian);
+  int getInt32(int index) => _bd.getInt32(index, endian);
+  int getUint64(int index) => _bd.getUint64(index, endian);
+  int getInt64(int index) => _bd.getInt64(index, endian);
+  double getFloat32(int index) => _bd.getFloat32(index, endian);
+  double getFloat64(int index) => _bd.getFloat64(index, endian);
+
+
+  // The Writers
+  void setInt8(int index, int value) => _bd.setInt8(index, value);
+  void setUint8(int index, int value) => _bd.setUint8(index, value);
+  void setUint16(int index, int value) => _bd.setUint16(index, value, endian);
+  void setInt16(int index, int value) => _bd.setInt16(index, value, endian);
+  void setUint32(int index, int value) => _bd.setUint32(index, value, endian);
+  void setInt32(int index, int value) => _bd.setInt32(index, value, endian);
+  void setUint64(int index, int value) => _bd.setUint64(index, value, endian);
+  void setInt64(int index, int value) => _bd.setInt64(index, value, endian);
+  void setFloat32(int index, double value) => _bd.setFloat32(index, value, endian);
+  void setFloat64(int index, double value) => _bd.setFloat64(index, value, endian);
+
+  void setLength(int newLength) {
+  	if (newLength < _bd.lengthInBytes) return;
+  	grow(newLength);
+  }
+
+  /// Creates a new buffer at least double the size of the current buffer,
+  /// and copies the contents of the current buffer into it.
+  ///
+  /// If [capacity] is null the new buffer will be twice the size of the
+  /// current buffer. If [capacity] is not null, the new buffer will be at
+  /// least that size. It will always have at least have double the
+  /// capacity of the current buffer.
+  void grow([int capacity]) {
+	  log.debug('start _grow: $this');
+	  final oldLength = bd.lengthInBytes;
+	  var newLength = oldLength * 2;
+	  log.debug('old: $oldLength new: $newLength');
+	  if (capacity != null && capacity > newLength) newLength = capacity;
+
+	  isValidBufferLength(newLength);
+	  if (newLength < oldLength) return;
+	  final newBuffer = new ByteData(newLength);
+	  for (var i = 0; i < oldLength; i++) newBuffer.setUint8(i, getUint8(i));
+	  _bd = newBuffer;
+	  log.debug('end _grow ${_bd.lengthInBytes}');
+  }
+
+  static const Endianness kDefaultEndian = Endianness.LITTLE_ENDIAN;
+  static const int kDefaultLength = 1024;
+  static const int kMinByteListLength = 768;
+
+  static int isValidBufferLength(int length, [int maxLength = k1GB]) {
+	  log.debug('isValidlength: $length');
+	  RangeError.checkValidRange(1, length, maxLength);
+	  return length;
+  }
 }

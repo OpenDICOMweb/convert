@@ -6,7 +6,6 @@
 part of odw.sdk.convert.binary.reader;
 
 void _readIvrRootDataset() {
-  _parentDS = _rds;
   _cds = _rds;
   _isEvr = false;
 

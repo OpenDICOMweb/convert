@@ -16,29 +16,15 @@ class ByteWriter extends ByteList {
   ///
   /// This is always both a List<E> and a TypedData, which we don't have a type
   /// for here. For example, for a `Uint8Buffer`, this is a `Uint8List`.
-  ByteData _bd;
   final int maxLength;
-  final Endianness endian;
   int _wIndex = 0;
 
-  factory ByteWriter(
-      [int length = kDefaultLength,
-      int maxLength = k1GB,
-      Endianness endian = kDefaultEndian]) {
-    final bd = new ByteData(_isValidBufferLength(length, maxLength));
-    return new ByteWriter._(bd, maxLength, endian);
+  factory ByteWriter([int length = ByteList.kDefaultLength, int maxLength = k1GB]) {
+    final bd = new ByteData(ByteList.isValidBufferLength(length, maxLength));
+    return new ByteWriter._(bd, maxLength);
   }
 
-/* Flush if not needed
-  factory ByteListWriter.view(ByteListWriter bd, [int start = 0, int end]) {
-  	RangeError.checkValidRange(start, end, bd.lengthInBytes);
-    return new ByteListWriter._(
-        bd.buffer.asByteData(bd.offsetInBytes + start, bd.offsetInBytes + end));
-  }
-*/
-
-  ByteWriter._(this._bd, [this.maxLength = k1GB, this.endian = kDefaultEndian])
-      : super(_bd);
+  ByteWriter._(ByteData bd, [this.maxLength = k1GB]) : super(bd);
 
   // **** WriteBuffer specific Getters and Methods
 
@@ -56,26 +42,26 @@ class ByteWriter extends ByteList {
   }
 
   int _setIndexTo(int index) {
-    if (index < 0 || index > _bd.lengthInBytes)
-      throw new RangeError.range(index, 0, _bd.lengthInBytes);
+    if (index < 0 || index > bd.lengthInBytes)
+      throw new RangeError.range(index, 0, bd.lengthInBytes);
     return _wIndex = index;
   }
 
   @override
-  ByteData get bd => (_isClosed) ? null : _bd;
+  ByteData get bd => (_isClosed) ? null : super.bd;
 
   int get wIndex => _wIndex;
 
   /// Returns the number of bytes left in the current buffer ([bd]).
-  int get remaining => _bd.lengthInBytes - _wIndex;
+  int get remaining => bd.lengthInBytes - _wIndex;
   bool hasRemaining(int n) => _hasRemaining(n);
-  bool _hasRemaining(int n) => (_wIndex + n) <= _bd.lengthInBytes;
+  bool _hasRemaining(int n) => (_wIndex + n) <= bd.lengthInBytes;
 
-  int get start => _bd.offsetInBytes;
-  int get end => _bd.lengthInBytes;
+  int get start => bd.offsetInBytes;
+  int get end => bd.lengthInBytes;
 
   bool get isWritable => _isWritable;
-  bool get _isWritable => _wIndex < _bd.lengthInBytes;
+  bool get _isWritable => _wIndex < bd.lengthInBytes;
 
   @override
   bool get isEmpty => _wIndex == start;
@@ -84,33 +70,17 @@ class ByteWriter extends ByteList {
 
   int move(int n) {
     final v = _wIndex + n;
-    if (v < 0 || v >= _bd.lengthInBytes)
-      throw new RangeError.range(v, 0, _bd.lengthInBytes);
+    if (v < 0 || v >= bd.lengthInBytes)
+      throw new RangeError.range(v, 0, bd.lengthInBytes);
     return _wIndex = v;
   }
 
 /*
   void _checkRange(int v) {
-    if (v < 0 || v >= _bd.lengthInBytes)
-    	throw new RangeError.range(v, 0, _bd.lengthInBytes);
+    if (v < 0 || v >= bd.lengthInBytes)
+    	throw new RangeError.range(v, 0, bd.lengthInBytes);
   }
 */
-
-  // The Reader
-  int getUint8(int index) => _bd.getInt8(index);
-
-  // The Writers
-  void setInt8(int index, int value) => _bd.setInt8(index, value);
-  void setUint8(int index, int value) => _bd.setUint8(index, value);
-  void setUint16(int index, int value) => _bd.setUint16(index, value, endian);
-  void setInt16(int index, int value) => _bd.setInt16(index, value, endian);
-  void setUint32(int index, int value) => _bd.setUint32(index, value, endian);
-  void setInt32(int index, int value) => _bd.setInt32(index, value, endian);
-  void setUint64(int index, int value) => _bd.setUint64(index, value, endian);
-  void setInt64(int index, int value) => _bd.setInt64(index, value, endian);
-  void setFloat32(int index, double value) => _bd.setFloat32(index, value, endian);
-  void setFloat64(int index, double value) => _bd.setFloat64(index, value, endian);
-
   void int8(int value) {
     assert(value >= -128 && value <= 127, 'Value out of range: $value');
     _maybeGrow();
@@ -154,7 +124,7 @@ class ByteWriter extends ByteList {
   void bytes(Uint8List bytes) => _writeBytes(bytes);
 
   void _writeBytes(Uint8List bytes) {
-    final length = bytes.length;
+    final length = bytes.lengthInBytes;
     _maybeGrow(length);
     for (var i = 0, j = _wIndex; i < length; i++, j++) setUint8(j, bytes[i]);
     _wIndex = _wIndex + length;
@@ -180,18 +150,18 @@ class ByteWriter extends ByteList {
 
   ByteData bdView([int start = 0, int end]) {
     final offset = _getOffset(start, length);
-    return _bd.buffer.asByteData(start, length ?? _bd.lengthInBytes - offset);
+    return bd.buffer.asByteData(start, length ?? bd.lengthInBytes - offset);
   }
 
   Uint8List uint8View([int start = 0, int length]) {
     final offset = _getOffset(start, length);
-    return _bd.buffer.asUint8List(offset, length ?? _bd.lengthInBytes - offset);
+    return bd.buffer.asUint8List(offset, length ?? bd.lengthInBytes - offset);
   }
 
   int _getOffset(int start, int length) {
-    final offset = _bd.offsetInBytes + start;
-    assert(offset >= 0 && offset <= _bd.lengthInBytes);
-    assert(offset + length >= offset && (offset + length) <= _bd.lengthInBytes);
+    final offset = bd.offsetInBytes + start;
+    assert(offset >= 0 && offset <= bd.lengthInBytes);
+    assert(offset + length >= offset && (offset + length) <= bd.lengthInBytes);
     return offset;
   }
 
@@ -203,13 +173,19 @@ class ByteWriter extends ByteList {
   bool _isClosed = false;
 
   Uint8List close() {
-    _isClosed = true;
-/*	  if (hadTrailingBytes) {
-		  hadTrailingZeros = checkAllZeros(_rIndex, _bd.lengthInBytes);
-		  log.debug('Trailing Bytes($remaining) All Zeros: $hadTrailingZeros');
-	  }*/
+    if (hadTrailingBytes) {
+      hadTrailingZeros = _checkAllZeros(_wIndex, bd.lengthInBytes);
+      log.debug('Trailing Bytes($remaining) All Zeros: $hadTrailingZeros');
+    }
 
-    return uint8View(0, _wIndex);
+    final bytes = uint8View(0, _wIndex);
+    _isClosed = true;
+    return bytes;
+  }
+
+  bool _checkAllZeros(int start, int end) {
+    for (var i = start; i < end; i++) if (bd.getUint8(i) != 0) return false;
+    return true;
   }
 
   // **** Aids to pretty printing - these may go away.
@@ -236,46 +212,18 @@ class ByteWriter extends ByteList {
 
   /// Ensures that [bd] is at least [capacity] long, and grows
   /// the buffer if necessary, preserving existing data.
-  void ensureCapacity(int capacity) => (capacity > lengthInBytes) ? _grow() : null;
+  void ensureCapacity(int capacity) => (capacity > bd.lengthInBytes) ? grow() : null;
+
+  @override
+  String toString() => '$runtimeType($length)[$_wIndex] maxLength: $maxLength';
 
   // Internal methods
 
   /// Grow the buffer if the index is at, or beyond, the end of the current
   /// buffer.
   void _maybeGrow([int size = 1]) {
-/*    log.debug('_wIndex: $_wIndex');
-    log.debug('lengthInBytes: ${lengthInBytes}');*/
-    if (_wIndex + size >= lengthInBytes) _grow();
+    //   log.debug('_wIndex: $_wIndex');
+//    log.debug('lengthInBytes: ${bd.lengthInBytes}');
+    if (_wIndex + size >= bd.lengthInBytes) grow();
   }
-
-  /// Creates a new buffer at least double the size of the current buffer,
-  /// and copies the contents of the current buffer into it.
-  ///
-  /// If [capacity] is null the new buffer will be twice the size of the
-  /// current buffer. If [capacity] is not null, the new buffer will be at
-  /// least that size. It will always have at least have double the
-  /// capacity of the current buffer.
-  void _grow([int capacity]) {
-    log.debug('start _grow: $lengthInBytes');
-    final oldLength = lengthInBytes;
-    var newLength = oldLength * 2;
-    if (capacity != null && capacity > newLength) newLength = capacity;
-
-    _isValidBufferLength(newLength);
-    if (newLength < oldLength) return;
-    final newBuffer = new ByteData(newLength);
-    for (var i = 0; i < oldLength; i++) newBuffer.setUint8(i, getUint8(i));
-    _bd = newBuffer;
-    log.debug('end _grow $lengthInBytes');
-  }
-
-  static const Endianness kDefaultEndian = Endianness.LITTLE_ENDIAN;
-  static const int kDefaultLength = 1024;
-  static const int kMinByteListLength = 768;
-}
-
-int _isValidBufferLength(int length, [int maxLength = k1GB]) {
-  log.debug('isValidlength: $length');
-  RangeError.checkValidRange(1, length, maxLength);
-  return length;
 }

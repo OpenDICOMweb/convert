@@ -10,24 +10,24 @@ import 'package:test/test.dart';
 import 'package:dcm_convert/src/binary/base/writer/byte_writer.dart';
 
 void main() {
-  Server.initialize(name: 'byte_date_writer.dart', level: Level.info0);
+  Server.initialize(name: 'byte_date_writer.dart', level: Level.debug);
 
   group('ByteDataBuffer', () {
     test('Buffer Growing Test', () {
       final startSize = 1;
-      final iterations = 1024 * 1024;
-      final buf = new ByteWriter(startSize);
+      final iterations = 1024 * 1;
+      final wb = new ByteWriter(startSize);
       log
         ..debug('iterations: $iterations')
-        ..debug('maxLength: ${buf.maxLength}')
-        ..debug('length: ${buf.lengthInBytes}');
-      expect(buf.lengthInBytes == startSize, true);
+        ..debug('maxLength: ${wb.maxLength}')
+        ..debug('length: ${wb.lengthInBytes}');
+      expect(wb.lengthInBytes == startSize, true);
       for (var i = 0; i < iterations - 1; i++) {
         final v = i % 127;
-        buf.int8(v);
+        wb.int8(v);
       }
-      log.debug('length: ${buf.lengthInBytes}');
-      expect(buf.lengthInBytes == iterations, true);
+      log..debug('wb: $wb}\n  length: ${wb.lengthInBytes}');
+      expect(wb.lengthInBytes == iterations, true);
     });
   });
 }

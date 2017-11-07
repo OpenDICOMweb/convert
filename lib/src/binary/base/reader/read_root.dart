@@ -10,15 +10,12 @@ part of odw.sdk.convert.binary.reader;
 /// Reads a Root [Dataset] and returns it.
 /// If an error is encountered and [system].throwOnError is true,
 /// an Error will be thrown; otherwise, returns null.
-RootDataset _readRootDS(RootDataset rds, String path, DecodingParameters dParams) {
+RootDataset _read(RootDataset rds, String path, DecodingParameters dParams) {
   final eStart = _rb.rIndex;
   log.debug('Reading RootDS: start: $eStart length: ${_rb.lengthInBytes}');
   _cds = rds;
   final hadFmi = _readFmi(rds, path, dParams);
   if (!hadFmi && !dParams.allowMissingFMI) return rds;
-
-  // Set the Element reader based on the Transfer Syntax.
-  _readElement = (rds.isEvr) ? _readEvrElement : _readIvrElement;
 
   try {
     if (_isEvr) {

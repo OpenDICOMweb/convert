@@ -93,8 +93,10 @@ bool byteReadWriteFileChecked(String path,
     if (same) log.info1('$pad Success!');
   } on ShortFileError {
     log.warn('$pad ** Short File(${f.lengthSync()} bytes): $f');
+    rethrow;
   } catch (e) {
     log.error(e);
+    rethrow;
     if (throwOnError) rethrow;
   }
   return success;

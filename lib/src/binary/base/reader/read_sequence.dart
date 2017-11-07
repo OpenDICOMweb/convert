@@ -26,7 +26,10 @@ Element _readUSQ(int code, int eStart, EBytesMaker ebMaker, int vfLengthField) {
   final items = <Item>[];
 
   _rb.sMsg('readUSQ', code, eStart, vfLength: vfLengthField);
-  while (!_rb.isSequenceDelimiter()) items.add(_readItem());
+  while (!_rb.isSequenceDelimiter()) {
+  	final item = _readItem();
+    items.add(item);
+  }
   final sq = _makeSequence(code, eStart, ebMaker, items);
   _rb.eMsg(sq);
 
@@ -86,8 +89,8 @@ Item _readItem() {
   final delimiter = _rb.uint32;
   _rb.sMsg('readItem', kItem, iStart, vfLength: delimiter);
 
-/* Urgent Jim: make utility
-   log
+  //Urgent Jim: make utility
+/*  log
     ..debug('${dcm(_rb.getUint32(_rb.rIndex - 4))} - ${_rb.getUint32(_rb.rIndex - 4)}')
     ..debug('${dcm(_rb.getUint32(_rb.rIndex))} - ${_rb.getUint32(_rb.rIndex)}')
     ..debug('${dcm(_rb.getUint32(_rb.rIndex + 4))} - ${_rb.getUint32(_rb.rIndex + 4)}')

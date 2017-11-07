@@ -45,8 +45,8 @@ void _writeIvrSequence(SQ sq) {
 		..uint32(sq.length);
 	if (sq.items.isNotEmpty) _writeItems(sq);
 	if (sq.hadULength) _writeDelimiter(kSequenceDelimitationItem);
-	_parseInfo.nSequences++;
-	if (sq.isPrivate) _parseInfo.nPrivateSequences++;
+	_pInfo.nSequences++;
+	if (sq.isPrivate) _pInfo.nPrivateSequences++;
 	log.debug('${_wb.wee} SQ', -1);
 }
 

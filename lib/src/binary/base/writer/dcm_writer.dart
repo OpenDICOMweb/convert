@@ -44,7 +44,10 @@ Function _writeElement;
 
 bool _isEvr;
 TransferSyntax _ts;
-ParseInfo _parseInfo;
+ParseInfo _pInfo;
+
+int _count;
+int _offset;
 
 /// A library for encoding [Dataset]s in the DICOM File Format.
 ///
@@ -91,7 +94,7 @@ abstract class DcmWriter extends DcmWriterInterface {
       {this.path,
       this.file,
       TransferSyntax outputTS,
-      int length = ByteWriter.kDefaultLength,
+      int length,
       this.reUseBuffer = true,
       this.eParams = EncodingParameters.kNoChange})
       : targetTS = getOutputTS(rds, outputTS),
@@ -104,7 +107,7 @@ abstract class DcmWriter extends DcmWriterInterface {
     _rds = rds;
 //    _path = path;
     _isEvr = rds.isEvr;
-    _parseInfo = new ParseInfo(rds);
+    _pInfo = new ParseInfo(rds);
     //if (elementOffsetsEnabled) _offsets = new ElementOffsets();
     _offsets = new ElementOffsets();
     _keepUndefinedLengths = !_eParams.doConvertUndefinedLengths;
@@ -163,10 +166,15 @@ abstract class DcmWriter extends DcmWriterInterface {
   @override
   Uint8List write() {
     //TODO: handle doSeparateBulkdata
-    _cds = rds;
+	  _rds = rds;
+	  _cds = rds;
+	  _count = 0;
+	  _offset = 0;
+
     _ts = (targetTS == null) ? rds.transferSyntax : targetTS;
     if (_ts == null) throw 'no TS';
-    _writeFmi(rds, eParams);
+    _writePrefix(rds, _eParams.doCleanPreamble);
+    log.debug('*** Preamble written');
 
     // Set the Element reader based on the Transfer Syntax.
     _isEvr = rds.isEvr;
@@ -176,15 +184,14 @@ abstract class DcmWriter extends DcmWriterInterface {
       _writeIvrRootDataset(rds, eParams);
     }
 
-    if (wb == null || wb.length < ByteWriter.kMinByteListLength)
-      throw 'Invalid bytes error: $wb';
+    if (wb == null) throw 'Invalid bytes error: $wb';
     final bytes = wb.close();
-    _writeFile(bytes, file);
+    if (file != null) _writeFile(bytes, file);
     return bytes;
   }
 
   void writeElement(Element e, {bool isEVR = true}) =>
-      (_isEvr) ? _writeEvr(e) : _writeIvr(e);
+      (_isEvr) ? _writeEvrElement(e) : _writeIvr(e);
 
   /// Writes a [Dataset] to the buffer.
   void writeDataset(Dataset ds, EncodingParameters eParams) {
