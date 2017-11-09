@@ -10,8 +10,8 @@ export 'package:entity/entity.dart';
 
 export 'package:dcm_convert/src/binary/base/reader/dcm_reader.dart';
 export 'package:dcm_convert/src/binary/base/writer/dcm_writer.dart';
-export 'package:dcm_convert/src/binary/byte/byte_reader.dart';
-export 'package:dcm_convert/src/binary/byte/byte_writer.dart';
+export 'package:dcm_convert/src/binary/byte/read_bytes.dart';
+export 'package:dcm_convert/src/binary/byte/write_bytes.dart';
 export 'package:dcm_convert/src/binary/byte_read_utils.dart';
 export 'package:dcm_convert/src/binary/convert_byte_to_tag.dart';
 export 'package:dcm_convert/src/binary/tag/tag_reader.dart';

@@ -19,7 +19,7 @@ typedef SQ SequenceMaker(EBytes eb, Dataset parent, List<Item>items);
 typedef Item ItemMaker(Dataset parent);
 typedef Element PixelDataMaker<V>(EBytes eb, int vrIndex, [VFFragments fragments]);
 
-const int shortFileThreshold = 1024;
+const int shortFileThreshold = 131;
 
 abstract class DcmReaderInterface {
   /// Returns the [ByteData] for the entire Root [Dataset].

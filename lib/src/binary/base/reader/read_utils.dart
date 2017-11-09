@@ -8,69 +8,37 @@ part of odw.sdk.convert.binary.reader;
 bool _isSequenceVR(int vrIndex) => vrIndex == 0;
 
 bool _isSpecialVR(int vrIndex) =>
-		vrIndex >= kVRSpecialIndexMin && vrIndex <= kVRSpecialIndexMax;
+    vrIndex >= kVRSpecialIndexMin && vrIndex <= kVRSpecialIndexMax;
 
-bool _isMaybeUndefinedVR(int vrIndex) =>
-		vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
+bool _isMaybeUndefinedLength(int vrIndex) =>
+    vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
 
 bool _isEvrLongVR(int vrIndex) =>
-		vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
+    vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
 
 bool _isEvrShortVR(int vrIndex) =>
-		vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
+    vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
 
-bool _isIvrVR(int vrIndex) =>
-		vrIndex >= kVRIvrIndexMin && vrIndex <= kVRIvrIndexMax;
-
-/*
-/// Read an Element (not SQ)  with a 32-bit [vfLengthField], that might have
-/// kUndefinedValue.
-Element _readMaybeUndefined(int code, int eStart, int vrIndex, int vfLengthField) {
-  if (vfLengthField == kUndefinedLength) {
-    final endOfVF = _findEndOfULengthVF();
-    final eLength = endOfVF - eStart;
-    _rIndex = endOfVF + 8;
-    return _finishLong(code, eStart, vrIndex, vfLengthField, eLength);
-  } else {
-    return _readLong(code, eStart, vrIndex, vfLengthField);
-  }
-}
-
-
-/// Read an Element (not SQ) with a 32-bit [vfLengthField], but that cannot
-/// have kUndefinedValue.
-Element _readLong(int code, int eStart, int vrIndex, int vfLengthField) {
-  final eLength = _rIndex - eStart;
-  _rIndex = _rIndex + vfLengthField;
-  return _finishLong(code, eStart, vrIndex, vfLengthField, eLength);
-}
-
-/// Finish reading a 32-bit (non SQ) Element.
-Element _finishLong(int code, int eStart, int vrIndex, int vfLengthField, int eLength) {
-  if (code == kPixelData) {
-    return _readPixelData(eStart, vfLengthField, vrIndex, eLength);
-  } else {
-    final bd = _rb.buffer.asByteData(eStart, eLength);
-    final eb = new EvrLong(bd);
-    return elementMaker(eb, vrIndex);
-  }
-}
-*/
-
+bool _isIvrDefinedLength(int vrIndex) =>
+		vrIndex >= kVRIvrDefinedIndexMin && vrIndex <= kVRIvrDefinedIndexMax
+                                                                 ;
 Element _finishReadElement(int code, int eStart, Element e) {
   assert(_rb.checkIndex());
   // Elements are always read into the current dataset.
+  // **** This is the only place they are added to the dataset.
   _cds.add(e);
 
   // Statistics
   if (statisticsEnabled) {
-	  _pInfo.lastElementRead = e;
+    _pInfo.lastElementRead = e;
     _pInfo.endOfLastElement = _rb.rIndex;
     if (e.isPrivate) _pInfo.nPrivateElements++;
     if (elementOffsetsEnabled) _offsets.add(eStart, _rb.rIndex, e);
     if ((code >> 16).isOdd) _pInfo.nPrivateElements++;
   }
-  _rb.eMsg(e);
+
+  final eEnd = _rb.rIndex;
+  _rb.eMsg(_elementCount, e, eStart, eEnd, -1);
   return e;
 }
 
@@ -83,7 +51,6 @@ String failedFMIErrorMsg(String path, Object x) => '''
 Failed to read FMI: "$path"\nException: $x\n'
 	  File length: ${_rb.lengthInBytes}\n${_rb.rrr} readFMI catch: $x');
 ''';
-
 
 // Issue:
 // **** Below this level is all for debugging and can be commented out for

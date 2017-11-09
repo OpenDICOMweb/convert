@@ -5,49 +5,22 @@
 // See the AUTHORS file for other contributors.
 part of odw.sdk.convert.binary.base.writer;
 
-bool _isSequenceVR(int vrIndex) => vrIndex == 0;
+bool _isSequence(int vrIndex) => vrIndex == 0;
 
-/*
 bool _isSpecialVR(int vrIndex) =>
 		vrIndex >= kVRSpecialIndexMin && vrIndex <= kVRSpecialIndexMax;
-*/
 
-bool _isMaybeUndefinedVR(int vrIndex) =>
-    vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
+bool _isMaybeUndefinedLength(int vrIndex) =>
+		vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
 
-bool _isPixelDataVR(int vrIndex) => _isMaybeUndefinedVR(vrIndex);
+bool _isEvrLongLength(int vrIndex) =>
+		vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
 
-bool _isEvrLongVR(int vrIndex) =>
-    vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
+bool _isEvrShortLength(int vrIndex) =>
+		vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
 
-bool _isEvrShortVR(int vrIndex) =>
-    vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
-
-bool _isIvrVR(int vrIndex) => vrIndex >= kVRIvrIndexMin && vrIndex <= kVRIvrIndexMax;
-
-void _writeItems(SQ sq) {
-  final items = sq.items;
-  for (var item in items) {
-    log.debug('${_wb.wbb} Writing Item: $item', 1);
-    if (item.hasULength && _keepUndefinedLengths) {
-      _writeUndefinedLengthItem(item);
-    } else {
-      _writeDefinedLengthItem(item);
-    }
-    log.debug('${_wb.wee} Wrote Item: $item', -1);
-  }
-}
-
-void _writeDefinedLengthItem(Item item) {
-  _wb..uint32(kItem32BitLE)..uint32(item.lengthInBytes);
-  item.forEach(_writeElement);
-}
-
-void _writeUndefinedLengthItem(Item item) {
-  _wb..uint32(kItem32BitLE)..uint32(kUndefinedLength);
-  item.forEach(_writeElement);
-  _wb..uint32(kItemDelimitationItem)..uint32(0);
-}
+bool _isIvrDefinedLength(int vrIndex) =>
+		vrIndex >= kVRIvrDefinedIndexMin && vrIndex <= kVRIvrDefinedIndexMax;
 
 /// Writes the [delimiter] and a zero length field for the [delimiter].
 /// The Write Index is advanced 8 bytes.
@@ -81,15 +54,40 @@ void _writePath(Uint8List bytes, String path) {
 }
 
 void _finishWritingElement(int start, int end, Element e) {
-  _outputOffsets.add(start, end, e);
   _pInfo.nElements++;
   if (e.isPrivate) _pInfo.nPrivateElements++;
   _count++;
   _offset = _offset + (end - start);
   if (_elementOffsetsEnabled) {
-    if (_inputOffsets.starts[_count] != start ||
-        _inputOffsets.ends[_count] != end ||
-        _inputOffsets.elements != e) throw 'Error';
+    _outputOffsets.add(start, end, e);
+    final iStart = _inputOffsets.starts[_count];
+    final iEnd = _inputOffsets.ends[_count];
+    final ie = _inputOffsets.elements[_count];
+    if (iStart != start || iEnd != end || ie != e) {
+      log
+        ..debug('**** Unequal Offset')
+        ..debug('  ** $iStart to $iEnd read $e')
+        ..debug('  ** $start to $end wrote $e');
+      throw 'badOffset';
+    }
   }
   log.debug('${_wb.wee} #$_count $_offset :${_wb.remaining}', -1);
+}
+
+void showOffsets() {
+  log
+    ..info(' input offset length: ${_inputOffsets.length}')
+    ..info('output offset length: ${_outputOffsets.length}');
+  for (var i = 0; i < _inputOffsets.length; i++) {
+    final iStart = _inputOffsets.starts[i];
+    final iEnd = _inputOffsets.ends[i];
+    final ioe = _inputOffsets.elements[i];
+    final oStart = _outputOffsets.starts[i];
+    final oEnd = _outputOffsets.ends[i];
+    final ooe = _outputOffsets.elements[i];
+
+    log
+      ..info('iStart: $iStart iEnd: $iEnd e: $ioe')
+      ..info('oStart: $oStart iEnd: $oEnd e: $ooe');
+  }
 }

@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:system/core.dart';
 
-import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
+import 'package:dcm_convert/src/binary/byte/read_bytes.dart';
 import 'package:dcm_convert/src/errors.dart';
 import 'package:dcm_convert/src/io_utils.dart';
 
@@ -40,7 +40,7 @@ Future<bool> doReadByteFile(File f,
   try {
 	  final Uint8List bytes = await f.readAsBytes();
 	  final bd = bytes.buffer.asByteData();
-	  final reader0 = new ByteReader(bd);
+	  final reader0 = new ByteDatasetReader(bd);
 	  final rds0 = reader0.read();
     if (rds0 == null) {
       log.info0('Unreadable File: $path');

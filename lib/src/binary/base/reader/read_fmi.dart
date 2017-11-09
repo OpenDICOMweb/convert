@@ -9,7 +9,7 @@ part of odw.sdk.convert.binary.reader;
 /// if any [Fmi] [Element]s were present; otherwise, returns null.
 bool _readFmi(RootDataset rds, String path, DecodingParameters dParams) {
   try {
-    log.debug('${_rb.rbb} readFmi($_cds)', -1);
+    log.debug('${_rb.rbb} readFmi($_cds)', 1);
     assert(_cds == rds);
  //   assert(_pInfo.hadPrefix == null, 'hadPrefix was non-null');
     _pInfo.hadPrefix = _readPrefix(path, dParams.checkPreambleAllZeros);
@@ -56,6 +56,7 @@ bool _readFmi(RootDataset rds, String path, DecodingParameters dParams) {
     if (throwOnError) rethrow;
   } on InvalidTransferSyntax catch (e) {
     _rb.warn(failedTSErrorMsg(path, e));
+    return false;
   } on RangeError catch (e) {
     _pInfo.exceptions.add(e);
     _rb.error('$e\n $_pInfo.stats');
@@ -69,6 +70,8 @@ bool _readFmi(RootDataset rds, String path, DecodingParameters dParams) {
     _rb.error(failedFMIErrorMsg(path, e));
     rethrow;
   }
+  print('log.level ${log.indenter.level}');
+  log.debug('${_rb.ree} readFMI ${rds.total} Elements read', -1);
   return true;
 }
 
@@ -82,7 +85,7 @@ bool _readPrefix(String path, bool checkPreamble) {
   if (_pInfo.hadPrefix != null)
     sb.writeln('Attempt to re-read DICOM Preamble and '
         'Prefix.');
-  if (_rb.lengthInBytes <= 132) sb.writeln('ByteData length(${_rb.lengthInBytes}) < 132');
+  if (_rb.lengthInBytes < 132) sb.writeln('ByteData length(${_rb.lengthInBytes}) < 132');
   if (sb.isNotEmpty) {
     _rb.error(sb.toString());
     return false;
@@ -100,7 +103,7 @@ bool _readPrefix(String path, bool checkPreamble) {
 bool isDcmPrefixPresent() {
   _rb + 128;
   final prefix = _rb.uint32;
-  log.debug3('prefix: ${prefix.toRadixString(16).padLeft(8, '0')}');
+  log.debug3('${_rb.rmm} prefix: ${prefix.toRadixString(16).padLeft(8, '0')}');
   if (prefix == kDcmPrefix) {
     return true;
   } else {

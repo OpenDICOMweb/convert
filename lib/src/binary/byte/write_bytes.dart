@@ -27,9 +27,9 @@ import 'package:dcm_convert/src/io_utils.dart';
 /// A [class] for writing a [RootDatasetByte] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
 /// all LITTLE ENDIAN [TransferSyntax]es.
-class ByteWriter extends DcmWriter {
-  /// Creates a new [ByteWriter] where [wIndex] = 0.
-  ByteWriter(RootDatasetByte rds,
+class ByteDatasetWriter extends DcmWriter {
+  /// Creates a new [ByteDatasetWriter] where [wIndex] = 0.
+  ByteDatasetWriter(RootDatasetByte rds,
       {int bufferLength = DcmWriter.defaultBufferLength,
       String path = '',
       File file,
@@ -46,28 +46,28 @@ class ByteWriter extends DcmWriter {
 
   /// Writes the [RootDatasetByte] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
-  factory ByteWriter.toFile(RootDatasetByte ds, File file,
+  factory ByteDatasetWriter.toFile(RootDatasetByte ds, File file,
       {int bufferLength,
       bool overwrite = false,
       bool fmiOnly = false,
       bool fast = true,
       TransferSyntax targetTS}) {
     checkFile(file, overwrite: overwrite);
-    return new ByteWriter(ds,
+    return new ByteDatasetWriter(ds,
         bufferLength: bufferLength, path: file.path, reUseBuffer: fast, outputTS: targetTS);
   }
 
   /// Creates a new empty [File] from [path], writes the [RootDatasetByte]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  factory ByteWriter.toPath(RootDatasetByte ds, String path,
+  factory ByteDatasetWriter.toPath(RootDatasetByte ds, String path,
       {int bufferLength,
       bool overwrite = false,
       bool fmiOnly = false,
       bool fast = false,
       TransferSyntax targetTS}) {
     checkPath(path);
-    return new ByteWriter(ds,
+    return new ByteDatasetWriter(ds,
         bufferLength: bufferLength, path: path, reUseBuffer: fast, outputTS: targetTS);
   }
 
@@ -84,7 +84,7 @@ class ByteWriter extends DcmWriter {
 
   /// Reads a [RootDatasetByte], and stores it in [rds], and returns it.
   @override
-  Uint8List write({bool allowMissingFMI = false}) => super.write();
+  Uint8List write() => super.write();
 
   @override
   String elementInfo(Element e) => (e == null) ? 'Element e = null' : e.info;
@@ -102,7 +102,7 @@ class ByteWriter extends DcmWriter {
       TransferSyntax outputTS
       }) {
     checkRootDataset(ds);
-    final writer = new ByteWriter(ds,
+    final writer = new ByteDatasetWriter(ds,
         bufferLength: bufferLength, path: path, reUseBuffer: reUseBD, outputTS: outputTS);
     return writer.write();
   }

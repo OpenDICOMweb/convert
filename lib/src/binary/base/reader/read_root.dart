@@ -12,8 +12,10 @@ part of odw.sdk.convert.binary.reader;
 /// an Error will be thrown; otherwise, returns null.
 RootDataset _read(RootDataset rds, String path, DecodingParameters dParams) {
   final eStart = _rb.rIndex;
-  log.debug('Reading RootDS: start: $eStart length: ${_rb.lengthInBytes}');
+  log.debug('Reading RootDS: start: $eStart length: ${_rb.lengthInBytes}', 1);
   _cds = rds;
+
+  log.reset;
   final hadFmi = _readFmi(rds, path, dParams);
   if (!hadFmi && !dParams.allowMissingFMI) return rds;
 
@@ -45,14 +47,21 @@ RootDataset _read(RootDataset rds, String path, DecodingParameters dParams) {
   }
 
   final rdsTotal = rds.total + rds.dupTotal;
-  log
-    ..debug('lastReadIndex: ${_pInfo.lastReadIndex}')
-    ..debug('nElements: ${rds.dsBytes.bd.lengthInBytes}')
-    ..debug('rds.total: ${rds.total}')
-    ..debug('rds.dupotal: ${rds.dupTotal}')
-    ..debug('nElements: ${_pInfo.nElements}');
+  final pInfoTotal = _pInfo.nElements + _pInfo.nDuplicateElements;
+  log.debug('''\n
+lastReadIndex: ${_pInfo.lastReadIndex}
+lengthInBytes: ${rds.dsBytes.bd.lengthInBytes}
+    rds.total: ${rds.total}
+  rds.dupotal: ${rds.dupTotal}
+    nElements: ${_pInfo.nElements}
+  nDuplicates: ${_pInfo.nDuplicateElements}
+  
+    rds total: $rdsTotal
+ reader total: $pInfoTotal
+''', -1);
 
-  if (_pInfo.nElements != rdsTotal) readerInconsistencyError(rds);
+  //TODO: fix this to include duplicates
+  if (_pInfo.nElements != rds.total) readerInconsistencyError(rds);
   return rds;
 }
 
@@ -66,13 +75,17 @@ class ReaderInconsistencyError extends Error {
 }
 
 RootDataset readerInconsistencyError(RootDataset rds) {
-  final all = rds.total + rds.dupTotal;
+  final rdsAll = rds.total + rds.dupTotal;
+  final pInfoAll = _pInfo.nElements + _pInfo.nDuplicateElements;
   final msg = '''
 Inconsistent Elements Error: '
-   ElementsRead(${_pInfo.nElements})
+   pInfo.total(${_pInfo.nElements})
+   pInfo.duplicates(${_pInfo.nDuplicateElements})
+   pInfo Total: $pInfoAll
+   
    rds.total(${rds.total}) 
    rds.duplicates(${rds.dupTotal})  
-   Total with duplciates: $all = ${rds.total} + ${rds.dupTotal}';
+   Total with duplciates: $rdsAll = ${rds.total} + ${rds.dupTotal}';
 ''';
   _rb.error(msg);
 // Urgent: fix

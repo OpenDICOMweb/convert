@@ -30,6 +30,7 @@ abstract class DcmWriterInterface {
   /// The current duplicate [List<Element>].
   List<Element> get duplicates => cds.elements.duplicates;
 
+  ElementOffsets get inputOffsets;
   ElementOffsets get outputOffsets;
 
   Uint8List write();
@@ -41,5 +42,4 @@ abstract class DcmWriterInterface {
 
   /// Interface for logging
   String elementInfo(Element e);
-
 }

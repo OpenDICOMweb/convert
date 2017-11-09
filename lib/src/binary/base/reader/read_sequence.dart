@@ -11,13 +11,13 @@ part of odw.sdk.convert.binary.reader;
 // determine the length. Returns a [kUndefinedLength], which is used for
 // reading the value field of these [Element]s. Returns an [SQ] [Element].
 Element _readSequence(int code, int eStart, EBytesMaker maker) {
-  _rb.sMsg('_readSequence', code, eStart);
   final vfLengthField = _rb.uint32;
-  //  log.debug2('vfLengthField: $vfLengthField ${dcm(vfLengthField)}');
-  final e = (vfLengthField == kUndefinedLength)
+  final hdrlength = (_isEvr) ? 12 : 8;
+  _rb.sMsg('readSequence', code, eStart, 0, hdrlength, vfLengthField);
+
+  return (vfLengthField == kUndefinedLength)
       ? _readUSQ(code, eStart, maker, vfLengthField)
       : _readDSQ(code, eStart, maker, vfLengthField);
-  return _finishReadElement(code, eStart, e);
 }
 
 /// Reads a [kUndefinedLength] Sequence.
@@ -25,16 +25,14 @@ Element _readUSQ(int code, int eStart, EBytesMaker ebMaker, int vfLengthField) {
   assert(vfLengthField == kUndefinedLength);
   final items = <Item>[];
 
-  _rb.sMsg('readUSQ', code, eStart, vfLength: vfLengthField);
+  _rb.mMsg('readUSQ', code, eStart, 0, vfLengthField);
   while (!_rb.isSequenceDelimiter()) {
-  	final item = _readItem();
+    final item = _readItem();
     items.add(item);
   }
-  final sq = _makeSequence(code, eStart, ebMaker, items);
-  _rb.eMsg(sq);
 
   _pInfo.nUndefinedSequences++;
-  return sq;
+  return _makeSequence(code, eStart, ebMaker, items);
 }
 
 /// Reads a defined [vfLengthField].
@@ -43,38 +41,26 @@ Element _readDSQ(int code, int eStart, EBytesMaker ebMaker, int vfLengthField) {
   final items = <Item>[];
   final eEnd = _rb.rIndex + vfLengthField;
 
-  _rb.sMsg('readDSQ', code, eStart, vfLength: vfLengthField);
+  _rb.mMsg('readDSQ', code, eStart, 0, vfLengthField);
   while (_rb.rIndex < eEnd) {
     final item = _readItem();
     items.add(item);
   }
-  final sq = _makeSequence(code, eStart, ebMaker, items);
-  _rb.eMsg(sq);
 
   _pInfo.nDefinedSequences++;
-  return sq;
+  return _makeSequence(code, eStart, ebMaker, items);
 }
 
-Element _makeSequence(
-  int code,
-  int eStart,
-  EBytesMaker ebMaker,
-  List<Item> items,
-) {
-  // Keep, but only use for debugging.
-  //_showNext(_rIndex);
-  //  log.debug1('$rmm   eLength($eLength), makeSQ');
+Element _makeSequence(int code, int eStart, EBytesMaker ebMaker, List<Item> items) {
   final bd = _rb.buffer.asByteData(eStart, _rb.rIndex - eStart);
   final eb = ebMaker(bd);
-  final sq = sequenceMaker(eb, _cds, items);
-  _cds.elements.add(sq);
+  final e = sequenceMaker(eb, _cds, items);
 
   _pInfo.nSequences++;
-  _pInfo.lastSequenceRead = sq;
+  _pInfo.lastSequenceRead = e;
   _pInfo.endOfLastSequence = _rb.rIndex;
-  if (sq.isPrivate) _pInfo.nPrivateSequences++;
-  //  log.debug('$ree  ${show(sq)} ${items.length} items readDS@ @end', -1);
-  return sq;
+  if (e.isPrivate) _pInfo.nPrivateSequences++;
+  return _finishReadElement(code, eStart, e);
 }
 
 final String kItemAsString = hex32(kItem32BitLE);
@@ -87,7 +73,7 @@ Item _readItem() {
 
   // read 32-bit kItem code and Item length field
   final delimiter = _rb.uint32;
-  _rb.sMsg('readItem', kItem, iStart, vfLength: delimiter);
+  _rb.sMsg('readItem', kItem, iStart, null, 8, delimiter);
 
   //Urgent Jim: make utility
 /*  log
@@ -128,6 +114,7 @@ Item _readItem() {
   final bd = _rb.buffer.asByteData(iStart, _rb.rIndex - iStart);
   item.dsBytes = new IDSBytes(bd);
   _pInfo.nItems++;
-  _rb.eMsg(item);
+  log.debug('${_rb.ree} $item');
+  _rb.eMsg(_elementCount, item, iStart, _rb.rIndex);
   return item;
 }

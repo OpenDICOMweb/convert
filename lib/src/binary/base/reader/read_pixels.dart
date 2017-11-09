@@ -12,7 +12,7 @@ Element _makePixelData(int eStart, int eLength, int vrIndex, [VFFragments fragme
   final bd = _rb.buffer.asByteData(eStart, eLength);
   final eb = (_isEvr) ? new EvrLong(bd) : new Ivr(bd);
   final e = makeBEPixelDataFromEBytes(eb, vrIndex, _rds.transferSyntax, fragments);
-  log.debug3('${_rb.rmm} _makePixelData: $eb');
+  log.debug3('${_rb.ree} _makePixelData: $eb');
   return _finishReadElement(kPixelData, eStart, e);
 }
 
@@ -55,7 +55,7 @@ Element _readPixelDataFragments(int eStart, int vfLengthField, int vrIndex) {
   final fragments = _readFragments();
   final eLength = _rb.rIndex - eStart;
   final e = _makePixelData(eStart, eLength, vrIndex, fragments);
-  log.debug('${_rb.ree} $e');
+  log.debug('${_rb.ree} $e', -1);
   return e;
 }
 
@@ -83,14 +83,14 @@ VFFragments _readFragments() {
     final endOfVF = _rb + vfLengthField;
     fragments.add(_rb.buffer.asUint8List(startOfVF, endOfVF - startOfVF));
 
-    log.debug3('${_rb.rmm}  length: ${endOfVF - startOfVF}');
+    log.debug3('${_rb.ree}  length: ${endOfVF - startOfVF}', -1);
     iCode = _rb.uint32;
   } while (iCode != kSequenceDelimitationItem32BitLE);
 
   __checkItemLengthField(iCode);
 
   final v = new VFFragments(fragments);
-  log.debug3('${_rb.rmm}  fragments: $v', -1);
+  log.debug3('${_rb.ree}  fragments: $v', -1);
   return v;
 }
 

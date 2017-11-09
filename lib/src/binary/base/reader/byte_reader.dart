@@ -25,7 +25,7 @@ class ByteReader extends ByteList {
   ByteReader(ByteData bd) : super(bd);
 
   ByteReader.from(List<int> iList)
-      :super(new Uint8List.fromList(iList).buffer.asByteData());
+      : super(new Uint8List.fromList(iList).buffer.asByteData());
 
   // **** ReadBuffer specific Getters and Methods
 
@@ -80,12 +80,11 @@ class ByteReader extends ByteList {
   Uint8List readUint8View(int length) => uint8View(_rIndex, length);
 
   int _getOffset(int start, int length) {
-	  final offset = bd.offsetInBytes + start;
-	  assert(offset >= 0 && offset <= bd.lengthInBytes);
-	  assert(offset + length >= offset && (offset + length) <= bd.lengthInBytes);
-	  return offset;
+    final offset = bd.offsetInBytes + start;
+    assert(offset >= 0 && offset <= bd.lengthInBytes);
+    assert(offset + length >= offset && (offset + length) <= bd.lengthInBytes);
+    return offset;
   }
-
 
   bool get isClosed => _isClosed;
   bool _isClosed = false;
@@ -113,7 +112,6 @@ class ByteReader extends ByteList {
 
   @override
   int getUint8(int offset) => bd.getUint8(offset);
-
 
   int get uint8 => readUint8();
 
@@ -256,26 +254,34 @@ class ByteReader extends ByteList {
 
   String get pad => ''.padRight('$_rrr'.length);
 
-  void sMsg(String name, int code, int start,
-          {int vrIndex = -1, int vfLength = 999999, int inc = 1}) =>
-      _msg(rbb, name, code, start, vrIndex, vfLength, inc);
+  void sMsg(String name, int code, int start, int vrIndex,
+          [int hdrLength, int vfLengthField = -1, int inc = 1]) =>
+      _msg(rbb, name, code, start, vrIndex, hdrLength, vfLengthField, inc);
 
-  void mMsg(String name, int code, int start,
-          {int vrIndex = -1, int vfLength = 999999, int inc = 0}) =>
-      _msg(rmm, name, code, start, vrIndex, vfLength, inc);
+  void mMsg(String name, int code, int start, int vrIndex,
+          [int hdrLength, int vfLengthField = -1, int inc = 0]) =>
+      _msg(rmm, name, code, start, vrIndex, hdrLength, vfLengthField, inc);
 
-  void _msg(String offset, String name, int code, int start, int vrIndex, int vfLength,
-      int inc) {
-    final len = (vfLength > 0xFFFE0000) ? '${dcm(vfLength)}' : '$vfLength';
-    final s = '$offset $name: ${dcm(code)} vr($vrIndex) $start[$len]';
+  void _msg(String offset, String name, int code, int start, int vrIndex,
+      [int hdrLength, int vfLength = -1, int inc]) {
+    final hasLength =
+        hdrLength != null && (vfLength != -1 && vfLength != kUndefinedLength);
+    final sum = (hasLength) ? start + hdrLength + vfLength : -1;
+
+    final range =
+        (hasLength) ? '>$start + $hdrLength + $vfLength = $sum' : '>$start + ???';
+    final s = '$offset $name: ${dcm(code)} vr($vrIndex) $range';
     log.debug(s, inc);
   }
 
-  void eMsg(Object o, [int inc = -1]) => log.debug('$ree $o $_remaining', inc);
+  void eMsg(int eNumber, Object e, int eStart, int eEnd, [int inc = -1]) {
+    final s = '$ree $eNumber $e  |$_remaining - $eEnd = ${_remaining - eEnd}';
+    log.debug(s, inc);
+  }
 
   void warn(Object msg) {
     final s = '**   $msg $_rrr';
-    //  _pInfo.exceptions.add(s);
+    //_pInfo.exceptions.add(msg);
     log.warn(s);
   }
 

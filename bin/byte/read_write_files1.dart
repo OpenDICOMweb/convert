@@ -22,6 +22,8 @@ import 'package:dcm_convert/src/binary/compare_bytes.dart';
 //TODO: move to appropriate place
 import 'read_utils.dart';
 
+const String foo = 'C:/odw/test_data/mweb/ASPERA/'
+		'DICOM filesonly/22c82bd4-6926-46e1-b055-c6b788388014.dcm';
 void main() {
   Server.initialize(name: 'read_write_file.dart', level: Level.debug);
   // String testFile = test6684_02;
@@ -32,7 +34,7 @@ void main() {
   // readWritePath(test6684_01, reps: 1, fmiOnly: false);
   // readWriteFileTimed(file, reps: 1, fast: false, fmiOnly: false);
   // readFMI(paths, fmiOnly: true);
-  readWriteFiles(testPaths0, fmiOnly: false);
+  readWriteFiles([foo], fmiOnly: false);
   // readWriteDirectory(dir36_4485_6684, fast: false, throwOnError: true);
   //targetTS: TransferSyntax.kImplicitVRLittleEndian);
 }
@@ -54,12 +56,12 @@ bool readWritePath(String path, {int reps = 1, bool fmiOnly = false}) {
 
 bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
   final Uint8List bytes0 = inFile.readAsBytesSync();
-  final reader = new ByteReader(bytes0.buffer.asByteData());
+  final reader = new ByteDatasetReader(bytes0.buffer.asByteData());
   final rds0 = reader.read();
 /*  List<int> elementIndex0 = reader.elementIndex;*/
   log..info0(rds0.parseInfo)..info0(rds0.info);
 
-  final writer = new ByteWriter(rds0);
+  final writer = new ByteDatasetWriter(rds0);
   final bytes1 = writer.write();
 
 /*  List<int> elementIndex1 = writer.elementIndex.sublist(0, writer.nthElement);
@@ -68,7 +70,7 @@ bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
   for (int i = 0; i < reader.nthElement; i++)
     if (elementIndex0[i] != elementIndex1[i])
       print('$i: ${elementIndex0[i]} != ${elementIndex1[i]}');*/
-  final rds1 = ByteReader.readBytes(bytes1);
+  final rds1 = ByteDatasetReader.readBytes(bytes1);
   log..info0(rds1.parseInfo)..info0(rds1.info);
   final areDatasetsEqual = _compareDatasets(rds0, rds1);
   log.info0('$rds0 == $rds1: $areDatasetsEqual');
@@ -109,12 +111,12 @@ FileResult readWriteFileTiming(File file,
       return null;
     }
 
-    final rds0 = ByteReader.readBytes(bytes0);
+    final rds0 = ByteDatasetReader.readBytes(bytes0);
     final readDS0 = timer.elapsed;
     final bytes1 = writeTimed(rds0, path: path);
     final writeDS0 = timer.elapsed;
 
-    final rds1 = ByteReader.readBytes(bytes1);
+    final rds1 = ByteDatasetReader.readBytes(bytes1);
     final readDS1 = timer.elapsed;
 
     //TODO: make this work?

@@ -76,7 +76,6 @@ abstract class ByteList extends ListBase<int> implements TypedData {
   double getFloat32(int index) => _bd.getFloat32(index, endian);
   double getFloat64(int index) => _bd.getFloat64(index, endian);
 
-
   // The Writers
   void setInt8(int index, int value) => _bd.setInt8(index, value);
   void setUint8(int index, int value) => _bd.setUint8(index, value);
@@ -90,39 +89,60 @@ abstract class ByteList extends ListBase<int> implements TypedData {
   void setFloat64(int index, double value) => _bd.setFloat64(index, value, endian);
 
   void setLength(int newLength) {
-  	if (newLength < _bd.lengthInBytes) return;
-  	grow(newLength);
+    if (newLength < _bd.lengthInBytes) return;
+    grow(newLength);
+  }
+
+  void writeCode(int index, int code) {
+    setUint16(index, code >> 16);
+    setUint16(index + 2, code & 0xFFFF);
   }
 
   /// Creates a new buffer at least double the size of the current buffer,
   /// and copies the contents of the current buffer into it.
   ///
-  /// If [capacity] is null the new buffer will be twice the size of the
-  /// current buffer. If [capacity] is not null, the new buffer will be at
+  /// If [minCapacity] is null the new buffer will be twice the size of the
+  /// current buffer. If [minCapacity] is not null, the new buffer will be at
   /// least that size. It will always have at least have double the
   /// capacity of the current buffer.
-  void grow([int capacity]) {
-	  log.debug('start _grow: $this');
-	  final oldLength = bd.lengthInBytes;
-	  var newLength = oldLength * 2;
-	  log.debug('old: $oldLength new: $newLength');
-	  if (capacity != null && capacity > newLength) newLength = capacity;
+  bool grow([int minCapacity]) {
+    log.debug('start _grow: $this');
+    final oldLength = bd.lengthInBytes;
+    if (minCapacity < oldLength) return false;
 
-	  isValidBufferLength(newLength);
-	  if (newLength < oldLength) return;
-	  final newBuffer = new ByteData(newLength);
-	  for (var i = 0; i < oldLength; i++) newBuffer.setUint8(i, getUint8(i));
-	  _bd = newBuffer;
-	  log.debug('end _grow ${_bd.lengthInBytes}');
+    var newLength = oldLength;
+    if (minCapacity == null) {
+      newLength = oldLength * 2;
+    } else {
+      while (newLength <= minCapacity) newLength *= 2;
+    }
+    log.debug('Grow Buffer oldLength: $oldLength newLength: $newLength');
+
+    if (isMaxCapacityExceeded(newLength)) return false;
+
+    final newBuffer = new ByteData(newLength);
+    for (var i = 0; i < oldLength; i++) newBuffer.setUint8(i, getUint8(i));
+    _bd = newBuffer;
+    log.debug('end _grow ${_bd.lengthInBytes}');
+    return true;
   }
 
-  static const Endianness kDefaultEndian = Endianness.LITTLE_ENDIAN;
+  static const int kMaxByteListLength = k1GB;
   static const int kDefaultLength = 1024;
   static const int kMinByteListLength = 768;
 
-  static int isValidBufferLength(int length, [int maxLength = k1GB]) {
-	  log.debug('isValidlength: $length');
-	  RangeError.checkValidRange(1, length, maxLength);
-	  return length;
+  static const Endianness kDefaultEndian = Endianness.LITTLE_ENDIAN;
+
+  static bool isMaxCapacityExceeded(int length, [int maxLength]) {
+    maxLength ??= kMaxByteListLength;
+    log.debug('isValidlength: $length');
+    return (length >= maxLength);
+  }
+
+  static bool isValidBufferLength(int length, [int maxLength]) {
+    maxLength ??= kMaxByteListLength;
+    log.debug('isValidlength: $length');
+    if (length < 1 || length > maxLength) return false;
+    return true;
   }
 }

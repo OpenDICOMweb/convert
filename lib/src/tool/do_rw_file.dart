@@ -10,15 +10,22 @@ import 'dart:typed_data';
 
 import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
+import 'package:path/path.dart' as  path;
 
-import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
-import 'package:dcm_convert/src/binary/byte/byte_writer.dart';
+import 'package:dcm_convert/src/binary/byte/read_bytes.dart';
+import 'package:dcm_convert/src/binary/byte/write_bytes.dart';
 import 'package:dcm_convert/src/tool/job_utils.dart';
 import 'package:dcm_convert/src/errors.dart';
 
 /// Read a file then write it to a buffer.
 Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) async {
   log.level = Level.error;
+
+  final ext = path.extension(f.path).toLowerCase();
+  if (ext != '' && ext != '.dcm') {
+  	log.error('Unknown File Extension: "$ext"');
+  	return false;
+  }
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
   final pad = ''.padRight(5);
@@ -26,7 +33,7 @@ Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) asy
   try {
     final Uint8List bytes = await f.readAsBytes();
     final bd = bytes.buffer.asByteData();
-    final reader0 = new ByteReader(bd, fast: true);
+    final reader0 = new ByteDatasetReader(bd, fast: true);
     final rds0 = reader0.read();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -49,13 +56,13 @@ $pad    TS: ${rds0.transferSyntax}''');
     }
 
     // Write the Root Dataset
-    ByteWriter writer;
+    ByteDatasetWriter writer;
     if (fast) {
       // Just write bytes don't write the file
-      writer = new ByteWriter(rds0);
+      writer = new ByteDatasetWriter(rds0);
     } else {
       final outPath = getTempFile(f.path, 'dcmout');
-      writer = new ByteWriter.toPath(rds0, outPath, fast: true);
+      writer = new ByteDatasetWriter.toPath(rds0, outPath, fast: true);
     }
     final bytes1 = writer.write();
     log.debug('$pad    Encoded ${bytes1.length} bytes');
@@ -76,7 +83,5 @@ $pad    TS: ${rds0.transferSyntax}''');
     log.error(e);
     if (throwOnError) rethrow;
     rethrow;
-    return false;
   }
-  return false;
 }

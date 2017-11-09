@@ -47,7 +47,7 @@ void main() {
 }
 
 bool readCheck(File file, int fileNo, {int reps = 1, bool fmiOnly = false}) {
-	final rds = ByteReader.readFile(file);
+	final rds = ByteDatasetReader.readFile(file);
   if (rds == null) {
     log.warn('---  File not readable');
   } else {
@@ -65,7 +65,7 @@ bool readWriteCheck(File file, {int reps = 1, bool fmiOnly = false}) {
   log.config('Reading: $file with ${bytes0.lengthInBytes} bytes', 1);
 
   if (bytes0 == null) return false;
-  final rds0 = ByteReader.readBytes(bytes0, path: file.path, fast: true);
+  final rds0 = ByteDatasetReader.readBytes(bytes0, path: file.path, fast: true);
   log..debug('rds0 root: ${rds0.root}')
   ..debug('ParseInfo: ${rds0.parseInfo}');
   final e = rds0[0x00020010];

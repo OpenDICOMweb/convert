@@ -9,30 +9,29 @@ void _readEvrRootDataset() {
   _cds = _rds;
   _isEvr = true;
 
-  log.debug('${_rb.rbb} _readEvrRootDataset ${_rb.rIndex} : ${_rb.remaining}', 1);
-  __readEvrDataset(_rds, _rb.rIndex, _rb.remaining);
+  log.debug('readEvrRootDataset', 1);
+  _readEvrDatasetDefined(_rds, _rb.rIndex, _rb.remaining);
   log
-    ..debug('${_rb.ree} $_count Elements read +${_rb.remaining}', -1)
+    ..debug('${_rb.ree} $_count Elements read +${_rb.remaining}')
     ..debug('Element count: $_count')
-    ..debug('Datasets: ${_pInfo.nDatasets}');
+    ..debug('Datasets: ${_pInfo.nDatasets}', -1);
 }
 
 void _readEvrItem(Dataset ds, int iStart) {
   final vfLengthField = _rb.uint32;
   log.debug('${_rb.rbb} _readEvrItem $iStart $vfLengthField', 1);
-  __readEvrDataset(ds, iStart, vfLengthField);
+
+  (vfLengthField == kUndefinedLength)
+      ? _readEvrDatasetUndefined(ds)
+      : _readEvrDatasetDefined(ds, iStart, vfLengthField);
+
   log.debug('${_rb.ree} _readEvrItem $_count Element read', -1);
 }
 
-void __readEvrDataset(Dataset ds, int dsStart, int vfLengthField) =>
-    (vfLengthField == kUndefinedLength)
-        ? _readEvrDatasetUndefined(ds)
-        : _readEvrDatasetDefined(ds, dsStart, vfLengthField);
-
-void _readEvrDatasetDefined(Dataset ds, int dsStart, int vfLengthField) {
-	final dsEnd = _rb.rIndex + vfLengthField;
-  log.debug2('${_rb.rbb} _readEvrDatasetDefined $dsStart, $vfLengthField, '
-		             '$deletedElementError(key)', 1);
+void _readEvrDatasetDefined(Dataset ds, int dsStart, int vfLength) {
+  assert(vfLength != kUndefinedLength);
+  final dsEnd = _rb.rIndex + vfLength;
+  log.debug3('${_rb.rbb} readEvrDatasetDefined $dsStart, $vfLength', 1);
 
   while (_rb.rIndex < dsEnd) {
     _readEvrElement();
@@ -40,7 +39,7 @@ void _readEvrDatasetDefined(Dataset ds, int dsStart, int vfLengthField) {
     _count++;
   }
 
-  log.debug2('${_rb.ree} $_count Elements read', -1);
+  log.debug3('${_rb.ree} $_count Elements read', -1);
   _pInfo.nDefinedDatasets++;
 }
 
@@ -48,7 +47,7 @@ void _readEvrDatasetUndefined(Dataset ds) {
   log.debug2('${_rb.rbb} _readEvrDatasetUndefined', 1);
 
   while (!_rb.isItemDelimiter()) {
-    ds.add(_readEvrElement());
+    _readEvrElement();
     _count++;
   }
 
@@ -61,6 +60,7 @@ Element _readEvrElement() {
   final eStart = _rb.rIndex;
   final code = _rb.code;
   final vrCode = _rb.uint16;
+  print('eStart: $eStart, ${dcm(code)} ${VR.lookupByCode(vrCode)}');
 
   final vr = VR.lookupByCode(vrCode);
   if (vr == null) {
@@ -69,13 +69,20 @@ Element _readEvrElement() {
     _showNext(_rb.rIndex - 4);
   }
 
-  log.debug2('${_rb.rbb} _readEvrElement${dcm(code)} $vr $eStart +${_rb.remaining}', 1);
-  var vrIndex = (_dParams.doCheckVR) ? _checkVR(code, vr.index) : vr.index;
-
+  var vrIndex = vr.index;
   if (_isSpecialVR(vrIndex)) {
     vrIndex = VR.kUN.index;
     _rb.warn('** vrIndex changed to VR.kUN.index');
   }
+  _rb.sMsg('readEvrElement', code, eStart, vrIndex);
+
+  vrIndex = (_dParams.doCheckVR) ? _checkVR(code, vr.index) : vr.index;
+
+/*
+  for(var i = eStart - 20; i <= eStart + 32; i += 2) {
+  log.debug('$i ${hex16(_rb.getUint16 (i))} - ${_rb.getUint16 (i)}');
+  }
+*/
 
   // TODO: figure out the fastest path through
   // TODO: i.e. which elements occure most often?
@@ -86,7 +93,7 @@ Element _readEvrElement() {
     e = _readEvrSQ(code, eStart, vrIndex);
   } else if (_isEvrLongVR(vrIndex)) {
     e = _readEvrLong(code, eStart, vrIndex);
-  } else if (_isMaybeUndefinedVR(vrIndex)) {
+  } else if (_isMaybeUndefinedLength(vrIndex)) {
     e = _readEvrMaybeUndefined(code, eStart, vrIndex);
   } else {
     return invalidVRIndexError(vrIndex);
@@ -94,7 +101,7 @@ Element _readEvrElement() {
 
   _elementCount++;
   _pInfo.nElements++;
-  log.debug2('${_rb.ree} $_elementCount $e +${_rb.remaining}', -1);
+  _rb.eMsg(_elementCount, e, _rb.rIndex, -1);
   return e;
 }
 
@@ -103,7 +110,7 @@ Element _readEvrElement() {
 /// a kUndefinedLength value.
 Element _readEvrShort(int code, int eStart, int vrIndex) {
   final vfLength = _rb.uint16;
-  _rb.sMsg('_readEvrShort', code, eStart, vrIndex: vrIndex, vfLength: vfLength);
+  _rb.sMsg('readEvrShort', code, eStart, vrIndex, 8, vfLength, 1);
   final endOfVF = _rb + vfLength;
   final eLength = endOfVF - eStart;
   final bd = _rb.buffer.asByteData(eStart, eLength);
@@ -115,11 +122,10 @@ Element _readEvrShort(int code, int eStart, int vrIndex) {
 
 /// Read and EVR Sequence.
 Element _readEvrSQ(int code, int eStart, int vrIndex) {
-	assert(vrIndex == 0);
+  assert(vrIndex == 0);
   _rb + 2;
-  _rb.sMsg('_readEvrSQ', code, eStart, vrIndex: vrIndex);
-  final e = _readSequence(code, eStart, _evrSQMaker);
-  return _finishReadElement(code, eStart, e);
+  log.debug('readEvrSQ');
+  return _readSequence(code, eStart, _evrSQMaker);
 }
 
 /// Read a Long EVR Element (not SQ) with a 32-bit vfLengthField,
@@ -128,9 +134,9 @@ Element _readEvrSQ(int code, int eStart, int vrIndex) {
 /// Reads one of OB, OD, OF, OL, OW, UC, UN, UR, or UT.
 Element _readEvrLong(int code, int eStart, int vrIndex) {
   _rb + 2;
-  _rb.sMsg('_readEvrLong', code, eStart);
-
   final vfLengthField = _rb.uint32;
+  _rb.sMsg('readEvrLong', code, eStart, vrIndex, 12, vfLengthField);
+
   final e = __readEvrLongDefined(code, eStart, vrIndex, vfLengthField);
 
   _pInfo.nLongElements++;
@@ -148,10 +154,7 @@ Element _readEvrMaybeUndefined(int code, int eStart, int vrIndex) {
   _rb + 2;
   final vfLengthField = _rb.uint32;
 
-  _rb.sMsg('_readEvrMaybeUndefined', code, eStart,
-      vrIndex: vrIndex, vfLength: vfLengthField);
-
- // final v = _rb.getUint32(_rb.rIndex);
+  log.debug('${_rb.rmm} readEvrMaybeUndefined $vfLengthField ${dcm(vfLengthField)}');
 
   if (vrIndex == kUNIndex && (_rb.isItemDelimiter() || _rb.isSequenceDelimiter())) {
     // A UN Sequence
@@ -159,24 +162,25 @@ Element _readEvrMaybeUndefined(int code, int eStart, int vrIndex) {
     _rb.index = eStart;
     return _readSequence(code, eStart, _evrSQMaker);
   }
-
-  final e = (vfLengthField == kUndefinedLength)
+  _pInfo.nMaybeUndefinedElements++;
+  return (vfLengthField == kUndefinedLength)
       ? __readEvrUndefined(code, eStart, vrIndex, vfLengthField)
       : __readEvrLongDefined(code, eStart, vrIndex, vfLengthField);
-
-  _pInfo.nMaybeUndefinedElements++;
-  return _finishReadElement(code, eStart, e);
 }
 
 // Finish reading an EVR Long Undefined Length Element
 Element __readEvrUndefined(int code, int eStart, int vrIndex, int vfLengthField) {
   _pInfo.nUndefinedElements++;
+  Element e;
   if (code == kPixelData) {
-    return _readPixelDataUndefined(code, eStart, vrIndex, vfLengthField);
+    e = _readPixelDataUndefined(code, eStart, vrIndex, vfLengthField);
   } else {
     final endOfVF = _rb.findEndOfULengthVF();
-    return __makeEvrLongElement(code, eStart, endOfVF - eStart, vrIndex);
+    _rb.sMsg('readEvrLongDefined', code, eStart, vrIndex, 20, vfLengthField);
+    e = __makeEvrLongElement(code, eStart, endOfVF - eStart, vrIndex);
   }
+  _pInfo.nMaybeUndefinedElements++;
+  return _finishReadElement(code, eStart, e);
 }
 
 Element __makeEvrLongElement(int code, int eStart, int eLength, int vrIndex) {
@@ -188,8 +192,7 @@ Element __makeEvrLongElement(int code, int eStart, int eLength, int vrIndex) {
 
 // Finish reading an EVR Long Defined Length Element
 Element __readEvrLongDefined(int code, int eStart, int vrIndex, int vfLengthField) {
-  _rb.mMsg('__readEvrLongDefined', code, eStart,
-      vrIndex: vrIndex, vfLength: vfLengthField);
+  _rb.mMsg('readEvrLongDefined', code, eStart, vrIndex, 12, vfLengthField);
   final end = _rb + vfLengthField;
   final eLength = end - eStart;
   _pInfo.nDefinedElements++;

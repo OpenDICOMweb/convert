@@ -27,6 +27,7 @@ import 'package:dcm_convert/src/encoding_parameters.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_evr.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_ivr.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_fmi.dart';
+part 'package:dcm_convert/src/binary/base/writer/write_sequence.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_utils.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_vf.dart';
 
@@ -36,12 +37,9 @@ RootDataset _rds;
 
 /// The current dataset.  This changes as Sequences are written.
 Dataset _cds;
-EncodingParameters _eParams;
-bool _keepUndefinedLengths;
 
-ElementOffsets _outputOffsets;
-ElementOffsets _inputOffsets;
-Function _writeElement;
+EncodingParameters _eParams;
+//bool _keepUndefinedLengths;
 
 bool _isEvr;
 TransferSyntax _ts;
@@ -49,7 +47,10 @@ ParseInfo _pInfo;
 
 int _count;
 int _offset;
-bool _elementOffsetsEnabled;
+
+bool _elementOffsetsEnabled = true;
+ElementOffsets _inputOffsets;
+ElementOffsets _outputOffsets;
 
 /// A library for encoding [Dataset]s in the DICOM File Format.
 ///
@@ -86,9 +87,10 @@ abstract class DcmWriter extends DcmWriterInterface {
   final EncodingParameters eParams;
 
   final bool elementOffsetsEnabled;
+  @override
   final ElementOffsets inputOffsets;
   @override
-  final ElementOffsets outputOffsets = new ElementOffsets();
+  final ElementOffsets outputOffsets;
 
   @override
   final ByteWriter wb;
@@ -101,9 +103,10 @@ abstract class DcmWriter extends DcmWriterInterface {
       int length,
       this.reUseBuffer = true,
       this.eParams = EncodingParameters.kNoChange,
-	      this.elementOffsetsEnabled = false,
-	      this.inputOffsets})
+      this.elementOffsetsEnabled = false,
+      this.inputOffsets})
       : targetTS = getOutputTS(rds, outputTS),
+        outputOffsets = (elementOffsetsEnabled) ? new ElementOffsets() : null,
         wb = (reUseBuffer)
             ? _reuseByteListWriter(length)
             : new ByteWriter((length == null) ? defaultBufferLength : length) {
@@ -111,14 +114,11 @@ abstract class DcmWriter extends DcmWriterInterface {
     _eParams = eParams;
     _wb = wb;
     _rds = rds;
-//    _path = path;
     _isEvr = rds.isEvr;
     _pInfo = new ParseInfo(rds);
-    _inputOffsets = inputOffsets;
     _elementOffsetsEnabled = elementOffsetsEnabled;
-    if (_elementOffsetsEnabled) _outputOffsets = new ElementOffsets();
-    _outputOffsets = new ElementOffsets();
-    _keepUndefinedLengths = !_eParams.doConvertUndefinedLengths;
+    _inputOffsets = inputOffsets;
+    _outputOffsets = outputOffsets;
   }
 
   /// Returns the [targetTS] for the encoded output.
@@ -169,15 +169,18 @@ abstract class DcmWriter extends DcmWriterInterface {
     return bytes;
   }
 
+  void writeElement(Element e, {bool isEVR = true}) =>
+      (isEVR) ? _writeEvrElement(e) : _writeIvrElement(e);
+
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].
   @override
   Uint8List write() {
     //TODO: handle doSeparateBulkdata
-	  _rds = rds;
-	  _cds = rds;
-	  _count = 0;
-	  _offset = 0;
+    _rds = rds;
+    _cds = rds;
+    _count = 0;
+    _offset = 0;
 
     _ts = (targetTS == null) ? rds.transferSyntax : targetTS;
     if (_ts == null) throw 'no TS';
@@ -198,23 +201,21 @@ abstract class DcmWriter extends DcmWriterInterface {
     return bytes;
   }
 
-  void writeElement(Element e, {bool isEVR = true}) =>
-      (_isEvr) ? _writeEvrElement(e) : _writeIvr(e);
-
   /// Writes a [Dataset] to the buffer.
   void writeDataset(Dataset ds, EncodingParameters eParams) {
     if (_isEvr) {
-      _writeEvrDataset(ds, eParams);
+      rds.elements.forEach(_writeEvrElement);
     } else {
-      _writeIvrDataset(ds, eParams);
+      rds.elements.forEach(_writeIvrElement);
     }
   }
 
   /// Testing interface
-  void xWriteElement(Element e) => _writeElement(e);
+  void xWriteElement(Element e, {bool isEvr = true}) =>
+      (isEvr) ? _writeEvrElement(e) : _writeIvrElement(e);
 
   /// The default [ByteData] buffer length, if none is provided.
-  static const int defaultBufferLength = 200 * k1MB;
+  static const int defaultBufferLength = k1MB; //200 * k1MB;
 
   /// If [_reuse] is true the [ByteData] buffer is stored here.
   static ByteWriter _reuse;
@@ -222,11 +223,13 @@ abstract class DcmWriter extends DcmWriterInterface {
   static ByteWriter _reuseByteListWriter([int size]) {
     size ??= defaultBufferLength;
     if (_reuse == null) return _reuse = new ByteWriter(size);
+
     if (size > _reuse.lengthInBytes) {
       _reuse = new ByteWriter(size + 1024);
       log.warn('**** DcmWriter creating new Reuse BD of Size: ${_reuse
 				  .lengthInBytes}');
     }
+    _reuse.reset;
     return _reuse;
   }
 }
@@ -236,6 +239,7 @@ void _writeValueField(Element e) {
   final bytes = e.vfBytes;
   _wb.bytes(bytes);
   if (bytes.length.isOdd) {
+	  log.warn('**** Odd length: ${bytes.length}');
     if (e.padChar.isNegative) return invalidVFLength(e.vfBytes.length, -1);
     _wb.uint8(e.padChar);
   }

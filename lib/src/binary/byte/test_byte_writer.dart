@@ -11,12 +11,12 @@ import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/binary/byte/byte_writer.dart';
+import 'package:dcm_convert/src/binary/byte/write_bytes.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 
-/// A class designed for testing [ByteWriter].
+/// A class designed for testing [ByteDatasetWriter].
 /// Note: This class should not be used in production code.
-class TestByteWriter extends ByteWriter {
+class TestByteWriter extends ByteDatasetWriter {
   /// Creates a new [TestByteWriter].
   TestByteWriter(RootDatasetByte rootDS,
       {int length,
@@ -42,7 +42,7 @@ class TestByteWriter extends ByteWriter {
   /// Returns a [Uint8List] containing the encoded [Dataset].
   void xWriteDataset(RootDatasetByte ds) {
     log.debug('${wb.wbb} writeDataset: isExplicitVR(${ds.isEvr})', 1);
-    new ByteWriter(ds, bufferLength: ds.length)..writeDataset(ds, eParams);
+    new ByteDatasetWriter(ds, bufferLength: ds.length)..writeDataset(ds, eParams);
     log.debug('${wb.wee} end writeDataset: isExplicitVR(${ds.isEvr})', -1);
   }
 

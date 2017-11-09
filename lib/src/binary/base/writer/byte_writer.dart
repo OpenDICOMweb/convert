@@ -20,11 +20,13 @@ class ByteWriter extends ByteList {
   int _wIndex = 0;
 
   factory ByteWriter([int length = ByteList.kDefaultLength, int maxLength = k1GB]) {
-    final bd = new ByteData(ByteList.isValidBufferLength(length, maxLength));
-    return new ByteWriter._(bd, maxLength);
+    final nbd = new ByteData(length);
+    return new ByteWriter._(nbd, maxLength);
   }
 
-  ByteWriter._(ByteData bd, [this.maxLength = k1GB]) : super(bd);
+  ByteWriter._(ByteData bd, [this.maxLength = k1GB])
+      : _lengthInBytes = bd.lengthInBytes,
+        super(bd);
 
   // **** WriteBuffer specific Getters and Methods
 
@@ -42,9 +44,15 @@ class ByteWriter extends ByteList {
   }
 
   int _setIndexTo(int index) {
-    if (index < 0 || index > bd.lengthInBytes)
-      throw new RangeError.range(index, 0, bd.lengthInBytes);
+    if (index < 0 || index > _lengthInBytes)
+      throw new RangeError.range(index, 0, _lengthInBytes);
     return _wIndex = index;
+  }
+
+  void get reset {
+    _wIndex = 0;
+    _isClosed = false;
+    hadTrailingZeros = false;
   }
 
   @override
@@ -53,15 +61,15 @@ class ByteWriter extends ByteList {
   int get wIndex => _wIndex;
 
   /// Returns the number of bytes left in the current buffer ([bd]).
-  int get remaining => bd.lengthInBytes - _wIndex;
+  int get remaining => _lengthInBytes - _wIndex;
   bool hasRemaining(int n) => _hasRemaining(n);
-  bool _hasRemaining(int n) => (_wIndex + n) <= bd.lengthInBytes;
+  bool _hasRemaining(int n) => (_wIndex + n) <= _lengthInBytes;
 
   int get start => bd.offsetInBytes;
-  int get end => bd.lengthInBytes;
+  int get end => _lengthInBytes;
 
   bool get isWritable => _isWritable;
-  bool get _isWritable => _wIndex < bd.lengthInBytes;
+  bool get _isWritable => _wIndex < _lengthInBytes;
 
   @override
   bool get isEmpty => _wIndex == start;
@@ -70,22 +78,23 @@ class ByteWriter extends ByteList {
 
   int move(int n) {
     final v = _wIndex + n;
-    if (v < 0 || v >= bd.lengthInBytes)
-      throw new RangeError.range(v, 0, bd.lengthInBytes);
+    if (v < 0 || v >= _lengthInBytes) throw new RangeError.range(v, 0, _lengthInBytes);
     return _wIndex = v;
   }
 
-/*
-  void _checkRange(int v) {
-    if (v < 0 || v >= bd.lengthInBytes)
-    	throw new RangeError.range(v, 0, bd.lengthInBytes);
-  }
-*/
   void int8(int value) {
     assert(value >= -128 && value <= 127, 'Value out of range: $value');
-    _maybeGrow();
+    _maybeGrow(1);
     setInt8(_wIndex, value);
     _wIndex++;
+  }
+
+  void code(int code) {
+    assert(code >= 0 && code < kItem, 'Value out of range: $code');
+    assert(_wIndex.isEven && _hasRemaining(4));
+    _maybeGrow(4);
+    writeCode(_wIndex, code);
+    _wIndex += 4;
   }
 
   /// Writes a byte (Uint8) value to the output [bd].
@@ -114,7 +123,7 @@ class ByteWriter extends ByteList {
 
   /// Writes a 64-bit unsigned integer (Uint32) value to the output [bd].
   void uint64(int value) {
-    assert(value >= 0 && value <= 0xFFFFFFFFFFFFFFFF, 'Value out if range: $value');
+    assert(value >= 0 && value <= 0xFFFFFFFFFFFFFFFF, 'Value out of range: $value');
     _maybeGrow(8);
     setUint64(_wIndex, value);
     _wIndex += 8;
@@ -150,31 +159,32 @@ class ByteWriter extends ByteList {
 
   ByteData bdView([int start = 0, int end]) {
     final offset = _getOffset(start, length);
-    return bd.buffer.asByteData(start, length ?? bd.lengthInBytes - offset);
+    return bd.buffer.asByteData(start, length ?? _lengthInBytes - offset);
   }
 
   Uint8List uint8View([int start = 0, int length]) {
     final offset = _getOffset(start, length);
-    return bd.buffer.asUint8List(offset, length ?? bd.lengthInBytes - offset);
+    return bd.buffer.asUint8List(offset, length ?? _lengthInBytes - offset);
   }
 
   int _getOffset(int start, int length) {
     final offset = bd.offsetInBytes + start;
-    assert(offset >= 0 && offset <= bd.lengthInBytes);
-    assert(offset + length >= offset && (offset + length) <= bd.lengthInBytes);
+    assert(offset >= 0 && offset <= _lengthInBytes);
+    assert(offset + length <= _lengthInBytes,
+        'offset($offset) + length($length) > _lengthInBytes($_lengthInBytes)');
     return offset;
   }
 
   /// Returns _true_ if this reader [isClosed] and it [isNotEmpty].
   bool get hadTrailingBytes => (_isClosed) ? isNotEmpty : false;
-  bool hadTrailingZeros;
+  bool hadTrailingZeros = false;
 
   bool get isClosed => _isClosed;
   bool _isClosed = false;
 
   Uint8List close() {
     if (hadTrailingBytes) {
-      hadTrailingZeros = _checkAllZeros(_wIndex, bd.lengthInBytes);
+      hadTrailingZeros = _checkAllZeros(_wIndex, _lengthInBytes);
       log.debug('Trailing Bytes($remaining) All Zeros: $hadTrailingZeros');
     }
 
@@ -191,8 +201,7 @@ class ByteWriter extends ByteList {
   // **** Aids to pretty printing - these may go away.
 
   /// The current readIndex as a string.
-  String get _www => 'W@$_wIndex';
-
+  String get _www => 'W@${_wIndex.toString().padLeft(5, '0')}';
   String get www => _www;
 
   /// The beginning of reading something.
@@ -204,6 +213,8 @@ class ByteWriter extends ByteList {
   /// The end of reading something.
   String get wee => '< $_www';
 
+  String get pad => ''.padRight('$_www'.length);
+
   void debug(String msg, [int level]) => log.debug(msg, level);
 
   /// Ensures that [bd] is at least [index] + [remaining] long,
@@ -212,18 +223,25 @@ class ByteWriter extends ByteList {
 
   /// Ensures that [bd] is at least [capacity] long, and grows
   /// the buffer if necessary, preserving existing data.
-  void ensureCapacity(int capacity) => (capacity > bd.lengthInBytes) ? grow() : null;
+  void ensureCapacity(int capacity) => (capacity > _lengthInBytes) ? grow() : null;
 
   @override
   String toString() => '$runtimeType($length)[$_wIndex] maxLength: $maxLength';
 
   // Internal methods
 
-  /// Grow the buffer if the index is at, or beyond, the end of the current
-  /// buffer.
-  void _maybeGrow([int size = 1]) {
-    //   log.debug('_wIndex: $_wIndex');
-//    log.debug('lengthInBytes: ${bd.lengthInBytes}');
-    if (_wIndex + size >= bd.lengthInBytes) grow();
+  /// Grow the buffer if the index is at, or beyond, the end of the current buffer.
+  //Urgent: Does this optimization actually improve performance
+  bool _maybeGrow([int size = 1]) =>
+      ((_wIndex + size) < _lengthInBytes) ? false : __maybeGrow(_wIndex + size);
+
+  int _lengthInBytes;
+
+  bool __maybeGrow([int size = 1]) {
+/*    log.debug('** MaybeGrow _wIndex: $_wIndex');
+    log.debug('** MaybeGrow lengthInBytes: ${_lengthInBytes}');*/
+    final result = grow(size);
+    _lengthInBytes = bd.lengthInBytes;
+    return result;
   }
 }

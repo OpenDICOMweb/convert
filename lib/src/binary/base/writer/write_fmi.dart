@@ -55,8 +55,11 @@ bool _writePrefix(RootDataset rds, bool cleanPreamble) {
 
 /// Writes a new Open DICOMweb FMI.
 bool _writeCleanPrefix() {
-  for (var i = 0; i < 128; i += 8) _wb.uint64(0);
+	print('wIndex: ${_wb.index}');
+  for (var i = 0; i < 128; i++) _wb.uint8(0);
+	print('wIndex: ${_wb.index}');
   _wb.uint32(kDcmPrefix);
+	print('wIndex: ${_wb.index}');
   return true;
 }
 

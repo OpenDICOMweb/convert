@@ -11,8 +11,8 @@ import 'dart:typed_data';
 import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 
-import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
-import 'package:dcm_convert/src/binary/byte/byte_writer.dart';
+import 'package:dcm_convert/src/binary/byte/read_bytes.dart';
+import 'package:dcm_convert/src/binary/byte/write_bytes.dart';
 import 'package:dcm_convert/src/tool/job_utils.dart';
 import 'package:dcm_convert/src/errors.dart';
 
@@ -25,7 +25,7 @@ Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
   try {
     final Uint8List bytes = await f.readAsBytes();
     final bd = bytes.buffer.asByteData();
-    final reader0 = new ByteReader(bd, fast: true);
+    final reader0 = new ByteDatasetReader(bd, fast: true);
     final rds0 = reader0.read();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -48,13 +48,13 @@ $pad    TS: ${rds0.transferSyntax}''');
     }
 
     // Write the Root Dataset
-    ByteWriter writer;
+    ByteDatasetWriter writer;
     final outPath = getTempFile(f.path, 'dcmout');
     if (fast) {
       // Just write bytes don't write the file
-      writer = new ByteWriter(rds0);
+      writer = new ByteDatasetWriter(rds0);
     } else {
-      writer = new ByteWriter.toPath(rds0, outPath, fast: true);
+      writer = new ByteDatasetWriter.toPath(rds0, outPath, fast: true);
     }
     final bytes1 = writer.write();
     log.debug('$pad    Encoded ${bytes1.length} bytes');
@@ -64,13 +64,13 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       log.debug('Re-reading: ${bytes1.length} bytes from $outPath');
     }
-    ByteReader reader1;
+    ByteDatasetReader reader1;
     if (fast) {
       // Just read bytes not file
-      reader1 = new ByteReader(
+      reader1 = new ByteDatasetReader(
           bytes1.buffer.asByteData(bytes1.offsetInBytes, bytes1.lengthInBytes));
     } else {
-      reader1 = new ByteReader.fromPath(outPath);
+      reader1 = new ByteDatasetReader.fromPath(outPath);
     }
     final rds1 = reader1.read();
     //   RootDatasetBytes rds1 = ByteReader.readPath(outPath);
@@ -123,9 +123,8 @@ $pad    TS: ${rds0.transferSyntax}''');
     rethrow;
   } catch (e) {
     log.error(e);
-    if (throwOnError) rethrow;
+   // if (throwOnError) rethrow;
     rethrow;
-    return false;
+   // return false;
   }
-  return false;
 }
