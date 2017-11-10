@@ -24,7 +24,7 @@ const String defaultDirectory = 'C:/odw/test_data/sfd/MG';
 
 /// A program for doing read/write/read testing on DICOM files.
 void main(List<String> args) {
-  Server.initialize(name: 'read_write_file', level: Level.error);
+  Server.initialize(name: 'read_write_file', level: Level.info);
 
   /// The processed arguments for this program.
   final jobArgs = new JobArgs(args);

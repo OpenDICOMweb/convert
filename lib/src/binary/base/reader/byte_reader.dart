@@ -53,7 +53,7 @@ class ByteReader extends ByteList {
 
   int get rIndex => _rIndex;
   int get remaining => _remaining;
-  int get _remaining => bd.lengthInBytes - _rIndex;
+  int get _remaining => super.bd.lengthInBytes - _rIndex;
   bool hasRemaining(int n) => _hasRemaining(n);
   bool _hasRemaining(int n) => (_rIndex + n) <= bd.lengthInBytes;
 
@@ -222,13 +222,13 @@ class ByteReader extends ByteList {
     if (delimiter == target) {
       log.debug('$rmm **** Delimiter Target: ${dcm(target)} == ${dcm(delimiter)}');
       _indexAdd(4);
-      _readAndCheckDelimiterLength();
+      readAndCheckDelimiterLength();
       return true;
     }
     return false;
   }
 
-  void _readAndCheckDelimiterLength() {
+  void readAndCheckDelimiterLength() {
     final length = uint32;
     log.debug('$rmm **** Delimiter Length: $length');
     if (length != 0) {

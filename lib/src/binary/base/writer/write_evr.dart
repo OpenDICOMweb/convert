@@ -23,9 +23,9 @@ void _writeEvrItems(SQ sq) {
 
 		log.debug('${_wb.wbb} Writing Item: $item', 1);
 		if (item.hasULength && !_eParams.doConvertUndefinedLengths) {
-			_writeEvrItemUndefined(item);
+			_writeItemUndefined(item);
 		} else {
-			_writeEvrItemDefined(item);
+			_writeItemDefined(item);
 		}
 		_cds = parentDS;
 
@@ -33,21 +33,17 @@ void _writeEvrItems(SQ sq) {
 	}
 }
 
-void _writeEvrItemUndefined(Item item) {
-	_wb..uint32(kItem32BitLE)..uint32(kUndefinedLength);
-	item.forEach(_writeEvrElement);
-	_wb..uint32(kItemDelimitationItem)..uint32(0);
-}
-
-void _writeEvrItemDefined(Item item) {
-	_wb..uint32(kItem32BitLE)..uint32(item.lengthInBytes);
-	item.forEach(_writeEvrElement);
-}
 
 void _writeEvrElement(Element e, {ElementOffsets inputOffsets}) {
   log.debug('${_wb.wbb} _writeEvrElement $e :${_wb.remaining}', 1);
   final eStart = _wb.wIndex;
-  final vrIndex = e.vrIndex;
+  var vrIndex = e.vrIndex;
+
+  if (_isSpecialVR(vrIndex)) {
+	  vrIndex = VR.kUN.index;
+	  _wb.warn('** vrIndex changed to VR.kUN.index');
+  }
+
   if (_isEvrShortLength(vrIndex)) {
     _writeShortEvr(e);
   } else if (_isEvrLongLength(vrIndex)) {
@@ -59,6 +55,7 @@ void _writeEvrElement(Element e, {ElementOffsets inputOffsets}) {
   } else {
     throw new ArgumentError('Invalid VR: $e');
   }
+  print('Level: ${log.indenter.level}');
   log.debug('${_wb.wee} _writeEvrElement ${e.dcm} ${e.keyword}', -1);
   _pInfo.nElements++;
   _finishWritingElement(eStart, _wb.wIndex, e);
@@ -86,8 +83,8 @@ void _writeLongEvr(Element e) {
 }
 
 void _writeEvrMaybeUndefined(Element e) {
+	_pInfo.nMaybeUndefinedElements++;
   if (e.code == kPixelData) return _writeEvrPixelData(e);
-  _pInfo.nMaybeUndefinedElements++;
   return (!e.hadULength ||_eParams.doConvertUndefinedLengths)
          ? _writeLongEvr(e)
          : _writeEvrUndefined(e);

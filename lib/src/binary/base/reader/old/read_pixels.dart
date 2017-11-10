@@ -5,25 +5,19 @@
 // See the AUTHORS file for other contributors.
 part of odw.sdk.convert.binary.reader;
 
-Element _makePixelData(int eStart, int eLength, int vrIndex, [VFFragments fragments]) {
-	_pInfo.pixelDataVR = VR.lookupByIndex(vrIndex);
-  _pInfo.pixelDataStart = eStart;
-  _pInfo.pixelDataLength = eLength;
-  final bd = _rb.buffer.asByteData(eStart, eLength);
-  final eb = (_isEvr) ? new EvrLong(bd) : new Ivr(bd);
-  final e = makeBEPixelDataFromEBytes(eb, vrIndex, _rds.transferSyntax, fragments);
-  log.debug3('${_rb.ree} _makePixelData: $eb');
-  return _finishReadElement(kPixelData, eStart, e);
-}
+/*
 
 // _rIndex is at end of Value Field
 Element _readPixelDataDefined(
-    int code, int eStart, int vrIndex, int vfLengthField, int eLength) {
-  log.debug2('${_rb.rbb} _readPixelDataDefined', 1);
-  final e = _makePixelData(eStart, eLength, vrIndex);
-  log.debug2('${_rb.ree} _readPixelDataDefined', -1);
+    int code, int eStart, int vrIndex, int vfLengthField,
+    EBytes ebMaker(ByteData bd)) {
+	assert(vfLengthField != kUndefinedLength);
+	log.debug2('${_rb.rbb} _readPixelDataDefined', 1);
+	final endOfVF = _rb.rIndex + vfLengthField;
+
   _pInfo.pixelDataHadUndefinedLength = false;
-  return e;
+
+  return _makePixelData(code, eStart, eLength, vrIndex, false, ebMaker);
 }
 
 /// There are only three VRs that use this: OB, OW, UN
@@ -32,31 +26,27 @@ Element _readPixelDataUndefined(int code, int eStart, int vrIndex, int vfLengthF
   assert(vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax);
   // assert(vrIndex == kOBIndex || vrIndex == kOWIndex || vrIndex == kUNIndex);
   log.debug2('${_rb.rbb} _readPixelDataUndefined');
-  Element e;
+
+
   final delimiter = _rb.getUint32(_rb.rIndex);
   if (delimiter == kItem32BitLE) {
-  	_pInfo.pixelDataHadFragments = true;
-    e = _readPixelDataFragments(eStart, vfLengthField, vrIndex);
+    return __readPixelDataFragments(eStart, vfLengthField, vrIndex);
   } else {
     final endOfVF = _rb.findEndOfULengthVF();
-    e = _makePixelData(eStart, endOfVF - eStart, vrIndex);
+    return _makePixelData(eStart, endOfVF, vrIndex, true);
   }
-  _beyondPixelData = true;
-  _pInfo.pixelDataHadUndefinedLength = true;
-  return _finishReadElement(code, eStart, e);
 }
+*/
 
 /// Reads an encapsulated (compressed) [kPixelData] [Element].
-Element _readPixelDataFragments(int eStart, int vfLengthField, int vrIndex) {
-  log.debug('${_rb.rbb} _readPixelData Fragments', 1);
+Element __readPixelDataFragments(
+    int code, int eStart, int vfLengthField, int vrIndex, EBytes ebMaker(ByteData bd)) {
+  log.debug('${_rb.rmm} _readPixelData Fragments', 1);
   assert(vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax);
   __checkForOB(vrIndex, _rds.transferSyntax);
 
-  final fragments = _readFragments();
-  final eLength = _rb.rIndex - eStart;
-  final e = _makePixelData(eStart, eLength, vrIndex, fragments);
-  log.debug('${_rb.ree} $e', -1);
-  return e;
+  final fragments = __readFragments();
+  return _makePixelData(code, eStart, _rb.rIndex, vrIndex, true, ebMaker, fragments);
 }
 
 void __checkForOB(int vrIndex, TransferSyntax ts) {
@@ -70,7 +60,7 @@ void __checkForOB(int vrIndex, TransferSyntax ts) {
 /// Read Pixel Data Fragments.
 /// They each start with an Item Delimiter followed by the 32-bit Item
 /// length field, which may not have a value of kUndefinedValue.
-VFFragments _readFragments() {
+VFFragments __readFragments() {
   final fragments = <Uint8List>[];
   var iCode = _rb.uint32;
   do {
@@ -89,6 +79,7 @@ VFFragments _readFragments() {
 
   __checkItemLengthField(iCode);
 
+  _pInfo.pixelDataHadFragments = true;
   final v = new VFFragments(fragments);
   log.debug3('${_rb.ree}  fragments: $v', -1);
   return v;

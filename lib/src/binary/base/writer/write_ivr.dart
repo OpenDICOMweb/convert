@@ -12,17 +12,12 @@ void _writeIvrRootDataset(RootDataset rds, EncodingParameters eParams) {
 
   log.debug('${_wb.wbb} _writeIvrRootDataset $rds :${_wb.remaining}', 1);
 
+  // Make FMI a separate part of rds.
   for (var e in rds.elements) {
     if (e.code < 0x00030000) {
-      print(e);
-      print('${_wb.www}');
       _writeEvrElement(e);
-      print('${_wb.www}');
     } else {
-      print(e);
-      print('${_wb.www}');
       _writeIvrElement(e);
-      print('${_wb.www}');
     }
   }
   log.debug('${_wb.wee} _writeIvrRootDataset  :${_wb.remaining}', -1);
@@ -60,7 +55,12 @@ void _writeIvrItemDefined(Item item) {
 void _writeIvrElement(Element e) {
   log.debug('${_wb.wbb} _writeIvrElement $e :${_wb.remaining}', 1);
   final eStart = _wb.wIndex;
-  final vrIndex = e.vrIndex;
+  var vrIndex = e.vrIndex;
+
+  if (_isSpecialVR(vrIndex)) {
+	  vrIndex = VR.kUN.index;
+	  _wb.warn('** vrIndex changed to VR.kUN.index');
+  }
 
   if (_isIvrDefinedLength(vrIndex)) {
     _writeSimpleIvr(e);
@@ -73,7 +73,8 @@ void _writeIvrElement(Element e) {
   } else {
     throw new ArgumentError('Invalid VR: $e');
   }
-  log.debug('${_wb.wee} _writeIvrElement ${e.dcm} ${e.keyword}', -1);
+  print('Level: ${log.indenter.level}');
+  log.debug('${_wb.wee} _writeIvrElement ${e.dcm} ${e.keyword}');
   _pInfo.nElements++;
   _finishWritingElement(eStart, _wb.wIndex, e);
 }

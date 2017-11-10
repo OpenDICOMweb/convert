@@ -113,10 +113,7 @@ SQ convertSQ(SQ sq) {
   currentTDS = parentTDS;
   final tagSQ = new SQtag(sq.tag, currentTDS, tItems, sq.length);
 
-//  print('byteSQ: ${byteSQ.info}');
-//  print('tagSQ: ${tagSQ.info}');
   for (var item in tItems) item.add(tagSQ);
-//  print('convertSQ: nElements: $nElements');
   return tagSQ;
 }
 

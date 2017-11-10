@@ -8,20 +8,21 @@ part of odw.sdk.convert.binary.base.writer;
 bool _isSequence(int vrIndex) => vrIndex == 0;
 
 bool _isSpecialVR(int vrIndex) =>
-		vrIndex >= kVRSpecialIndexMin && vrIndex <= kVRSpecialIndexMax;
+    vrIndex >= kVRSpecialIndexMin && vrIndex <= kVRSpecialIndexMax;
 
 bool _isMaybeUndefinedLength(int vrIndex) =>
-		vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
+    vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
 
 bool _isEvrLongLength(int vrIndex) =>
-		vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
+    vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
 
 bool _isEvrShortLength(int vrIndex) =>
-		vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
+    vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
 
 bool _isIvrDefinedLength(int vrIndex) =>
-		vrIndex >= kVRIvrDefinedIndexMin && vrIndex <= kVRIvrDefinedIndexMax;
+    vrIndex >= kVRIvrDefinedIndexMin && vrIndex <= kVRIvrDefinedIndexMax;
 
+/*
 /// Writes the [delimiter] and a zero length field for the [delimiter].
 /// The Write Index is advanced 8 bytes.
 /// Note: There are four [Element]s ([SQ], [OB], [OW], and [UN]) plus
@@ -33,10 +34,13 @@ void _writeDelimiter(int delimiter, [int lengthInBytes]) {
   _writeTagCode(delimiter);
   _wb.uint32(lengthInBytes);
 }
+*/
 
+/*
 void _writeTagCode(int code) {
   _wb..uint16(code >> 16)..uint16(code & 0xFFFF);
 }
+*/
 
 //TODO: make this work for [async] == true and make that the default.
 /// Writes [bytes] to [file].
@@ -46,32 +50,40 @@ void _writeFile(Uint8List bytes, File file) {
   log.debug('Wrote ${bytes.lengthInBytes} bytes to "${file.path}"');
 }
 
+/*
 //TODO: make this work for [async] == true and make that the default.
 /// Writes [bytes] to [path].
 void _writePath(Uint8List bytes, String path) {
   if (path == null || path.isEmpty) throw new ArgumentError();
   _writeFile(bytes, new File(path));
 }
+*/
 
 void _finishWritingElement(int start, int end, Element e) {
-  _pInfo.nElements++;
-  if (e.isPrivate) _pInfo.nPrivateElements++;
-  _count++;
-  _offset = _offset + (end - start);
-  if (_elementOffsetsEnabled) {
-    _outputOffsets.add(start, end, e);
-    final iStart = _inputOffsets.starts[_count];
-    final iEnd = _inputOffsets.ends[_count];
-    final ie = _inputOffsets.elements[_count];
-    if (iStart != start || iEnd != end || ie != e) {
-      log
-        ..debug('**** Unequal Offset')
-        ..debug('  ** $iStart to $iEnd read $e')
-        ..debug('  ** $start to $end wrote $e');
-      throw 'badOffset';
+  _elementCount++;
+
+  if (_statisticsEnabled) {
+    _pInfo.nElements++;
+    _pInfo.lastElementRead = e;
+    _pInfo.endOfLastElement = _wb.wIndex;
+    if (e.isPrivate) _pInfo.nPrivateElements++;
+
+    if (_elementOffsetsEnabled) {
+      _outputOffsets.add(start, end, e);
+
+      final iStart = _inputOffsets.starts[_elementCount];
+      final iEnd = _inputOffsets.ends[_elementCount];
+      final ie = _inputOffsets.elements[_elementCount];
+      if (iStart != start || iEnd != end || ie != e) {
+        log..debug('''
+**** Unequal Offset
+	** $iStart to $iEnd read $e
+  ** $start to $end wrote $e''');
+        throw 'badOffset';
+      }
     }
   }
-  log.debug('${_wb.wee} #$_count $_offset :${_wb.remaining}', -1);
+  log.debug('${_wb.wee} #$_elementCount ${_wb.wIndex} :${_wb.remaining}', -1);
 }
 
 void showOffsets() {

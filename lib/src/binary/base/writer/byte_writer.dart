@@ -217,6 +217,19 @@ class ByteWriter extends ByteList {
 
   void debug(String msg, [int level]) => log.debug(msg, level);
 
+  void warn(Object msg) {
+	  final s = '**   $msg $_www';
+	  //_pInfo.exceptions.add(msg);
+	  log.warn(s);
+  }
+
+  void error(Object msg) {
+	  final s = '**** $msg $_www';
+	  //	  exceptions.add(s);
+	  log.error(s);
+  }
+
+
   /// Ensures that [bd] is at least [index] + [remaining] long,
   /// and grows the buffer if necessary, preserving existing data.
   void ensureRemaining(int index, int remaining) => ensureCapacity(index + remaining);

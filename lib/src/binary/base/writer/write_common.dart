@@ -5,6 +5,7 @@
 // See the AUTHORS file for other contributors.
 part of odw.sdk.convert.binary.base.writer;
 
+/*
 void _writeSequence(Element e) {
 
 }
@@ -16,6 +17,17 @@ void _writeSQ(SQ e) {
 	       ? _writeIvrSQUndefined(e)
 	       : _writeIvrSQDefined(e);
 }
+*/
 
+void _writeItemUndefined(Item item) {
+	_wb..uint32(kItem32BitLE)..uint32(kUndefinedLength);
+	item.forEach(_writeEvrElement);
+	_wb..uint32(kItemDelimitationItem)..uint32(0);
+}
+
+void _writeItemDefined(Item item) {
+	_wb..uint32(kItem32BitLE)..uint32(item.lengthInBytes);
+	item.forEach(_writeEvrElement);
+}
 
 

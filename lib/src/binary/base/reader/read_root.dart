@@ -12,7 +12,7 @@ part of odw.sdk.convert.binary.reader;
 /// an Error will be thrown; otherwise, returns null.
 RootDataset _read(RootDataset rds, String path, DecodingParameters dParams) {
   final eStart = _rb.rIndex;
-  log.debug('Reading RootDS: start: $eStart length: ${_rb.lengthInBytes}', 1);
+  log.debug('Reading RootDS: start: $eStart length: ${_rb.lengthInBytes}');
   _cds = rds;
 
   log.reset;
@@ -25,21 +25,23 @@ RootDataset _read(RootDataset rds, String path, DecodingParameters dParams) {
     } else {
       _readIvrRootDataset();
     }
-
   } on EndOfDataError catch (e) {
     addErrorInfo(e);
     log.error(e);
     if (throwOnError) rethrow;
+    return null;
   } on RangeError catch (e) {
     addErrorInfo(e);
     _rb.error('$e\n $_pInfo.stats');
     if (_beyondPixelData) log.info0('${_rb.rrr} Beyond Pixel Data');
     // Keep: *** Keep, but only use for debugging.
     if (throwOnError) rethrow;
+    return null;
   } catch (e) {
     addErrorInfo(e);
     _rb.error(e);
-    rethrow;
+    if (throwOnError) rethrow;
+    return null;
   } finally {
     bdRead = _rb.close();
     rds.dsBytes = new RDSBytes(bdRead);
@@ -48,20 +50,24 @@ RootDataset _read(RootDataset rds, String path, DecodingParameters dParams) {
 
   final rdsTotal = rds.total + rds.dupTotal;
   final pInfoTotal = _pInfo.nElements + _pInfo.nDuplicateElements;
-  log.debug('''\n
-lastReadIndex: ${_pInfo.lastReadIndex}
-lengthInBytes: ${rds.dsBytes.bd.lengthInBytes}
-    rds.total: ${rds.total}
-  rds.dupotal: ${rds.dupTotal}
-    nElements: ${_pInfo.nElements}
-  nDuplicates: ${_pInfo.nDuplicateElements}
-  
-    rds total: $rdsTotal
- reader total: $pInfoTotal
+  log.info('''\n
+pInfo.lastReadIndex: ${_pInfo.lastReadIndex}
+  rds.lengthInBytes: ${rds.dsBytes.bd.lengthInBytes}
+    pInfo.nElements: ${_pInfo.nElements}
+          rds.total: ${rds.total}
+  pInfo.nDuplicates: ${_pInfo.nDuplicateElements}
+        rds.dupotal: ${rds.dupTotal}
+
+   pInfo.total: $pInfoTotal
+    rds.total: $rdsTotal
+
 ''', -1);
 
   //TODO: fix this to include duplicates
-  if (_pInfo.nElements != rds.total) readerInconsistencyError(rds);
+  if (_pInfo.nElements != rds.total) {
+    log.error('pInfo.nElements(${_pInfo.nElements}) != rds.total(${rds.total})');
+    readerInconsistencyError(rds);
+  }
   return rds;
 }
 

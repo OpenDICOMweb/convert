@@ -24,10 +24,10 @@ part 'package:dcm_convert/src/binary/base/reader/read_evr.dart';
 part 'package:dcm_convert/src/binary/base/reader/read_fmi.dart';
 //part 'package:dcm_convert/src/binary/base/reader/reader_info.dart';
 part 'package:dcm_convert/src/binary/base/reader/read_ivr.dart';
-part 'package:dcm_convert/src/binary/base/reader/read_pixels.dart';
+//part 'package:dcm_convert/src/binary/base/reader/read_pixels.dart';
 part 'package:dcm_convert/src/binary/base/reader/read_root.dart';
-part 'package:dcm_convert/src/binary/base/reader/read_sequence.dart';
-part 'package:dcm_convert/src/binary/base/reader/read_utils.dart';
+part 'package:dcm_convert/src/binary/base/reader/read_common.dart';
+//part 'package:dcm_convert/src/binary/base/reader/read_utils.dart';
 
 // Reader axioms
 // 1. The read index (rIndex) should always be at the last place read,
@@ -36,7 +36,11 @@ part 'package:dcm_convert/src/binary/base/reader/read_utils.dart';
 //
 // 2. For non-sequence Elements with undefined length (kUndefinedLength)
 //    the Value Field Length (vfLength) of a non-Sequence Element.
-///   The read index rIndex is left at the end of the Element Delimiter.
+//    The read index rIndex is left at the end of the Element Delimiter.
+//
+// 3. [_finishReadElement] is only called from [readEvrElement] and
+//    [readIvrElement].
+
 //TODO: redoc to reflect current state of code
 
 typedef Element ElementMaker(EBytes eb, int vrIndex);
@@ -53,42 +57,22 @@ ItemMaker itemMaker;
 // Local variables used by DcmReader package
 ByteReader _rb;
 RootDataset _rds;
-DecodingParameters _dParams;
-
-ElementOffsets _offsets;
-ParseInfo _pInfo;
-//bool _hadPrefix;
-bool _beyondPixelData;
-Tag _tag;
-bool _isEvr;
-int _elementCount = 0;
-int _count = 0;
-
-// local variables used by _readEvrDataset and _readIvrDataset
-//Dataset _parentDS;
 Dataset _cds;
 
-/*
-typedef SQ SQMaker();
-SQMaker _sqMaker;
-*/
+DecodingParameters _dParams;
 
-/*
-typedef int DSReaderDefined(Dataset ds, int dsEnd);
-DSReaderDefined _dsReaderDefined;
+bool _isEvr;
 
-typedef int DSReaderUndefined(Dataset ds);
-DSReaderUndefined _dsReaderUndefined;
-*/
+ParseInfo _pInfo;
+int _elementCount = 0;
+final bool _statisticsEnabled = true;
+final bool _elementOffsetsEnabled = true;
+ElementOffsets _inputOffsets;
 
-/*
-typedef Element EReader();
-EReader _eReader;
-*/
+//final List<String> _exceptions = <String>[];
 
-final bool statisticsEnabled = true;
-final bool elementOffsetsEnabled = true;
-final List<String> exceptions = <String>[];
+bool _beyondPixelData;
+Tag tag;
 
 /// Returns the [ByteData] that was actually read, i.e. from 0 to
 /// end of last [Element] read.
@@ -150,12 +134,11 @@ abstract class DcmReader extends DcmReaderInterface {
     }
     _rb = rb;
     _rds = rds;
-    _cds = rds;
     _dParams = dParams;
     _pInfo = pInfo
       ..shortFileThreshold = shortFileThreshold
       ..fileLengthInBytes = bd.lengthInBytes;
-    if (elementOffsetsEnabled) _offsets = new ElementOffsets();
+    if (_elementOffsetsEnabled) _inputOffsets = new ElementOffsets();
   }
 
   bool get isEvr => rds.isEvr;
@@ -165,7 +148,7 @@ abstract class DcmReader extends DcmReaderInterface {
   Uint8List get rootBytes => rb.buffer.asUint8List(rb.offsetInBytes, rb.lengthInBytes);
 
   @override
-  ElementOffsets get offsets => _offsets;
+  ElementOffsets get offsets => _inputOffsets;
 
   String get info => '$runtimeType: rds: ${rds.info}, cds: ${cds.info}';
 
@@ -175,7 +158,7 @@ abstract class DcmReader extends DcmReaderInterface {
     cds = rds;
     _read(rds, path, dParams);
     rds.parseInfo = _pInfo;
-    if (showStats) showStats;
+    if (showStats) print(pInfo);
     return rds;
   }
 
@@ -183,7 +166,7 @@ abstract class DcmReader extends DcmReaderInterface {
     cds = rds;
     _readFmi(rds, path, dParams);
     rds.parseInfo = _pInfo;
-    if (showStats) showStats;
+    if (showStats) print(pInfo);
     return (rds.hasFmi) ? rds : null;
   }
 
@@ -193,11 +176,11 @@ abstract class DcmReader extends DcmReaderInterface {
   @override
   String toString() => '$runtimeType: rds: $rds, cds: $cds';
 
-  String get stats => '''${_rb.rmm} 
- Bytes remaining unread: ${rb.remaining}
+/* TODO: move to ParseInfo
+  String get stats => '''${_rb.rmm}
   Statistics
                   isEvr: $isEvr
-        Bytes remaining: ${rb.remaining}
+        Bytes remaining: ${_rb.remaining}
         
               nDatasets: ${pInfo.nDatasets}
        nDefinedDatasets: ${pInfo.nDefinedDatasets}
@@ -206,7 +189,7 @@ abstract class DcmReader extends DcmReaderInterface {
       nDefinedItemsRead: ${pInfo.nDefinedDatasets}
     nUndefinedItemsRead: ${pInfo.nUndefinedDatasets}
                                 
-            rootDSTotal: ${rds.elements.sequences}
+            rootDSTotal: ${rds.total}
           nElementsRead: ${pInfo.nElements}
           
              nSequences: ${pInfo.nSequences}
@@ -216,21 +199,21 @@ abstract class DcmReader extends DcmReaderInterface {
        lastSequenceRead: ${pInfo.lastSequenceRead}
        endOfLastSequence: ${pInfo.endOfLastSequence}
 
-
-
         lastElementRead: ${pInfo.lastElementRead}
        endOfLastElement: ${dcm(pInfo.endOfLastElement)}
        
         bdLengthInBytes: ${rb.lengthInBytes}
-        dsLengthInBytes: ${pInfo.dsLengthInBytes}
+        dsLengthInBytes: ${rds.lengthInBytes}
               remaining: ${rb.remaining}
 
             rootDSTotal: ${rds.total}
          rootDSTopLevel: ${rds.length}
-        rootDSSequences: ${rds.elements.sequences}
+        rootDSSequences: ${rds.elements.sequences.length}
         rootDSDupLength: ${rds.elements.duplicates.length}
         currentDSLength: ${rds.elements.length}
      currentDSDupLength: ${cds.elements.duplicates.length}
      currentDSSequences: ${cds.elements.sequences}
                 totalDS: ${rds.total + rds.dupTotal}''';
+*/
+
 }

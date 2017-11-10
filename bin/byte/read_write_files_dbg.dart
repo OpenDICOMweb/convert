@@ -18,6 +18,8 @@ const String foo = 'C:/odw/test_data/mweb/ASPERA/DICOM files only/22f01f4d-32c0-
 const String ivrNoSequences = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy'
 		'/1.2.840.113619.2.5.1762583153.215519.978957063.101.dcm';
 
+const String bar = 'C:/odw/test_data/mweb/10 Patient IDs/04443352';
+
 void main() {
   Server.initialize(name: 'read_write_file', level: Level.info);
 
@@ -29,7 +31,7 @@ void main() {
 //  ..addAll(testErrors);
 
   for (var i = 0; i < 1; i++) {
-  	final f = new File(foo);
+  	final f = new File(bar);
   	log.info('$i Start RW File: $f');
     doRWFileDebug(f);
 	  log.info('$i End RW File: $f');

@@ -5,42 +5,7 @@
 // See the AUTHORS file for other contributors.
 part of odw.sdk.convert.binary.reader;
 
-bool _isSequenceVR(int vrIndex) => vrIndex == 0;
 
-bool _isSpecialVR(int vrIndex) =>
-    vrIndex >= kVRSpecialIndexMin && vrIndex <= kVRSpecialIndexMax;
-
-bool _isMaybeUndefinedLength(int vrIndex) =>
-    vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
-
-bool _isEvrLongVR(int vrIndex) =>
-    vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
-
-bool _isEvrShortVR(int vrIndex) =>
-    vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
-
-bool _isIvrDefinedLength(int vrIndex) =>
-		vrIndex >= kVRIvrDefinedIndexMin && vrIndex <= kVRIvrDefinedIndexMax
-                                                                 ;
-Element _finishReadElement(int code, int eStart, Element e) {
-  assert(_rb.checkIndex());
-  // Elements are always read into the current dataset.
-  // **** This is the only place they are added to the dataset.
-  _cds.add(e);
-
-  // Statistics
-  if (statisticsEnabled) {
-    _pInfo.lastElementRead = e;
-    _pInfo.endOfLastElement = _rb.rIndex;
-    if (e.isPrivate) _pInfo.nPrivateElements++;
-    if (elementOffsetsEnabled) _offsets.add(eStart, _rb.rIndex, e);
-    if ((code >> 16).isOdd) _pInfo.nPrivateElements++;
-  }
-
-  final eEnd = _rb.rIndex;
-  _rb.eMsg(_elementCount, e, eStart, eEnd, -1);
-  return e;
-}
 
 String failedTSErrorMsg(String path, Error x) => '''
 Invalid Transfer Syntax: "$path"\nException: $x\n ${_rb.rrr}
@@ -105,6 +70,19 @@ String toVFLength(int vfl) => 'vfLengthField($vfl, ${hex32(vfl)})';
 String toHadULength(int vfl) =>
     'HadULength(${(vfl == kUndefinedLength) ? 'true': 'false'})';
 
+/*
+  for(var i = eStart - 20; i <= eStart + 32; i += 2) {
+  log.debug('$i ${hex16(_rb.getUint16 (i))} - ${_rb.getUint16 (i)}');
+  }
+*/
+
+//Urgent Jim: make utility
+/*  log
+    ..debug('${dcm(_rb.getUint32(_rb.rIndex - 4))} - ${_rb.getUint32(_rb.rIndex - 4)}')
+    ..debug('${dcm(_rb.getUint32(_rb.rIndex))} - ${_rb.getUint32(_rb.rIndex)}')
+    ..debug('${dcm(_rb.getUint32(_rb.rIndex + 4))} - ${_rb.getUint32(_rb.rIndex + 4)}')
+    ..debug('${dcm(_rb.getUint32(_rb.rIndex + 8))} - ${_rb.getUint32(_rb.rIndex + 8)}');
+  */
 /* Enhancement:
   void _printTrailingData(int start, int length) {
     for (var i= start; i < start + length; i += 4) {

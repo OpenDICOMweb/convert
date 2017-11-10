@@ -51,6 +51,7 @@ class ByteDatasetReader extends DcmReader {
             showStats: showStats,
             dParams: dParams) {
     elementMaker = makeBEFromEBytes;
+    pixelDataMaker = makeBEPixelDataFromEBytes;
     sequenceMaker = _makeSequence;
     itemMaker = _makeItem;
   }

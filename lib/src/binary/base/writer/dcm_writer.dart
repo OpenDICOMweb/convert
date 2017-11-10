@@ -17,6 +17,7 @@ import 'dart:typed_data';
 import 'package:dataset/byte_dataset.dart';
 import 'package:element/element.dart';
 import 'package:system/core.dart';
+import 'package:tag/vr.dart';
 import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/src/binary/base/writer/writer_interface.dart';
@@ -27,30 +28,32 @@ import 'package:dcm_convert/src/encoding_parameters.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_evr.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_ivr.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_fmi.dart';
-part 'package:dcm_convert/src/binary/base/writer/write_sequence.dart';
+part 'package:dcm_convert/src/binary/base/writer/write_common.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_utils.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_vf.dart';
 
-//String _path;
+// The write buffer
 ByteWriter _wb;
+
+// The RootDataset
 RootDataset _rds;
 
-/// The current dataset.  This changes as Sequences are written.
+// The current dataset.  This changes as Sequences are written.
 Dataset _cds;
 
 EncodingParameters _eParams;
-//bool _keepUndefinedLengths;
 
-bool _isEvr;
 TransferSyntax _ts;
+bool _isEvr;
+
 ParseInfo _pInfo;
-
-int _count;
-int _offset;
-
-bool _elementOffsetsEnabled = true;
+int _elementCount = 0;
+final bool _statisticsEnabled = true;
+final bool _elementOffsetsEnabled = true;
 ElementOffsets _inputOffsets;
 ElementOffsets _outputOffsets;
+
+//final List<String> _exceptions = <String>[];
 
 /// A library for encoding [Dataset]s in the DICOM File Format.
 ///
@@ -116,9 +119,11 @@ abstract class DcmWriter extends DcmWriterInterface {
     _rds = rds;
     _isEvr = rds.isEvr;
     _pInfo = new ParseInfo(rds);
-    _elementOffsetsEnabled = elementOffsetsEnabled;
-    _inputOffsets = inputOffsets;
-    _outputOffsets = outputOffsets;
+    if (elementOffsetsEnabled) {
+//	    _elementOffsetsEnabled = elementOffsetsEnabled;
+	    _inputOffsets = inputOffsets;
+	    _outputOffsets = outputOffsets;
+    }
   }
 
   /// Returns the [targetTS] for the encoded output.
@@ -179,8 +184,7 @@ abstract class DcmWriter extends DcmWriterInterface {
     //TODO: handle doSeparateBulkdata
     _rds = rds;
     _cds = rds;
-    _count = 0;
-    _offset = 0;
+    _elementCount = 0;
 
     _ts = (targetTS == null) ? rds.transferSyntax : targetTS;
     if (_ts == null) throw 'no TS';
@@ -245,14 +249,18 @@ void _writeValueField(Element e) {
   }
 }
 
+/*
 //TODO: make this work for [async] == true and make that the default.
 /// Writes [bd] to [file] if it is not null or empty.
 void _writeFileSync(ByteData bd, File file) {
-  final bytes = bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes);
-  file.writeAsBytesSync(bytes);
+	final bytes = bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes);
+	file.writeAsBytesSync(bytes);
 }
+*/
 
+/*
 void _writePathSync(ByteData bd, String path) {
   assert(path != null && path.isNotEmpty);
   if (path.isNotEmpty) _writeFileSync(bd, new File(path));
 }
+*/

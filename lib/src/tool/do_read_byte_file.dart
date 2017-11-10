@@ -8,17 +8,17 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:path/path.dart' as path;
 import 'package:system/core.dart';
 
 import 'package:dcm_convert/src/binary/byte/read_bytes.dart';
 import 'package:dcm_convert/src/errors.dart';
+import 'package:dcm_convert/src/file_utils.dart';
 import 'package:dcm_convert/src/io_utils.dart';
+
 
 Future<Uint8List> readFileFast(File f, {bool fast = true}) async =>
 	(fast) ? await f.readAsBytes() : 		f.readAsBytesSync();
-
-
-
 
 Future<Uint8List> readFileAsync(File f) async {
   final bytes = await f.readAsBytes();
@@ -35,19 +35,21 @@ Future<bool> doReadByteFile(File f,
   //TODO: improve output
 //  var n = getPaddedInt(fileNumber, width);
   final pad = ''.padRight(5);
-  final path = cleanPath(f.path);
+  final cPath = cleanPath(f.path);
+
 
   try {
-	  final Uint8List bytes = await f.readAsBytes();
+	  final  bytes = await readDcmPath(cPath);
+	  if (bytes == null) return false;
 	  final bd = bytes.buffer.asByteData();
 	  final reader0 = new ByteDatasetReader(bd);
 	  final rds0 = reader0.read();
     if (rds0 == null) {
-      log.info0('Unreadable File: $path');
+      log.info0('Unreadable File: $cPath');
       return false;
     }
     if (rds0.parseInfo == null) {
-      log.info0('Bad File - No ParseInfo: $path');
+      log.info0('Bad File - No ParseInfo: $cPath');
       return false;
     }
     if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.info}');
@@ -65,7 +67,7 @@ Future<bool> doReadByteFile(File f,
     if (rds0 != null) log.info0('$pad Success!');
     return true;
   } on ShortFileError {
-    log.warn('$pad ** Short File(${f.lengthSync()} bytes): $path');
+    log.warn('$pad ** Short File(${f.lengthSync()} bytes): $cPath');
   } catch (e) {
     log.error(e);
     if (throwOnError) rethrow;
