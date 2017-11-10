@@ -14,7 +14,7 @@ import 'package:dcm_convert/src/tool/job_reporter.dart';
 import 'package:dcm_convert/src/io_utils.dart';
 
 // **** change this name when testing
-const String defaultDirName = 'C:/odw/test_data';
+const String defaultDirName = 'C:/odw/test_data/mweb/ASPERA/';
 
 /// Get target directory and validate it.
 Directory getDirectory(JobArgs args) {

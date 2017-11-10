@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:path/path.dart' as path;
 
-const List<String> stdDcmExtensions = const <String>['.dcm', ''];
+const List<String> stdDcmExtensions = const <String>['.dcm', '', '.DCM'];
 
 //TODO: what should default be?
 const int kSmallDcmFileLimit = 376;

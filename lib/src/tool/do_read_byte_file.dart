@@ -28,6 +28,7 @@ Future<Uint8List> readFileAsync(File f) async {
 
 Uint8List readFileSync(File f) => f.readAsBytesSync();
 
+//Urgent make sure garbage is not being retained
 //Urgent Test async
 Future<bool> doReadByteFile(File f,
     {bool throwOnError = false, bool fast = true, bool isAsync = true}) async {

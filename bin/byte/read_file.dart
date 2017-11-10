@@ -15,6 +15,8 @@ import 'package:path/path.dart' as path;
 import 'package:system/server.dart';
 import 'package:dcm_convert/src/file_utils.dart';
 
+const String xx1 = 'C:/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm';
+const String xx0 = 'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm';
 const String xxx = 'C:/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
 const String dcmDir = 'C:/odw/test_data/sfd/MG/DICOMDIR';
 const String evrLarge = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
@@ -45,7 +47,7 @@ Future main() async {
 
   //for (var i = 0; i < testPaths0.length; i++) {
   for (var i = 0; i < testPaths0.length; i++) {
-    final fPath = xxx;
+    final fPath = xx0;
     // testPaths0[i];
 
     print('$i: path: $fPath');
