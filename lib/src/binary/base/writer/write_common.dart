@@ -92,7 +92,7 @@ void _doEndOfElementStats(int start, int end, Element e) {
     _pInfo.lastSequenceRead = e;
   }
 
-  if (e is! SQ && _elementOffsetsEnabled) {
+  if (e is! SQ && _elementOffsetsEnabled && !_rds.hasDuplicates) {
     _outputOffsets.add(start, end, e);
 
     final iStart = _inputOffsets.starts[_elementCount];

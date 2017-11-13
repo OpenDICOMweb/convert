@@ -144,7 +144,7 @@ Element __readDSQ(
 
   final vfStart = _rb.rIndex;
   print('eStart: $eStart, vfStart: $vfStart, vfLength: $vfLength');
-  assert(eStart == _rb.rIndex - 12, '$eStart == ${_rb.rIndex - 12}');
+//  assert(eStart == _rb.rIndex - 12, '$eStart == ${_rb.rIndex - 12}');
   print('_element #$_elementCount');
   print('offsets: ${_inputOffsets.length}');
   final offsetIndex = _inputOffsets.reserveSlot;

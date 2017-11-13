@@ -20,6 +20,7 @@ const String ivrNoSequences = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy'
 
 const String bar = 'C:/odw/test_data/mweb/10 Patient IDs/04443352';
 
+const String xx0 = 'C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/CT.2.16.840.1.114255.390617858.1794098916.62037.38690.dcm';
 void main() {
   Server.initialize(name: 'read_write_file', level: Level.debug3);
 
@@ -32,7 +33,7 @@ void main() {
 //  ..addAll(testErrors);
 
   for (var i = 0; i < 1; i++) {
-  	final f = new File(paths[19]);
+  	final f = new File(xx0);
   	stderr.writeln('$f');
   	log.info('$i Start RW File: $f');
     doRWRByteFile(f);

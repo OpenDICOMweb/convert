@@ -24,7 +24,7 @@ Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
   try {
     final Uint8List bytes = await f.readAsBytes();
     final bd = bytes.buffer.asByteData();
-    final reader0 = new ByteDatasetReader(bd, fast: true);
+    final reader0 = new ByteDatasetReader(bd, path: f.path, fast: true);
     final rds0 = reader0.read();
     //TODO: improve next two errors
     if (rds0 == null) {

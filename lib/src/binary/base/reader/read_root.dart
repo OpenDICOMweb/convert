@@ -13,6 +13,7 @@ part of odw.sdk.convert.binary.reader;
 RootDataset _read(RootDataset rds, String path, DecodingParameters dParams) {
   final eStart = _rb.rIndex;
   log.debug('Reading RootDS: start: $eStart length: ${_rb.lengthInBytes}');
+  log.debug('  $path');
   _cds = rds;
 
   log.reset;

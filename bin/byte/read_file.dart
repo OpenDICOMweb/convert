@@ -46,9 +46,9 @@ const String bas = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368.fmt'
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
 
+  for (var i = 0; i < 1; i++) {
   //for (var i = 0; i < testPaths0.length; i++) {
-  for (var i = 0; i < testPaths0.length; i++) {
-    final fPath = testPaths0[i];
+    final fPath = ivrClean;
     // testPaths0[i];
 
     print('$i: path: $fPath');
