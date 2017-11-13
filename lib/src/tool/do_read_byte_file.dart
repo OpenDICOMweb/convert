@@ -8,7 +8,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:path/path.dart' as path;
 import 'package:system/core.dart';
 
 import 'package:dcm_convert/src/binary/byte/read_bytes.dart';
@@ -32,12 +31,8 @@ Uint8List readFileSync(File f) => f.readAsBytesSync();
 //Urgent Test async
 Future<bool> doReadByteFile(File f,
     {bool throwOnError = false, bool fast = true, bool isAsync = true}) async {
-  system.log.level = Level.error;
-  //TODO: improve output
-//  var n = getPaddedInt(fileNumber, width);
   final pad = ''.padRight(5);
   final cPath = cleanPath(f.path);
-
 
   try {
 	  final  bytes = await readDcmPath(cPath);
@@ -53,7 +48,7 @@ Future<bool> doReadByteFile(File f,
       log.info0('Bad File - No ParseInfo: $cPath');
       return false;
     }
-    if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.info}');
+    if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.summary(rds0)}');
 
 // TODO: move into dataset.warnings.
 	  final e = rds0[kPixelData];

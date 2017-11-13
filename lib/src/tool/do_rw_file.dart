@@ -45,7 +45,7 @@ Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) asy
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');
-    if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.info}');
+    if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.summary(rds0)}');
 
     // TODO: move into dataset.warnings.
     final e = rds0[kPixelData];

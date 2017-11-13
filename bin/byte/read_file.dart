@@ -14,7 +14,8 @@ import 'package:dcm_convert/byte_convert.dart';
 import 'package:path/path.dart' as path;
 import 'package:system/server.dart';
 import 'package:dcm_convert/src/file_utils.dart';
-
+const String xx3 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
+const String xx2 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.5.5.dcm';
 const String xx1 = 'C:/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm';
 const String xx0 = 'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm';
 const String xxx = 'C:/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
@@ -47,7 +48,7 @@ Future main() async {
 
   //for (var i = 0; i < testPaths0.length; i++) {
   for (var i = 0; i < testPaths0.length; i++) {
-    final fPath = xx0;
+    final fPath = testPaths0[i];
     // testPaths0[i];
 
     print('$i: path: $fPath');
@@ -68,7 +69,7 @@ Future main() async {
       if (rds.parseInfo != null) {
         final infoPath = '${path.withoutExtension(fPath)}.info';
         log.info('infoPath: $infoPath');
-        final sb = new StringBuffer('${rds.parseInfo.info}\n')
+        final sb = new StringBuffer('${rds.parseInfo.summary(rds)}\n')
           ..write('Bytes Dataset: ${rds.summary}');
         new File(infoPath)..writeAsStringSync(sb.toString());
         log.debug(sb.toString());

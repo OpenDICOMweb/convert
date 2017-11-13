@@ -10,142 +10,143 @@ void _writeEvrRootDataset(RootDataset rds, EncodingParameters eParams) {
   _cds = rds;
   _isEvr = true;
 
-  log.debug('${_wb.wbb} _writeEvrRootDataset $rds :${_wb.remaining}', 1);
-  rds.elements.forEach(_writeEvrElement);
-  log.debug('${_wb.wee} _writeEvrRootDataset  :${_wb.remaining}', -1);
+  log.debug('${_wb.wbb} writeEvrRootDataset $rds :${_wb.remaining}');
+  for (var e in rds.elements) {
+    _writeEvrElement(e);
+  }
+//  rds.elements.forEach(_writeEvrElement);
+  log.debug('${_wb.wee} writeEvrRootDataset  :${_wb.remaining}');
 }
-
-void _writeEvrItems(SQ sq) {
-	final items = sq.items;
-	for (var item in items) {
-		final parentDS = _cds;
-		_cds = item;
-
-		log.debug('${_wb.wbb} Writing Item: $item', 1);
-		if (item.hasULength && !_eParams.doConvertUndefinedLengths) {
-			_writeItemUndefined(item);
-		} else {
-			_writeItemDefined(item);
-		}
-		_cds = parentDS;
-
-		log.debug('${_wb.wee} Wrote Item: $item', -1);
-	}
-}
-
 
 void _writeEvrElement(Element e, {ElementOffsets inputOffsets}) {
-  log.debug('${_wb.wbb} _writeEvrElement $e :${_wb.remaining}', 1);
+	_elementCount++;
   final eStart = _wb.wIndex;
   var vrIndex = e.vrIndex;
 
   if (_isSpecialVR(vrIndex)) {
-	  vrIndex = VR.kUN.index;
-	  _wb.warn('** vrIndex changed to VR.kUN.index');
+    // This should not happen
+    vrIndex = VR.kUN.index;
+    _wb.warn('** vrIndex changed to VR.kUN.index');
   }
 
-  if (_isEvrShortLength(vrIndex)) {
+  log.debug('${_wb.wbb} #$_elementCount writeEvrElement $e :${_wb.remaining}', 1);
+  if (_isEvrShortLengthVR(vrIndex)) {
     _writeShortEvr(e);
-  } else if (_isEvrLongLength(vrIndex)) {
+  } else if (_isEvrLongLengthVR(vrIndex)) {
     _writeLongEvr(e);
-  } else if (_isSequence(vrIndex)) {
+  } else if (_isSequenceVR(vrIndex)) {
     _writeEvrSQ(e);
-  } else if (_isMaybeUndefinedLength(vrIndex)) {
+  } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
     _writeEvrMaybeUndefined(e);
   } else {
     throw new ArgumentError('Invalid VR: $e');
   }
-  print('Level: ${log.indenter.level}');
-  log.debug('${_wb.wee} _writeEvrElement ${e.dcm} ${e.keyword}', -1);
+
+  if (e.eStart != eStart) {
+  	log.error('** e.eStart(${e.eStart} != eStart($eStart)');
+  }
+  if (e.eEnd != _wb.wIndex) {
+	  log.error('** e.eEnd(${e.eStart} != eEnd(${_wb.wIndex})');
+  }
+
+
   _pInfo.nElements++;
-  _finishWritingElement(eStart, _wb.wIndex, e);
+	if (_statisticsEnabled) _doEndOfElementStats(eStart, _wb.wIndex, e);
+	log.debug('${_wb.wee} #$_elementCount writeEvrElement ${e.dcm} ${e.keyword}', -2);
 }
 
 void _writeShortEvr(Element e) {
-  log.debug('${_wb.wbb} _writeShortEvr $e :${_wb.remaining}', 1);
+  log.debug('${_wb.wbb} writeShortEvr $e :${_wb.remaining}', 1);
   _wb
     ..code(e.code)
     ..uint16(e.vrCode)
     ..uint16(e.vfLength);
-  _writeValueField(e);
+  __writeValueField(e);
   _pInfo.nShortElements++;
 }
 
 void _writeLongEvr(Element e) {
-  log.debug('${_wb.wbb} _writeLongEvr $e :${_wb.remaining}', 1);
-  _wb
-	  ..code(e.code)
-    ..uint16(e.vrCode)
-    ..uint16(0)
-    ..uint32(e.vfLengthField);
-  _writeValueField(e);
-  _pInfo.nLongElements++;
+  log.debug('${_wb.wbb} writeLongEvr $e :${_wb.remaining}', 1);
+  __reallyEvrWriteDefinedLength(e);
 }
 
 void _writeEvrMaybeUndefined(Element e) {
-	_pInfo.nMaybeUndefinedElements++;
-  if (e.code == kPixelData) return _writeEvrPixelData(e);
-  return (!e.hadULength ||_eParams.doConvertUndefinedLengths)
-         ? _writeLongEvr(e)
-         : _writeEvrUndefined(e);
-}
-
-void _writeEvrUndefined(Element e) {
-  log.debug('${_wb.wbb} _writeEvrUndefined $e :${_wb.remaining}', 1);
-  _wb
-	  ..code(e.code)
-    ..uint16(e.vrCode)
-    ..uint16(0)
-    ..uint32(kUndefinedLength);
-  _writeValueField(e);
-  _wb..uint32(kSequenceDelimitationItem);
-  _pInfo.nUndefinedElements++;
-}
-
-/// Write [kPixelData] from [PixelData] [pd].
-void _writeEvrPixelData(PixelData pd) {
-  log.debug('${_wb.wbb} _writeEvrPixelData $pd :${_wb.remaining}', 1);
-  _pInfo.pixelDataVR = pd.vr;
-  _pInfo.pixelDataStart = _wb.wIndex;
-  _pInfo.pixelDataLength = pd.vfLength;
-
-  assert(_isMaybeUndefinedLength(pd.vrIndex));
-  log.debug('${_wb.wmm} PixelData: $pd');
-  _writeEvrUndefined(pd);
-  log.debug('${_wb.wmm}  @End of Pixel Data');
+  log.debug('${_wb.wbb} writeEvrMaybeUndefined $e :${_wb.remaining}', 1);
+  _pInfo.nMaybeUndefinedElements++;
+  return (e.hadULength && !_eParams.doConvertUndefinedLengths)
+      ? __reallyEvrWriteUndefinedLength(e)
+      : __reallyEvrWriteDefinedLength(e);
 }
 
 void _writeEvrSQ(SQ e) {
   _pInfo.nSequences++;
   if (e.isPrivate) _pInfo.nPrivateSequences++;
   return (e.hadULength && !_eParams.doConvertUndefinedLengths)
-      ? _writeEvrSQUndefined(e)
-      : _writeEvrSQDefined(e);
+      ? __writeEvrSQUndefinedLength(e)
+      : __writeEvrSQDefinedLength(e);
 }
 
-void _writeEvrSQDefined(SQ e) {
-  log.debug('${_wb.wbb} _writeEvrSQDefined $e :${_wb.remaining}', 1);
-  _wb
-	  ..code(e.code)
-    ..uint16(e.vrCode)
-    ..uint16(0);
-  final sqLengthOffset = _wb.wIndex;
-  final start = _wb.move(4);
-  _writeEvrItems(e.items);
-  _wb.setUint32(sqLengthOffset, _wb.wIndex - start);
-  _pInfo.nDefinedSequences++;
+void __writeEvrSQDefinedLength(SQ e) {
+  log.debug('${_wb.wbb} writeEvrSQDefinedLength $e :${_wb.remaining}', 1);
+  _pInfo.nDefinedLengthSequences++;
+  final index = _outputOffsets.reserveSlot;
+  final eStart = _wb.wIndex;
+  final vlf = e.vfLength;
+  final vlfOffset = _writeEvrLongHeader(e, e.vfLength);
+  _writeItems(e.items, _writeEvrElement);
+  final eEnd = _wb.wIndex;
+  assert(e.vfLength + 12 == e.eEnd - e.eStart, '$vlf, $eEnd - $eStart');
+  assert(vlf + 12 == (eEnd - eStart), '$vlf, $eEnd - $eStart');
+  final vfLength = (eEnd - eStart) - 12;
+  print('$eStart - $eEnd vfLength: $vlf, $vfLength');
+  _wb.setUint32(vlfOffset, vfLength);
+  print('evrDef: $eStart $eEnd, $e');
+  _outputOffsets.insertAt(index, eStart, eEnd, e);
 }
 
-void _writeEvrSQUndefined(SQ e) {
-  log.debug('${_wb.wbb} _writeEvrSQUndefined $e :${_wb.remaining}', 1);
+void __writeEvrSQUndefinedLength(SQ e) {
+	final index = _outputOffsets.reserveSlot;
+	final eStart = _wb.wIndex;
+  log.debug('${_wb.wbb} writeEvrSQUndefinedLength $e :${_wb.remaining}', 1);
+  _pInfo.nUndefinedLengthSequences++;
+  _writeEvrLongHeader(e, kUndefinedLength);
+  _writeItems(e.items, _writeEvrElement);
   _wb
-	  ..code(e.code)
+	  ..uint32(kSequenceDelimitationItem32BitLE)
+	  ..uint32(0);
+	final eEnd = _wb.wIndex;
+	print('evrDef: $eStart $eEnd, $e');
+	_outputOffsets.insertAt(index, eStart, eEnd, e);
+}
+
+void __reallyEvrWriteDefinedLength(Element e) {
+  log.debug('${_wb.wmm} writeEvrUndefined $e :${_wb.remaining}');
+  if (e.code == kPixelData) __updatePInfoPixelData(e);
+  _writeEvrLongHeader(e, e.vfLength);
+  __writeValueField(e);
+  _pInfo.nLongElements++;
+}
+
+void __reallyEvrWriteUndefinedLength(Element e) {
+  log.debug('${_wb.wmm} writeEvrUndefined $e :${_wb.remaining}');
+  if (e.code == kPixelData) {
+    log.debug('Pixel Data: ${e.info}');
+    log.debug('vfLength: ${e.vfLength}');
+    log.debug('fragments: ${e.fragments.info}');
+    __updatePInfoPixelData(e);
+  }
+  _writeEvrLongHeader(e, kUndefinedLength);
+  __writeValueField(e);
+  _wb..uint32(kSequenceDelimitationItem32BitLE);
+  if (e.code == kPixelData) _pInfo.pixelDataEnd = _wb.wIndex;
+  _pInfo.nUndefinedLengthElements++;
+}
+
+int _writeEvrLongHeader(Element e, int vfLengthField) {
+  _wb
+    ..code(e.code)
     ..uint16(e.vrCode)
     ..uint16(0)
-    ..uint32(kUndefinedLength);
-  _writeEvrItems(e.items);
-  _wb.uint32(kSequenceDelimitationItem);
-  _pInfo.nUndefinedSequences++;
+    ..uint32(vfLengthField);
+  return _wb.wIndex - 4;
 }
-
-

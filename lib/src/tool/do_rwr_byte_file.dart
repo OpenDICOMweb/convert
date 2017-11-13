@@ -17,7 +17,6 @@ import 'package:dcm_convert/src/tool/job_utils.dart';
 import 'package:dcm_convert/src/errors.dart';
 
 Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
-  log.level = Level.error;
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
   final pad = ''.padRight(5);
@@ -37,7 +36,7 @@ Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');
-    if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.info}');
+    if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.summary(rds0)}');
 
     // TODO: move into dataset.warnings.
     final e = rds0[kPixelData];
@@ -47,17 +46,28 @@ $pad    TS: ${rds0.transferSyntax}''');
       log.debug1('$pad  e: ${e.info}');
     }
 
+    final offsets = reader0.inputOffsets;
+    for (var i = 0; i < offsets.length; i++) {
+    	print('$i: ${offsets.starts[i]} - ${offsets.ends[i]} ${offsets.elements[i]}');
+    }
+
     // Write the Root Dataset
     ByteDatasetWriter writer;
     final outPath = getTempFile(f.path, 'dcmout');
     if (fast) {
       // Just write bytes don't write the file
-      writer = new ByteDatasetWriter(rds0);
+      writer = new ByteDatasetWriter(rds0,
+          elementOffsetsEnabled: true, inputOffsets: reader0.inputOffsets);
     } else {
       writer = new ByteDatasetWriter.toPath(rds0, outPath, fast: true);
     }
     final bytes1 = writer.write();
     log.debug('$pad    Encoded ${bytes1.length} bytes');
+
+    final wOffsets = writer.outputOffsets;
+    for (var i = 0; i < wOffsets.length; i++) {
+	    print('$i: ${wOffsets.starts[i]} - ${wOffsets.ends[i]} ${wOffsets.elements[i]}');
+    }
 
     if (!fast) {
       log.debug('Re-reading: ${bytes1.length} bytes');
@@ -82,8 +92,8 @@ $pad    TS: ${rds0.transferSyntax}''');
     if (rds0.parseInfo != rds1.parseInfo) {
       log
         ..warn('$pad ** ParseInfo is Different!')
-        ..debug1('$pad rds0: ${rds0.parseInfo.info}')
-        ..debug1('$pad rds1: ${rds1.parseInfo.info}')
+        ..debug1('$pad rds0: ${rds0.parseInfo.summary(rds0)}')
+        ..debug1('$pad rds1: ${rds1.parseInfo.summary(rds1)}')
         ..debug2(rds0.format(new Formatter(maxDepth: -1)))
         ..debug2(rds1.format(new Formatter(maxDepth: -1)));
     }
@@ -92,9 +102,9 @@ $pad    TS: ${rds0.transferSyntax}''');
     if (!fast || !rds0.hasDuplicates) {
       // Compare [ElementOffsets]s
       if (reader0.offsets == writer.outputOffsets) {
-        log.debug('$pad ElementOffsetss are identical.');
+        log.debug('$pad ElementOffsets are identical.');
       } else {
-        log.warn('$pad ElementOffsetss are different!');
+        log.warn('$pad ElementOffsets are different!');
       }
     }
 
@@ -104,6 +114,21 @@ $pad    TS: ${rds0.transferSyntax}''');
       log.debug('$pad Datasets are identical.');
     } else {
       log.warn('$pad Datasets are different!');
+    }
+
+    final aList = rds0.elements.elements;
+    final bList = rds1.elements.elements;
+    final length = (aList.length > bList.length) ? aList.length : bList.length;
+    for (var i = 0; i < length; i++) {
+      final x = aList.elementAt(i) as ByteElement;
+      final y = bList.elementAt(i) as ByteElement;
+      print('$i x: $x');
+      print('$i y: $y');
+      if (x.eStart != y.eStart) print('** Starts are different');
+      if (x.code != y.code) print('** Codes are different');
+      if (x.vrCode != y.vrCode) print('** VRCodes are different');
+      if (x.vfLengthField != y.vfLengthField) print('** VFL are different');
+      if (x.eEnd != y.eEnd) print('** Ends are different');
     }
 
     // If duplicates are present the [ElementOffsets]s will not be equal.
@@ -123,8 +148,8 @@ $pad    TS: ${rds0.transferSyntax}''');
     rethrow;
   } catch (e) {
     log.error(e);
-   // if (throwOnError) rethrow;
+    // if (throwOnError) rethrow;
     rethrow;
-   // return false;
+    // return false;
   }
 }

@@ -51,7 +51,7 @@ bool readCheck(File file, int fileNo, {int reps = 1, bool fmiOnly = false}) {
   if (rds == null) {
     log.warn('---  File not readable');
   } else {
-    log..info0('${rds.parseInfo.info}')
+    log..info0('${rds.parseInfo.summary(rds)}')
     ..debug('Bytes Dataset: ${rds.info}');
   }
   log.info0('---\n');

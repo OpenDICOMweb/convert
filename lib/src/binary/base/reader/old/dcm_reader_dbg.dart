@@ -281,7 +281,7 @@ abstract class DcmReader extends DcmReaderInterface {
     }
 
     int rootDSTotal = rootDS.total + rootDS.dupTotal;
-    if (_nElementsRead != rootDSTotal) {
+    if (rds.parseInfo.nElements != rootDSTotal) {
       var msg = 'Inconsistent Elements Error: '
           '_nElementsRead($_nElementsRead), rootDS.total(${rootDS.total}) '
           'rootDS.dupTotal(${rootDS.dupTotal})  '

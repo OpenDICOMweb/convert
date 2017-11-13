@@ -26,13 +26,17 @@ Future<Uint8List> readDcmPath(String fPath,
 
 Future<Uint8List> readDcmFile(File f, [int sizeLimit = kSmallDcmFileLimit]) async {
   Uint8List bytes;
-  if (f.existsSync() && await f.length() > kSmallDcmFileLimit) {
-    try {
-      bytes = await f.readAsBytes();
-    } on FileSystemException {
-      return null;
+  int length;
+  if (f.existsSync()) {
+    length = await f.length();
+    if (length > kSmallDcmFileLimit) {
+      try {
+        bytes = await f.readAsBytes();
+      } on FileSystemException {
+        return null;
+      }
+      return (bytes.length > kSmallDcmFileLimit) ? bytes : null;
     }
-    return (bytes.length > kSmallDcmFileLimit) ? bytes : null;
   }
   return null;
 }
@@ -46,12 +50,12 @@ Uint8List readDcmPathSync(String fPath,
 }
 
 Uint8List readDcmFileSync(File f, [int sizeLimit = kSmallDcmFileLimit]) {
-  if (f.existsSync() && f.lengthSync() > kSmallDcmFileLimit) {
-    try {
-      final bytes = f.readAsBytesSync();
-      return (bytes.length > kSmallDcmFileLimit) ? bytes : null;
-    } on FileSystemException {
-      return null;
-    }
+  Uint8List bytes;
+  if (!f.existsSync() && (f.lengthSync() <= kSmallDcmFileLimit)) return null;
+  try {
+    bytes = f.readAsBytesSync();
+  } on FileSystemException {
+    return null;
   }
+  return (bytes.length > kSmallDcmFileLimit) ? bytes : null;
 }

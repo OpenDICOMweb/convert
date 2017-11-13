@@ -15,6 +15,7 @@ import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/dcm_reader.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
+import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/io_utils.dart';
 
 /// Returns a new ByteSequence.
@@ -36,12 +37,14 @@ class ByteDatasetReader extends DcmReader {
   /// (application/dicom).
   ByteDatasetReader(ByteData bd,
       {String path = '',
-      bool async = true,
+      bool async = false,
       bool fast = true,
       bool fmiOnly = false,
       bool reUseBD = true,
       bool showStats = false,
-      DecodingParameters dParams = DecodingParameters.kNoChange})
+      DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool elementOffsetsEnabled = true,
+      ElementOffsets inputOffsets})
       : super(bd, new RootDatasetByte(new RDSBytes(bd), path: path),
             path: path,
             async: async,
@@ -49,7 +52,8 @@ class ByteDatasetReader extends DcmReader {
             fmiOnly: fmiOnly,
             reUseBD: reUseBD,
             showStats: showStats,
-            dParams: dParams) {
+            dParams: dParams,
+            elementOffsetsEnabled: elementOffsetsEnabled) {
     elementMaker = makeBEFromEBytes;
     pixelDataMaker = makeBEPixelDataFromEBytes;
     sequenceMaker = _makeSequence;
@@ -107,7 +111,9 @@ class ByteDatasetReader extends DcmReader {
       bool fmiOnly = false,
       bool reUseBD = true,
       bool showStats = false,
-      DecodingParameters dParams = DecodingParameters.kNoChange}) {
+      DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool elementOffsetsEnabled = true,
+      ElementOffsets inputOffsets}) {
     final bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     final reader = new ByteDatasetReader(bd,
         path: path,

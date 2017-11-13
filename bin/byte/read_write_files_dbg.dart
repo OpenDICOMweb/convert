@@ -10,7 +10,7 @@ import 'package:system/core.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:system/server.dart';
 
-import 'package:dcm_convert/src/tool/do_rw_file_dbg.dart';
+import 'package:dcm_convert/src/tool/do_rwr_byte_file.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
@@ -21,8 +21,9 @@ const String ivrNoSequences = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy'
 const String bar = 'C:/odw/test_data/mweb/10 Patient IDs/04443352';
 
 void main() {
-  Server.initialize(name: 'read_write_file', level: Level.info);
+  Server.initialize(name: 'read_write_file', level: Level.debug3);
 
+  system.throwOnError = true;
   // *** Modify [paths] value to read/write a different file
   final paths = testPaths0;
   //paths.addAll(testPaths0);
@@ -31,9 +32,10 @@ void main() {
 //  ..addAll(testErrors);
 
   for (var i = 0; i < 1; i++) {
-  	final f = new File(bar);
+  	final f = new File(paths[19]);
+  	stderr.writeln('$f');
   	log.info('$i Start RW File: $f');
-    doRWFileDebug(f);
+    doRWRByteFile(f);
 	  log.info('$i End RW File: $f');
   }
 }

@@ -21,6 +21,7 @@ import 'package:element/tag_element.dart';
 import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/src/binary/base/writer/dcm_writer.dart';
+import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 import 'package:dcm_convert/src/io_utils.dart';
 
@@ -36,13 +37,17 @@ class ByteDatasetWriter extends DcmWriter {
       TransferSyntax outputTS,
       bool throwOnError = true,
       bool reUseBuffer = true,
-      EncodingParameters encoding = EncodingParameters.kNoChange})
+      EncodingParameters encoding = EncodingParameters.kNoChange,
+      bool elementOffsetsEnabled = true,
+      ElementOffsets inputOffsets})
       : super(rds,
             length: bufferLength,
             path: path,
             outputTS: outputTS,
             reUseBuffer: reUseBuffer,
-            eParams: encoding);
+            eParams: encoding,
+            elementOffsetsEnabled: elementOffsetsEnabled,
+            inputOffsets: inputOffsets);
 
   /// Writes the [RootDatasetByte] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
@@ -51,10 +56,17 @@ class ByteDatasetWriter extends DcmWriter {
       bool overwrite = false,
       bool fmiOnly = false,
       bool fast = true,
-      TransferSyntax targetTS}) {
+      TransferSyntax targetTS,
+      bool elementOffsetsEnabled = true,
+      ElementOffsets inputOffsets}) {
     checkFile(file, overwrite: overwrite);
     return new ByteDatasetWriter(ds,
-        bufferLength: bufferLength, path: file.path, reUseBuffer: fast, outputTS: targetTS);
+        bufferLength: bufferLength,
+        path: file.path,
+        reUseBuffer: fast,
+        outputTS: targetTS,
+        elementOffsetsEnabled: elementOffsetsEnabled,
+        inputOffsets: inputOffsets);
   }
 
   /// Creates a new empty [File] from [path], writes the [RootDatasetByte]
@@ -65,18 +77,24 @@ class ByteDatasetWriter extends DcmWriter {
       bool overwrite = false,
       bool fmiOnly = false,
       bool fast = false,
-      TransferSyntax targetTS}) {
+      TransferSyntax targetTS,
+      bool elementOffsetsEnabled = true,
+      ElementOffsets inputOffsets}) {
     checkPath(path);
     return new ByteDatasetWriter(ds,
-        bufferLength: bufferLength, path: path, reUseBuffer: fast, outputTS: targetTS);
+        bufferLength: bufferLength,
+        path: path,
+        reUseBuffer: fast,
+        outputTS: targetTS,
+        elementOffsetsEnabled: elementOffsetsEnabled,
+        inputOffsets: inputOffsets);
   }
 
   @override
   ElementList get elements => rds.elements;
 
   @override
-  String get info =>
-      '$runtimeType: rds: ${rds.info}, cds: ${cds.info}';
+  String get info => '$runtimeType: rds: ${rds.info}, cds: ${cds.info}';
 
   /// Reads a [RootDatasetByte], and stores it in [rds], and returns it.
   @override
@@ -98,12 +116,18 @@ class ByteDatasetWriter extends DcmWriter {
       String path = '',
       bool fmiOnly: false,
       bool fast: true,
-	      bool reUseBD = true,
-      TransferSyntax outputTS
-      }) {
+      bool reUseBD = true,
+      TransferSyntax outputTS,
+      bool elementOffsetsEnabled = true,
+      ElementOffsets inputOffsets}) {
     checkRootDataset(ds);
     final writer = new ByteDatasetWriter(ds,
-        bufferLength: bufferLength, path: path, reUseBuffer: reUseBD, outputTS: outputTS);
+        bufferLength: bufferLength,
+        path: path,
+        reUseBuffer: reUseBD,
+        outputTS: outputTS,
+        elementOffsetsEnabled: elementOffsetsEnabled,
+        inputOffsets: inputOffsets);
     return writer.write();
   }
 
@@ -114,10 +138,17 @@ class ByteDatasetWriter extends DcmWriter {
       bool overwrite = false,
       bool fmiOnly = false,
       bool fast = true,
-      TransferSyntax targetTS}) async {
+      TransferSyntax targetTS,
+      bool elementOffsetsEnabled = true,
+      ElementOffsets inputOffsets}) async {
     checkFile(file, overwrite: overwrite);
     final bytes = writeBytes(ds,
-        bufferLength: bufferLength, path: file.path, reUseBD: fast, outputTS: targetTS);
+        bufferLength: bufferLength,
+        path: file.path,
+        reUseBD: fast,
+        outputTS: targetTS,
+        elementOffsetsEnabled: elementOffsetsEnabled,
+        inputOffsets: inputOffsets);
     await file.writeAsBytes(bytes);
     return bytes;
   }
@@ -130,14 +161,18 @@ class ByteDatasetWriter extends DcmWriter {
       bool overwrite = false,
       bool fmiOnly = false,
       bool fast = false,
-      TransferSyntax targetTS})  {
+      TransferSyntax targetTS,
+      bool elementOffsetsEnabled = true,
+      ElementOffsets inputOffsets}) {
     checkPath(path);
     return writeFile(ds, new File(path),
         bufferLength: bufferLength,
         overwrite: overwrite,
         fmiOnly: fmiOnly,
         fast: fast,
-        targetTS: targetTS);
+        targetTS: targetTS,
+        elementOffsetsEnabled: elementOffsetsEnabled,
+        inputOffsets: inputOffsets);
   }
 
   /// Creates a new empty [File] at [path], writes the [RootDatasetByte]
@@ -157,7 +192,3 @@ class ByteDatasetWriter extends DcmWriter {
         targetTS: targetTS);
   }
 }
-
-
-
-

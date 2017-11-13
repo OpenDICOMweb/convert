@@ -37,6 +37,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
   }
 
   // Write the Root Dataset
+  log.info('Writing $rds0');
   ByteDatasetWriter writer;
   if (fast) {
     // Just write bytes don't write the file
@@ -97,6 +98,6 @@ Read ${bytes0.lengthInBytes} bytes
       TS: ${rds.transferSyntax}
   Pixels: $pdMsg
   ${reader.info}
-  ${rds.parseInfo.info}
+  ${rds.parseInfo.summary(rds)}
 ''');
 }

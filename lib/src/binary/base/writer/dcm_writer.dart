@@ -29,7 +29,7 @@ part 'package:dcm_convert/src/binary/base/writer/write_evr.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_ivr.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_fmi.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_common.dart';
-part 'package:dcm_convert/src/binary/base/writer/write_utils.dart';
+//part 'package:dcm_convert/src/binary/base/writer/write_utils.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_vf.dart';
 
 // The write buffer
@@ -47,7 +47,7 @@ TransferSyntax _ts;
 bool _isEvr;
 
 ParseInfo _pInfo;
-int _elementCount = 0;
+int _elementCount;
 final bool _statisticsEnabled = true;
 final bool _elementOffsetsEnabled = true;
 ElementOffsets _inputOffsets;
@@ -106,7 +106,7 @@ abstract class DcmWriter extends DcmWriterInterface {
       int length,
       this.reUseBuffer = true,
       this.eParams = EncodingParameters.kNoChange,
-      this.elementOffsetsEnabled = false,
+      this.elementOffsetsEnabled = true,
       this.inputOffsets})
       : targetTS = getOutputTS(rds, outputTS),
         outputOffsets = (elementOffsetsEnabled) ? new ElementOffsets() : null,
@@ -118,10 +118,10 @@ abstract class DcmWriter extends DcmWriterInterface {
     _wb = wb;
     _rds = rds;
     _isEvr = rds.isEvr;
+    _elementCount = -1;
     _pInfo = new ParseInfo(rds);
     if (elementOffsetsEnabled) {
-//	    _elementOffsetsEnabled = elementOffsetsEnabled;
-	    _inputOffsets = inputOffsets;
+    	if (inputOffsets != null ) _inputOffsets = inputOffsets;
 	    _outputOffsets = outputOffsets;
     }
   }
@@ -168,6 +168,7 @@ abstract class DcmWriter extends DcmWriterInterface {
   /// media type, writes it to a Uint8List, and returns the [Uint8List].
   @override
   Uint8List writeFmi() {
+  	log.reset;
     _writeFmi(rds, eParams);
     final bytes = wb.close();
     _writeFile(bytes, file);
@@ -181,10 +182,10 @@ abstract class DcmWriter extends DcmWriterInterface {
   /// writes it to a Uint8List, and returns the [Uint8List].
   @override
   Uint8List write() {
+  	log.reset;
     //TODO: handle doSeparateBulkdata
     _rds = rds;
     _cds = rds;
-    _elementCount = 0;
 
     _ts = (targetTS == null) ? rds.transferSyntax : targetTS;
     if (_ts == null) throw 'no TS';
@@ -239,8 +240,9 @@ abstract class DcmWriter extends DcmWriterInterface {
 }
 // **** Private methods
 
-void _writeValueField(Element e) {
+void __writeValueField(Element e) {
   final bytes = e.vfBytes;
+ // print('bytes.length: ${bytes.lengthInBytes}');
   _wb.bytes(bytes);
   if (bytes.length.isOdd) {
 	  log.warn('**** Odd length: ${bytes.length}');

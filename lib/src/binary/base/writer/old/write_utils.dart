@@ -68,7 +68,7 @@ void _finishWritingElement(int start, int end, Element e) {
     _pInfo.endOfLastElement = _wb.wIndex;
     if (e.isPrivate) _pInfo.nPrivateElements++;
 
-    if (_elementOffsetsEnabled) {
+    if (_elementOffsetsEnabled && _inputOffsets != null) {
       _outputOffsets.add(start, end, e);
 
       final iStart = _inputOffsets.starts[_elementCount];

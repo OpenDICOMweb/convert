@@ -48,7 +48,7 @@ void _writeExistingFmi(RootDataset rootDS, bool cleanPreamble) {
 bool _writePrefix(RootDataset rds, bool cleanPreamble) {
   if (rds is! RootDataset) log.error('Not _rds');
   final pInfo = rds.parseInfo;
-  return (pInfo.preambleWasZeros || _eParams.doCleanPreamble)
+  return (pInfo.preambleAllZeros || _eParams.doCleanPreamble)
       ? _writeCleanPrefix()
       : _writeExistingPrefix(pInfo);
 }
@@ -63,7 +63,7 @@ bool _writeCleanPrefix() {
 /// Writes a new Open DICOMweb FMI.
 bool _writeExistingPrefix(ParseInfo pInfo) {
   assert(pInfo.preamble != null && !_eParams.doCleanPreamble);
-  for (var i = 0; i < 128; i++) _wb.bd.setUint8(i, pInfo.preamble[i]);
+  for (var i = 0; i < 128; i++) _wb.uint8(pInfo.preamble[i]);
   _wb.uint32(kDcmPrefix);
   return true;
 }

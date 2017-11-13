@@ -64,14 +64,15 @@ DecodingParameters _dParams;
 bool _isEvr;
 
 ParseInfo _pInfo;
-int _elementCount = 0;
+int _elementCount;
 final bool _statisticsEnabled = true;
-final bool _elementOffsetsEnabled = true;
+bool _elementOffsetsEnabled;
 ElementOffsets _inputOffsets;
 
 //final List<String> _exceptions = <String>[];
 
 bool _beyondPixelData;
+bool _checkCode = false;
 Tag tag;
 
 /// Returns the [ByteData] that was actually read, i.e. from 0 to
@@ -108,6 +109,8 @@ abstract class DcmReader extends DcmReaderInterface {
   final bool reUseBD;
   final bool showStats;
   final DecodingParameters dParams;
+  final bool elementOffsetsEnabled;
+  final ElementOffsets inputOffsets;
   @override
   Dataset cds;
   ParseInfo pInfo;
@@ -121,24 +124,26 @@ abstract class DcmReader extends DcmReaderInterface {
       this.fmiOnly = false,
       this.reUseBD = true,
       this.showStats = false,
-      this.dParams = DecodingParameters.kNoChange})
+      this.dParams = DecodingParameters.kNoChange,
+      this.elementOffsetsEnabled = true})
       : bdLength = bd.lengthInBytes,
         rb = new ByteReader(bd),
         cds = rds,
+        inputOffsets = (elementOffsetsEnabled) ? new ElementOffsets() : null,
         pInfo = new ParseInfo(rds) {
-    //  log.debug('ByteData length: ${rb.lengthInBytes}');
-    if (bdLength <= shortFileThreshold) {
-      final s = 'Short file error: length(${rb.lengthInBytes}) $path';
-      rb.warn('$s ${rb.rrr}');
-      if (throwOnError) throw new ShortFileError('Length($rb.lengthInBytes) $path');
-    }
     _rb = rb;
     _rds = rds;
+    _elementCount = -1;
     _dParams = dParams;
+    if (elementOffsetsEnabled && inputOffsets != null) {
+    	_elementOffsetsEnabled = elementOffsetsEnabled;
+      _inputOffsets = inputOffsets;
+    }
     _pInfo = pInfo
+      ..path = path
+      ..fileLengthInBytes = bd.lengthInBytes
       ..shortFileThreshold = shortFileThreshold
-      ..fileLengthInBytes = bd.lengthInBytes;
-    if (_elementOffsetsEnabled) _inputOffsets = new ElementOffsets();
+      ..wasShortFile = (bd.lengthInBytes <= shortFileThreshold);
   }
 
   bool get isEvr => rds.isEvr;
@@ -155,10 +160,11 @@ abstract class DcmReader extends DcmReaderInterface {
   bool hasRemaining(int n) => _rb.hasRemaining(n);
 
   RootDataset read() {
+    if (_pInfo.wasShortFile) return _shortFileError();
     cds = rds;
     _read(rds, path, dParams);
     rds.parseInfo = _pInfo;
-    if (showStats) print(pInfo);
+    if (showStats) print(pInfo.summary);
     return rds;
   }
 
@@ -181,17 +187,17 @@ abstract class DcmReader extends DcmReaderInterface {
   Statistics
                   isEvr: $isEvr
         Bytes remaining: ${_rb.remaining}
-        
+
               nDatasets: ${pInfo.nDatasets}
        nDefinedDatasets: ${pInfo.nDefinedDatasets}
       nUnefinedDatasets: ${pInfo.nUndefinedDatasets}
-             nItemsRead: ${pInfo.nItems}     
+             nItemsRead: ${pInfo.nItems}
       nDefinedItemsRead: ${pInfo.nDefinedDatasets}
     nUndefinedItemsRead: ${pInfo.nUndefinedDatasets}
-                                
+
             rootDSTotal: ${rds.total}
           nElementsRead: ${pInfo.nElements}
-          
+
              nSequences: ${pInfo.nSequences}
       nDefinedSequences: ${pInfo.nDefinedSequences}
     nUndefinedSequences: ${pInfo.nUndefinedSequences}
@@ -201,7 +207,7 @@ abstract class DcmReader extends DcmReaderInterface {
 
         lastElementRead: ${pInfo.lastElementRead}
        endOfLastElement: ${dcm(pInfo.endOfLastElement)}
-       
+
         bdLengthInBytes: ${rb.lengthInBytes}
         dsLengthInBytes: ${rds.lengthInBytes}
               remaining: ${rb.remaining}
@@ -216,4 +222,10 @@ abstract class DcmReader extends DcmReaderInterface {
                 totalDS: ${rds.total + rds.dupTotal}''';
 */
 
+  Null _shortFileError() {
+    final s = 'Short file error: length(${rb.lengthInBytes}) $path';
+    rb.warn('$s ${rb.rrr}');
+    if (throwOnError) throw new ShortFileError('Length($rb.lengthInBytes) $path');
+    return null;
+  }
 }

@@ -11,7 +11,7 @@ bool _readFmi(RootDataset rds, String path, DecodingParameters dParams) {
   try {
     log.debug('${_rb.rbb} readFmi($_cds)');
     assert(_cds == rds);
- //   assert(_pInfo.hadPrefix == null, 'hadPrefix was non-null');
+    //   assert(_pInfo.hadPrefix == null, 'hadPrefix was non-null');
     _pInfo.hadPrefix = _readPrefix(path, dParams.checkPreambleAllZeros);
     if (!_pInfo.hadPrefix && !dParams.allowMissingPrefix) {
       return false;
@@ -82,18 +82,19 @@ bool _readPrefix(String path, bool checkPreamble) {
   if (_rb.rIndex != 0)
     sb.writeln('Attempt to read DICOM Prefix at ByteData[$_rb.rIndex]');
   if (_pInfo.hadPrefix != null)
-    sb.writeln('Attempt to re-read DICOM Preamble and '
-        'Prefix.');
-  if (_rb.lengthInBytes < 132) sb.writeln('ByteData length(${_rb.lengthInBytes}) < 132');
+    sb.writeln('Attempt to re-read DICOM Preamble and Prefix.');
+  if (_rb.lengthInBytes <= 132) sb.writeln('ByteData length(${_rb.lengthInBytes}) < 132');
   if (sb.isNotEmpty) {
     _rb.error(sb.toString());
     return false;
   }
   if (checkPreamble) {
-    _pInfo.preambleWasZeros = true;
-    _pInfo.preamble = _rb.uint8View(0, 128);
+    _pInfo.preambleAllZeros = true;
     for (var i = 0; i < 128; i++)
-      if (_rb.getUint8(i) != 0) _pInfo.preambleWasZeros = false;
+      if (_rb.getUint8(i) != 0) {
+        _pInfo.preambleAllZeros = false;
+        _pInfo.preamble = _rb.uint8View(0, 128);
+      }
   }
   return isDcmPrefixPresent();
 }
@@ -104,8 +105,10 @@ bool isDcmPrefixPresent() {
   final prefix = _rb.uint32;
   log.debug3('${_rb.rmm} prefix: ${prefix.toRadixString(16).padLeft(8, '0')}');
   if (prefix == kDcmPrefix) {
+  	_pInfo.hadPrefix = true;
     return true;
   } else {
+	  _pInfo.hadPrefix = false;
     _rb.warn('No DICOM Prefix present @${_rb.rrr}');
     return false;
   }

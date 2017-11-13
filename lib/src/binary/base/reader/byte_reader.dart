@@ -9,7 +9,6 @@ import 'dart:typed_data';
 import 'package:system/core.dart';
 
 import 'package:dcm_convert/src/binary/base/byte_list.dart';
-import 'package:dcm_convert/src/errors.dart';
 
 class ByteReader extends ByteList {
   /// The underlying data buffer.
@@ -17,10 +16,6 @@ class ByteReader extends ByteList {
   /// This is always both a List<E> and a TypedData, which we don't have a type
   /// for here. For example, for a `Uint8Buffer`, this is a `Uint8List`.
   int _rIndex = 0;
-  int nonZeroDelimiterLengths = 0;
-  int nOddLengthValueFields = 0;
-  bool beyondPixelData = false;
-  bool hadGroupLengths = false;
 
   ByteReader(ByteData bd) : super(bd);
 
@@ -129,6 +124,7 @@ class ByteReader extends ByteList {
     return v;
   }
 
+  int get uint32Peek => getUint32(_rIndex);
   int get uint32 => readUint32();
 
   int readUint32() {
@@ -154,18 +150,7 @@ class ByteReader extends ByteList {
     return (group << 16) + elt;
   }
 
-  int getCode(int start) {
-    final code = _peekCode();
-    if (code == 0) {
-      skip(-4); // undo readTagCode
-      _zeroEncountered(code);
-      return 0;
-    }
-    // Check for Group Length Code
-    final elt = code & 0xFFFF;
-    if (code > 0x3000 && (elt == 0)) hadGroupLengths = true;
-    return code;
-  }
+  int getCode(int start) => _peekCode();
 
   int get code => readCode();
   int readCode() {
@@ -181,39 +166,24 @@ class ByteReader extends ByteList {
     return code;
   }
 
-  /// Returns the Value Field Length (vfLength) of a non-Sequence Element.
-  /// The read index [_rIndex] is left at the end of the Element Delimiter.
-  //  The [_rIndex] should be at the beginning of the Value Field.
-  // Note: Since for binary DICOM the Value Field is 16-bit aligned,
-  // it must be checked 16 bits at a time.
-  int findEndOfULengthVF() {
-    log.down;
-    //  log.debug1('$rbb findEndOfULengthVF');
-    while (_isReadable) {
-      if (uint16 != kDelimiterFirst16Bits) continue;
-      if (uint16 != kSequenceDelimiterLast16Bits) continue;
-      break;
-    }
-    if (!_isReadable) {
-      throw new EndOfDataError('_findEndOfVF');
-    }
-    final delimiterLength = uint32;
-    if (delimiterLength != 0) {
-      nonZeroDelimiterLengths++;
-      warn('Encountered non-zero delimiter length($delimiterLength) $rrr');
-    }
-    final endOfVF = _rIndex - 8;
-    //  log.debug1('$ree   endOfVR($endOfVF) eEnd($_rIndex) @end');
-    log.up;
-    return endOfVF;
-  }
 
+/*
   /// Returns true if the sequence delimiter is found at [_rIndex].
   bool isSequenceDelimiter() => _checkForDelimiter(kSequenceDelimitationItem32BitLE);
 
   /// Returns true if the kItemDelimitationItem32Bit delimiter is found.
   bool isItemDelimiter() => _checkForDelimiter(kItemDelimitationItem32BitLE);
+*/
 
+  bool getUint32AndCompare(int target) {
+	  final delimiter = getUint32(_rIndex);
+	  final v = 	  target == delimiter;
+	  log.debug('$rmm target ${dcm(target)}|$target == '
+			            'delimiter ${dcm(delimiter)}|$delimiter is $v');
+    return v;
+  }
+
+/*
   /// Returns true if the [target] delimiter is found. If the target
   /// delimiter is found [_rIndex] is advanced to the end of the delimiter
   /// field (8 bytes); otherwise, readIndex does not change.
@@ -236,6 +206,7 @@ class ByteReader extends ByteList {
       warn('Encountered non-zero delimiter length($length) $rrr');
     }
   }
+*/
 
   // **** these next four are utilities for logger
   /// The current readIndex as a string.
@@ -265,7 +236,7 @@ class ByteReader extends ByteList {
   void _msg(String offset, String name, int code, int start, int vrIndex,
       [int hdrLength, int vfLength = -1, int inc]) {
     final hasLength =
-        hdrLength != null && (vfLength != -1 && vfLength != kUndefinedLength);
+        hdrLength != null && vfLength != -1 && vfLength != kUndefinedLength;
     final sum = (hasLength) ? start + hdrLength + vfLength : -1;
 
     final range =
@@ -275,7 +246,7 @@ class ByteReader extends ByteList {
   }
 
   void eMsg(int eNumber, Object e, int eStart, int eEnd, [int inc = -1]) {
-    final s = '$ree $eNumber $e  |$_remaining - $eEnd = ${_remaining - eEnd}';
+    final s = '$ree #$eNumber $e  |$_remaining - $eEnd = ${_remaining - eEnd}';
     log.debug(s, inc);
   }
 
@@ -296,12 +267,13 @@ class ByteReader extends ByteList {
     if (v < 0 || v >= max) throw new RangeError.range(v, 0, max);
   }
 
+/*
   bool checkIndex() {
     if (_rIndex.isOdd) {
       final msg = 'Odd Lenth Value Field at @$_rIndex - incrementing';
       warn('$msg $_rrr');
       _indexAdd(1);
-      nOddLengthValueFields++;
+      _pInfo.nOddLengthValueFields++;
       if (throwOnError) throw msg;
     }
     return true;
@@ -314,6 +286,7 @@ class ByteReader extends ByteList {
     warn('Zero encountered $msg $rrr');
     throw new EndOfDataError('Zero encountered $msg $rrr');
   }
+*/
 
   static const int kMinLength = 768;
 }

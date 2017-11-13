@@ -61,8 +61,8 @@ bool byteReadWriteFileChecked(String path,
     if (rds0.parseInfo != rds1.parseInfo) {
       log
         ..warn('$pad ** ParseInfo is Different!')
-        ..debug1('$pad rds0: ${rds0.parseInfo.info}')
-        ..debug1('$pad rds1: ${rds1.parseInfo.info}')
+        ..debug1('$pad rds0: ${rds0.parseInfo.summary(rds0)}')
+        ..debug1('$pad rds1: ${rds1.parseInfo.summary(rds1)}')
         ..debug2(rds0.format(new Formatter(maxDepth: -1)))
         ..debug2(rds1.format(new Formatter(maxDepth: -1)));
     }

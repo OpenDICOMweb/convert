@@ -57,7 +57,7 @@ RootDatasetTag convertFile(File file, {int reps = 1, bool fmiOnly = false}) {
   print('TS: ${bRoot.transferSyntax}');
   log
     ..debug('bRoot.isRoot: ${bRoot.isRoot}')
-    ..debug1(bRoot.parseInfo.info);
+    ..debug1(bRoot.parseInfo.summary(bRoot));
   if (bRoot == null) return null;
 
   final tRoot = convertByteDSToTagDS<int>(bRoot);

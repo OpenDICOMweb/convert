@@ -30,8 +30,9 @@ class DecodingParameters {
   /// are Sequences.
   final bool checkForUNSequence;
 
-  /// If true elements with VR.kUN will be converted to correct VR if known.
-  final bool doConvertUndefinedVR;
+  /// If true elements with VR.kUN or with _invalid_ VRs will be converted
+  /// to correct VR if known.
+  final bool doCorrectVR;
 
   /// If true Elements will be checked for valid VR by looking up Tag.
   final bool doCheckVR;
@@ -80,7 +81,7 @@ class DecodingParameters {
     this.allowMissingFMI = true,
     this.allowDuplicates = true,
     this.checkForUNSequence = true,
-    this.doConvertUndefinedVR = true,
+    this.doCorrectVR = true,
     this.doCheckVR = true,
     this.doConvertToNormalForm = false,
     this.doSeparateBulkdata = false,

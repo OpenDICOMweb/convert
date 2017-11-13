@@ -25,7 +25,7 @@ RootDataset _read(RootDataset rds, String path, DecodingParameters dParams) {
     } else {
       _readIvrRootDataset();
     }
-  } on EndOfDataError catch (e) {
+  }  on EndOfDataError catch (e) {
     addErrorInfo(e);
     log.error(e);
     if (throwOnError) rethrow;
@@ -45,13 +45,13 @@ RootDataset _read(RootDataset rds, String path, DecodingParameters dParams) {
   } finally {
     bdRead = _rb.close();
     rds.dsBytes = new RDSBytes(bdRead);
-    _pInfo.lastReadIndex = _rb.rIndex;
+    _pInfo.lastIndex = _rb.rIndex;
   }
 
   final rdsTotal = rds.total + rds.dupTotal;
   final pInfoTotal = _pInfo.nElements + _pInfo.nDuplicateElements;
   log.info('''\n
-pInfo.lastReadIndex: ${_pInfo.lastReadIndex}
+pInfo.lastReadIndex: ${_pInfo.lastIndex}
   rds.lengthInBytes: ${rds.dsBytes.bd.lengthInBytes}
     pInfo.nElements: ${_pInfo.nElements}
           rds.total: ${rds.total}
@@ -64,8 +64,9 @@ pInfo.lastReadIndex: ${_pInfo.lastReadIndex}
 ''', -1);
 
   //TODO: fix this to include duplicates
-  if (_pInfo.nElements != rds.total) {
-    log.error('pInfo.nElements(${_pInfo.nElements}) != rds.total(${rds.total})');
+  if (_pInfo.nElements != (rds.total + rds.dupTotal)) {
+    log.error('pInfo.nElements(${_pInfo.nElements}) '
+		              '!= rds.total(${rds.total}) + rds.dupTotal(${rds.dupTotal}');
     readerInconsistencyError(rds);
   }
   return rds;
@@ -102,5 +103,5 @@ Inconsistent Elements Error: '
 void addErrorInfo(Object e) {
   _pInfo.exceptions.add(e);
   _pInfo.hadParsingErrors = true;
-  _pInfo.lastReadIndex = _rb.rIndex;
+  _pInfo.lastIndex = _rb.rIndex;
 }

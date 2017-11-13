@@ -55,11 +55,5 @@ ${jobArgs.parser.usage}
 
   system.log.level = jobArgs.baseLevel;
 
-  final ivrClean = new File( 'C:/odw/test_data/sfd/MR/PID_BREASTMR/1_DICOM_Origin'
-		  'al/EFC524F2.dcm');
-
-  final f = new File('C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/'
-      'Sop/1.2.392.200036.9123.100.12.11.3.dcm');
-
-  JobRunner.fileList([ivrClean], doRWFile, level: Level.info);
+  JobRunner.fileList([], doRWFile, level: Level.info);
 }
