@@ -22,10 +22,12 @@ import 'package:system/server.dart';
 
 /// A program for doing read/write/read testing on DICOM files.
 void main(List<String> args) {
-  Server.initialize(name: 'read_write_file', level: Level.error, throwOnError: true);
+  Server.initialize(name: 'read_write_file', level: Level.warn1, throwOnError: true);
 
   /// The processed arguments for this program.
   final jobArgs = new JobArgs(args);
+
+  print('jobArgs: ${jobArgs.summary}');
 
   if (jobArgs.showHelp) showHelp(jobArgs);
 

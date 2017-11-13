@@ -14,25 +14,25 @@ import 'package:dcm_convert/src/tool/do_rwr_byte_file_sync.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
-const String foo = 'C:/odw/test_data/mweb/ASPERA/DICOM files only/22f01f4d-32c0-4a13-9350-9f0b4390889b.dcm';
+const String foo =
+    'C:/odw/test_data/mweb/ASPERA/DICOM files only/22f01f4d-32c0-4a13-9350-9f0b4390889b.dcm';
 const String ivrNoSequences = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy'
-		'/1.2.840.113619.2.5.1762583153.215519.978957063.101.dcm';
+    '/1.2.840.113619.2.5.1762583153.215519.978957063.101.dcm';
 
 const String bar = 'C:/odw/test_data/mweb/10 Patient IDs/04443352';
 
-const String xx0 = 'C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/CT.2.16.840.1.114255.390617858.1794098916.62037.38690.dcm';
+const String xx0 =
+    'C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/CT.2.16.840.1.114255.390617858.1794098916.62037.38690.dcm';
 
 void main() {
-  Server.initialize(name: 'read_write_file', level: Level.info1);
+  Server.initialize(name: 'read_write_file', level: Level.debug3);
   system.throwOnError = true;
+  system.level = Level.debug3;
 
-  final paths = testPaths0;
+  final path = path0;
 
-  for (var i = 0; i < testPaths0.length; i++) {
-  	final f = new File(testPaths0[i]);
-  	stderr.writeln('$i Start RW $f');
-    doRWRByteFileSync(f);
-	  log.info('$i End RW $f');
-  }
+  final f = new File(path);
+  stderr.writeln('Start RW $f');
+  doRWRByteFileSync(f, noisy: true);
+  log.info('End RW $f');
 }
-

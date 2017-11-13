@@ -37,7 +37,7 @@ bool _inItem;
 
 /// Returns an [Item].
 // rIndex is @ delimiterFvr
-Item _readItem(Element eReader(), int count) {
+Item _readItem(EReader eReader, int count) {
   assert(_rb.hasRemaining(8));
   final iStart = _rb.rIndex;
 
@@ -66,7 +66,7 @@ Item _readItem(Element eReader(), int count) {
   return item;
 }
 
-void _readDatasetDefinedLength(Dataset ds, int dsStart, int vfLength, Element eReader()) {
+void _readDatasetDefinedLength(Dataset ds, int dsStart, int vfLength, EReader eReader) {
   assert(vfLength != kUndefinedLength);
   final dsEnd = dsStart + vfLength;
   log.debug2('${_rb.rbb} readDatasetDefined $dsStart - $dsEnd: $vfLength', 1);
@@ -80,7 +80,7 @@ void _readDatasetDefinedLength(Dataset ds, int dsStart, int vfLength, Element eR
   _pInfo.nDefinedLengthDatasets++;
 }
 
-void _readDatasetUndefinedLength(Dataset ds, Element eReader()) {
+void _readDatasetUndefinedLength(Dataset ds, EReader eReader) {
   log.debug2('${_rb.rbb} readEvrDatasetUndefined', 1);
 
   while (!__isItemDelimiter()) {
@@ -100,7 +100,7 @@ bool get _inSQ => _sqDepth <= 0;
 
 /// Read a Sequence.
 Element __readSQ(
-    int code, int eStart, int vfLengthField, EBytesMaker ebMaker, Element eReader()) {
+    int code, int eStart, int vfLengthField, EBMaker ebMaker, EReader eReader) {
   _sqDepth++;
   _pInfo.nSequences++;
   final e = (vfLengthField == kUndefinedLength)
@@ -112,14 +112,13 @@ Element __readSQ(
 }
 
 /// Reads a [kUndefinedLength] Sequence.
-Element __readUSQ(
-    int code, int eStart, int uLength, EBytesMaker ebMaker, Element eReader()) {
+Element __readUSQ(int code, int eStart, int uLength, EBMaker ebMaker, EReader eReader) {
   assert(uLength == kUndefinedLength);
   final items = <Item>[];
   _pInfo.nUndefinedLengthSequences++;
 
-  print('_element #$_elementCount');
-  print('offsets: ${_inputOffsets.length}');
+  // print('_element #$_elementCount');
+  // print('offsets: ${_inputOffsets.length}');
   final offsetIndex = _inputOffsets.reserveSlot;
   log.debug('${_rb.rbb} readUSQ Reading ${items.length} Items', 1);
   var itemCount = 0;
@@ -129,24 +128,23 @@ Element __readUSQ(
     itemCount++;
   }
   log.debug('${_rb.ree} USQ Read $itemCount Items', -1);
-  final e =  _makeSequence(code, eStart, ebMaker, items);
-  print('*** insert at $offsetIndex $eStart ${e.eStart} ${e.eEnd}');
+  final e = _makeSequence(code, eStart, ebMaker, items);
+  // print('*** insert at $offsetIndex $eStart ${e.eStart} ${e.eEnd}');
   _inputOffsets.insertAt(offsetIndex, e.eStart, e.eEnd, e);
   return e;
 }
 
 /// Reads a defined [vfLength].
-Element __readDSQ(
-    int code, int eStart, int vfLength, EBytesMaker ebMaker, Element eReader()) {
+Element __readDSQ(int code, int eStart, int vfLength, EBMaker ebMaker, EReader eReader) {
   assert(vfLength != kUndefinedLength);
   final items = <Item>[];
   _pInfo.nDefinedLengthSequences++;
 
   final vfStart = _rb.rIndex;
-  print('eStart: $eStart, vfStart: $vfStart, vfLength: $vfLength');
+  // print('eStart: $eStart, vfStart: $vfStart, vfLength: $vfLength');
 //  assert(eStart == _rb.rIndex - 12, '$eStart == ${_rb.rIndex - 12}');
-  print('_element #$_elementCount');
-  print('offsets: ${_inputOffsets.length}');
+  // print('_element #$_elementCount');
+  // print('offsets: ${_inputOffsets.length}');
   final offsetIndex = _inputOffsets.reserveSlot;
   log.debug2('${_rb.rbb} readDSQ Reading ${items.length} Items', 1);
   final eEnd = vfStart + vfLength;
@@ -160,15 +158,15 @@ Element __readDSQ(
   assert(eEnd == end, '$eEnd == $end');
   log.debug2('${_rb.ree} DSQ Read $itemCount Items', -1);
   final e = _makeSequence(code, eStart, ebMaker, items);
-  print('insert at $offsetIndex');
-  print('*** insert at $offsetIndex $eStart ${_rb.rIndex} ${e.eStart} ${e.eEnd}');
+  // print('insert at $offsetIndex');
+  // print('*** insert at $offsetIndex $eStart ${_rb.rIndex} ${e.eStart} ${e.eEnd}');
   _inputOffsets.insertAt(offsetIndex, eStart, eEnd, e);
   return e;
 }
 
 // If VR is UN then this might be a Sequence
 Element __tryReadUNSequence(
-    int code, int eStart, int vlf, EBytesMaker ebMaker, Element eReader()) {
+    int code, int eStart, int vlf, EBMaker ebMaker, EReader eReader) {
   log.debug3('${_rb.rmm} *** Maybe Reading Evr UN Sequence');
   final delimiter = _rb.getUint32(_rb.rIndex);
   if (delimiter == kSequenceDelimitationItem32BitLE) {
@@ -190,7 +188,7 @@ Element __tryReadUNSequence(
   return null;
 }
 
-Element _makeSequence(int code, int eStart, EBytesMaker ebMaker, List<Item> items) {
+Element _makeSequence(int code, int eStart, EBMaker ebMaker, List<Item> items) {
   final eb = _makeEBytes(eStart, ebMaker);
   return sequenceMaker(eb, _cds, items);
 }
@@ -237,6 +235,48 @@ void _readAndCheckDelimiterLength() {
   }
 }
 
+/// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have
+/// kUndefinedValue.
+Element __readMaybeUndefinedLength(int code, int eStart, int vrIndex, int vlf,
+    EBytes ebMaker(ByteData bd), EReader eReader) {
+  // If VR is UN then this might be a Sequence
+  if (vrIndex == kUNIndex) {
+    final e = __tryReadUNSequence(code, eStart, vlf, ebMaker, eReader);
+    if (e != null) return e;
+  }
+  return (vlf == kUndefinedLength)
+      ? __readUndefinedLength(code, eStart, vrIndex, vlf, ebMaker)
+      : __readLongDefinedLength(code, eStart, vrIndex, vlf, ebMaker);
+}
+
+// Finish reading an EVR Long Defined Length Element
+Element __readLongDefinedLength(
+    int code, int eStart, int vrIndex, int vlf, EBytes ebMaker(ByteData bd)) {
+  assert(vlf != kUndefinedLength);
+  log.debug('${_rb.rmm} readEvrLongDefined ${dcm(code)} vr($vrIndex) '
+      '$eStart + 12 + $vlf = ${eStart + 12 + vlf}');
+  _pInfo.nDefinedLengthElements++;
+  _rb + vlf;
+  return (code == kPixelData)
+      ? _makePixelData(code, eStart, vrIndex, _rb.rIndex, false, ebMaker)
+      : _makeElement(code, eStart, vrIndex, _rb.rIndex, ebMaker);
+}
+
+// Finish reading an EVR Long Undefined Length Element
+Element __readUndefinedLength(
+    int code, int eStart, int vrIndex, int vlf, EBytes ebMaker(ByteData bd)) {
+  assert(vlf == kUndefinedLength);
+  log.debug('${_rb.rmm} readEvrUndefinedLength ${dcm(code)} vr($vrIndex) '
+      '$eStart + 12 + ??? = ???');
+  _pInfo.nUndefinedLengthElements++;
+  if (code == kPixelData) {
+    return __readEncapsulatedPixelData(code, eStart, vrIndex, vlf, ebMaker);
+  } else {
+    final endOfVF = _findEndOfULengthVF();
+    return _makeElement(code, eStart, vrIndex, endOfVF, ebMaker);
+  }
+}
+
 /// There are only three VRs that use this: OB, OW, UN
 // _rIndex is Just after vflengthField
 Element __readEncapsulatedPixelData(
@@ -254,9 +294,6 @@ Element __readEncapsulatedPixelData(
     return _makePixelData(code, eStart, vrIndex, _rb.rIndex, true, ebMaker);
   } else {
     throw 'Non-Delimiter ${dcm(delimiter)}, $delimiter found';
-    // Un-encapsulated
-    final endOfVF = _findEndOfULengthVF();
-    return _makePixelData(code, eStart, vrIndex, endOfVF, true, ebMaker);
   }
 }
 
@@ -315,19 +352,19 @@ void _checkDelimiterLength(int delimiter) {
 }
 
 void _doEndOfElementStats(int code, int eStart, Element e, bool ok) {
-	  _pInfo.nElements++;
-    if (ok) {
-      _pInfo.lastElementRead = e;
-      _pInfo.endOfLastElement = _rb.rIndex;
-      if (e.isPrivate) _pInfo.nPrivateElements++;
-      if (e is SQ) {
-        _pInfo.endOfLastSequence = _rb.rIndex;
-        _pInfo.lastSequenceRead = e;
-      }
-    } else {
-      _pInfo.nDuplicateElements++;
+  _pInfo.nElements++;
+  if (ok) {
+    _pInfo.lastElementRead = e;
+    _pInfo.endOfLastElement = _rb.rIndex;
+    if (e.isPrivate) _pInfo.nPrivateElements++;
+    if (e is SQ) {
+      _pInfo.endOfLastSequence = _rb.rIndex;
+      _pInfo.lastSequenceRead = e;
     }
-    if (e is! SQ && _elementOffsetsEnabled) _inputOffsets.add(eStart, _rb.rIndex, e);
+  } else {
+    _pInfo.nDuplicateElements++;
+  }
+  if (e is! SQ && _elementOffsetsEnabled) _inputOffsets.add(eStart, _rb.rIndex, e);
 }
 
 // vfLength cannot be undefined.
@@ -366,6 +403,11 @@ void _maybeDoPixelDataStats(int eStart, int endOfVF, int vrIndex, bool undefined
 Tag __checkCode(int code, int eStart) {
   if (_checkCode) {
     if (code < 0x00020000 || code >= kItem) {
+      if (_beyondPixelData) {
+        log.warn('** Bad data beyond Pixel Data');
+        if (throwOnError)
+          return invalidTagError('code${dcm(code)} @${eStart - 4} +${_rb.remaining}');
+      }
       log.error('Invalid Tag code: ${dcm(code)}');
       showReadIndex(_rb.rIndex - 6);
       throw 'bad code';
@@ -387,16 +429,16 @@ Tag __checkCode(int code, int eStart) {
 int __vrToIndex(int code, VR vr) {
   var vrIndex = vr.index;
   if (_isSpecialVR(vrIndex)) {
+	  log.info1('-- Changing Special VR ${VR.lookupByIndex(vrIndex)}) to VR.kUN');
     vrIndex = VR.kUN.index;
-    _rb.warn('** vrIndex changed to VR.kUN.index');
   }
   return vrIndex;
 }
 
 bool __isValidVR(int code, int vrIndex, Tag tag) {
   if (vrIndex == kUNIndex) {
-	  log.debug3('${_rb.rmm} VR ${VR.kUN} is valid for $tag');
-	  return true;
+    log.debug3('${_rb.rmm} VR ${VR.kUN} is valid for $tag');
+    return true;
   }
   if (tag.hasNormalVR && vrIndex == tag.vrIndex) return true;
   if (tag.hasSpecialVR && tag.vr.isValidVRIndex(vrIndex)) {
@@ -411,53 +453,11 @@ bool __isNotValidVR(int code, int vrIndex, Tag tag) => !__isValidVR(code, vrInde
 
 int __correctVR(int code, int vrIndex, Tag tag) {
   if (vrIndex == kUNIndex) {
-	  if (tag.vrIndex == kUNIndex) return vrIndex;
-	  return (tag.hasNormalVR) ? tag.vrIndex : vrIndex;
+    if (tag.vrIndex == kUNIndex) return vrIndex;
+    return (tag.hasNormalVR) ? tag.vrIndex : vrIndex;
   }
   return vrIndex;
 }
-/*
-//TODO: add VR.kSSUS, etc. to dictionary
-/// checks that code & vrCode are compatible
-// Note: This function MUST NOT return a [VRSpecial] [vrIndex].
-int __checkVR(int code, int vrIndex, Tag tag, [bool warnOnUN = false]) {
-	// If [tag] is _null_ we can't do anything.
-  if (tag == null) return vrIndex;
-
-  final tagVRIndex = tag.vrIndex;
-  if (vrIndex == kUNIndex) {
-  	if (_isNormalVR(tagVRIndex)) {
-		  //TODO: add a switch to turn on or off
-		  return tagVRIndex;
-	  }
-  } else if (_isNormalVR(vrIndex)) {
-  	if (vrIndex == tagVRIndex) return vrIndex;
-
-  }  else if (vrIndex == tagVRIndex){
-  	  retirm
-  } else if (_isSpecialVR(vrIndex)) {
-	  if (tag.vr.isValidVRIndex(vrIndex)) return vrIndex;
-  } else if (vrIndex == kUNIndex && tagVRIndex != kUNIndex) {
-    _rb.warn('${dcm(code)} VR.kUN($vrIndex) changing to ${tag.vr} ${_rb.rrr}');
-    return tagVRIndex;
-  } else if (_isSpecialVR(tagVRIndex) && vrIndex != tagVRIndex) {
-    log.warn('vrIndex $vrIndex is valid for $tag');
-    return (shouldConvertVR) ? tagVRIndex : vrIndex;
-
-  } else if (vrIndex != VR.kUN.code) {
-    if (code != kPixelData && warnOnUN == true) {
-      if (tag is PDTag && tag is! PDTagKnown) {
-        log.info0('${_rb.pad} ${dcm(code)} VR.kUN: Unknown Private Data');
-      } else if (tag is PCTag && tag is! PCTagKnown) {
-        log.info0('${_rb.pad} ${dcm(code)} VR.kUN: Unknown Private Creator $tag');
-      } else {
-        log.info0('${_rb.pad} ${dcm(code)} VR.kUN: $tag');
-      }
-    }
-  }
-  return vrIndex;
-}
-*/
 
 /// Returns true if there are only trailing zeros at the end of the
 /// Object being parsed.
@@ -557,6 +557,6 @@ void _printTrailingData(int start, int length) {
     final xx = hex8(x);
     final yy = hex16(y);
     final zz = hex32(z);
-    print('@$i: 16($x, $xx) | $y, $yy) 32($z, $zz)');
+    // print('@$i: 16($x, $xx) | $y, $yy) 32($z, $zz)');
   }
 }

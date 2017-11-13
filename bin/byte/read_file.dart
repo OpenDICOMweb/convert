@@ -14,10 +14,18 @@ import 'package:dcm_convert/byte_convert.dart';
 import 'package:path/path.dart' as path;
 import 'package:system/server.dart';
 import 'package:dcm_convert/src/file_utils.dart';
+
+const String xx5 = 'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/RTOG Study/CT_2'
+		'.25.538706832433601549630505042241494458338.10.dcm';
+const String xx4 =
+    'C:/odw/test_data/mweb/ASPERA/DICOM files only/22c82bd4-6926-46e1-b055-c6b788388014.dcm';
 const String xx3 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
-const String xx2 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.5.5.dcm';
-const String xx1 = 'C:/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm';
-const String xx0 = 'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm';
+const String xx2 =
+    'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.5.5.dcm';
+const String xx1 =
+    'C:/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm';
+const String xx0 =
+    'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm';
 const String xxx = 'C:/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
 const String dcmDir = 'C:/odw/test_data/sfd/MG/DICOMDIR';
 const String evrLarge = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
@@ -45,46 +53,47 @@ const String bas = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368.fmt'
 //Urgent: bug with path20
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
+  final formatter = new Formatter();
 
-  for (var i = 0; i < 1; i++) {
-  //for (var i = 0; i < testPaths0.length; i++) {
-    final fPath = ivrClean;
-    // testPaths0[i];
+  final fPath = xx5;
 
-    print('$i: path: $fPath');
-    print(' out: ${getTempFile(fPath, 'dcmout')}');
-    final url = new Uri.file(fPath);
-    stdout.writeln('Reading(byte): $url');
+  print('path: $fPath');
+  print(' out: ${getTempFile(
+						fPath, 'dcmout')}');
+  final url = new Uri.file(fPath);
+  stdout.writeln('Reading(byte): $url');
 
-    final bytes = await readDcmPath(fPath);
-    if (bytes == null) {
-      log.error('"$fPath" is not a valid DICOM file');
-      return;
-    }
-    //   final bytes = await readFileAsync(file);
-    final rds = ByteDatasetReader.readBytes(bytes, path: fPath, showStats: true);
-    if (rds == null) {
-      log.warn('Invalid DICOM file: $fPath');
+  final bytes = await readDcmPath(fPath);
+  if (bytes == null) {
+    log.error('"$fPath" is not a valid DICOM file');
+    return;
+  }
+
+  //   final bytes = await readFileAsync(file);
+  final rds = ByteDatasetReader.readBytes(bytes, path: fPath, showStats: true);
+  if (rds == null) {
+    log.warn('Invalid DICOM file: $fPath');
+  } else {
+    if (rds.parseInfo != null) {
+      final infoPath = '${path.withoutExtension(fPath)}.info';
+      log.info('infoPath: $infoPath');
+      final sb = new StringBuffer('${rds.parseInfo.summary(
+									rds)}\n')..write('Bytes Dataset: ${rds.summary}');
+      new File(infoPath)..writeAsStringSync(sb.toString());
+      log.debug(sb.toString());
+
+      //   final formatter = new Formatter.withIndenter(-1, Indenter.basic);
+      final formatter = new Formatter(maxDepth: -1);
+      final fmtPath = '${path.withoutExtension(
+							fPath)}.fmt';
+      log.info('fmtPath: $fmtPath');
+      final fmtOut = rds.format(formatter);
+      new File(fmtPath)..writeAsStringSync(sb.toString());
+      log.debug(fmtOut);
+
+      //        print(rds.format(z));
     } else {
-      if (rds.parseInfo != null) {
-        final infoPath = '${path.withoutExtension(fPath)}.info';
-        log.info('infoPath: $infoPath');
-        final sb = new StringBuffer('${rds.parseInfo.summary(rds)}\n')
-          ..write('Bytes Dataset: ${rds.summary}');
-        new File(infoPath)..writeAsStringSync(sb.toString());
-        log.debug(sb.toString());
-
-        final z = new Formatter.withIndenter(-1, Indenter.basic);
-        final fmtPath = '${path.withoutExtension(fPath)}.fmt';
-        log.info('fmtPath: $fmtPath');
-        final fmtOut = rds.format(z);
-        new File(fmtPath)..writeAsStringSync(sb.toString());
-        log.debug(fmtOut);
-
-//        print(rds.format(z));
-      } else {
-        print('${rds.summary}');
-      }
+      print('${rds.summary}');
     }
   }
 }

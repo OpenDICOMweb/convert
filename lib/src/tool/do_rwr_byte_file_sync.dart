@@ -4,7 +4,6 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -16,14 +15,14 @@ import 'package:dcm_convert/src/binary/byte/write_bytes.dart';
 import 'package:dcm_convert/src/tool/job_utils.dart';
 import 'package:dcm_convert/src/errors.dart';
 
-Future<bool> doRWRByteFile(File f, {bool fast = true, bool noisy = false}) async {
+bool doRWRByteFileSync(File f, {bool fast = true, bool noisy = false}) {
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
   final pad = ''.padRight(5);
   log.info0('RRWByte $f');
 
   try {
-    final Uint8List bytes = await f.readAsBytes();
+    final Uint8List bytes = f.readAsBytesSync();
     final bd = bytes.buffer.asByteData();
     final reader0 = new ByteDatasetReader(bd, path: f.path, fast: true);
     final rds0 = reader0.read();
@@ -131,13 +130,16 @@ $pad    TS: ${rds0.transferSyntax}''');
       for (var i = 0; i < length; i++) {
         final x = aList.elementAt(i) as ByteElement;
         final y = bList.elementAt(i) as ByteElement;
-        log.debug('$i x: $x');
-        log.debug('$i y: $y');
-        if (x.eStart != y.eStart) print('** Starts are different');
-        if (x.code != y.code) print('** Codes are different');
-        if (x.vrCode != y.vrCode) print('** VRCodes are different');
-        if (x.vfLengthField != y.vfLengthField) print('** VFL are different');
-        if (x.eEnd != y.eEnd) print('** Ends are different');
+        if (x.eStart != y.eStart ||
+            x.code != y.code ||
+            x.vrCode != y.vrCode ||
+            x.vfLengthField != y.vfLengthField ||
+            x.eEnd != y.eEnd) {
+          log
+	          ..warn('Elements are different:')
+	          ..warn('  $i x: $x')
+	          ..warn('  $i y: $y');
+        }
       }
     }
 

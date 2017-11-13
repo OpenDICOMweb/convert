@@ -16,7 +16,7 @@ void main() {
   Server.initialize(name: 'read_write_file', level: Level.debug3);
 
   // *** Modify the [path0] value to read/write a different file
-  final path = testPaths1[0];
+  final path = path0;
 
   byteReadWriteFileChecked(path, fileNumber:  1,width:  5, fast: true);
 }

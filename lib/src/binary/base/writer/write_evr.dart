@@ -19,7 +19,7 @@ void _writeEvrRootDataset(RootDataset rds, EncodingParameters eParams) {
 }
 
 void _writeEvrElement(Element e, {ElementOffsets inputOffsets}) {
-	_elementCount++;
+  _elementCount++;
   final eStart = _wb.wIndex;
   var vrIndex = e.vrIndex;
 
@@ -43,16 +43,15 @@ void _writeEvrElement(Element e, {ElementOffsets inputOffsets}) {
   }
 
   if (e.eStart != eStart) {
-  	log.error('** e.eStart(${e.eStart} != eStart($eStart)');
+    log.error('** e.eStart(${e.eStart} != eStart($eStart)');
   }
   if (e.eEnd != _wb.wIndex) {
-	  log.error('** e.eEnd(${e.eStart} != eEnd(${_wb.wIndex})');
+    log.error('** e.eEnd(${e.eStart} != eEnd(${_wb.wIndex})');
   }
 
-
   _pInfo.nElements++;
-	if (_statisticsEnabled) _doEndOfElementStats(eStart, _wb.wIndex, e);
-	log.debug('${_wb.wee} #$_elementCount writeEvrElement ${e.dcm} ${e.keyword}', -2);
+  if (_statisticsEnabled) _doEndOfElementStats(eStart, _wb.wIndex, e);
+  log.debug('${_wb.wee} #$_elementCount writeEvrElement ${e.dcm} ${e.keyword}', -2);
 }
 
 void _writeShortEvr(Element e) {
@@ -98,30 +97,28 @@ void __writeEvrSQDefinedLength(SQ e) {
   assert(e.vfLength + 12 == e.eEnd - e.eStart, '$vlf, $eEnd - $eStart');
   assert(vlf + 12 == (eEnd - eStart), '$vlf, $eEnd - $eStart');
   final vfLength = (eEnd - eStart) - 12;
-  print('$eStart - $eEnd vfLength: $vlf, $vfLength');
+  // print('$eStart - $eEnd vfLength: $vlf, $vfLength');
   _wb.setUint32(vlfOffset, vfLength);
-  print('evrDef: $eStart $eEnd, $e');
+  // print('evrDef: $eStart $eEnd, $e');
   _outputOffsets.insertAt(index, eStart, eEnd, e);
 }
 
 void __writeEvrSQUndefinedLength(SQ e) {
-	final index = _outputOffsets.reserveSlot;
-	final eStart = _wb.wIndex;
+  final index = _outputOffsets.reserveSlot;
+  final eStart = _wb.wIndex;
   log.debug('${_wb.wbb} writeEvrSQUndefinedLength $e :${_wb.remaining}', 1);
   _pInfo.nUndefinedLengthSequences++;
   _writeEvrLongHeader(e, kUndefinedLength);
   _writeItems(e.items, _writeEvrElement);
-  _wb
-	  ..uint32(kSequenceDelimitationItem32BitLE)
-	  ..uint32(0);
-	final eEnd = _wb.wIndex;
-	print('evrDef: $eStart $eEnd, $e');
-	_outputOffsets.insertAt(index, eStart, eEnd, e);
+  _wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
+  final eEnd = _wb.wIndex;
+  // print('evrDef: $eStart $eEnd, $e');
+  _outputOffsets.insertAt(index, eStart, eEnd, e);
 }
 
 void __reallyEvrWriteDefinedLength(Element e) {
   log.debug('${_wb.wmm} writeEvrUndefined $e :${_wb.remaining}');
-  if (e.code == kPixelData) __updatePInfoPixelData(e);
+  if (e.code == kPixelData) {}
   _writeEvrLongHeader(e, e.vfLength);
   __writeValueField(e);
   _pInfo.nLongElements++;
@@ -130,15 +127,14 @@ void __reallyEvrWriteDefinedLength(Element e) {
 void __reallyEvrWriteUndefinedLength(Element e) {
   log.debug('${_wb.wmm} writeEvrUndefined $e :${_wb.remaining}');
   if (e.code == kPixelData) {
-    log.debug('Pixel Data: ${e.info}');
-    log.debug('vfLength: ${e.vfLength}');
-    log.debug('fragments: ${e.fragments.info}');
     __updatePInfoPixelData(e);
+    _writeEncapsulatedPixelData(e);
+  } else {
+    _writeEvrLongHeader(e, kUndefinedLength);
+    __writeValueField(e);
+    _wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
   }
-  _writeEvrLongHeader(e, kUndefinedLength);
-  __writeValueField(e);
-  _wb..uint32(kSequenceDelimitationItem32BitLE);
-  if (e.code == kPixelData) _pInfo.pixelDataEnd = _wb.wIndex;
+  if (e.code == kPixelData) ;
   _pInfo.nUndefinedLengthElements++;
 }
 
@@ -149,4 +145,21 @@ int _writeEvrLongHeader(Element e, int vfLengthField) {
     ..uint16(0)
     ..uint32(vfLengthField);
   return _wb.wIndex - 4;
+}
+
+void _writeEncapsulatedPixelData(PixelData e) {
+  __updatePInfoPixelData(e);
+  _writeEvrLongHeader(e, e.vfLengthField);
+  if (e.vfLengthField == kUndefinedLength) {
+    for (final bytes in e.fragments.fragments) {
+      _wb
+        ..uint32(kItem32BitLE)
+        ..uint32(bytes.lengthInBytes)
+        ..bytes(bytes);
+    }
+    _wb
+	    ..uint32(kSequenceDelimitationItem32BitLE)
+	    ..uint32(0);
+    _pInfo.pixelDataEnd = _wb.wIndex;
+  }
 }

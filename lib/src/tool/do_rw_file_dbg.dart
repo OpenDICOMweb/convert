@@ -31,7 +31,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
   // TODO: move into dataset.warnings.
   final e = rds0[kPixelData];
   if (e == null) {
-    log.warn('$pad ** Pixel Data Element not present');
+    log.info1('$pad ** Pixel Data Element not present');
   } else {
     log.debug1('$pad  e: ${e.info}');
   }

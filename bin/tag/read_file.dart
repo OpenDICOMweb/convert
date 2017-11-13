@@ -8,7 +8,7 @@ import 'package:logger/logger.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/byte_convert.dart';
 
-final Logger log = new Logger('io/bin/read_files.dart', Level.info);
+final Logger log = new Logger('io/bin/read_files_old.dart', Level.info);
 
 void main() {
   final path = path1; //test6684_02;

@@ -8,7 +8,7 @@ part of odw.sdk.convert.binary.reader;
 /// Reads File Meta Information ([Fmi]) and returns a Map<int, Element>
 /// if any [Fmi] [Element]s were present; otherwise, returns null.
 bool _readFmi(RootDataset rds, String path, DecodingParameters dParams) {
-  try {
+//  try {
     log.debug('${_rb.rbb} readFmi($_cds)');
     assert(_cds == rds);
     //   assert(_pInfo.hadPrefix == null, 'hadPrefix was non-null');
@@ -35,7 +35,7 @@ bool _readFmi(RootDataset rds, String path, DecodingParameters dParams) {
 
     final ts = rds.transferSyntax;
     _pInfo.ts = ts;
-    log.info('TS: $ts');
+    log.debug('TS: $ts');
     if (!system.isSupportedTransferSyntax(ts.asString)) {
       _pInfo.hadParsingErrors = true;
       invalidTransferSyntax(ts);
@@ -44,7 +44,7 @@ bool _readFmi(RootDataset rds, String path, DecodingParameters dParams) {
 
     if (dParams.targetTS != null && ts != dParams.targetTS)
       invalidTransferSyntax(ts, dParams.targetTS);
-  } on ShortFileError catch (e) {
+/*  } on ShortFileError catch (e) {
     _pInfo.exceptions.add(e);
     _pInfo.hadParsingErrors = true;
     _rb.error(failedFMIErrorMsg(path, e));
@@ -60,7 +60,7 @@ bool _readFmi(RootDataset rds, String path, DecodingParameters dParams) {
   } on RangeError catch (e) {
     _pInfo.exceptions.add(e);
     _rb.error('$e\n $_pInfo.stats');
-    if (_beyondPixelData) log.info0('${_rb.rrr} Beyond Pixel Data');
+    if (_beyondPixelData) log.debug('${_rb.rrr} Beyond Pixel Data');
     // Keep: *** Keep, but only use for debugging.
     if (throwOnError) rethrow;
   } catch (e) {
@@ -69,7 +69,7 @@ bool _readFmi(RootDataset rds, String path, DecodingParameters dParams) {
     _pInfo.hadParsingErrors = true;
     _rb.error(failedFMIErrorMsg(path, e));
     rethrow;
-  }
+  }*/
   log.debug('${_rb.ree} readFMI ${rds.total} Elements read');
   return true;
 }

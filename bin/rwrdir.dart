@@ -21,17 +21,22 @@ import 'package:system/server.dart';
 //TODO: better doc
 
 const String defaultDirectory = 'C:/odw/test_data/sfd/MG';
+const String mWeb1000 = 'C:/odw/test_data/mweb/1000+';
+
+final defaultArgs = ['$mWeb1000'];
 
 /// A program for doing read/write/read testing on DICOM files.
 void main(List<String> args) {
   Server.initialize(name: 'read_write_file', level: Level.info);
 
+  final xArgs =  (args.isEmpty) ? defaultArgs : args;
+
   /// The processed arguments for this program.
-  final jobArgs = new JobArgs(args);
+  final jobArgs = new JobArgs(xArgs);
 
   if (jobArgs.showHelp) showHelp(jobArgs);
 
-  JobRunner.job(jobArgs, doRWRByteFile,
+  JobRunner.job(jobArgs, doRWFile,
       interval: jobArgs.shortMsgEvery, level: jobArgs.baseLevel);
 }
 

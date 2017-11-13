@@ -17,16 +17,23 @@ RootDataset _read(RootDataset rds, String path, DecodingParameters dParams) {
   _cds = rds;
 
   log.reset;
-  final hadFmi = _readFmi(rds, path, dParams);
-  if (!hadFmi && !dParams.allowMissingFMI) return rds;
+
 
   try {
+	  final hadFmi = _readFmi(rds, path, dParams);
+	  if (!hadFmi && !dParams.allowMissingFMI) return null;
+
     if (_isEvr) {
       _readEvrRootDataset();
     } else {
       _readIvrRootDataset();
     }
-  }  on EndOfDataError catch (e) {
+  } on InvalidTagCodeError {
+	  return rds;
+  } on InvalidTransferSyntax catch(e) {
+  	log.error(e);
+  	return null;
+  } on EndOfDataError catch (e) {
     addErrorInfo(e);
     log.error(e);
     if (throwOnError) rethrow;
@@ -34,7 +41,7 @@ RootDataset _read(RootDataset rds, String path, DecodingParameters dParams) {
   } on RangeError catch (e) {
     addErrorInfo(e);
     _rb.error('$e\n $_pInfo.stats');
-    if (_beyondPixelData) log.info0('${_rb.rrr} Beyond Pixel Data');
+    if (_beyondPixelData) log.debug('${_rb.rrr} Beyond Pixel Data');
     // Keep: *** Keep, but only use for debugging.
     if (throwOnError) rethrow;
     return null;
@@ -51,20 +58,7 @@ RootDataset _read(RootDataset rds, String path, DecodingParameters dParams) {
 
   final rdsTotal = rds.total + rds.dupTotal;
   final pInfoTotal = _pInfo.nElements + _pInfo.nDuplicateElements;
-  log.info('''\n
-pInfo.lastReadIndex: ${_pInfo.lastIndex}
-  rds.lengthInBytes: ${rds.dsBytes.bd.lengthInBytes}
-    pInfo.nElements: ${_pInfo.nElements}
-          rds.total: ${rds.total}
-  pInfo.nDuplicates: ${_pInfo.nDuplicateElements}
-        rds.dupotal: ${rds.dupTotal}
 
-   pInfo.total: $pInfoTotal
-    rds.total: $rdsTotal
-
-''', -1);
-
-  //TODO: fix this to include duplicates
   if (_pInfo.nElements != (rds.total + rds.dupTotal)) {
     log.error('pInfo.nElements(${_pInfo.nElements}) '
 		              '!= rds.total(${rds.total}) + rds.dupTotal(${rds.dupTotal}');

@@ -40,7 +40,7 @@ bool byteReadWriteFileChecked(String path,
     ByteDatasetWriter writer;
     if (fast) {
       // Just write bytes not file
-      writer = new ByteDatasetWriter(rds0);
+      writer = new ByteDatasetWriter(rds0, inputOffsets: reader0.inputOffsets);
     } else {
       writer = new ByteDatasetWriter.toPath(rds0, outPath);
     }

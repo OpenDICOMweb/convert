@@ -6,6 +6,7 @@
 
 export 'package:dcm_convert/src/tool/do_read_byte_file.dart';
 export 'package:dcm_convert/src/tool/do_rw_file.dart';
+export 'package:dcm_convert/src/tool/do_rw_file_dbg.dart';
 export 'package:dcm_convert/src/tool/do_rwr_byte_file.dart';
 export 'package:dcm_convert/src/tool/job_args.dart';
 export 'package:dcm_convert/src/tool/job_reporter.dart';

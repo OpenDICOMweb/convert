@@ -109,6 +109,10 @@ void _doEndOfElementStats(int start, int end, Element e) {
 }
 
 void __updatePInfoPixelData(Element e) {
+	log.debug('Pixel Data: ${e.info}');
+	log.debug('vfLength: ${e.vfLength}');
+	log.debug('vfLengthField: ${e.vfLengthField}');
+	log.debug('fragments: ${e.fragments.info}');
   _pInfo.pixelDataVR = e.vr;
   _pInfo.pixelDataStart = _wb.wIndex;
   _pInfo.pixelDataLength = e.vfLength;

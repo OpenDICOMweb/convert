@@ -4,73 +4,155 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the   AUTHORS file for other contributors.
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dcm_convert/data/test_files.dart';
+
 import 'package:dcm_convert/byte_convert.dart';
+import 'package:path/path.dart' as path;
 import 'package:system/server.dart';
+import 'package:dcm_convert/src/file_utils.dart';
 
+const String xx3 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
+const String xx2 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.5.5.dcm';
+const String xx1 = 'C:/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm';
+const String xx0 = 'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm';
+const String xxx = 'C:/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
+const String dcmDir = 'C:/odw/test_data/sfd/MG/DICOMDIR';
+const String evrLarge = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
+const String evrULength = 'c:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
+const String evrX = 'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840'
+    '.10008.5.1.4.1.1.88.67.dcm ';
+// Defined and Undefined datasets
+const String evrXLarge = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368';
+const String evrOWPixels = 'C:/odw/test_data/IM-0001-0001.dcm';
 
-//Urgent: use badFileList2 - fix indentation
+const String ivrClean = 'C:/odw/test_data/sfd/MR/PID_BREASTMR/1_DICOM_Original/'
+    'EFC524F2.dcm';
+const String ivrCleanMR = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy/'
+    '1.2.840.113619.2.5.1762583153.215519.978957063.99.dcm';
 
-void main() {
-	Server.initialize(name: 'read_files.dart', level: Level.debug3);
-  print('Read Files');
-  system.log.level = Level.info;
-  final paths = testPaths0;
+const String evrDataAfterPixels =
+    'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
 
-  final nFiles = testPaths0.length;
-  final width = '$nFiles'.length;
+const String ivrWithGroupLengths = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy'
+    '/1.2.840.113619.2.5.1762583153.215519.978957063.101.dcm';
 
-  for (var i = 0; i < paths.length; i++) {
-    log.reset;
+const String bar = 'C:/odw/test_data/mweb/10 Patient IDs/04443352';
 
-    final n = getPaddedInt(i, width);
-    final p = cleanPath(paths[i]);
-    final f = new File(paths[i]);
-    final nBytes = f.lengthSync();
-    if (nBytes == 0) {
-      log.info0('Skipping empty file: $f');
+const String bas = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368.fmt';
+//Urgent: bug with path20
+Future main() async {
+  Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
+  final formatter = new Formatter();
+ // for (var i = 0; i < 1; i++) {
+  for (var i = 0; i < testPaths0.length; i++) {
+    final fPath = testPaths0[i];
+
+    print('$i: path: $fPath');
+    print(' out: ${getTempFile(fPath, 'dcmout')}');
+    final url = new Uri.file(fPath);
+    stdout.writeln('Reading(byte): $url');
+
+    final bytes = await readDcmPath(fPath);
+    if (bytes == null) {
+      log.error('"$fPath" is not a valid DICOM file');
+      return;
     }
-    log.config('$n: Reading: $p - $nBytes bytes');
+    //   final bytes = await readFileAsync(file);
+    final rds = ByteDatasetReader.readBytes(bytes, path: fPath, showStats: true);
+    if (rds == null) {
+      log.warn('Invalid DICOM file: $fPath');
+    } else {
+      if (rds.parseInfo != null) {
+        final infoPath = '${path.withoutExtension(fPath)}.info';
+        log.info('infoPath: $infoPath');
+        final sb = new StringBuffer('${rds.parseInfo.summary(rds)}\n')
+          ..write('Bytes Dataset: ${rds.summary}');
+        new File(infoPath)..writeAsStringSync(sb.toString());
+        log.debug(sb.toString());
 
-    try {
-      readCheck(f, i, fmiOnly: false);
-    } on ShortFileError catch (e) {
-      log..warn('ShortFile: $e')..warn('Short File(${f.lengthSync()} bytes): $f');
-    } catch (e) {
-      log.error(e);
-      rethrow;
+     //   final formatter = new Formatter.withIndenter(-1, Indenter.basic);
+        final formatter = new Formatter(maxDepth: -1);
+        final fmtPath = '${path.withoutExtension(fPath)}.fmt';
+        log.info('fmtPath: $fmtPath');
+        final fmtOut = rds.format(formatter);
+        new File(fmtPath)..writeAsStringSync(sb.toString());
+        log.debug(fmtOut);
+
+//        print(rds.format(z));
+      } else {
+        print('${rds.summary}');
+      }
     }
   }
 }
 
-bool readCheck(File file, int fileNo, {int reps = 1, bool fmiOnly = false}) {
-	final rds = ByteDatasetReader.readFile(file);
-  if (rds == null) {
-    log.warn('---  File not readable');
-  } else {
-    log..info0('${rds.parseInfo.summary(rds)}')
-    ..debug('Bytes Dataset: ${rds.info}');
-  }
-  log.info0('---\n');
-  return (rds == null) ? false : true;
+Future<Uint8List> readFileAsync(File file) async => await file.readAsBytes();
+
+String getTempFile(String infile, String extension) {
+  final name = path.basenameWithoutExtension(infile);
+  final dir = Directory.systemTemp.path;
+  return '$dir/$name.$extension';
 }
 
-//TODO: merge with read_write_files
-bool readWriteCheck(File file, {int reps = 1, bool fmiOnly = false}) {
-  log.debug('Reading: $file');
-  final Uint8List bytes0 = file.readAsBytesSync();
-  log.config('Reading: $file with ${bytes0.lengthInBytes} bytes', 1);
+const String x00 = 'c:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/'
+    '1.2.392.200036.9123.100.12.11.3.dcm';
+const String x01 = 'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/'
+    '1.2.840.10008.5.1.4.1.1.66.dcm';
+const String x02 = 'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/'
+    'Sop (user 349383158)/1.2.392.200036.9123.100.12.11.3.dcm';
+const String x03 =
+    'c:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2'
+    '.840.10008.5.1.4.1.1.66.dcm';
+const String x04 = 'c:/odw/test_data/mweb/ASPERA/DICOM files '
+    'only/22c82bd4-6926-46e1-b055-c6b788388014.dcm';
+const String x05 = 'c:/odw/test_data/mweb/ASPERA/DICOM files '
+    'only/4cf05f57-4893-4453-b540-4070ac1a9ffb.dcm';
+const String x06 = 'c:/odw/test_data/mweb/ASPERA/DICOM files '
+    'only/523a693d-94fa-4143-babb-be8a847a38cd.dcm';
+const String x07 = 'c:/odw/test_data/mweb/ASPERA/DICOM files '
+    'only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm';
+const String x08 = 'c:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
+const String x09 = 'c:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.826.0.1'
+    '.3680043.2.93.1.0.1.dcm';
+const String x10 = 'c:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.826.0.1'
+    '.3680043.2.93.1.0.2.dcm';
+const String x11 =
+    'c:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1'
+    '.2.5.5.dcm';
+const String x12 =
+    'c:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1'
+    '.2.6.1.dcm';
+const String x13 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840'
+    '.10008.5.1.4.1.1.20.dcm';
+const String x14 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840'
+    '.10008.5.1.4.1.1.7.dcm';
+const String x15 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840'
+    '.10008.5.1.4.1.1.88.22.dcm';
+const String x16 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840'
+    '.10008.5.1.4.1.1.88.67.dcm';
+const String x17 = 'C:/odw/test_data/mweb/Sop-selected/1.2.840.10008.5.1.4.1.1.66.dcm';
 
-  if (bytes0 == null) return false;
-  final rds0 = ByteDatasetReader.readBytes(bytes0, path: file.path, fast: true);
-  log..debug('rds0 root: ${rds0.root}')
-  ..debug('ParseInfo: ${rds0.parseInfo}');
-  final e = rds0[0x00020010];
-  log.debug('e: $e');
-  if (rds0 == null) return false;
-  log.info0('  Original: $rds0', -1);
-  return true;
-}
+const List<String> badFiles = const <String>[
+  x00,
+  x01,
+  x02,
+  x03,
+  // x04, Big Endian
+  // x05, Big Endian
+  // x06, Big E
+  // x07, Big E
+  x08,
+  x09,
+  x10,
+//  x11, Bad data @1878
+  x12,
+//  x13, //132 chars with DICM\
+//  x14, Big E
+//  x15, 132 chars
+//  x16, Big E
+  x17
+];

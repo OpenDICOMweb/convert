@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:system/core.dart';
 
-import 'package:dcm_convert/src/binary/byte/read_bytes.dart';
+import 'package:dcm_convert/byte_convert.dart';
 import 'package:dcm_convert/src/errors.dart';
 import 'package:dcm_convert/src/file_utils.dart';
 import 'package:dcm_convert/src/io_utils.dart';
@@ -31,6 +31,8 @@ Uint8List readFileSync(File f) => f.readAsBytesSync();
 //Urgent Test async
 Future<bool> doReadByteFile(File f,
     {bool throwOnError = false, bool fast = true, bool isAsync = true}) async {
+	system.throwOnError = throwOnError;
+	system.level = Level.warn0;
   final pad = ''.padRight(5);
   final cPath = cleanPath(f.path);
 
@@ -38,7 +40,7 @@ Future<bool> doReadByteFile(File f,
 	  final  bytes = await readDcmPath(cPath);
 	  if (bytes == null) return false;
 	  final bd = bytes.buffer.asByteData();
-	  final reader0 = new ByteDatasetReader(bd);
+	  final reader0 = new ByteDatasetReader(bd, path: cPath);
 	  final rds0 = reader0.read();
     if (rds0 == null) {
       log.info0('Unreadable File: $cPath');
@@ -53,18 +55,19 @@ Future<bool> doReadByteFile(File f,
 // TODO: move into dataset.warnings.
 	  final e = rds0[kPixelData];
     if (e == null) {
-      log.warn('$pad ** Pixel Data Element not present');
+      log.info1('$pad ** Pixel Data Element not present');
     } else {
       log.debug1('$pad  e: ${e.info}');
     }
 
     if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
 
-    if (rds0 != null) log.info0('$pad Success!');
+    if (rds0 != null) log.info1('$pad Success!');
     return true;
   } on ShortFileError {
     log.warn('$pad ** Short File(${f.lengthSync()} bytes): $cPath');
-  } catch (e) {
+    if (throwOnError) rethrow;
+  } on InvalidTransferSyntax catch (e) {
     log.error(e);
     if (throwOnError) rethrow;
     return false;

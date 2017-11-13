@@ -44,10 +44,15 @@ part 'package:dcm_convert/src/binary/base/reader/read_common.dart';
 //TODO: redoc to reflect current state of code
 
 typedef Element ElementMaker(EBytes eb, int vrIndex);
+
 typedef PixelData PixelDataMaker(EBytes eb, int vrIndex,
     [TransferSyntax ts, VFFragments fragments]);
+
 typedef SQ SequenceMaker(EBytes eb, Dataset _cds, List<Item> items);
+
 typedef Item ItemMaker(Dataset _cds);
+
+typedef Element EReader();
 
 ElementMaker elementMaker;
 PixelDataMaker pixelDataMaker;
@@ -135,15 +140,16 @@ abstract class DcmReader extends DcmReaderInterface {
     _rds = rds;
     _elementCount = -1;
     _dParams = dParams;
-    if (elementOffsetsEnabled && inputOffsets != null) {
-    	_elementOffsetsEnabled = elementOffsetsEnabled;
-      _inputOffsets = inputOffsets;
-    }
     _pInfo = pInfo
       ..path = path
       ..fileLengthInBytes = bd.lengthInBytes
       ..shortFileThreshold = shortFileThreshold
       ..wasShortFile = (bd.lengthInBytes <= shortFileThreshold);
+    rds.parseInfo = _pInfo;
+    if (elementOffsetsEnabled && inputOffsets != null) {
+	    _elementOffsetsEnabled = elementOffsetsEnabled;
+	    _inputOffsets = inputOffsets;
+    }
   }
 
   bool get isEvr => rds.isEvr;
@@ -161,18 +167,11 @@ abstract class DcmReader extends DcmReaderInterface {
 
   RootDataset read() {
     if (_pInfo.wasShortFile) return _shortFileError();
-    cds = rds;
-    _read(rds, path, dParams);
-    rds.parseInfo = _pInfo;
-    if (showStats) print(pInfo.summary);
-    return rds;
+    return _read(rds, path, dParams);
   }
 
   RootDataset readFmi() {
-    cds = rds;
     _readFmi(rds, path, dParams);
-    rds.parseInfo = _pInfo;
-    if (showStats) print(pInfo);
     return (rds.hasFmi) ? rds : null;
   }
 
@@ -181,46 +180,6 @@ abstract class DcmReader extends DcmReaderInterface {
 
   @override
   String toString() => '$runtimeType: rds: $rds, cds: $cds';
-
-/* TODO: move to ParseInfo
-  String get stats => '''${_rb.rmm}
-  Statistics
-                  isEvr: $isEvr
-        Bytes remaining: ${_rb.remaining}
-
-              nDatasets: ${pInfo.nDatasets}
-       nDefinedDatasets: ${pInfo.nDefinedDatasets}
-      nUnefinedDatasets: ${pInfo.nUndefinedDatasets}
-             nItemsRead: ${pInfo.nItems}
-      nDefinedItemsRead: ${pInfo.nDefinedDatasets}
-    nUndefinedItemsRead: ${pInfo.nUndefinedDatasets}
-
-            rootDSTotal: ${rds.total}
-          nElementsRead: ${pInfo.nElements}
-
-             nSequences: ${pInfo.nSequences}
-      nDefinedSequences: ${pInfo.nDefinedSequences}
-    nUndefinedSequences: ${pInfo.nUndefinedSequences}
-      nPrivateSequences: ${pInfo.nPrivateSequences}
-       lastSequenceRead: ${pInfo.lastSequenceRead}
-       endOfLastSequence: ${pInfo.endOfLastSequence}
-
-        lastElementRead: ${pInfo.lastElementRead}
-       endOfLastElement: ${dcm(pInfo.endOfLastElement)}
-
-        bdLengthInBytes: ${rb.lengthInBytes}
-        dsLengthInBytes: ${rds.lengthInBytes}
-              remaining: ${rb.remaining}
-
-            rootDSTotal: ${rds.total}
-         rootDSTopLevel: ${rds.length}
-        rootDSSequences: ${rds.elements.sequences.length}
-        rootDSDupLength: ${rds.elements.duplicates.length}
-        currentDSLength: ${rds.elements.length}
-     currentDSDupLength: ${cds.elements.duplicates.length}
-     currentDSSequences: ${cds.elements.sequences}
-                totalDS: ${rds.total + rds.dupTotal}''';
-*/
 
   Null _shortFileError() {
     final s = 'Short file error: length(${rb.lengthInBytes}) $path';
