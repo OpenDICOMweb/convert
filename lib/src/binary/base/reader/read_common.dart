@@ -35,11 +35,11 @@ final String kItemAsString = hex32(kItem32BitLE);
 
 bool _inItem;
 
-void __readRootDataset() {
+void __readRootDataset(EReader eReader) {
 	log
 		..reset
 	  ..debug('${_rb.rbb} readRootDataset');
-	_readDatasetDefinedLength(_rds, _rb.rIndex, _rb.remaining, _readEvrElement);
+	_readDatasetDefinedLength(_rds, _rb.rIndex, _rb.remaining, eReader);
 	log.debug('${_rb.ree} readRootDataset $_elementCount Elements read with '
 			          '${_rb.remaining} bytes remaining\nDatasets: ${_pInfo.nDatasets}');
 }
@@ -193,7 +193,7 @@ Element __tryReadUNSequence(
     _readAndCheckDelimiterLength();
     _pInfo.nSequences++;
     _pInfo.nNonEmptyUNSequences++;
-    return __readSQ(code, eStart, vlf, EvrLong.make, _readEvrElement);
+    return __readSQ(code, eStart, vlf, EvrLong.make, eReader);
   }
   log.debug3('${_rb.rmm} *** UN Sequence not found');
   return null;

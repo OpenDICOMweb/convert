@@ -15,6 +15,7 @@ import 'package:path/path.dart' as path;
 import 'package:system/server.dart';
 import 'package:dcm_convert/src/file_utils.dart';
 
+const String xx6 = 'C:/odw/test_data/mweb/ASPERA/Mix of DICOM files/1.2.840.113619.2.5.1762583153.215519.978957063.95.dcm';
 const String xx5 = 'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/RTOG Study/CT_2'
 		'.25.538706832433601549630505042241494458338.10.dcm';
 const String xx4 =

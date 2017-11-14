@@ -5,10 +5,8 @@
 // See the AUTHORS file for other contributors.
 part of odw.sdk.convert.binary.reader;
 
-void _readEvrRootDataset() {
-  _isEvr = true;
-  return __readRootDataset();
-}
+void _readEvrRootDataset() => __readRootDataset(_readEvrElement);
+
 
 /// For EVR Datasets, all Elements are read by this method.
 Element _readEvrElement() {

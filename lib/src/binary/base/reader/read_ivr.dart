@@ -5,10 +5,7 @@
 // See the AUTHORS file for other contributors.
 part of odw.sdk.convert.binary.reader;
 
-void _readIvrRootDataset() {
-  _isEvr = false;
-	return __readRootDataset();
-}
+void _readIvrRootDataset() => __readRootDataset(_readIvrElement);
 
 /// All [Element]s are read by this method.
 Element _readIvrElement() {
