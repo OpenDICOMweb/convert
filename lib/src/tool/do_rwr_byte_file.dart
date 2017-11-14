@@ -124,15 +124,15 @@ $pad    TS: ${rds0.transferSyntax}''');
     if (noisy) {
       final aList = rds0.elements.elements;
       final bList = rds1.elements.elements;
-      //final length = (aList.length > bList.length) ? aList.length : bList.length;
       if (aList.length != bList.length)
         log.warn('** rds0.length(${bList.length}) != rds1.length(${aList.length})');
       final length = aList.length;
       for (var i = 0; i < length; i++) {
         final x = aList.elementAt(i) as ByteElement;
         final y = bList.elementAt(i) as ByteElement;
-        log.debug('$i x: $x');
-        log.debug('$i y: $y');
+        log
+	        ..debug('$i x: $x')
+          ..debug('$i y: $y');
         if (x.eStart != y.eStart) print('** Starts are different');
         if (x.code != y.code) print('** Codes are different');
         if (x.vrCode != y.vrCode) print('** VRCodes are different');

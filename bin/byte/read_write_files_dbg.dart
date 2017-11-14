@@ -28,8 +28,8 @@ void main() {
 
   final paths = testPaths0;
 
-  for (var i = 0; i < testPaths0.length; i++) {
-  	final f = new File(testPaths0[i]);
+  for (var i = 0; i < paths.length; i++) {
+  	final f = new File(paths[i]);
   	stderr.writeln('$i Start RW $f');
     doRWRByteFileSync(f);
 	  log.info('$i End RW $f');

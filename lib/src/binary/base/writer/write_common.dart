@@ -55,9 +55,7 @@ void _writeItemUndefinedLength(Item item, void writer(Element e), int number) {
 }
 
 void _writeItemDefinedLength(Item item, void writer(Element e), int number) {
-  _wb
-	  ..uint32(kItem32BitLE)
-	  ..uint32(item.vfLength);
+  _wb..uint32(kItem32BitLE)..uint32(item.vfLength);
   for (var e in item.elements) {
     log.debug('${_wb.wbb}  $e');
     writer(e);
@@ -72,15 +70,6 @@ void _writeFile(Uint8List bytes, File file) {
   file.writeAsBytesSync(bytes.buffer.asUint8List());
   log.debug('Wrote ${bytes.lengthInBytes} bytes to "${file.path}"');
 }
-
-/*
-//TODO: make this work for [async] == true and make that the default.
-/// Writes [bytes] to [path].
-void _writePath(Uint8List bytes, String path) {
-  if (path == null || path.isEmpty) throw new ArgumentError();
-  _writeFile(bytes, new File(path));
-}
-*/
 
 void _doEndOfElementStats(int start, int end, Element e) {
   _pInfo.nElements++;
@@ -109,10 +98,11 @@ void _doEndOfElementStats(int start, int end, Element e) {
 }
 
 void __updatePInfoPixelData(Element e) {
-	log.debug('Pixel Data: ${e.info}');
-	log.debug('vfLength: ${e.vfLength}');
-	log.debug('vfLengthField: ${e.vfLengthField}');
-	log.debug('fragments: ${e.fragments.info}');
+  log
+    ..debug('Pixel Data: ${e.info}')
+    ..debug('vfLength: ${e.vfLength}')
+    ..debug('vfLengthField: ${e.vfLengthField}')
+    ..debug('fragments: ${e.fragments.info}');
   _pInfo.pixelDataVR = e.vr;
   _pInfo.pixelDataStart = _wb.wIndex;
   _pInfo.pixelDataLength = e.vfLength;

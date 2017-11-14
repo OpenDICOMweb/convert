@@ -46,7 +46,6 @@ const String bas = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368.fmt'
 //Urgent: bug with path20
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
-  final formatter = new Formatter();
  // for (var i = 0; i < 1; i++) {
   for (var i = 0; i < testPaths0.length; i++) {
     final fPath = testPaths0[i];

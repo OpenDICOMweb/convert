@@ -12,16 +12,16 @@ part of odw.sdk.convert.binary.reader;
 /// an Error will be thrown; otherwise, returns null.
 RootDataset _read(RootDataset rds, String path, DecodingParameters dParams) {
   final eStart = _rb.rIndex;
-  log.debug('Reading RootDS: start: $eStart length: ${_rb.lengthInBytes}');
-  log.debug('  $path');
+  log
+    ..debug('Reading RootDS: start: $eStart length: ${_rb.lengthInBytes}')
+    ..debug('  $path');
   _cds = rds;
 
   log.reset;
 
-
   try {
-	  final hadFmi = _readFmi(rds, path, dParams);
-	  if (!hadFmi && !dParams.allowMissingFMI) return null;
+    final hadFmi = _readFmi(rds, path, dParams);
+    if (!hadFmi && !dParams.allowMissingFMI) return null;
 
     if (_isEvr) {
       _readEvrRootDataset();
@@ -29,10 +29,10 @@ RootDataset _read(RootDataset rds, String path, DecodingParameters dParams) {
       _readIvrRootDataset();
     }
   } on InvalidTagCodeError {
-	  return rds;
-  } on InvalidTransferSyntax catch(e) {
-  	log.error(e);
-  	return null;
+    return rds;
+  } on InvalidTransferSyntax catch (e) {
+    log.error(e);
+    return null;
   } on EndOfDataError catch (e) {
     addErrorInfo(e);
     log.error(e);
@@ -56,12 +56,12 @@ RootDataset _read(RootDataset rds, String path, DecodingParameters dParams) {
     _pInfo.lastIndex = _rb.rIndex;
   }
 
-  final rdsTotal = rds.total + rds.dupTotal;
-  final pInfoTotal = _pInfo.nElements + _pInfo.nDuplicateElements;
+//  final rdsTotal = rds.total + rds.dupTotal;
+//  final pInfoTotal = _pInfo.nElements + _pInfo.nDuplicateElements;
 
   if (_pInfo.nElements != (rds.total + rds.dupTotal)) {
     log.error('pInfo.nElements(${_pInfo.nElements}) '
-		              '!= rds.total(${rds.total}) + rds.dupTotal(${rds.dupTotal}');
+        '!= rds.total(${rds.total}) + rds.dupTotal(${rds.dupTotal}');
     readerInconsistencyError(rds);
   }
   return rds;

@@ -7,11 +7,7 @@ part of odw.sdk.convert.binary.reader;
 
 void _readIvrRootDataset() {
   _isEvr = false;
-
-  log.debug('${_rb.rbb} readIvrRootDataset: ${_rb.remaining}');
-  _readDatasetDefinedLength(_rds, _rb.rIndex, _rb.remaining, _readIvrElement);
-  log.debug('${_rb.ree} readIvrRootDataset $_elementCount Elements read with '
-      '${_rb.remaining} bytes remaining\nDatasets: ${_pInfo.nDatasets}');
+	return __readRootDataset();
 }
 
 /// All [Element]s are read by this method.
@@ -26,14 +22,12 @@ Element _readIvrElement() {
 
   Element e;
   if (_isIvrDefinedLengthVR(vrIndex)) {
-    _pInfo.nLongElements++;
     e = _readIvrDefinedLength(code, eStart, vrIndex);
     log.up;
   } else if (vrIndex == kVRIndexMin) {
     e = _readIvrSQ(code, eStart);
     log.up;
   } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
-    _pInfo.nMaybeUndefinedElements++;
     e = _readIvrMaybeUndefinedLength(code, eStart, vrIndex);
     log.up;
   } else {
@@ -60,10 +54,6 @@ int __lookupIvrVRIndex(int code, int eStart, Tag tag) {
 Element _readIvrDefinedLength(int code, int eStart, int vrIndex) {
   final vlf = _rb.uint32;
   assert(vlf != kUndefinedLength);
-  log.debug(
-      '${_rb.rmm} readIvrDefinedLength ${dcm(code)} vr($vrIndex) '
-      '$eStart + 12 + $vlf = ${eStart + 12 + vlf}',
-      1);
   return __readLongDefinedLength(code, eStart, vrIndex, vlf, Ivr.make);
 }
 
@@ -71,56 +61,12 @@ Element _readIvrDefinedLength(int code, int eStart, int vrIndex) {
 /// kUndefinedValue.
 Element _readIvrMaybeUndefinedLength(int code, int eStart, int vrIndex) {
   final vlf = _rb.uint32;
-  log.debug(
-      '${_rb.rbb} _readIvrMaybeUndefinedLength ${dcm(code)} vr($vrIndex) '
-      '$eStart + 12 + ??? = ???',
-      1);
   return __readMaybeUndefinedLength(
       code, eStart, vrIndex, vlf, Ivr.make, _readIvrElement);
-/*  // If VR is UN then this might be a Sequence
-  if (vrIndex == kUNIndex) {
-	  final e = __tryReadUNSequence(code, eStart, vlf, EvrLong.make, _readEvrElement);
-	  if (e != null) return e;
-  }
-  return (vlf == kUndefinedLength)
-      ? __readUndefinedLength(code, eStart, vrIndex, vlf, Ivr.make)
-      : __readLongDefinedLength(code, eStart, vrIndex, vlf, Ivr.make);*/
 }
 
 Element _readIvrSQ(int code, int eStart) {
   final vlf = _rb.uint32;
-  final eNumber = _elementCount;
-  log.debug('${_rb.rbb} #$eNumber readEvrSQ ${dcm(code)} @$eStart vfl:$vlf', 1);
-  final e = __readSQ(code, eStart, vlf, Ivr.make, _readIvrElement);
-  log.debug('${_rb.ree} #$eNumber readEvrSQ ${dcm(code)} $e', -1);
-  return e;
+  return __readSQ(code, eStart, vlf, Ivr.make, _readIvrElement);
 }
 
-/*
-/// Read an IVR Element (not SQ) with a 32-bit [vlf], but that cannot
-/// have kUndefinedValue.
-Element __readIvrDefinedLength(int code, int eStart, int vrIndex, int vlf) {
-	assert(vlf != kUndefinedLength);
-	log.debug('${_rb.rmm} readIvrLongDefined ${dcm(code)} vr($vrIndex) '
-			          '$eStart + 12 + $vlf = ${eStart + 12 + vlf}');
-	_pInfo.nDefinedLengthElements++;
-	_rb + vlf;
-	return (code == kPixelData)
-	       ? _makePixelData(code, eStart, vrIndex, _rb.rIndex, false, Ivr.make)
-	       : _makeElement(code, eStart, vrIndex, _rb.rIndex, Ivr.make);
-}
-
-/// Read an Element (not SQ)  that has an undefined length.
-Element __readIvrUndefinedLength(int code, int eStart, int vrIndex, int vlf) {
-	assert(vlf == kUndefinedLength);
-	log.debug('${_rb.rmm} readIvrUndefinedLength ${dcm(code)} vr($vrIndex) '
-			          '$eStart + 12 + ??? = ???');
-	_pInfo.nUndefinedLengthElements++;
-	if (code == kPixelData) {
-		return __readEncapsulatedPixelData(code, eStart, vrIndex, vlf, Ivr.make);
-	} else {
-		final endOfVF = _findEndOfULengthVF();
-		return _makeElement(code, eStart, vrIndex, endOfVF, Ivr.make);
-	}
-}
-*/

@@ -134,7 +134,6 @@ void __reallyEvrWriteUndefinedLength(Element e) {
     __writeValueField(e);
     _wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
   }
-  if (e.code == kPixelData) ;
   _pInfo.nUndefinedLengthElements++;
 }
 

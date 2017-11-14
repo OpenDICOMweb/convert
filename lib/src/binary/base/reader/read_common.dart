@@ -35,6 +35,14 @@ final String kItemAsString = hex32(kItem32BitLE);
 
 bool _inItem;
 
+void __readRootDataset() {
+	log
+		..reset
+	  ..debug('${_rb.rbb} readRootDataset');
+	_readDatasetDefinedLength(_rds, _rb.rIndex, _rb.remaining, _readEvrElement);
+	log.debug('${_rb.ree} readRootDataset $_elementCount Elements read with '
+			          '${_rb.remaining} bytes remaining\nDatasets: ${_pInfo.nDatasets}');
+}
 /// Returns an [Item].
 // rIndex is @ delimiterFvr
 Item _readItem(EReader eReader, int count) {
@@ -100,14 +108,17 @@ bool get _inSQ => _sqDepth <= 0;
 
 /// Read a Sequence.
 Element __readSQ(
-    int code, int eStart, int vfLengthField, EBMaker ebMaker, EReader eReader) {
+    int code, int eStart, int vlf, EBMaker ebMaker, EReader eReader) {
+	final eNumber = _elementCount;
+	log.debug('${_rb.rbb} #$eNumber readSQ ${dcm(code)} @$eStart vfl:$vlf', 1);
   _sqDepth++;
   _pInfo.nSequences++;
-  final e = (vfLengthField == kUndefinedLength)
-      ? __readUSQ(code, eStart, vfLengthField, ebMaker, eReader)
-      : __readDSQ(code, eStart, vfLengthField, ebMaker, eReader);
+  final e = (vlf == kUndefinedLength)
+      ? __readUSQ(code, eStart, vlf, ebMaker, eReader)
+      : __readDSQ(code, eStart, vlf, ebMaker, eReader);
   _sqDepth--;
   if (_sqDepth < 0) readError('_sqDepth($_sqDepth) < 0');
+	log.debug('${_rb.ree} #$eNumber readSQ ${dcm(code)} $e', -1);
   return e;
 }
 
@@ -239,11 +250,14 @@ void _readAndCheckDelimiterLength() {
 /// kUndefinedValue.
 Element __readMaybeUndefinedLength(int code, int eStart, int vrIndex, int vlf,
     EBytes ebMaker(ByteData bd), EReader eReader) {
+	log.debug('${_rb.rbb} readMaybeUndefined ${dcm(code)} vr($vrIndex) '
+			          '$eStart + 12 + ??? = ???', 1);
   // If VR is UN then this might be a Sequence
   if (vrIndex == kUNIndex) {
     final e = __tryReadUNSequence(code, eStart, vlf, ebMaker, eReader);
     if (e != null) return e;
   }
+	_pInfo.nMaybeUndefinedElements++;
   return (vlf == kUndefinedLength)
       ? __readUndefinedLength(code, eStart, vrIndex, vlf, ebMaker)
       : __readLongDefinedLength(code, eStart, vrIndex, vlf, ebMaker);
@@ -253,9 +267,10 @@ Element __readMaybeUndefinedLength(int code, int eStart, int vrIndex, int vlf,
 Element __readLongDefinedLength(
     int code, int eStart, int vrIndex, int vlf, EBytes ebMaker(ByteData bd)) {
   assert(vlf != kUndefinedLength);
-  log.debug('${_rb.rmm} readEvrLongDefined ${dcm(code)} vr($vrIndex) '
+
+  log.debug('${_rb.rmm} readLongDefinedLength ${dcm(code)} vr($vrIndex) '
       '$eStart + 12 + $vlf = ${eStart + 12 + vlf}');
-  _pInfo.nDefinedLengthElements++;
+  _pInfo.nLongDefinedLengthElements++;
   _rb + vlf;
   return (code == kPixelData)
       ? _makePixelData(code, eStart, vrIndex, _rb.rIndex, false, ebMaker)
@@ -548,6 +563,7 @@ void showReadIndex([int index, int before = 20, int after = 28]) {
   }
 }
 
+/*
 //Enhancement:
 void _printTrailingData(int start, int length) {
   for (var i = start; i < start + length; i += 4) {
@@ -560,3 +576,4 @@ void _printTrailingData(int start, int length) {
     // print('@$i: 16($x, $xx) | $y, $yy) 32($z, $zz)');
   }
 }
+*/

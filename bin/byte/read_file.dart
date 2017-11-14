@@ -8,7 +8,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/data/test_files.dart';
+//import 'package:dcm_convert/data/test_files.dart';
 
 import 'package:dcm_convert/byte_convert.dart';
 import 'package:path/path.dart' as path;
@@ -53,7 +53,6 @@ const String bas = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368.fmt'
 //Urgent: bug with path20
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
-  final formatter = new Formatter();
 
   final fPath = xx5;
 
