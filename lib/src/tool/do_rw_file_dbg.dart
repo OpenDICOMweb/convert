@@ -11,7 +11,7 @@ import 'package:dataset/byte_dataset.dart';
 import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 
-import 'package:dcm_convert/src/binary/byte/read_bytes.dart';
+import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
 import 'package:dcm_convert/src/binary/byte/write_bytes.dart';
 import 'package:dcm_convert/src/tool/job_utils.dart';
 
@@ -24,7 +24,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
 
   final Uint8List bytes = f.readAsBytesSync();
   final bd = bytes.buffer.asByteData();
-  final reader0 = new ByteDatasetReader(bd, fast: true);
+  final reader0 = new ByteReader(bd, fast: true);
   final rds0 = reader0.read();
   showRDS(rds0, reader0);
 
@@ -50,7 +50,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
   log.debug('$pad    Encoded ${bytes1.length} bytes');
 
   final bd1 = bytes1.buffer.asByteData();
-  final reader1 = new ByteDatasetReader(bd1, fast: true);
+  final reader1 = new ByteReader(bd1, fast: true);
   final rds1 = reader1.read();
   showRDS(rds1, reader1);
 
@@ -83,7 +83,7 @@ $f
   return same;
 }
 
-void showRDS(RootDatasetByte rds,  ByteDatasetReader reader) {
+void showRDS(RootDatasetByte rds,  ByteReader reader) {
 
 	final PixelData e = rds[kPixelData];
 	final pdMsg =  (e == null)

@@ -40,7 +40,7 @@ Future<bool> doReadByteFile(File f,
 	  final  bytes = await readDcmPath(cPath);
 	  if (bytes == null) return false;
 	  final bd = bytes.buffer.asByteData();
-	  final reader0 = new ByteDatasetReader(bd, path: cPath);
+	  final reader0 = new ByteReader(bd, path: cPath);
 	  final rds0 = reader0.read();
     if (rds0 == null) {
       log.info0('Unreadable File: $cPath');

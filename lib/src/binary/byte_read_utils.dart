@@ -28,7 +28,7 @@ bool byteReadWriteFileChecked(String path,
 
   final f = new File(fPath);
   try {
-    final reader0 = new ByteDatasetReader.fromFile(f);
+    final reader0 = new ByteReader.fromFile(f);
     final rds0 = reader0.read();
     final bytes0 = reader0.rootBytes;
     final e = rds0[kPixelData];
@@ -46,13 +46,13 @@ bool byteReadWriteFileChecked(String path,
     }
     final bytes1 = writer.write();
 
-    ByteDatasetReader reader1;
+    ByteReader reader1;
     if (fast) {
       // Just read bytes not file
-      reader1 = new ByteDatasetReader(
+      reader1 = new ByteReader(
           bytes1.buffer.asByteData(bytes1.offsetInBytes, bytes1.lengthInBytes));
     } else {
-      reader1 = new ByteDatasetReader.fromPath(outPath);
+      reader1 = new ByteReader.fromPath(outPath);
     }
     final rds1 = reader1.read();
 
@@ -119,7 +119,7 @@ RootDatasetByte readFileTimed(File file,
 
   RootDataset rds;
   timer.start();
-  rds = ByteDatasetReader.readBytes(bytes, path: path, fmiOnly: fmiOnly);
+  rds = ByteReader.readBytes(bytes, path: path, fmiOnly: fmiOnly);
 
   timer.stop();
   if (rds == null) {
@@ -142,7 +142,7 @@ RootDatasetByte readFileTimed(File file,
 }
 
 RootDatasetByte readFMI(Uint8List bytes, [String path = '']) =>
-    ByteDatasetReader.readBytes(bytes, path: path, fmiOnly: true);
+    ByteReader.readBytes(bytes, path: path, fmiOnly: true);
 
 Uint8List writeTimed(RootDatasetByte rds,
     {String path = '', bool fast = true, bool fmiOnly = false, TransferSyntax targetTS}) {

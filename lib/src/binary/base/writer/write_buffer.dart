@@ -11,7 +11,7 @@ import 'package:system/core.dart';
 
 import 'package:dcm_convert/src/binary/base/byte_list.dart';
 
-class ByteWriter extends ByteList {
+class WriteBuffer extends ByteList {
   /// The underlying data buffer.
   ///
   /// This is always both a List<E> and a TypedData, which we don't have a type
@@ -19,12 +19,12 @@ class ByteWriter extends ByteList {
   final int maxLength;
   int _wIndex = 0;
 
-  factory ByteWriter([int length = ByteList.kDefaultLength, int maxLength = k1GB]) {
+  factory WriteBuffer([int length = ByteList.kDefaultLength, int maxLength = k1GB]) {
     final nbd = new ByteData(length);
-    return new ByteWriter._(nbd, maxLength);
+    return new WriteBuffer._(nbd, maxLength);
   }
 
-  ByteWriter._(ByteData bd, [this.maxLength = k1GB])
+  WriteBuffer._(ByteData bd, [this.maxLength = k1GB])
       : _lengthInBytes = bd.lengthInBytes,
         super(bd);
 

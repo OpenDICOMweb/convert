@@ -51,7 +51,7 @@ int __lookupIvrVRIndex(int code, int eStart, Tag tag) {
 Element _readIvrDefinedLength(int code, int eStart, int vrIndex) {
   final vlf = _rb.uint32;
   assert(vlf != kUndefinedLength);
-  return __readLongDefinedLength(code, eStart, vrIndex, vlf, Ivr.make);
+  return __readDefinedLength(code, eStart, vrIndex, vlf, Ivr.make);
 }
 
 /// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have

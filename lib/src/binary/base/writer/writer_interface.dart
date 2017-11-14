@@ -10,13 +10,13 @@ import 'package:element/byte_element.dart';
 import 'package:dataset/byte_dataset.dart';
 
 import 'package:dcm_convert/src/element_offsets.dart';
-import 'package:dcm_convert/src/binary/base/writer/byte_writer.dart';
+import 'package:dcm_convert/src/binary/base/writer/write_buffer.dart';
 
 const int shortFileThreshold = 1024;
 
 abstract class DcmWriterInterface {
   /// Returns the [ByteData] for the entire Root [Dataset].
-  ByteWriter get wb;
+  WriteBuffer get wb;
 
   /// Returns the Root [Dataset].
   RootDataset get rds;

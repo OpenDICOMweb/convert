@@ -10,16 +10,16 @@ import 'package:system/core.dart';
 
 import 'package:dcm_convert/src/binary/base/byte_list.dart';
 
-class ByteReader extends ByteList {
+class ReadBuffer extends ByteList {
   /// The underlying data buffer.
   ///
   /// This is always both a List<E> and a TypedData, which we don't have a type
   /// for here. For example, for a `Uint8Buffer`, this is a `Uint8List`.
   int _rIndex = 0;
 
-  ByteReader(ByteData bd) : super(bd);
+  ReadBuffer(ByteData bd) : super(bd);
 
-  ByteReader.from(List<int> iList)
+  ReadBuffer.from(List<int> iList)
       : super(new Uint8List.fromList(iList).buffer.asByteData());
 
   // **** ReadBuffer specific Getters and Methods

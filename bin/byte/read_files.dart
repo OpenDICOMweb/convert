@@ -61,7 +61,7 @@ Future main() async {
       return;
     }
     //   final bytes = await readFileAsync(file);
-    final rds = ByteDatasetReader.readBytes(bytes, path: fPath, showStats: true);
+    final rds = ByteReader.readBytes(bytes, path: fPath, showStats: true);
     if (rds == null) {
       log.warn('Invalid DICOM file: $fPath');
     } else {

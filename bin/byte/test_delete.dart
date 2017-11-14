@@ -20,7 +20,7 @@ void main() {
 
   final f = pathToFile(path, mustExist: true);
   log.debug2('Reading: $f');
-  final rds = ByteDatasetReader.readFile(f, fast: true);
+  final rds = ByteReader.readFile(f, fast: true);
   final eList = rds.remove(kPatientID);
   log..debug('bRoot.isRoot: ${rds.isRoot}')
   ..info0('patientID: "${rds.patientId}"')

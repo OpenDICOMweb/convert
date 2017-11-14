@@ -260,11 +260,11 @@ Element __readMaybeUndefinedLength(int code, int eStart, int vrIndex, int vlf,
 	_pInfo.nMaybeUndefinedElements++;
   return (vlf == kUndefinedLength)
       ? __readUndefinedLength(code, eStart, vrIndex, vlf, ebMaker)
-      : __readLongDefinedLength(code, eStart, vrIndex, vlf, ebMaker);
+      : __readDefinedLength(code, eStart, vrIndex, vlf, ebMaker);
 }
 
 // Finish reading an EVR Long Defined Length Element
-Element __readLongDefinedLength(
+Element __readDefinedLength(
     int code, int eStart, int vrIndex, int vlf, EBytes ebMaker(ByteData bd)) {
   assert(vlf != kUndefinedLength);
 
