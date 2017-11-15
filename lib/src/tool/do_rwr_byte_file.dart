@@ -11,21 +11,20 @@ import 'dart:typed_data';
 import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 
-import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
+import 'package:dcm_convert/src/binary/byte/read_bytes.dart';
 import 'package:dcm_convert/src/binary/byte/write_bytes.dart';
 import 'package:dcm_convert/src/tool/job_utils.dart';
 import 'package:dcm_convert/src/errors.dart';
 
-Future<bool> doRWRByteFile(File f, {bool fast = true, bool noisy = false}) async {
+Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
   final pad = ''.padRight(5);
-  log.info0('RRWByte $f');
 
   try {
     final Uint8List bytes = await f.readAsBytes();
     final bd = bytes.buffer.asByteData();
-    final reader0 = new ByteReader(bd, path: f.path, fast: true);
+    final reader0 = new ByteDatasetReader(bd, fast: true);
     final rds0 = reader0.read();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -47,11 +46,9 @@ $pad    TS: ${rds0.transferSyntax}''');
       log.debug1('$pad  e: ${e.info}');
     }
 
-    if (noisy) {
-      final offsets = reader0.inputOffsets;
-      for (var i = 0; i < offsets.length; i++) {
-        print('$i: ${offsets.starts[i]} - ${offsets.ends[i]} ${offsets.elements[i]}');
-      }
+    final offsets = reader0.inputOffsets;
+    for (var i = 0; i < offsets.length; i++) {
+    	print('$i: ${offsets.starts[i]} - ${offsets.ends[i]} ${offsets.elements[i]}');
     }
 
     // Write the Root Dataset
@@ -67,11 +64,9 @@ $pad    TS: ${rds0.transferSyntax}''');
     final bytes1 = writer.write();
     log.debug('$pad    Encoded ${bytes1.length} bytes');
 
-    if (noisy) {
-      final wOffsets = writer.outputOffsets;
-      for (var i = 0; i < wOffsets.length; i++) {
-        print('$i: ${wOffsets.starts[i]} - ${wOffsets.ends[i]} ${wOffsets.elements[i]}');
-      }
+    final wOffsets = writer.outputOffsets;
+    for (var i = 0; i < wOffsets.length; i++) {
+	    print('$i: ${wOffsets.starts[i]} - ${wOffsets.ends[i]} ${wOffsets.elements[i]}');
     }
 
     if (!fast) {
@@ -79,13 +74,13 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       log.debug('Re-reading: ${bytes1.length} bytes from $outPath');
     }
-    ByteReader reader1;
+    ByteDatasetReader reader1;
     if (fast) {
       // Just read bytes not file
-      reader1 = new ByteReader(
+      reader1 = new ByteDatasetReader(
           bytes1.buffer.asByteData(bytes1.offsetInBytes, bytes1.lengthInBytes));
     } else {
-      reader1 = new ByteReader.fromPath(outPath);
+      reader1 = new ByteDatasetReader.fromPath(outPath);
     }
     final rds1 = reader1.read();
     //   RootDatasetBytes rds1 = ByteReader.readPath(outPath);
@@ -121,24 +116,19 @@ $pad    TS: ${rds0.transferSyntax}''');
       log.warn('$pad Datasets are different!');
     }
 
-    if (noisy) {
-      final aList = rds0.elements.elements;
-      final bList = rds1.elements.elements;
-      if (aList.length != bList.length)
-        log.warn('** rds0.length(${bList.length}) != rds1.length(${aList.length})');
-      final length = aList.length;
-      for (var i = 0; i < length; i++) {
-        final x = aList.elementAt(i) as ByteElement;
-        final y = bList.elementAt(i) as ByteElement;
-        log
-	        ..debug('$i x: $x')
-          ..debug('$i y: $y');
-        if (x.eStart != y.eStart) print('** Starts are different');
-        if (x.code != y.code) print('** Codes are different');
-        if (x.vrCode != y.vrCode) print('** VRCodes are different');
-        if (x.vfLengthField != y.vfLengthField) print('** VFL are different');
-        if (x.eEnd != y.eEnd) print('** Ends are different');
-      }
+    final aList = rds0.elements.elements;
+    final bList = rds1.elements.elements;
+    final length = (aList.length > bList.length) ? aList.length : bList.length;
+    for (var i = 0; i < length; i++) {
+      final x = aList.elementAt(i) as ByteElement;
+      final y = bList.elementAt(i) as ByteElement;
+      print('$i x: $x');
+      print('$i y: $y');
+      if (x.eStart != y.eStart) print('** Starts are different');
+      if (x.code != y.code) print('** Codes are different');
+      if (x.vrCode != y.vrCode) print('** VRCodes are different');
+      if (x.vfLengthField != y.vfLengthField) print('** VFL are different');
+      if (x.eEnd != y.eEnd) print('** Ends are different');
     }
 
     // If duplicates are present the [ElementOffsets]s will not be equal.
