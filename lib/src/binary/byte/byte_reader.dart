@@ -37,19 +37,13 @@ class ByteReader extends DcmReader {
   /// (application/dicom).
   ByteReader(ByteData bd,
       {String path = '',
-
       bool fast = true,
       bool reUseBD = true,
-//      bool showStats = false,
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool elementOffsetsEnabled = true,
       ElementOffsets inputOffsets})
       : super(bd, new RootDatasetByte(new RDSBytes(bd), path: path),
-            path: path,
-            reUseBD: reUseBD,
-//            showStats: showStats,
-            dParams: dParams) {
-//            elementOffsetsEnabled: elementOffsetsEnabled) {
+            path: path, reUseBD: reUseBD, dParams: dParams) {
     elementMaker = makeBEFromEBytes;
     pixelDataMaker = makeBEPixelDataFromEBytes;
     sequenceMaker = _makeSequence;
@@ -58,31 +52,17 @@ class ByteReader extends DcmReader {
 
   /// Creates a [ByteReader] from the contents of the [file].
   factory ByteReader.fromFile(File file,
-      {bool async: false,
-      bool fast: true,
-      bool fmiOnly = false,
-      bool reUseBD = true,
-      DecodingParameters dParams = DecodingParameters.kNoChange}) {
+      {bool reUseBD = true, DecodingParameters dParams = DecodingParameters.kNoChange}) {
     final Uint8List bytes = file.readAsBytesSync();
     final bd = bytes.buffer.asByteData();
-    return new ByteReader(bd,
-        path: file.path,
-        async: async,
-        fast: fast,
-        fmiOnly: fmiOnly,
-        reUseBD: reUseBD,
-        dParams: dParams);
+    return new ByteReader(bd, path: file.path, reUseBD: reUseBD, dParams: dParams);
   }
 
   /// Creates a [ByteReader] from the contents of the [File] at [path].
   factory ByteReader.fromPath(String path,
-          {bool async: true,
-          bool fast: true,
-          bool fmiOnly = false,
-          bool reUseBD = true,
+          {bool reUseBD = true,
           DecodingParameters dParams = DecodingParameters.kNoChange}) =>
-      new ByteReader.fromFile(new File(path),
-          async: async, fast: fast, fmiOnly: fmiOnly, reUseBD: reUseBD, dParams: dParams);
+      new ByteReader.fromFile(new File(path), reUseBD: reUseBD, dParams: dParams);
 
   @override
   ElementList get elements => cds.elements;
@@ -102,9 +82,6 @@ class ByteReader extends DcmReader {
   /// Reads the [RootDataset] from a [Uint8List].
   static RootDataset readBytes(Uint8List bytes,
       {String path = '',
-      bool async = true,
-      bool fast = true,
-      bool fmiOnly = false,
       bool reUseBD = true,
       bool showStats = false,
       DecodingParameters dParams = DecodingParameters.kNoChange,
@@ -112,33 +89,18 @@ class ByteReader extends DcmReader {
       ElementOffsets inputOffsets}) {
     final bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     final reader = new ByteReader(bd,
-        path: path,
-        async: async,
-        fast: fast,
-        fmiOnly: fmiOnly,
-        reUseBD: reUseBD,
-        showStats: showStats,
-        dParams: dParams);
+        path: path, reUseBD: reUseBD, dParams: dParams);
     return reader.read();
   }
 
   /// Reads the [RootDataset] from a [File].
   static RootDataset readFile(File file,
-      {bool async: true,
-      bool fast = true,
-      bool fmiOnly = false,
-      bool reUseBD: true,
+      {bool reUseBD: true,
       bool showStats = false,
       DecodingParameters dParams = DecodingParameters.kNoChange}) {
     checkFile(file);
     return readBytes(file.readAsBytesSync(),
-        path: file.path,
-        async: async,
-        fast: fast,
-        fmiOnly: fmiOnly,
-        reUseBD: reUseBD,
-        showStats: showStats,
-        dParams: dParams);
+        path: file.path, reUseBD: reUseBD, showStats: showStats, dParams: dParams);
   }
 
   /// Reads the [RootDataset] from a [path] ([File] or URL).
@@ -151,40 +113,21 @@ class ByteReader extends DcmReader {
       DecodingParameters dParams = DecodingParameters.kNoChange}) {
     checkPath(path);
     return readFile(new File(path),
-        async: async,
-        fast: fast,
-        fmiOnly: fmiOnly,
-        reUseBD: reUseBD,
-        showStats: showStats,
-        dParams: dParams);
+        reUseBD: reUseBD, showStats: showStats, dParams: dParams);
   }
 
   /// Reads only the File Meta Information (FMI), if present.
   static RootDataset readFileFmiOnly(File file,
-          {bool async: true,
-          bool fast = true,
-          bool fmiOnly = false,
-          bool throwOnError = true,
-          TransferSyntax targetTS,
+          {TransferSyntax targetTS,
           bool reUseBD = true,
           bool showStats = false,
           DecodingParameters dParams = DecodingParameters.kNoChange}) =>
-      readFile(file,
-          async: async, fast: fast, fmiOnly: true, reUseBD: reUseBD, dParams: dParams);
+      readFile(file, reUseBD: reUseBD, dParams: dParams);
 
   /// Reads only the File Meta Information (FMI), if present.
   static RootDataset readPathFmiOnly(String path,
-          {bool async: true,
-          bool fast = true,
-          bool fmiOnly = false,
-          bool reUseBD = true,
+          {bool reUseBD = true,
           bool showStats = false,
           DecodingParameters dParams = DecodingParameters.kNoChange}) =>
-      readPath(path,
-          async: async,
-          fast: fast,
-          fmiOnly: true,
-          reUseBD: reUseBD,
-          showStats: showStats,
-          dParams: dParams);
+      readPath(path, reUseBD: reUseBD, showStats: showStats, dParams: dParams);
 }

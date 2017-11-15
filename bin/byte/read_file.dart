@@ -14,6 +14,7 @@ import 'package:dcm_convert/byte_convert.dart';
 import 'package:path/path.dart' as path;
 import 'package:system/server.dart';
 import 'package:dcm_convert/src/file_utils.dart';
+
 const String xx3 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
 const String xx2 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.5.5.dcm';
 const String xx1 = 'C:/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm';
@@ -62,7 +63,7 @@ Future main() async {
       return;
     }
     //   final bytes = await readFileAsync(file);
-    final rds = ByteDatasetReader.readBytes(bytes, path: fPath, showStats: true);
+    final rds = ByteReader.readBytes(bytes, path: fPath, showStats: true);
     if (rds == null) {
       log.warn('Invalid DICOM file: $fPath');
     } else {

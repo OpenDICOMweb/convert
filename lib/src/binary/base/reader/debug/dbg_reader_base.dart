@@ -16,7 +16,7 @@ import 'package:uid/uid.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/errors.dart';
-import 'package:dcm_convert/src/binary/base/reader/reader_base.dart';
+import 'package:dcm_convert/src/binary/base/reader/base/reader_base.dart';
 
 //part 'package:dcm_convert/src/binary/base/reader/read_utils.dart';
 
@@ -444,7 +444,7 @@ abstract class DbgReaderBase extends DcmReaderBase {
       int code, int eStart, int vrIndex, int endOfVF, EBytes ebMaker(ByteData bd)) {
     assert(endOfVF != kUndefinedLength);
     final eb = _makeEBytes(eStart, ebMaker);
-    return elementMaker(eb, vrIndex);
+    return eMaker(eb, vrIndex);
   }
 
   PixelData _makePixelData(int code, int eStart, int vrIndex, int endOfVF, bool undefined,

@@ -11,20 +11,30 @@ import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/reader_base.dart';
+import 'package:dcm_convert/src/binary/base/reader/base/reader_base.dart';
+import 'package:dcm_convert/src/decoding_parameters.dart';
 
 abstract class IvrReader extends DcmReaderBase {
   final bool isEVR = false;
 
-  /// Creates a new [EvrReader]  where [rb].rIndex = 0.
-  IvrReader(ByteData bd, RootDataset rds) : super(bd, rds);
+  /// Creates a new [IvrReader]  where [rb].rIndex = 0.
+  IvrReader(ByteData bd, RootDataset rds,
+      {String path = '',
+      bool reUseBD = true,
+      DecodingParameters dParams = DecodingParameters.kNoChange})
+      : super(bd, rds, path, dParams, reUseBD: reUseBD);
 
   @override
   RootDataset read() {
     cds = rds;
     final fmiBD = readFmi(rds);
-    if (fmiBD == null) return null;
-    readRootDataset(readElement);
+
+    final rdsStart = rb.index;
+    readDatasetDefinedLength(rds, rb.rIndex, rb.remaining);
+    final rdsLength = rb.index - rdsStart;
+    final rdsBD = rb.bd.buffer.asByteData(rdsStart, rdsLength);
+    final dsBytes = new RDSBytes(fmiBD, rdsBD);
+    rds.dsBytes = dsBytes;
     return rds;
   }
 
@@ -34,17 +44,17 @@ abstract class IvrReader extends DcmReaderBase {
     final eStart = rb.rIndex;
     final code = rb.code;
     final tag = checkCode(code, eStart);
-    final vrIndex = __lookupIvrVRIndex(code, eStart, tag);
+    final vrIndex = _lookupIvrVRIndex(code, eStart, tag);
 
     Element e;
     if (_isIvrDefinedLengthVR(vrIndex)) {
-      e = _readIvrDefinedLength(code, eStart, vrIndex);
+      e = readIvrDefinedLength(code, eStart, vrIndex);
       log.up;
     } else if (_isSequenceVR(vrIndex)) {
-      e = _readIvrSQ(code, eStart);
+      e = readSequence(code, eStart, vrIndex);
       log.up;
     } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
-      e = readIvrMaybeUndefinedLength(code, eStart, vrIndex);
+      e = readMaybeUndefined(code, eStart, vrIndex);
       log.up;
     } else {
       return invalidVRIndexError(vrIndex);
@@ -52,30 +62,32 @@ abstract class IvrReader extends DcmReaderBase {
     return e;
   }
 
-  int __lookupIvrVRIndex(int code, int eStart, Tag tag) {
+  int _lookupIvrVRIndex(int code, int eStart, Tag tag) {
     final vr = (tag == null) ? VR.kUN : tag.vr;
     return _vrToIndex(code, vr);
   }
 
   /// Read an IVR Element (not SQ) with a 32-bit vfLengthField (vlf),
   /// but that cannot have kUndefinedValue.
-  Element _readIvrDefinedLength(int code, int eStart, int vrIndex) {
+  Element readIvrDefinedLength(int code, int eStart, int vrIndex) {
     final vlf = rb.uint32;
     assert(vlf != kUndefinedLength);
-    return super.readDefinedLength(code, eStart, vrIndex, vlf, Ivr.make);
+    return readDefinedLength(code, eStart, vrIndex, vlf);
   }
 
   /// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have
   /// kUndefinedValue.
-  Element readIvrMaybeUndefinedLength(int code, int eStart, int vrIndex) {
+  Element readMaybeUndefined(int code, int eStart, int vrIndex) {
     final vlf = rb.uint32;
-    return super
-        .readMaybeUndefinedLength(code, eStart, vrIndex, vlf, Ivr.make, readElement);
+    return readMaybeUndefinedLength(code, eStart, vrIndex, vlf);
   }
 
-  Element _readIvrSQ(int code, int eStart) {
+  @override
+  Element readSequence(int code, int eStart, int vrIndex) {
     final vlf = rb.uint32;
-    return super.readSQ(code, eStart, vlf, Ivr.make, readElement);
+    return (vlf == kUndefinedLength)
+        ? readUSQ(code, eStart, vlf)
+        : readDSQ(code, eStart, vlf);
   }
 }
 
@@ -84,17 +96,8 @@ bool _isSequenceVR(int vrIndex) => vrIndex == 0;
 bool _isSpecialVR(int vrIndex) =>
     vrIndex >= kVRSpecialIndexMin && vrIndex <= kVRSpecialIndexMax;
 
-bool _isNormalVR(int vrIndex) =>
-    vrIndex >= kVRNormalIndexMin && vrIndex <= kVRNormalIndexMax;
-
 bool _isMaybeUndefinedLengthVR(int vrIndex) =>
     vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
-
-bool _isEvrLongVR(int vrIndex) =>
-    vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
-
-bool _isEvrShortVR(int vrIndex) =>
-    vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
 
 bool _isIvrDefinedLengthVR(int vrIndex) =>
     vrIndex >= kVRIvrDefinedIndexMin && vrIndex <= kVRIvrDefinedIndexMax;

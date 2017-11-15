@@ -43,6 +43,8 @@ part 'package:dcm_convert/src/binary/base/reader/read_common.dart';
 
 //TODO: redoc to reflect current state of code
 
+typedef EBytes EBytesMaker(ByteData bd);
+
 typedef Element ElementMaker(EBytes eb, int vrIndex);
 
 typedef PixelData PixelDataMaker(EBytes eb, int vrIndex,
@@ -110,6 +112,7 @@ abstract class DcmReader extends DcmReaderInterface {
   final DecodingParameters dParams;
   @override
   Dataset cds;
+  ByteData bdRead;
 
   /// The [ByteData] being read.
   // final int bdLength;
@@ -141,7 +144,7 @@ abstract class DcmReader extends DcmReaderInterface {
   @override
   RootDataset read() {
     if (_pInfo.wasShortFile) return shortFileError();
-    return _read(rds, path, dParams);
+    return __readRootDataset(rds, path, dParams);
   }
 
   @override
@@ -151,7 +154,7 @@ abstract class DcmReader extends DcmReaderInterface {
 
   Element readDefinedLength(
           int code, int eStart, int vrIndex, int vlf, EBMaker ebMaker) =>
-      __readDefinedLength(code, eStart, vrIndex, vlf, ebMaker);
+      __readLongDefinedLength(code, eStart, vrIndex, vlf, ebMaker);
 
   Element readMaybeUndefinedLength(int code, int eStart, int vrIndex, int vlf,
           EBMaker ebMaker, EReader eReader) =>

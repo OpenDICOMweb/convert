@@ -35,6 +35,14 @@ final String kItemAsString = hex32(kItem32BitLE);
 
 bool _inItem;
 
+void __readRootDataset() {
+	log
+		..reset
+	  ..debug('${_rb.rbb} readRootDataset');
+	_readDatasetDefinedLength(_rds, _rb.rIndex, _rb.remaining, _readEvrElement);
+	log.debug('${_rb.ree} readRootDataset $_elementCount Elements read with '
+			          '${_rb.remaining} bytes remaining\nDatasets: ${_pInfo.nDatasets}');
+}
 /// Returns an [Item].
 // rIndex is @ delimiterFvr
 Item _readItem(Element eReader(), int count) {
@@ -168,7 +176,7 @@ Element __readDSQ(
 
 // If VR is UN then this might be a Sequence
 Element __tryReadUNSequence(
-    int code, int eStart, int vlf, EBytesMaker ebMaker, Element eReader()) {
+    int code, int eStart, int vlf, EBMaker ebMaker, EReader eReader) {
   log.debug3('${_rb.rmm} *** Maybe Reading Evr UN Sequence');
   final delimiter = _rb.getUint32(_rb.rIndex);
   if (delimiter == kSequenceDelimitationItem32BitLE) {
@@ -184,13 +192,13 @@ Element __tryReadUNSequence(
     _readAndCheckDelimiterLength();
     _pInfo.nSequences++;
     _pInfo.nNonEmptyUNSequences++;
-    return __readSQ(code, eStart, vlf, ebMaker, _readEvrElement);
+    return __readSQ(code, eStart, vlf, EvrLong.make, _readEvrElement);
   }
   log.debug3('${_rb.rmm} *** UN Sequence not found');
   return null;
 }
 
-Element _makeSequence(int code, int eStart, EBytesMaker ebMaker, List<Item> items) {
+Element _makeSequence(int code, int eStart, EBMaker ebMaker, List<Item> items) {
   final eb = _makeEBytes(eStart, ebMaker);
   return sequenceMaker(eb, _cds, items);
 }
@@ -234,6 +242,52 @@ void _readAndCheckDelimiterLength() {
   if (length != 0) {
     _pInfo.nonZeroDelimiterLengths++;
     _rb.warn('Encountered non-zero delimiter length($length) ${_rb.rrr}');
+  }
+}
+
+/// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have
+/// kUndefinedValue.
+Element __readMaybeUndefinedLength(int code, int eStart, int vrIndex, int vlf,
+    EBytes ebMaker(ByteData bd), EReader eReader) {
+	log.debug('${_rb.rbb} readMaybeUndefined ${dcm(code)} vr($vrIndex) '
+			          '$eStart + 12 + ??? = ???', 1);
+  // If VR is UN then this might be a Sequence
+  if (vrIndex == kUNIndex) {
+    final e = __tryReadUNSequence(code, eStart, vlf, ebMaker, eReader);
+    if (e != null) return e;
+  }
+	_pInfo.nMaybeUndefinedElements++;
+  return (vlf == kUndefinedLength)
+      ? __readUndefinedLength(code, eStart, vrIndex, vlf, ebMaker)
+      : __readLongDefinedLength(code, eStart, vrIndex, vlf, ebMaker);
+}
+
+// Finish reading an EVR Long Defined Length Element
+Element __readLongDefinedLength(
+    int code, int eStart, int vrIndex, int vlf, EBytes ebMaker(ByteData bd)) {
+  assert(vlf != kUndefinedLength);
+
+  log.debug('${_rb.rmm} readLongDefinedLength ${dcm(code)} vr($vrIndex) '
+      '$eStart + 12 + $vlf = ${eStart + 12 + vlf}');
+  _pInfo.nLongDefinedLengthElements++;
+  _rb + vlf;
+  return (code == kPixelData)
+      ? _makePixelData(code, eStart, vrIndex, _rb.rIndex, false, ebMaker)
+      : _makeElement(code, eStart, vrIndex, _rb.rIndex, ebMaker);
+}
+
+// Finish reading an EVR Long Undefined Length Element
+Element __readUndefinedLength(
+    int code, int eStart, int vrIndex, int vlf, EBytes ebMaker(ByteData bd)) {
+  assert(vlf == kUndefinedLength);
+  log.debug('${_rb.rmm} readEvrUndefinedLength ${dcm(code)} vr($vrIndex) '
+      '$eStart + 12 + ??? = ???');
+  _pInfo.nUndefinedLengthElements++;
+  if (code == kPixelData) {
+    return __readEncapsulatedPixelData(code, eStart, vrIndex, vlf, ebMaker);
+  } else {
+    final endOfVF = _findEndOfULengthVF();
+    return _makeElement(code, eStart, vrIndex, endOfVF, ebMaker);
   }
 }
 

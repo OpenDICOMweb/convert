@@ -3,7 +3,6 @@
 // that can be found in the LICENSE file.
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
-library odw.sdk.convert.binary.reader;
 
 import 'dart:convert';
 import 'dart:typed_data';
@@ -16,13 +15,8 @@ import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/errors.dart';
-import 'package:dcm_convert/src/binary/base/reader/reader_interface_old.dart';
+import 'package:dcm_convert/src/binary/base/reader/base/reader_interface.dart';
 import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
-
-part 'package:dcm_convert/src/binary/base/reader/read_evr.dart';
-part 'package:dcm_convert/src/binary/base/reader/read_fmi.dart';
-part 'package:dcm_convert/src/binary/base/reader/read_ivr.dart';
-part 'package:dcm_convert/src/binary/base/reader/read_root.dart';
 
 // Reader axioms
 // 1. The read index (rIndex) should always be at the last place read,
@@ -35,20 +29,10 @@ part 'package:dcm_convert/src/binary/base/reader/read_root.dart';
 
 //TODO: redoc to reflect current state of code
 
-typedef Element ElementMaker(EBytes eb, int vrIndex);
-
-typedef PixelData PixelDataMaker(EBytes eb, int vrIndex,
-    [TransferSyntax ts, VFFragments fragments]);
-
-typedef SQ SequenceMaker(EBytes eb, Dataset cds, List<Item> items);
-
-typedef Item ItemMaker(Dataset cds);
-
-typedef Element EReader();
-
-ElementMaker elementMaker;
-PixelDataMaker pixelDataMaker;
-SequenceMaker sequenceMaker;
+EBMaker ebMaker;
+EMaker eMaker;
+PDMaker pixelDataMaker;
+SQMaker sequenceMaker;
 ItemMaker itemMaker;
 
 /// Returns the [ByteData] that was actually read, i.e. from 0 to
@@ -88,8 +72,7 @@ abstract class DcmReaderBase extends DcmReaderInterface {
   // final int bdLength;
 
   /// Creates a new [DcmReaderBase]  where [rb].rIndex = 0.
-  DcmReaderBase(ByteData bd, this.rds,
-      {this.path = '', this.reUseBD = true, this.dParams = DecodingParameters.kNoChange})
+  DcmReaderBase(ByteData bd, this.rds, this.path, this.dParams, {this.reUseBD = true})
       : rb = new ReadBuffer(bd);
 
   DcmReaderBase.from(DcmReaderBase rBase)
@@ -112,23 +95,6 @@ abstract class DcmReaderBase extends DcmReaderInterface {
   bool hasRemaining(int n) => rb.hasRemaining(n);
 
 /*
-  @override
-  RootDataset read() {
-	  cds = rds;
-	  if (!readFmi(rds)) return null;
-	  return readRootDataset();
-  }
-*/
-
-  void readRootDataset() {
-    cds = rds;
-    final hasFmi = readFmi(rds);
-    __readRootDataset(eReader);
-  }
-
-  @override
-  ByteData readFmi(RootDataset rds); => _readFmi(rb, rds, dParams);
-
   @override
   Element readDefinedLength(
           int code, int eStart, int vrIndex, int vlf, EBMaker ebMaker) =>
@@ -156,15 +122,14 @@ abstract class DcmReaderBase extends DcmReaderInterface {
 
   bool isIvrDefinedLengthVR(int vrIndex) =>
       vrIndex >= kVRIvrDefinedIndexMin && vrIndex <= kVRIvrDefinedIndexMax;
+*/
 
   final String kItemAsString = hex32(kItem32BitLE);
 
-  void __readRootDataset(EReader eReader) =>
-      _readDatasetDefinedLength(rds, rb.rIndex, rb.remaining, eReader);
-
   /// Returns an [Item].
   // rIndex is @ delimiterFvr
-  Item readItem(EReader eReader, int count) {
+  @override
+  Item readItem() {
     assert(rb.hasRemaining(8));
     final iStart = rb.rIndex;
 
@@ -173,15 +138,13 @@ abstract class DcmReaderBase extends DcmReaderInterface {
     if (delimiter != kItem32BitLE) throw 'Missing Item Delimiter';
     rb + 4;
     final vfLengthField = rb.uint32;
-    // readItemStart('Reading Item', ount , vfLengthField', 1);c
-
     final item = itemMaker(cds);
     final parentDS = cds;
     cds = item;
 
     (vfLengthField == kUndefinedLength)
-        ? _readDatasetUndefinedLength(item, eReader)
-        : _readDatasetDefinedLength(item, rb.rIndex, vfLengthField, eReader);
+        ? readDatasetUndefinedLength(item)
+        : readDatasetDefinedLength(item, rb.rIndex, vfLengthField);
 
     cds = parentDS;
     final bd = rb.buffer.asByteData(iStart, rb.rIndex - iStart);
@@ -190,24 +153,24 @@ abstract class DcmReaderBase extends DcmReaderInterface {
   }
 
   // **** This is one of the only two places Elements are added to the dataset.
-  void _readDatasetDefinedLength(Dataset ds, int dsStart, int vfLength, EReader eReader) {
+  void readDatasetDefinedLength(Dataset ds, int dsStart, int vfLength) {
     assert(vfLength != kUndefinedLength);
     final dsEnd = dsStart + vfLength;
     assert(dsStart == rb.rIndex);
     while (rb.rIndex < dsEnd) {
       // Elements are always read into the current dataset.
-      final e = eReader();
+      final e = readElement();
       final ok = ds.tryAdd(e);
       if (!ok) log.warn('*** duplicate: $e');
     }
   }
 
   // **** This is the other of the only two places Elements are added to the dataset.
-  void _readDatasetUndefinedLength(Dataset ds, EReader eReader) {
+  void readDatasetUndefinedLength(Dataset ds) {
     while (!__isItemDelimiter()) {
       // Elements are always read into the current dataset.
       // **** This is the only place they are added to the dataset.
-      final e = eReader();
+      final e = readElement();
       final ok = ds.tryAdd(e);
       if (!ok) log.warn('*** duplicate: $e');
     }
@@ -217,39 +180,27 @@ abstract class DcmReaderBase extends DcmReaderInterface {
   /// _delimiter length_ field, and returns _true_.
   bool __isItemDelimiter() => _checkForDelimiter(kItemDelimitationItem32BitLE);
 
-/*
-  /// Read a Sequence.
-  Element readSQ(int code, int eStart, int vlf, EBMaker ebMaker, EReader eReader) =>
-      (vlf == kUndefinedLength)
-          ? _readUSQ(code, eStart, vlf, ebMaker, eReader)
-          : _readDSQ(code, eStart, vlf, ebMaker, eReader);
-*/
-
   /// Reads a [kUndefinedLength] Sequence.
-  Element readUSQ(int code, int eStart, int uLength, EBMaker ebMaker, EReader eReader) {
+  Element readUSQ(int code, int eStart, int uLength) {
     assert(uLength == kUndefinedLength);
     final items = <Item>[];
-    var itemCount = 0;
     while (!__isSequenceDelimiter()) {
-      final item = readItem(eReader, itemCount);
+      final item = readItem();
       items.add(item);
-      itemCount++;
     }
     return _makeSequence(code, eStart, ebMaker, items);
   }
 
   /// Reads a defined [vfLength].
-  Element readDSQ(int code, int eStart, int vfLength, EBMaker ebMaker, EReader eReader) {
+  Element readDSQ(int code, int eStart, int vfLength) {
     assert(vfLength != kUndefinedLength);
     final items = <Item>[];
     final vfStart = rb.rIndex;
     final eEnd = vfStart + vfLength;
 
-    var itemCount = 0;
     while (rb.rIndex < eEnd) {
-      final item = readItem(eReader, itemCount);
+      final item = readItem();
       items.add(item);
-      itemCount++;
     }
     final end = rb.rIndex;
     assert(eEnd == end, '$eEnd == $end');
@@ -257,17 +208,16 @@ abstract class DcmReaderBase extends DcmReaderInterface {
   }
 
   // If VR is UN then this might be a Sequence
-  Element __tryReadUNSequence(
-      int code, int eStart, int vlf, EBMaker ebMaker, EReader eReader) {
+  Element tryReadUNSequence(int code, int eStart, int vlf) {
     final delimiter = rb.getUint32(rb.rIndex);
     if (delimiter == kSequenceDelimitationItem32BitLE) {
       // An empty Sequence
       _readAndCheckDelimiterLength();
-      return _makeSequence(code, eStart, EvrLong.make, emptyItemList);
+      return _makeSequence(code, eStart, ebMaker, emptyItemList);
     } else if (delimiter == kItem) {
       // A non-empty Sequence
       _readAndCheckDelimiterLength();
-      return readSQ(code, eStart, vlf, EvrLong.make, eReader);
+      return readUSQ(code, eStart, vlf);
     }
     return null;
   }
@@ -320,21 +270,21 @@ abstract class DcmReaderBase extends DcmReaderInterface {
 
   /// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have
   /// kUndefinedValue.
-  Element readMaybeUndefinedLength(int code, int eStart, int vrIndex, int vlf,
-      EBytes ebMaker(ByteData bd), EReader eReader) {
+  @override
+  Element readMaybeUndefinedLength(int code, int eStart, int vrIndex, int vlf) {
     // If VR is UN then this might be a Sequence
     if (vrIndex == kUNIndex) {
-      final e = __tryReadUNSequence(code, eStart, vlf, ebMaker, eReader);
+      final e = tryReadUNSequence(code, eStart, vlf);
       if (e != null) return e;
     }
     return (vlf == kUndefinedLength)
-        ? __readUndefinedLength(code, eStart, vrIndex, vlf, ebMaker)
-        : __readDefinedLength(code, eStart, vrIndex, vlf, ebMaker);
+        ? readUndefinedLength(code, eStart, vrIndex, vlf)
+        : readDefinedLength(code, eStart, vrIndex, vlf);
   }
 
-  // Finish reading an EVR Long Defined Length Element
-  Element __readDefinedLength(
-      int code, int eStart, int vrIndex, int vlf, EBytes ebMaker(ByteData bd)) {
+  // Finish reading a Long (32-bit Value Length Field) Defined Length Element
+  @override
+  Element readDefinedLength(int code, int eStart, int vrIndex, int vlf) {
     assert(vlf != kUndefinedLength);
     rb + vlf;
     return (code == kPixelData)
@@ -343,8 +293,7 @@ abstract class DcmReaderBase extends DcmReaderInterface {
   }
 
   // Finish reading an EVR Long Undefined Length Element
-  Element __readUndefinedLength(
-      int code, int eStart, int vrIndex, int vlf, EBytes ebMaker(ByteData bd)) {
+  Element readUndefinedLength(int code, int eStart, int vrIndex, int vlf) {
     assert(vlf == kUndefinedLength);
     if (code == kPixelData) {
       return __readEncapsulatedPixelData(code, eStart, vrIndex, vlf, ebMaker);
@@ -426,7 +375,7 @@ abstract class DcmReaderBase extends DcmReaderInterface {
       int code, int eStart, int vrIndex, int endOfVF, EBytes ebMaker(ByteData bd)) {
     assert(endOfVF != kUndefinedLength);
     final eb = _makeEBytes(eStart, ebMaker);
-    return elementMaker(eb, vrIndex);
+    return eMaker(eb, vrIndex);
   }
 
   PixelData _makePixelData(

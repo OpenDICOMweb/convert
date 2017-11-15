@@ -12,8 +12,8 @@ import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/read_fmi.dart';
-import 'package:dcm_convert/src/binary/base/reader/reader_base.dart';
+import 'package:dcm_convert/src/binary/base/reader/base/reader_base.dart';
+import 'package:dcm_convert/src/binary/base/reader/debug/dbg_fmi_reader.dart';
 
 // Reader axioms
 // 1. The read index (rIndex) should always be at the last place read,
@@ -26,6 +26,26 @@ import 'package:dcm_convert/src/binary/base/reader/reader_base.dart';
 //
 // 3. [_finishReadElement] is only called from [readEvrElement] and
 //    [readIvrElement].
+
+
+
+//DecodingParameters _dParams;
+
+//ParseInfo pInfo;
+int _elementCount;
+final bool _statisticsEnabled = true;
+bool _elementOffsetsEnabled;
+//ElementOffsets _inputOffsets;
+
+//final List<String> _exceptions = <String>[];
+
+//bool _beyondPixelData;
+//bool _checkCode = false;
+//Tag _tag;
+
+/// Returns the [ByteData] that was actually read, i.e. from 0 to
+/// end of last [Element] read.
+//ByteData _bdRead;
 
 /// A [Converter] for [Uint8List]s containing a [Dataset] encoded in the
 /// application/dicom media type.
@@ -46,26 +66,27 @@ abstract class EvrReader extends DcmReaderBase {
   EvrReader(ByteData bd, RootDataset rds) : super(bd, rds);
 
   @override
-  ByteData readFmi(RootDataset rds) => _readFmi(rb, rds, dParams);
-
-  @override
   RootDataset read() {
+//    if (pInfo.wasShortFile) return shortFileError();
     cds = rds;
-    final fmiBD = readFmi(rds);
-    if (fmiBD == null) return null;
-
-      return (rds.isEvr) ? EvrReader.readInstance(rds) : IvrReader(rds);
+    readRootDataset(readEvrElement);
+    return rds;
   }
 
   /// For EVR Datasets, all Elements are read by this method.
-  @override
-  Element readElement() {
+  Element readEvrElement() {
+    _elementCount++;
     final eStart = rb.rIndex;
     final code = rb.code;
     final tag = checkCode(code, eStart);
     final vrCode = rb.uint16;
     final vrIndex = __lookupEvrVRIndex(code, eStart, vrCode);
     int newVRIndex;
+
+    log.debug(
+        '${rb.rbb} #$_elementCount readEvr ${dcm(
+	code)} VR($vrIndex) @$eStart',
+        1);
 
     // Note: this is only relevant for EVR
     if (tag != null) {
@@ -85,20 +106,44 @@ abstract class EvrReader extends DcmReaderBase {
         }
       }
     }
-    if (_isShortVR(vrIndex)) return readShort(code, eStart, vrIndex);
-    if (_isSequenceVR(vrIndex)) return readEvrSQ(code, eStart);
-    if (_isLongVR(vrIndex)) return readLong(code, eStart, vrIndex);
-    if (_isUndefinedLengthVR(vrIndex)) return readMaybeUndefined(code, eStart, vrIndex);
 
-    return invalidVRIndexError(vrIndex);
+    //Urgent: implement correcting VR
+    Element e;
+    if (_isEvrShortVR(vrIndex)) {
+      e = readEvrShort(code, eStart, vrIndex);
+      log.up;
+    } else if (_isSequenceVR(vrIndex)) {
+      e = readEvrSQ(code, eStart);
+    } else if (_isEvrLongVR(vrIndex)) {
+      e = readEvrLong(code, eStart, vrIndex);
+      log.up;
+    } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
+      e = readEvrMaybeUndefined(code, eStart, vrIndex);
+      log.up;
+    } else {
+      return invalidVRIndexError(vrIndex);
+    }
+
+    // Elements are always read into the current dataset.
+    // **** This is the only place they are added to the dataset.
+    final ok = cds.tryAdd(e);
+    if (!ok) log.warn('*** duplicate: $e');
+
+    if (_statisticsEnabled) doEndOfElementStats(code, eStart, e, ok);
+    log.debug('${rb.ree} readEvr $e', -1);
+    return e;
   }
 
   int __lookupEvrVRIndex(int code, int eStart, int vrCode) {
     final vr = VR.lookupByCode(vrCode);
     if (vr == null) {
-      log.debug('${rb.rmm} ${dcm(code)} $eStart ${hex16(vrCode)}');
-      rb.warn('VR is Null: vrCode(${hex16(vrCode)}) '
-          '${dcm(code)} start: $eStart ${rb.rrr}');
+      log.debug('${rb.rmm} ${dcm(
+	code)} $eStart ${hex16(
+	vrCode)}');
+      rb.warn('VR is Null: vrCode(${hex16(
+	vrCode)}) '
+          '${dcm(
+	code)} start: $eStart ${rb.rrr}');
       showNext(rb.rIndex - 4);
     }
     return __vrToIndex(code, vr);
@@ -107,9 +152,15 @@ abstract class EvrReader extends DcmReaderBase {
   /// Read a Short EVR Element, i.e. one with a 16-bit
   /// Value Field Length field. These Elements may not have
   /// a kUndefinedLength value.
-  Element readShort(int code, int eStart, int vrIndex) {
+  Element readEvrShort(int code, int eStart, int vrIndex) {
     final vlf = rb.uint16;
     rb + vlf;
+    log.debug(
+        '${rb.rmm} readEvrShort ${dcm(
+	code)} vr($vrIndex) '
+        '$eStart + 8 + $vlf = ${eStart + 8 + vlf}',
+        1);
+//	pInfo.nShortElements++;
     return makeElement(code, eStart, vrIndex, vlf, EvrShort.make);
   }
 
@@ -117,7 +168,7 @@ abstract class EvrReader extends DcmReaderBase {
   /// but that cannot have the value kUndefinedValue.
   ///
   /// Reads one of OB, OD, OF, OL, OW, UC, UN, UR, or UT.
-  Element readLong(int code, int eStart, int vrIndex) {
+  Element readEvrLong(int code, int eStart, int vrIndex) {
     rb + 2;
     final vlf = rb.uint32;
     assert(vlf != kUndefinedLength);
@@ -131,25 +182,19 @@ abstract class EvrReader extends DcmReaderBase {
   //  If the Element if UN then it maybe a Sequence.  If it is it will
   //  start with either a kItem delimiter or if it is an empty undefined
   //  Sequence it will start with a kSequenceDelimiter.
-  Element readMaybeUndefined(int code, int eStart, int vrIndex) {
+  Element readEvrMaybeUndefined(int code, int eStart, int vrIndex) {
     rb + 2;
     final vlf = rb.uint32;
     return readMaybeUndefinedLength(
-        code, eStart, vrIndex, vlf, EvrLong.make, readElement);
+        code, eStart, vrIndex, vlf, EvrLong.make, readEvrElement);
   }
 
-  /// Read an EVR Sequence.
+  /// Read and EVR Sequence.
   Element readEvrSQ(int code, int eStart) {
     rb + 2;
     final vlf = rb.uint32;
-    return (vlf == kUndefinedLength)
-        ? readUSQ(code, eStart, vlf, EvrLong.make, readElement)
-        : readDSQ(code, eStart, vlf, EvrLong.make, readElement);
+    return readSQ(code, eStart, vlf, EvrLong.make, readEvrElement);
   }
-
-  static RootDataset readFMI(ByteData bd, RootDataset rds) {}
-
-  static RootDataset readInstance(ByteData bd, RootDataset rds) {}
 }
 
 bool _isSequenceVR(int vrIndex) => vrIndex == 0;
@@ -157,13 +202,13 @@ bool _isSequenceVR(int vrIndex) => vrIndex == 0;
 bool _isSpecialVR(int vrIndex) =>
     vrIndex >= kVRSpecialIndexMin && vrIndex <= kVRSpecialIndexMax;
 
-bool _isShortVR(int vrIndex) =>
+bool _isEvrShortVR(int vrIndex) =>
     vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
 
-bool _isUndefinedLengthVR(int vrIndex) =>
+bool _isMaybeUndefinedLengthVR(int vrIndex) =>
     vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
 
-bool _isLongVR(int vrIndex) =>
+bool _isEvrLongVR(int vrIndex) =>
     vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
 
 int __vrToIndex(int code, VR vr) {
