@@ -133,23 +133,24 @@ class EvrReader extends DcmReaderBase {
   //  If the Element if UN then it maybe a Sequence.  If it is it will
   //  start with either a kItem delimiter or if it is an empty undefined
   //  Sequence it will start with a kSequenceDelimiter.
- Element readMaybeUndefined(int code, int eStart, int vrIndex) {
+  Element readMaybeUndefined(int code, int eStart, int vrIndex) {
     rb + 2;
     final vlf = rb.uint32;
     return readMaybeUndefinedLength(code, eStart, vrIndex, vlf);
   }
 
-
-@override
+  @override
   Element readMaybeUndefinedLength(int code, int eStart, int vrIndex, int vlf) {
     // If VR is UN then this might be a Sequence
     if (vrIndex == kUNIndex) {
       final e = tryReadUNSequence(code, eStart, vlf);
       if (e != null) return e;
     }
-    return (vlf == kUndefinedLength) ? readUndefinedLength(code, eStart, vrIndex, vlf)
-           : readDefinedLength(code, eStart, vrIndex, vlf);
+    return (vlf == kUndefinedLength)
+        ? readUndefinedLength(code, eStart, vrIndex, vlf)
+        : readDefinedLength(code, eStart, vrIndex, vlf);
   }
+
   /// Read an EVR Sequence.
   @override
   Element readSequence(int code, int eStart, int vrIndex) {

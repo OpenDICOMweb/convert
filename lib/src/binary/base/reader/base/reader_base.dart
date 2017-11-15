@@ -398,43 +398,6 @@ abstract class DcmReaderBase extends DcmReaderInterface {
     }
     return tag;
   }
-/*
-  //TODO: check the performance cost of code checking
-  Tag checkCode(int code, int eStart) {
-    if (_checkCode) {
-      if (code < 0x00020000 || code >= kItem) {
-        if (_beyondPixelData) {
-          log.warn('** Bad data beyond Pixel Data');
-          if (throwOnError)
-            return invalidTagError('code${dcm(code)} @${eStart - 4} +${rb.remaining}');
-        }
-        log.error('Invalid Tag code: ${dcm(code)}');
-        showReadIndex(rb.rIndex - 6);
-        throw 'bad code';
-      }
-      if (code <= 0) _zeroEncountered(code);
-      // Check for Group Length Code
-      final elt = code & 0xFFFF;
-      if (code > 0x3000 && (elt == 0)) _pInfo.hadGroupLengths = true;
-    }
-
-    final tag = Tag.lookup(code);
-    if (tag == null) {
-      rb.warn('Tag is Null: ${dcm(code)} start: $eStart ${rb.rrr}');
-      showNext(rb.rIndex - 4);
-    }
-    return tag;
-  }
-*/
-
-  int __vrToIndex(int code, VR vr) {
-    var vrIndex = vr.index;
-    if (_isSpecialVR(vrIndex)) {
-      log.info1('-- Changing Special VR ${VR.lookupByIndex(vrIndex)}) to VR.kUN');
-      vrIndex = VR.kUN.index;
-    }
-    return vrIndex;
-  }
 
   bool __isValidVR(int code, int vrIndex, Tag tag) {
     if (vrIndex == kUNIndex) {
@@ -547,21 +510,6 @@ Failed to read FMI: "$path"\nException: $x\n'
     }
   }
 
-  /*
-//Enhancement:
-void _printTrailingData(int start, int length) {
-  for (var i = start; i < start + length; i += 4) {
-    final x = rb.getUint16(i);
-    final y = rb.getUint16(i + 2);
-    final z = rb.getUint32(i);
-    final xx = hex8(x);
-    final yy = hex16(y);
-    final zz = hex32(z);
-    // print('@$i: 16($x, $xx) | $y, $yy) 32($z, $zz)');
-  }
-}
-*/
-
   @override
   String toString() => '$runtimeType: rds: $rds, cds: $cds';
 
@@ -573,24 +521,7 @@ void _printTrailingData(int start, int length) {
   }
 }
 
-bool _isSequenceVR(int vrIndex) => vrIndex == 0;
-
-bool _isSpecialVR(int vrIndex) =>
-    vrIndex >= kVRSpecialIndexMin && vrIndex <= kVRSpecialIndexMax;
-
-bool _isNormalVR(int vrIndex) =>
-    vrIndex >= kVRNormalIndexMin && vrIndex <= kVRNormalIndexMax;
-
 bool _isMaybeUndefinedLengthVR(int vrIndex) =>
     vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
-
-bool _isEvrLongVR(int vrIndex) =>
-    vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
-
-bool _isEvrShortVR(int vrIndex) =>
-    vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
-
-bool _isIvrDefinedLengthVR(int vrIndex) =>
-    vrIndex >= kVRIvrDefinedIndexMin && vrIndex <= kVRIvrDefinedIndexMax;
 
 final String kItemAsString = hex32(kItem32BitLE);
