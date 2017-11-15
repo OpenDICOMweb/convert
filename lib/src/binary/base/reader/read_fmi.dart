@@ -16,12 +16,12 @@ bool _readFmi(RootDataset rds, String path, DecodingParameters dParams) {
     if (!_pInfo.hadPrefix && !dParams.allowMissingPrefix) {
       return false;
     }
-    //  log.debug1('$rmm readFMI: prefix($_hadPrefix) $rds');
+
 
     while (_rb.isReadable) {
-      final code = _rb.peekCode;
-      if (code >= 0x00030000) break;
-      _readEvrElement();
+	    final code = _rb.peekCode;
+	    if (code >= 0x00030000) break;
+	    rds.fmi.add(_readEvrElement());
     }
 
     _isEvr = rds.isEvr;

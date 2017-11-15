@@ -186,14 +186,14 @@ Element __tryReadUNSequence(
     _pInfo.nEmptyUNSequences++;
     log.debug3('${_rb.rmm} *** Empty Evr UN Sequence');
     _readAndCheckDelimiterLength();
-    return _makeSequence(code, eStart, EvrLong.make, emptyItemList);
+    return _makeSequence(code, eStart, ebMaker, emptyItemList);
   } else if (delimiter == kItem) {
     // A non-empty Sequence
     log.debug3('${_rb.rmm} *** Found UN Sequence');
     _readAndCheckDelimiterLength();
     _pInfo.nSequences++;
     _pInfo.nNonEmptyUNSequences++;
-    return __readSQ(code, eStart, vlf, EvrLong.make, eReader);
+    return __readSQ(code, eStart, vlf, ebMaker, eReader);
   }
   log.debug3('${_rb.rmm} *** UN Sequence not found');
   return null;
