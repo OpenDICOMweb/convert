@@ -3,11 +3,19 @@
 // that can be found in the LICENSE file.
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
-part of odw.sdk.convert.binary.reader;
+
+import 'package:dataset/dataset.dart';
+import 'package:system/core.dart';
+
+
+import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
+import 'package:dcm_convert/src/decoding_parameters.dart';
+import 'package:dcm_convert/src/errors.dart';
+
 
 /// Reads File Meta Information ([Fmi]) and returns a Map<int, Element>
 /// if any [Fmi] [Element]s were present; otherwise, returns null.
-ByteData _readFmi(ReadBuffer rb, RootDataset rds,
+ByteData readFmi(ReadBuffer rb, RootDataset rds,
     [DecodingParameters dParams, ParseInfo pInfo]) {
   assert(_cds == rds);
 
@@ -16,17 +24,17 @@ ByteData _readFmi(ReadBuffer rb, RootDataset rds,
     rb.index = 0;
     return null;
   }
-  final fmiStart = _rb.rIndex;
-  while (_rb.isReadable) {
-    final code = _rb.peekCode;
+  final fmiStart = rb.rIndex;
+  while (rb.isReadable) {
+    final code = rb.peekCode;
     if (code >= 0x00030000) break;
     rds.fmi.add(_readEvrElement());
   }
-  final fmiEnd = _rb.rIndex;
+  final fmiEnd = rb.rIndex;
 
-  if (!_rb.hasRemaining(dParams.shortFileThreshold - _rb.rIndex)) {
+  if (!rb.hasRemaining(dParams.shortFileThreshold - rb.rIndex)) {
     throw new EndOfDataError(
-        '_readFmi', 'index: ${_rb.rIndex} bdLength: ${_rb.lengthInBytes}');
+        '_readFmi', 'index: ${rb.rIndex} bdLength: ${rb.lengthInBytes}');
   }
 
   final ts = rds.transferSyntax;

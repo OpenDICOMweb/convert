@@ -12,6 +12,7 @@ import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 
+import 'package:dcm_convert/src/binary/base/reader/read_fmi.dart';
 import 'package:dcm_convert/src/binary/base/reader/reader_base.dart';
 
 // Reader axioms
@@ -45,12 +46,15 @@ abstract class EvrReader extends DcmReaderBase {
   EvrReader(ByteData bd, RootDataset rds) : super(bd, rds);
 
   @override
+  ByteData readFmi(RootDataset rds) => _readFmi(rb, rds, dParams);
+
+  @override
   RootDataset read() {
     cds = rds;
     final fmiBD = readFmi(rds);
     if (fmiBD == null) return null;
 
-//      return (rds.isEvr) ? EvrReader.readInstance(rds) : IvrReader(rds);
+      return (rds.isEvr) ? EvrReader.readInstance(rds) : IvrReader(rds);
   }
 
   /// For EVR Datasets, all Elements are read by this method.

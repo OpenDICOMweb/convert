@@ -33,7 +33,6 @@ part 'package:dcm_convert/src/binary/base/reader/read_root.dart';
 //    the Value Field Length (vfLength) of a non-Sequence Element.
 //    The read index rIndex is left at the end of the Element Delimiter.
 
-
 //TODO: redoc to reflect current state of code
 
 typedef Element ElementMaker(EBytes eb, int vrIndex);
@@ -93,6 +92,15 @@ abstract class DcmReaderBase extends DcmReaderInterface {
       {this.path = '', this.reUseBD = true, this.dParams = DecodingParameters.kNoChange})
       : rb = new ReadBuffer(bd);
 
+  DcmReaderBase.from(DcmReaderBase rBase)
+      : path = rBase.path,
+        rb = rBase.rb,
+        rds = rBase.rds,
+        cds = rBase.cds,
+        fmiBD = rBase.fmiBD,
+        reUseBD = rBase.reUseBD,
+        dParams = rBase.dParams;
+
   bool get isEvr => rds.isEvr;
 
   bool get isReadable => rb.isReadable;
@@ -102,7 +110,6 @@ abstract class DcmReaderBase extends DcmReaderInterface {
   String get info => '$runtimeType: rds: ${rds.info}, cds: ${cds.info}';
 
   bool hasRemaining(int n) => rb.hasRemaining(n);
-
 
 /*
   @override
@@ -114,14 +121,13 @@ abstract class DcmReaderBase extends DcmReaderInterface {
 */
 
   void readRootDataset() {
-  	cds = rds;
-  	final hasFmi = readFmi(rds);
-	  __readRootDataset(eReader);
+    cds = rds;
+    final hasFmi = readFmi(rds);
+    __readRootDataset(eReader);
   }
 
-
   @override
-  ByteData readFmi(RootDataset rds) => _readFmi(rb, rds, dParams);
+  ByteData readFmi(RootDataset rds); => _readFmi(rb, rds, dParams);
 
   @override
   Element readDefinedLength(
@@ -189,10 +195,10 @@ abstract class DcmReaderBase extends DcmReaderInterface {
     final dsEnd = dsStart + vfLength;
     assert(dsStart == rb.rIndex);
     while (rb.rIndex < dsEnd) {
-	    // Elements are always read into the current dataset.
-	    final e = eReader();
-	    final ok = ds.tryAdd(e);
-	    if (!ok) log.warn('*** duplicate: $e');
+      // Elements are always read into the current dataset.
+      final e = eReader();
+      final ok = ds.tryAdd(e);
+      if (!ok) log.warn('*** duplicate: $e');
     }
   }
 

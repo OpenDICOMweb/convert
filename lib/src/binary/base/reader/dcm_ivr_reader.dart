@@ -11,9 +11,9 @@ import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/evr_reader.dart';
+import 'package:dcm_convert/src/binary/base/reader/reader_base.dart';
 
-abstract class IvrReader extends EvrReader {
+abstract class IvrReader extends DcmReaderBase {
   final bool isEVR = false;
 
   /// Creates a new [EvrReader]  where [rb].rIndex = 0.
@@ -22,6 +22,8 @@ abstract class IvrReader extends EvrReader {
   @override
   RootDataset read() {
     cds = rds;
+    final fmiBD = readFmi(rds);
+    if (fmiBD == null) return null;
     readRootDataset(readElement);
     return rds;
   }
