@@ -217,7 +217,7 @@ FileResult readFileWithResult(File file,
   final start = timer.split;
   final bytes = file.readAsBytesSync();
   final readBD = timer.split;
-  final rds = ByteDatasetReader.readBytes(bytes, path: file.path, fmiOnly: fmiOnly, fast: true);
+  final rds = ByteReader.readBytes(bytes, path: file.path, fmiOnly: fmiOnly, fast: true);
   timer.stop();
   if (rds == null) return null;
   final stop = timer.elapsed;

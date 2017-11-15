@@ -10,7 +10,7 @@ import 'dart:typed_data';
 import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 
-import 'package:dcm_convert/src/binary/byte/read_bytes.dart';
+import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
 import 'package:dcm_convert/src/binary/byte/write_bytes.dart';
 import 'package:dcm_convert/src/tool/job_utils.dart';
 import 'package:dcm_convert/src/errors.dart';
@@ -24,7 +24,7 @@ bool doRWRByteFileSync(File f, {bool fast = true, bool noisy = false}) {
   try {
     final Uint8List bytes = f.readAsBytesSync();
     final bd = bytes.buffer.asByteData();
-    final reader0 = new ByteDatasetReader(bd, path: f.path, fast: true);
+    final reader0 = new ByteReader(bd, path: f.path, fast: true);
     final rds0 = reader0.read();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -78,13 +78,13 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       log.debug('Re-reading: ${bytes1.length} bytes from $outPath');
     }
-    ByteDatasetReader reader1;
+    ByteReader reader1;
     if (fast) {
       // Just read bytes not file
-      reader1 = new ByteDatasetReader(
+      reader1 = new ByteReader(
           bytes1.buffer.asByteData(bytes1.offsetInBytes, bytes1.lengthInBytes));
     } else {
-      reader1 = new ByteDatasetReader.fromPath(outPath);
+      reader1 = new ByteReader.fromPath(outPath);
     }
     final rds1 = reader1.read();
     //   RootDatasetBytes rds1 = ByteReader.readPath(outPath);

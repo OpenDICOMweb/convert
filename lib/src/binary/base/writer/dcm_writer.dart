@@ -21,7 +21,7 @@ import 'package:tag/vr.dart';
 import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/src/binary/base/writer/writer_interface.dart';
-import 'package:dcm_convert/src/binary/base/writer/byte_writer.dart';
+import 'package:dcm_convert/src/binary/base/writer/write_buffer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 
@@ -33,7 +33,7 @@ part 'package:dcm_convert/src/binary/base/writer/write_common.dart';
 part 'package:dcm_convert/src/binary/base/writer/write_vf.dart';
 
 // The write buffer
-ByteWriter _wb;
+WriteBuffer _wb;
 
 // The RootDataset
 RootDataset _rds;
@@ -96,7 +96,7 @@ abstract class DcmWriter extends DcmWriterInterface {
   final ElementOffsets outputOffsets;
 
   @override
-  final ByteWriter wb;
+  final WriteBuffer wb;
 
   /// Creates a new [DcmWriter], where [wIndex] = 0.
   DcmWriter(this.rds,
@@ -112,7 +112,7 @@ abstract class DcmWriter extends DcmWriterInterface {
         outputOffsets = (elementOffsetsEnabled) ? new ElementOffsets() : null,
         wb = (reUseBuffer)
             ? _reuseByteListWriter(length)
-            : new ByteWriter((length == null) ? defaultBufferLength : length) {
+            : new WriteBuffer((length == null) ? defaultBufferLength : length) {
     _cds = rds;
     _eParams = eParams;
     _wb = wb;
@@ -223,14 +223,14 @@ abstract class DcmWriter extends DcmWriterInterface {
   static const int defaultBufferLength = k1MB; //200 * k1MB;
 
   /// If [_reuse] is true the [ByteData] buffer is stored here.
-  static ByteWriter _reuse;
+  static WriteBuffer _reuse;
 
-  static ByteWriter _reuseByteListWriter([int size]) {
+  static WriteBuffer _reuseByteListWriter([int size]) {
     size ??= defaultBufferLength;
-    if (_reuse == null) return _reuse = new ByteWriter(size);
+    if (_reuse == null) return _reuse = new WriteBuffer(size);
 
     if (size > _reuse.lengthInBytes) {
-      _reuse = new ByteWriter(size + 1024);
+      _reuse = new WriteBuffer(size + 1024);
       log.warn('**** DcmWriter creating new Reuse BD of Size: ${_reuse
 				  .lengthInBytes}');
     }

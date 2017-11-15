@@ -5,23 +5,28 @@
 // See the AUTHORS file for other contributors.
 part of odw.sdk.convert.binary.reader;
 
-void _readEvrRootDataset() => __readRootDataset(_readEvrElement);
+void _readEvrRootDataset() {
+	log.reset;
+  _isEvr = true;
 
+  log.debug('${_rb.rbb} readEvrRootDataset');
+  _readDatasetDefinedLength(_rds, _rb.rIndex, _rb.remaining, _readEvrElement);
+  log.debug('${_rb.ree} readEvrRootDataset $_elementCount Elements read with '
+      '${_rb.remaining} bytes remaining\nDatasets: ${_pInfo.nDatasets}');
+}
 
 /// For EVR Datasets, all Elements are read by this method.
 Element _readEvrElement() {
-  _elementCount++;
+	_elementCount++;
   final eStart = _rb.rIndex;
   final code = _rb.code;
   final tag = __checkCode(code, eStart);
   final vrCode = _rb.uint16;
-  final vrIndex = __lookupEvrVRIndex(code, eStart, vrCode);
-  int newVRIndex;
+  var vrIndex = __lookupEvrVRIndex(code, eStart, vrCode);
 
-  log.debug('${_rb.rbb} #$_elementCount readEvr ${dcm(code)} VR($vrIndex) @$eStart', 1);
+	log.debug('${_rb.rbb} #$_elementCount readEvr ${dcm(code)} VR($vrIndex) @$eStart', 1);
 
-  // Note: this is only relevant for EVR
-  if (tag != null) {
+	if (tag != null) {
     if (_dParams.doCheckVR && __isNotValidVR(code, vrIndex, tag)) {
       final vr = VR.lookupByCode(vrCode);
       log.error('VR $vr is not valid for $tag');
@@ -29,47 +34,48 @@ Element _readEvrElement() {
 
     if (_dParams.doCorrectVR) {
       final oldIndex = vrIndex;
-      //Urgent: implement replacing the VR, but must be after parsing
-      newVRIndex = __correctVR(code, vrIndex, tag);
+      vrIndex = __correctVR(code, vrIndex, tag);
       if (vrIndex != oldIndex) {
         final oldVR = VR.lookupByCode(vrCode);
         final newVR = tag.vr;
-        log.info1('** Changing VR from $oldVR to $newVR');
+        log.warn('** Changing VR from $oldVR to $newVR');
       }
     }
   }
 
-  //Urgent: implement correcting VR
   Element e;
-  if (_isEvrShortVR(vrIndex)) {
+  if (  _isEvrShortVR(vrIndex)) {
+    _pInfo.nShortElements++;
     e = _readEvrShort(code, eStart, vrIndex);
     log.up;
   } else if (_isSequenceVR(vrIndex)) {
     e = _readEvrSQ(code, eStart);
   } else if (_isEvrLongVR(vrIndex)) {
+    _pInfo.nLongElements++;
     e = _readEvrLong(code, eStart, vrIndex);
     log.up;
   } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
+    _pInfo.nMaybeUndefinedElements++;
     e = _readEvrMaybeUndefined(code, eStart, vrIndex);
     log.up;
   } else {
     return invalidVRIndexError(vrIndex);
   }
 
-  // Elements are always read into the current dataset.
-  // **** This is the only place they are added to the dataset.
-  final ok = _cds.tryAdd(e);
-  if (!ok) log.warn('*** duplicate: $e');
+	// Elements are always read into the current dataset.
+	// **** This is the only place they are added to the dataset.
+	final ok = _cds.tryAdd(e);
+	if (!ok) log.warn('*** duplicate: $e');
 
   if (_statisticsEnabled) _doEndOfElementStats(code, eStart, e, ok);
-  log.debug('${_rb.ree} readEvr $e', -1);
+
+	log.debug('${_rb.ree} readEvr $e', -1);
   return e;
 }
 
 int __lookupEvrVRIndex(int code, int eStart, int vrCode) {
   final vr = VR.lookupByCode(vrCode);
   if (vr == null) {
-    log.debug('${_rb.rmm} ${dcm(code)} $eStart ${hex16(vrCode)}');
     _rb.warn('VR is Null: vrCode(${hex16(vrCode)}) '
         '${dcm(code)} start: $eStart ${_rb.rrr}');
     _showNext(_rb.rIndex - 4);
@@ -84,8 +90,7 @@ Element _readEvrShort(int code, int eStart, int vrIndex) {
   final vlf = _rb.uint16;
   _rb + vlf;
   log.debug('${_rb.rmm} readEvrShort ${dcm(code)} vr($vrIndex) '
-      '$eStart + 8 + $vlf = ${eStart + 8 + vlf}', 1);
-  _pInfo.nShortElements++;
+		            '$eStart + 8 + $vlf = ${eStart + 8 + vlf}', 1);
   return _makeElement(code, eStart, vrIndex, vlf, EvrShort.make);
 }
 
@@ -97,7 +102,9 @@ Element _readEvrLong(int code, int eStart, int vrIndex) {
   _rb + 2;
   final vlf = _rb.uint32;
   assert(vlf != kUndefinedLength);
-  return __readLongDefinedLength(code, eStart, vrIndex, vlf, EvrLong.make);
+  log.debug('${_rb.rmm} readEvrLong ${dcm(code)} vr($vrIndex) '
+		            '$eStart + 12 + $vlf = ${eStart + 12 + vlf}', 1);
+  return __readEvrLongDefinedLength(code, eStart, vrIndex, vlf);
 }
 
 /// Read a long EVR Element (not SQ) with a 32-bit vfLengthField,
@@ -110,14 +117,52 @@ Element _readEvrLong(int code, int eStart, int vrIndex) {
 Element _readEvrMaybeUndefined(int code, int eStart, int vrIndex) {
   _rb + 2;
   final vlf = _rb.uint32;
-  return __readMaybeUndefinedLength(
-      code, eStart, vrIndex, vlf, EvrLong.make, _readEvrElement);
+  log.debug('${_rb.rbb} readEvrMaybeUndefined ${dcm(code)} vr($vrIndex) '
+		            '$eStart + 12 + ??? = ???', 1);
+
+  // If VR is UN then this might be a Sequence
+  if (vrIndex == kUNIndex) {
+    final e = __tryReadUNSequence(code, eStart, vlf, EvrLong.make, _readEvrElement);
+    if (e != null) return e;
+  }
+  return (vlf == kUndefinedLength)
+      ? __readEvrUndefinedLength(code, eStart, vrIndex, vlf)
+      : __readEvrLongDefinedLength(code, eStart, vrIndex, vlf);
 }
 
 /// Read and EVR Sequence.
 Element _readEvrSQ(int code, int eStart) {
+	final eNumber = _elementCount;
   _rb + 2;
   final vlf = _rb.uint32;
-  return __readSQ(code, eStart, vlf, EvrLong.make, _readEvrElement);
+	log.debug('${_rb.rbb} #$eNumber readEvrSQ ${dcm(code)} @$eStart vfl:$vlf', 1);
+  final e =  __readSQ(code, eStart, vlf, EvrLong.make, _readEvrElement);
+  log.debug('${_rb.ree} #$eNumber readEvrSQ ${dcm(code)} $e', -1);
+  return e;
 }
 
+// Finish reading an EVR Long Defined Length Element
+Element __readEvrLongDefinedLength(int code, int eStart, int vrIndex, int vlf) {
+  assert(vlf != kUndefinedLength);
+  log.debug('${_rb.rmm} readEvrLongDefined ${dcm(code)} vr($vrIndex) '
+		            '$eStart + 12 + $vlf = ${eStart + 12 + vlf}');
+  _pInfo.nDefinedLengthElements++;
+  _rb + vlf;
+  return (code == kPixelData)
+      ? _makePixelData(code, eStart, vrIndex, _rb.rIndex, false, EvrLong.make)
+      : _makeElement(code, eStart, vrIndex, _rb.rIndex, EvrLong.make);
+}
+
+// Finish reading an EVR Long Undefined Length Element
+Element __readEvrUndefinedLength(int code, int eStart, int vrIndex, int vlf) {
+  assert(vlf == kUndefinedLength);
+  log.debug('${_rb.rmm} readEvrLongUndefined ${dcm(code)} vr($vrIndex) '
+		            '$eStart + 12 + ??? = ???');
+  _pInfo.nUndefinedLengthElements++;
+  if (code == kPixelData) {
+    return __readEncapsulatedPixelData(code, eStart, vrIndex, vlf, EvrLong.make);
+  } else {
+    final endOfVF = _findEndOfULengthVF();
+    return _makeElement(code, eStart, vrIndex, endOfVF, EvrLong.make);
+  }
+}

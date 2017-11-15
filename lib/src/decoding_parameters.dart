@@ -7,6 +7,7 @@
 import 'package:uid/uid.dart';
 
 class DecodingParameters {
+	final int shortFileThreshold;
   /// if true Datasets will be allowed to be encoded in IVRLE.
   /// The default is false.
   final bool allowImplicitLittleEndian;
@@ -74,6 +75,7 @@ class DecodingParameters {
   final int bulkdataThreshold;
 
   const DecodingParameters({
+	  this.shortFileThreshold = 131,
     this.allowImplicitLittleEndian = true,
     this.targetTS,
 	  this.checkPreambleAllZeros = true,
@@ -81,7 +83,7 @@ class DecodingParameters {
     this.allowMissingFMI = true,
     this.allowDuplicates = true,
     this.checkForUNSequence = true,
-    this.doCorrectVR = false,
+    this.doCorrectVR = true,
     this.doCheckVR = true,
     this.doConvertToNormalForm = false,
     this.doSeparateBulkdata = false,

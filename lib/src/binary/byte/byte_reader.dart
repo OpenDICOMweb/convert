@@ -32,36 +32,32 @@ Item _makeItem(Dataset parent, {ElementList elements, SQ sequence, DSBytes eb}) 
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootDatasetByte].
-class ByteDatasetReader extends DcmReader {
-  /// Creates a new [ByteDatasetReader], which is decoder for Binary DICOM
+class ByteReader extends DcmReader {
+  /// Creates a new [ByteReader], which is decoder for Binary DICOM
   /// (application/dicom).
-  ByteDatasetReader(ByteData bd,
+  ByteReader(ByteData bd,
       {String path = '',
-      bool async = false,
+
       bool fast = true,
-      bool fmiOnly = false,
       bool reUseBD = true,
-      bool showStats = false,
+//      bool showStats = false,
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool elementOffsetsEnabled = true,
       ElementOffsets inputOffsets})
       : super(bd, new RootDatasetByte(new RDSBytes(bd), path: path),
             path: path,
-            async: async,
-            fast: fast,
-            fmiOnly: fmiOnly,
             reUseBD: reUseBD,
-            showStats: showStats,
-            dParams: dParams,
-            elementOffsetsEnabled: elementOffsetsEnabled) {
+//            showStats: showStats,
+            dParams: dParams) {
+//            elementOffsetsEnabled: elementOffsetsEnabled) {
     elementMaker = makeBEFromEBytes;
     pixelDataMaker = makeBEPixelDataFromEBytes;
     sequenceMaker = _makeSequence;
     itemMaker = _makeItem;
   }
 
-  /// Creates a [ByteDatasetReader] from the contents of the [file].
-  factory ByteDatasetReader.fromFile(File file,
+  /// Creates a [ByteReader] from the contents of the [file].
+  factory ByteReader.fromFile(File file,
       {bool async: false,
       bool fast: true,
       bool fmiOnly = false,
@@ -69,7 +65,7 @@ class ByteDatasetReader extends DcmReader {
       DecodingParameters dParams = DecodingParameters.kNoChange}) {
     final Uint8List bytes = file.readAsBytesSync();
     final bd = bytes.buffer.asByteData();
-    return new ByteDatasetReader(bd,
+    return new ByteReader(bd,
         path: file.path,
         async: async,
         fast: fast,
@@ -78,14 +74,14 @@ class ByteDatasetReader extends DcmReader {
         dParams: dParams);
   }
 
-  /// Creates a [ByteDatasetReader] from the contents of the [File] at [path].
-  factory ByteDatasetReader.fromPath(String path,
+  /// Creates a [ByteReader] from the contents of the [File] at [path].
+  factory ByteReader.fromPath(String path,
           {bool async: true,
           bool fast: true,
           bool fmiOnly = false,
           bool reUseBD = true,
           DecodingParameters dParams = DecodingParameters.kNoChange}) =>
-      new ByteDatasetReader.fromFile(new File(path),
+      new ByteReader.fromFile(new File(path),
           async: async, fast: fast, fmiOnly: fmiOnly, reUseBD: reUseBD, dParams: dParams);
 
   @override
@@ -115,7 +111,7 @@ class ByteDatasetReader extends DcmReader {
       bool elementOffsetsEnabled = true,
       ElementOffsets inputOffsets}) {
     final bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
-    final reader = new ByteDatasetReader(bd,
+    final reader = new ByteReader(bd,
         path: path,
         async: async,
         fast: fast,

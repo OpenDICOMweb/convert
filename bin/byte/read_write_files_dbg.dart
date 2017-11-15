@@ -10,7 +10,7 @@ import 'package:system/core.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:system/server.dart';
 
-import 'package:dcm_convert/src/tool/do_rwr_byte_file_sync.dart';
+import 'package:dcm_convert/src/tool/do_rwr_byte_file.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
@@ -20,19 +20,23 @@ const String ivrNoSequences = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy'
 
 const String bar = 'C:/odw/test_data/mweb/10 Patient IDs/04443352';
 
-const String xx0 = 'C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/CT.2.16.840.1.114255.390617858.1794098916.62037.38690.dcm';
-
 void main() {
-  Server.initialize(name: 'read_write_file', level: Level.info1);
+  Server.initialize(name: 'read_write_file', level: Level.debug3);
+
   system.throwOnError = true;
-
+  // *** Modify [paths] value to read/write a different file
   final paths = testPaths0;
+  //paths.addAll(testPaths0);
+ // paths.addAll(testPaths1);
+ // paths.addAll(testPaths2);
+//  ..addAll(testErrors);
 
-  for (var i = 0; i < paths.length; i++) {
-  	final f = new File(paths[i]);
-  	stderr.writeln('$i Start RW $f');
-    doRWRByteFileSync(f);
-	  log.info('$i End RW $f');
+  for (var i = 0; i < 1; i++) {
+  	final f = new File(paths[19]);
+  	stderr.writeln('$f');
+  	log.info('$i Start RW File: $f');
+    doRWRByteFile(f);
+	  log.info('$i End RW File: $f');
   }
 }
 

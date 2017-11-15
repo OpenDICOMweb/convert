@@ -53,7 +53,7 @@ RootDatasetTag convertFile(File file, {int reps = 1, bool fmiOnly = false}) {
   final log = new Logger('convertFile', Level.info)
     ..level = Level.warn1
     ..debug2('Reading: $file');
-  final bRoot = ByteDatasetReader.readFile(file, fast: true);
+  final bRoot = ByteReader.readFile(file, fast: true);
   print('TS: ${bRoot.transferSyntax}');
   log
     ..debug('bRoot.isRoot: ${bRoot.isRoot}')

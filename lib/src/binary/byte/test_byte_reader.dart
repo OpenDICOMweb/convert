@@ -11,11 +11,11 @@ import 'package:dataset/byte_dataset.dart';
 import 'package:element/byte_element.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/binary/byte/read_bytes.dart';
+import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 
 /// External Interface for Testing Only!!!
-class TestByteReader extends ByteDatasetReader {
+class TestByteReader extends ByteReader {
   /// Creates a new [TestByteReader].
   TestByteReader(ByteData bd,
       {String path = '',
@@ -71,7 +71,7 @@ class TestByteReader extends ByteDatasetReader {
       bool reUseBD = true,
       DecodingParameters dParams = DecodingParameters.kNoChange}) {
     final bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
-    final reader = new ByteDatasetReader(bd,
+    final reader = new ByteReader(bd,
         path: path,
         async: async,
         fast: fast,

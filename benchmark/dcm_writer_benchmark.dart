@@ -60,7 +60,7 @@ void main() {
 
 bool writeFileTest(File inFile, {int reps = 1, bool fmiOnly = false}) {
 	final bytes0 = inFile.readAsBytesSync();
-  final rds0 = ByteDatasetReader.readBytes(bytes0);
+  final rds0 = ByteReader.readBytes(bytes0);
 	final bytes1 = ByteDatasetWriter.writeBytes(rds0, fast: true, path: '');
   if (!bytesEqual(bytes0, bytes1)) throw 'Error in DcmWrite';
 

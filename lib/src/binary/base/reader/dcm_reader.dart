@@ -17,8 +17,8 @@ import 'package:uid/uid.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/errors.dart';
-import 'package:dcm_convert/src/binary/base/reader/reader_interface.dart';
-import 'package:dcm_convert/src/binary/base/reader/byte_reader.dart';
+import 'package:dcm_convert/src/binary/base/reader/reader_interface_old.dart';
+import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
 
 part 'package:dcm_convert/src/binary/base/reader/read_evr.dart';
 part 'package:dcm_convert/src/binary/base/reader/read_fmi.dart';
@@ -60,7 +60,7 @@ SequenceMaker sequenceMaker;
 ItemMaker itemMaker;
 
 // Local variables used by DcmReader package
-ByteReader _rb;
+ReadBuffer _rb;
 RootDataset _rds;
 Dataset _cds;
 
@@ -82,7 +82,7 @@ Tag tag;
 
 /// Returns the [ByteData] that was actually read, i.e. from 0 to
 /// end of last [Element] read.
-ByteData bdRead;
+//ByteData bdRead;
 
 /// A [Converter] for [Uint8List]s containing a [Dataset] encoded in the
 /// application/dicom media type.
@@ -100,56 +100,29 @@ abstract class DcmReader extends DcmReaderInterface {
   /// The source of the [Uint8List] being read.
   final String path;
 
-  /// The [ByteData] being read.
-  final int bdLength;
   @override
-  final ByteReader rb;
+  final ReadBuffer rb;
   @override
   final RootDataset rds;
-  final bool async;
-  final bool fast;
-  final bool fmiOnly;
 
   /// If true the [ByteData] buffer ([rb] will be reused.
   final bool reUseBD;
-  final bool showStats;
   final DecodingParameters dParams;
-  final bool elementOffsetsEnabled;
-  final ElementOffsets inputOffsets;
   @override
   Dataset cds;
-  ParseInfo pInfo;
+
+  /// The [ByteData] being read.
+  // final int bdLength;
 
   /// Creates a new [DcmReader]  where [rb].rIndex = 0.
   DcmReader(ByteData bd, this.rds,
-      {this.path = '',
-      //TODO: make async work and be the default
-      this.async = true,
-      this.fast: true,
-      this.fmiOnly = false,
-      this.reUseBD = true,
-      this.showStats = false,
-      this.dParams = DecodingParameters.kNoChange,
-      this.elementOffsetsEnabled = true})
-      : bdLength = bd.lengthInBytes,
-        rb = new ByteReader(bd),
-        cds = rds,
-        inputOffsets = (elementOffsetsEnabled) ? new ElementOffsets() : null,
-        pInfo = new ParseInfo(rds) {
+      {this.path = '', this.reUseBD = true, this.dParams = DecodingParameters.kNoChange})
+      : //bdLength = bd.lengthInBytes,
+        rb = new ReadBuffer(bd) {
     _rb = rb;
     _rds = rds;
     _elementCount = -1;
     _dParams = dParams;
-    _pInfo = pInfo
-      ..path = path
-      ..fileLengthInBytes = bd.lengthInBytes
-      ..shortFileThreshold = shortFileThreshold
-      ..wasShortFile = (bd.lengthInBytes <= shortFileThreshold);
-    rds.parseInfo = _pInfo;
-    if (elementOffsetsEnabled && inputOffsets != null) {
-	    _elementOffsetsEnabled = elementOffsetsEnabled;
-	    _inputOffsets = inputOffsets;
-    }
   }
 
   bool get isEvr => rds.isEvr;
@@ -165,23 +138,34 @@ abstract class DcmReader extends DcmReaderInterface {
 
   bool hasRemaining(int n) => _rb.hasRemaining(n);
 
+  @override
   RootDataset read() {
-    if (_pInfo.wasShortFile) return _shortFileError();
+    if (_pInfo.wasShortFile) return shortFileError();
     return _read(rds, path, dParams);
   }
 
-  RootDataset readFmi() {
-    _readFmi(rds, path, dParams);
-    return (rds.hasFmi) ? rds : null;
-  }
+  @override
+  bool readFmi(RootDataset rds) => _readFmi(rb, rds, dParams);
 
-  Element readElement({bool isEVR = true}) =>
-      (isEVR) ? _readEvrElement() : _readIvrElement();
+  void readRootDataset(EReader eReader) => __readRootDataset(eReader);
+
+  Element readDefinedLength(
+          int code, int eStart, int vrIndex, int vlf, EBMaker ebMaker) =>
+      __readDefinedLength(code, eStart, vrIndex, vlf, ebMaker);
+
+  Element readMaybeUndefinedLength(int code, int eStart, int vrIndex, int vlf,
+          EBMaker ebMaker, EReader eReader) =>
+      __readMaybeUndefinedLength(
+          code, eStart, vrIndex, vlf, ebMaker, eReader);
+
+  Element readSQ(
+          int code, int eStart, int vlf, EBMaker ebMaker, EReader eReader) =>
+      __readSQ(code, eStart, vlf, ebMaker, eReader);
 
   @override
   String toString() => '$runtimeType: rds: $rds, cds: $cds';
 
-  Null _shortFileError() {
+  Null shortFileError() {
     final s = 'Short file error: length(${rb.lengthInBytes}) $path';
     rb.warn('$s ${rb.rrr}');
     if (throwOnError) throw new ShortFileError('Length($rb.lengthInBytes) $path');

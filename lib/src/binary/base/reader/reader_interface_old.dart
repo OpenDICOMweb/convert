@@ -10,7 +10,8 @@ import 'package:element/byte_element.dart';
 import 'package:dataset/byte_dataset.dart';
 
 import 'package:dcm_convert/src/element_offsets.dart';
-import 'package:dcm_convert/src/binary/base/reader/byte_reader.dart';
+import 'package:dcm_convert/src/decoding_parameters.dart';
+import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
 
 /// The Types of the different Value Field readers.  Each [ElementMaker]
 /// reads the Value Field for a particular Value Representation.
@@ -19,11 +20,9 @@ typedef SQ SequenceMaker(EBytes eb, Dataset parent, List<Item>items);
 typedef Item ItemMaker(Dataset parent);
 typedef Element PixelDataMaker<V>(EBytes eb, int vrIndex, [VFFragments fragments]);
 
-const int shortFileThreshold = 131;
-
 abstract class DcmReaderInterface {
   /// Returns the [ByteData] for the entire Root [Dataset].
-  ByteReader get rb;
+  ReadBuffer get rb;
 
   /// Returns the Root [Dataset].
   RootDataset get rds;
@@ -38,6 +37,18 @@ abstract class DcmReaderInterface {
   List<Element> get duplicates => cds.elements.duplicates;
 
   ElementOffsets get offsets;
+
+  bool readFmi(RootDataset rds);
+
+  RootDataset read();
+
+  Element readElement();
+
+  Element readDefinedLength(int code, int eStart, int vrIndex, int vlf, EBMaker ebMaker);
+
+  Element readUndefinedLength(int code, int eStart, int vrIndex);
+
+  Element readSequence(int code, int eStart, int vrIndex);
 
   /// Interface for logging
   String itemInfo(Item item);

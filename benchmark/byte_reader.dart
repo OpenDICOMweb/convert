@@ -60,7 +60,7 @@ void readFileTest(File inFile, {int reps = 1, bool fmiOnly = false}) {
 	final bytes0 = inFile.readAsBytesSync();
   final timer = new Timer();
   for (var i = 0; i < reps; i++) {
-    ByteDatasetReader.readBytes(bytes0);
+    ByteReader.readBytes(bytes0);
   }
   timer.stop();
   print('readFileTest Time: ${timer.elapsed}');
