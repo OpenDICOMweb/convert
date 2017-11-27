@@ -8,12 +8,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
-import 'package:element/byte_element.dart';
-import 'package:system/core.dart';
-
 import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
 import 'package:dcm_convert/src/binary/byte/write_bytes.dart';
 import 'package:dcm_convert/src/tool/job_utils.dart';
+import 'package:element/byte_element.dart';
+import 'package:system/core.dart';
 
 /// Read a file then write it to a buffer.
 bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
@@ -24,7 +23,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
 
   final Uint8List bytes = f.readAsBytesSync();
   final bd = bytes.buffer.asByteData();
-  final reader0 = new ByteReader(bd, fast: true);
+  final reader0 = new ByteReader(bd);
   final rds0 = reader0.read();
   showRDS(rds0, reader0);
 
@@ -44,7 +43,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
     writer = new ByteDatasetWriter(rds0);
   } else {
     final outPath = getTempFile(f.path, 'dcmout');
-    writer = new ByteDatasetWriter.toPath(rds0, outPath, fast: true);
+    writer = new ByteDatasetWriter.toPath(rds0, outPath);
   }
   final bytes1 = writer.write();
   log.debug('$pad    Encoded ${bytes1.length} bytes');

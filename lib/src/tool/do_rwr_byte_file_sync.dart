@@ -7,13 +7,12 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:element/byte_element.dart';
-import 'package:system/core.dart';
-
 import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
 import 'package:dcm_convert/src/binary/byte/write_bytes.dart';
-import 'package:dcm_convert/src/tool/job_utils.dart';
 import 'package:dcm_convert/src/errors.dart';
+import 'package:dcm_convert/src/tool/job_utils.dart';
+import 'package:element/byte_element.dart';
+import 'package:system/core.dart';
 
 bool doRWRByteFileSync(File f, {bool fast = true, bool noisy = false}) {
   //TODO: improve output
@@ -24,7 +23,7 @@ bool doRWRByteFileSync(File f, {bool fast = true, bool noisy = false}) {
   try {
     final Uint8List bytes = f.readAsBytesSync();
     final bd = bytes.buffer.asByteData();
-    final reader0 = new ByteReader(bd, path: f.path, fast: true);
+    final reader0 = new ByteReader(bd, path: f.pathTransferSyntax);
     final rds0 = reader0.read();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -59,9 +58,9 @@ $pad    TS: ${rds0.transferSyntax}''');
     if (fast) {
       // Just write bytes don't write the file
       writer = new ByteDatasetWriter(rds0,
-          elementOffsetsEnabled: true, inputOffsets: reader0.inputOffsets);
+          elementOffsetsEnabled: true, inputOffsets: reader0.offsets);
     } else {
-      writer = new ByteDatasetWriter.toPath(rds0, outPath, fast: true);
+      writer = new ByteDatasetWriter.toPath(rds0, outPathTransferSyntax);
     }
     final bytes1 = writer.write();
     log.debug('$pad    Encoded ${bytes1.length} bytes');

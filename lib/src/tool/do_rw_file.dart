@@ -8,14 +8,13 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:element/byte_element.dart';
-import 'package:system/core.dart';
-import 'package:path/path.dart' as  path;
-
 import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
 import 'package:dcm_convert/src/binary/byte/write_bytes.dart';
-import 'package:dcm_convert/src/tool/job_utils.dart';
 import 'package:dcm_convert/src/errors.dart';
+import 'package:dcm_convert/src/tool/job_utils.dart';
+import 'package:element/byte_element.dart';
+import 'package:path/path.dart' as  path;
+import 'package:system/core.dart';
 
 /// Read a file then write it to a buffer.
 Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) async {
@@ -33,7 +32,7 @@ Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) asy
   try {
     final Uint8List bytes = await f.readAsBytes();
     final bd = bytes.buffer.asByteData();
-    final reader0 = new ByteReader(bd, fast: true);
+    final reader0 = new ByteReader(bd);
     final rds0 = reader0.read();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -62,7 +61,7 @@ $pad    TS: ${rds0.transferSyntax}''');
       writer = new ByteDatasetWriter(rds0);
     } else {
       final outPath = getTempFile(f.path, 'dcmout');
-      writer = new ByteDatasetWriter.toPath(rds0, outPath, fast: true);
+      writer = new ByteDatasetWriter.toPath(rds0, outPath);
     }
     final bytes1 = writer.write();
     log.debug('$pad    Encoded ${bytes1.length} bytes');

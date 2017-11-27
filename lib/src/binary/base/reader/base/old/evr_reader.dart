@@ -13,7 +13,7 @@ import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/reader_base.dart';
+import 'package:dcm_convert/src/binary/base/reader/base/reader_base.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/errors.dart';

@@ -11,7 +11,6 @@ import 'package:dcm_convert/byte_convert.dart';
 import 'package:system/server.dart';
 import 'package:timer/timer.dart';
 
-
 import 'test_files.dart';
 // Import BenchmarkBase class.
 
@@ -61,12 +60,12 @@ void main() {
 bool writeFileTest(File inFile, {int reps = 1, bool fmiOnly = false}) {
 	final bytes0 = inFile.readAsBytesSync();
   final rds0 = ByteReader.readBytes(bytes0);
-	final bytes1 = ByteDatasetWriter.writeBytes(rds0, fast: true, path: '');
+	final bytes1 = ByteDatasetWriter.writeBytes(rds0, path: '');
   if (!bytesEqual(bytes0, bytes1)) throw 'Error in DcmWrite';
 
 	final timer = new Timer();
   for (var i = 0; i < reps; i++) {
-    ByteDatasetWriter.writeBytes(rds0, fast: true, path: '');
+    ByteDatasetWriter.writeBytes(rds0, path: '');
   }
 
   print('writeFileTest Time: ${timer.elapsed}');

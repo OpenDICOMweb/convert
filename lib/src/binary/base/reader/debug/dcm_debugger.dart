@@ -16,17 +16,12 @@ import 'dart:typed_data';
 import 'package:dataset/byte_dataset.dart';
 import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
-import 'package:tag/tag.dart';
 import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/dcm_reader.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/errors.dart';
-import 'package:dcm_convert/src/binary/base/reader/reader_interface_old.dart';
-import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
-
-
 
 // Reader axioms
 // 1. The read index (rIndex) should always be at the last place read,
@@ -44,7 +39,7 @@ import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
 
 typedef Element ElementMaker(EBytes eb, int vrIndex);
 
-typedef PixelData PixelDataMaker(EBytes eb, int vrIndex,
+typedef Element PixelDataMaker(EBytes eb, int vrIndex,
                                  [TransferSyntax ts, VFFragments fragments]);
 
 typedef SQ SequenceMaker(EBytes eb, Dataset _cds, List<Item> items);
@@ -126,7 +121,7 @@ abstract class DebugReader extends DcmReader {
 		          this.elementOffsetsEnabled = true})
 			: inputOffsets = (elementOffsetsEnabled) ? new ElementOffsets() : null,
 				pInfo = new ParseInfo(rds),
-			  super(bd, rds, path: path, DecodingParameters dParams) {
+			  super(bd, rds, path: path, dParams: dParams) {
 		pInfo..path = path
 			..fileLengthInBytes = bd.lengthInBytes
 			..shortFileThreshold = shortFileThreshold

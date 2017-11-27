@@ -4,89 +4,48 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
+import 'package:dcm_convert/src/binary/base/reader/base/evr_reader.dart';
+import 'package:dcm_convert/src/binary/base/reader/debug/debug_mixin.dart';
+import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/base/reader_base.dart';
-import 'package:dcm_convert/src/binary/base/reader/debug/dbg_fmi_reader.dart';
-
-// Reader axioms
-// 1. The read index (rIndex) should always be at the last place read,
-//    and the end of the value field should be calculated by subtracting
-//    the length of the delimiter (and delimiter length), which is 8 bytes.
-//
-// 2. For non-sequence Elements with undefined length (kUndefinedLength)
-//    the Value Field Length (vfLength) of a non-Sequence Element.
-//    The read index rIndex is left at the end of the Element Delimiter.
-//
-// 3. [_finishReadElement] is only called from [readEvrElement] and
-//    [readIvrElement].
-
-
-
-//DecodingParameters _dParams;
-
-//ParseInfo pInfo;
-int _elementCount;
-final bool _statisticsEnabled = true;
-bool _elementOffsetsEnabled;
-//ElementOffsets _inputOffsets;
-
-//final List<String> _exceptions = <String>[];
-
-//bool _beyondPixelData;
-//bool _checkCode = false;
-//Tag _tag;
-
-/// Returns the [ByteData] that was actually read, i.e. from 0 to
-/// end of last [Element] read.
-//ByteData _bdRead;
-
-/// A [Converter] for [Uint8List]s containing a [Dataset] encoded in the
-/// application/dicom media type.
-///
-/// _Notes_:
-/// 1. Reads and returns the Value Fields as they are in the data.
-///  For example DcmReader does not trim whitespace from strings.
-///  This is so they can be written out byte for byte as they were
-///  read. and a byte-wise comparator will find them to be equal.
-/// 2. All String manipulation should be handled by the containing
-///  [Element] itself.
-/// 3. All VFReaders allow the Value Field to be empty.  In which case they
-///   return the empty [List] [].
-abstract class EvrReader extends DcmReaderBase {
-  final bool isEVR = true;
-
+abstract class DbgEvrReader extends EvrReader with DbgMixin {
   /// Creates a new [EvrReader]  where [rb].rIndex = 0.
-  EvrReader(ByteData bd, RootDataset rds) : super(bd, rds);
+  DbgEvrReader(ByteData bd, RootDataset rds,
+      {String path = '',
+      bool reUseBD = true,
+      DecodingParameters dParams = DecodingParameters.kNoChange})
+      : super(bd, rds, path, dParams, reUseBD);
+
+  @override
+  ParseInfo get pInfo;
 
   @override
   RootDataset read() {
-//    if (pInfo.wasShortFile) return shortFileError();
-    cds = rds;
-    readRootDataset(readEvrElement);
+    if (pInfo.wasShortFile) return shortFileError();
+    dbgDSReadStart('read');
+    final rds = super.read();
+    dbgDSReadEnd('read', rds);
     return rds;
   }
 
   /// For EVR Datasets, all Elements are read by this method.
-  Element readEvrElement() {
-    _elementCount++;
+  @override
+  Element readElement() {
     final eStart = rb.rIndex;
     final code = rb.code;
     final tag = checkCode(code, eStart);
     final vrCode = rb.uint16;
     final vrIndex = __lookupEvrVRIndex(code, eStart, vrCode);
     int newVRIndex;
-
-    log.debug(
-        '${rb.rbb} #$_elementCount readEvr ${dcm(
-	code)} VR($vrIndex) @$eStart',
-        1);
+    dbgReadStart(eStart, vrIndex, code, 'EVR readElement');
+    final e = super.readElement();
+    elementCount++;
 
     // Note: this is only relevant for EVR
     if (tag != null) {
@@ -107,30 +66,7 @@ abstract class EvrReader extends DcmReaderBase {
       }
     }
 
-    //Urgent: implement correcting VR
-    Element e;
-    if (_isEvrShortVR(vrIndex)) {
-      e = readEvrShort(code, eStart, vrIndex);
-      log.up;
-    } else if (_isSequenceVR(vrIndex)) {
-      e = readEvrSQ(code, eStart);
-    } else if (_isEvrLongVR(vrIndex)) {
-      e = readEvrLong(code, eStart, vrIndex);
-      log.up;
-    } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
-      e = readEvrMaybeUndefined(code, eStart, vrIndex);
-      log.up;
-    } else {
-      return invalidVRIndexError(vrIndex);
-    }
-
-    // Elements are always read into the current dataset.
-    // **** This is the only place they are added to the dataset.
-    final ok = cds.tryAdd(e);
-    if (!ok) log.warn('*** duplicate: $e');
-
-    if (_statisticsEnabled) doEndOfElementStats(code, eStart, e, ok);
-    log.debug('${rb.ree} readEvr $e', -1);
+    dbgReadEnd(eStart, e);
     return e;
   }
 
@@ -152,15 +88,14 @@ abstract class EvrReader extends DcmReaderBase {
   /// Read a Short EVR Element, i.e. one with a 16-bit
   /// Value Field Length field. These Elements may not have
   /// a kUndefinedLength value.
+  @override
   Element readEvrShort(int code, int eStart, int vrIndex) {
+    super.readEvrShort(eStart, vrIndex, code);
     final vlf = rb.uint16;
     rb + vlf;
-    log.debug(
-        '${rb.rmm} readEvrShort ${dcm(
-	code)} vr($vrIndex) '
-        '$eStart + 8 + $vlf = ${eStart + 8 + vlf}',
-        1);
-//	pInfo.nShortElements++;
+    dbgReadStart(eStart, vrIndex, code, 'readEvrShort', vlf);
+
+    pInfo.nShortElements++;
     return makeElement(code, eStart, vrIndex, vlf, EvrShort.make);
   }
 
@@ -172,7 +107,7 @@ abstract class EvrReader extends DcmReaderBase {
     rb + 2;
     final vlf = rb.uint32;
     assert(vlf != kUndefinedLength);
-    return readDefinedLength(code, eStart, vrIndex, vlf, EvrLong.make);
+    return readDefinedLength(code, eStart, vrIndex, vlf);
   }
 
   /// Read a long EVR Element (not SQ) with a 32-bit vfLengthField,
@@ -182,18 +117,18 @@ abstract class EvrReader extends DcmReaderBase {
   //  If the Element if UN then it maybe a Sequence.  If it is it will
   //  start with either a kItem delimiter or if it is an empty undefined
   //  Sequence it will start with a kSequenceDelimiter.
-  Element readEvrMaybeUndefined(int code, int eStart, int vrIndex) {
+  @override
+  Element readMaybeUndefined(int code, int eStart, int vrIndex) {
     rb + 2;
     final vlf = rb.uint32;
-    return readMaybeUndefinedLength(
-        code, eStart, vrIndex, vlf, EvrLong.make, readEvrElement);
+    return readMaybeUndefinedLength(code, eStart, vrIndex, vlf);
   }
 
   /// Read and EVR Sequence.
   Element readEvrSQ(int code, int eStart) {
     rb + 2;
     final vlf = rb.uint32;
-    return readSQ(code, eStart, vlf, EvrLong.make, readEvrElement);
+    return readSequence(code, eStart, vlf);
   }
 }
 
@@ -206,7 +141,8 @@ bool _isEvrShortVR(int vrIndex) =>
     vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
 
 bool _isMaybeUndefinedLengthVR(int vrIndex) =>
-    vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
+    vrIndex >= kVRMaybeUndefinedIndexMin &&
+    vrIndex <= kVRMaybeUndefinedIndexMax;
 
 bool _isEvrLongVR(int vrIndex) =>
     vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;

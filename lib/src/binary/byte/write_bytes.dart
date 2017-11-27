@@ -16,14 +16,13 @@ import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
-import 'package:element/byte_element.dart';
-import 'package:element/tag_element.dart';
-import 'package:uid/uid.dart';
-
 import 'package:dcm_convert/src/binary/base/writer/dcm_writer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 import 'package:dcm_convert/src/io_utils.dart';
+import 'package:element/byte_element.dart';
+import 'package:element/tag_element.dart';
+import 'package:uid/uid.dart';
 
 /// A [class] for writing a [RootDatasetByte] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
@@ -36,7 +35,7 @@ class ByteDatasetWriter extends DcmWriter {
       File file,
       TransferSyntax outputTS,
       bool throwOnError = true,
-      bool reUseBuffer = true,
+      bool overwrite = true,
       EncodingParameters encoding = EncodingParameters.kNoChange,
       bool elementOffsetsEnabled = true,
       ElementOffsets inputOffsets})
@@ -44,7 +43,7 @@ class ByteDatasetWriter extends DcmWriter {
             length: bufferLength,
             path: path,
             outputTS: outputTS,
-            reUseBuffer: reUseBuffer,
+            reUseBuffer: overwrite,
             eParams: encoding,
             elementOffsetsEnabled: elementOffsetsEnabled,
             inputOffsets: inputOffsets);
@@ -63,7 +62,7 @@ class ByteDatasetWriter extends DcmWriter {
     return new ByteDatasetWriter(ds,
         bufferLength: bufferLength,
         path: file.path,
-        reUseBuffer: fast,
+        overwrite: fast,
         outputTS: targetTS,
         elementOffsetsEnabled: elementOffsetsEnabled,
         inputOffsets: inputOffsets);
@@ -75,8 +74,6 @@ class ByteDatasetWriter extends DcmWriter {
   factory ByteDatasetWriter.toPath(RootDatasetByte ds, String path,
       {int bufferLength,
       bool overwrite = false,
-      bool fmiOnly = false,
-      bool fast = false,
       TransferSyntax targetTS,
       bool elementOffsetsEnabled = true,
       ElementOffsets inputOffsets}) {
@@ -84,7 +81,7 @@ class ByteDatasetWriter extends DcmWriter {
     return new ByteDatasetWriter(ds,
         bufferLength: bufferLength,
         path: path,
-        reUseBuffer: fast,
+        overwrite: overwrite,
         outputTS: targetTS,
         elementOffsetsEnabled: elementOffsetsEnabled,
         inputOffsets: inputOffsets);
@@ -114,8 +111,6 @@ class ByteDatasetWriter extends DcmWriter {
   static Uint8List writeBytes(RootDatasetByte ds,
       {int bufferLength,
       String path = '',
-      bool fmiOnly: false,
-      bool fast: true,
       bool reUseBD = true,
       TransferSyntax outputTS,
       bool elementOffsetsEnabled = true,
@@ -124,7 +119,7 @@ class ByteDatasetWriter extends DcmWriter {
     final writer = new ByteDatasetWriter(ds,
         bufferLength: bufferLength,
         path: path,
-        reUseBuffer: reUseBD,
+        overwrite: reUseBD,
         outputTS: outputTS,
         elementOffsetsEnabled: elementOffsetsEnabled,
         inputOffsets: inputOffsets);
@@ -136,8 +131,6 @@ class ByteDatasetWriter extends DcmWriter {
   static Future<Uint8List> writeFile(RootDatasetByte ds, File file,
       {int bufferLength,
       bool overwrite = false,
-      bool fmiOnly = false,
-      bool fast = true,
       TransferSyntax targetTS,
       bool elementOffsetsEnabled = true,
       ElementOffsets inputOffsets}) async {
@@ -145,7 +138,6 @@ class ByteDatasetWriter extends DcmWriter {
     final bytes = writeBytes(ds,
         bufferLength: bufferLength,
         path: file.path,
-        reUseBD: fast,
         outputTS: targetTS,
         elementOffsetsEnabled: elementOffsetsEnabled,
         inputOffsets: inputOffsets);
@@ -168,8 +160,6 @@ class ByteDatasetWriter extends DcmWriter {
     return writeFile(ds, new File(path),
         bufferLength: bufferLength,
         overwrite: overwrite,
-        fmiOnly: fmiOnly,
-        fast: fast,
         targetTS: targetTS,
         elementOffsetsEnabled: elementOffsetsEnabled,
         inputOffsets: inputOffsets);
@@ -187,8 +177,6 @@ class ByteDatasetWriter extends DcmWriter {
     return writeFile(ds, new File(path),
         bufferLength: bufferLength,
         overwrite: overwrite,
-        fmiOnly: true,
-        fast: fast,
         targetTS: targetTS);
   }
 }

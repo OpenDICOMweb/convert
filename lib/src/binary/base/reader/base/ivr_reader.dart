@@ -7,16 +7,13 @@
 import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
+import 'package:dcm_convert/src/binary/base/reader/base/reader_base.dart';
+import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/base/reader_base.dart';
-import 'package:dcm_convert/src/decoding_parameters.dart';
-
-abstract class IvrReader extends DcmReaderBase {
-  final bool isEVR = false;
-
+class IvrReader extends DcmReaderBase {
   /// Creates a new [IvrReader]  where [rb].rIndex = 0.
   IvrReader(ByteData bd, RootDataset rds,
       {String path = '',
@@ -25,12 +22,11 @@ abstract class IvrReader extends DcmReaderBase {
       : super(bd, rds, path, dParams, reUseBD: reUseBD);
 
   @override
-  RootDataset read() {
-    cds = rds;
-    final fmiBD = readFmi(rds);
+  bool get isEVR => false;
 
+  RootDataset ivrRead() {
+    cds = rds;
     final rdsStart = rb.index;
-    readDatasetDefinedLength(rds, rb.rIndex, rb.remaining);
     final rdsLength = rb.index - rdsStart;
     final rdsBD = rb.bd.buffer.asByteData(rdsStart, rdsLength);
     final dsBytes = new RDSBytes(fmiBD, rdsBD);
@@ -57,7 +53,8 @@ abstract class IvrReader extends DcmReaderBase {
       e = readMaybeUndefined(code, eStart, vrIndex);
       log.up;
     } else {
-      return invalidVRIndexError(vrIndex);
+      invalidVRIndex(vrIndex, null, null);
+      return null;
     }
     return e;
   }
@@ -77,6 +74,7 @@ abstract class IvrReader extends DcmReaderBase {
 
   /// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have
   /// kUndefinedValue.
+  @override
   Element readMaybeUndefined(int code, int eStart, int vrIndex) {
     final vlf = rb.uint32;
     return readMaybeUndefinedLength(code, eStart, vrIndex, vlf);
@@ -101,8 +99,6 @@ bool _isMaybeUndefinedLengthVR(int vrIndex) =>
 
 bool _isIvrDefinedLengthVR(int vrIndex) =>
     vrIndex >= kVRIvrDefinedIndexMin && vrIndex <= kVRIvrDefinedIndexMax;
-
-final String kItemAsString = hex32(kItem32BitLE);
 
 int _vrToIndex(int code, VR vr) {
   var vrIndex = vr.index;

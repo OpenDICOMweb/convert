@@ -10,14 +10,14 @@ part of odw.sdk.convert.binary.reader;
 /// Reads a Root [Dataset] and returns it.
 /// If an error is encountered and [system].throwOnError is true,
 /// an Error will be thrown; otherwise, returns null.
-RootDataset __readRootDataset(RootDataset rds, String path, DecodingParameters dParams) {
+RootDataset __readRootDataset() {
   final eStart = _rb.rIndex;
   log.debug('Reading RootDS: start: $eStart length: ${_rb.lengthInBytes}');
-  _cds = rds;
+  _cds = _rds;
 
   log.reset;
-  final hadFmi = _readFmi(_rb, rds, path, dParams);
-  if (!hadFmi && !dParams.allowMissingFMI) return rds;
+  final hadFmi = _readFmi(_rb);
+  if (!hadFmi && !_dParams.allowMissingFMI) return _rds;
 
   try {
     if (_isEvr) {

@@ -40,7 +40,7 @@ bool byteReadWriteFileChecked(String path,
     ByteDatasetWriter writer;
     if (fast) {
       // Just write bytes not file
-      writer = new ByteDatasetWriter(rds0, inputOffsets: reader0.inputOffsets);
+      writer = new ByteDatasetWriter(rds0, inputOffsets: reader0.offsets);
     } else {
       writer = new ByteDatasetWriter.toPath(rds0, outPath);
     }
@@ -119,7 +119,7 @@ RootDatasetByte readFileTimed(File file,
 
   RootDataset rds;
   timer.start();
-  rds = ByteReader.readBytes(bytes, path: path, fmiOnly: fmiOnly);
+  rds = ByteReader.readBytes(bytes, path: path);
 
   timer.stop();
   if (rds == null) {
@@ -142,7 +142,7 @@ RootDatasetByte readFileTimed(File file,
 }
 
 RootDatasetByte readFMI(Uint8List bytes, [String path = '']) =>
-    ByteReader.readBytes(bytes, path: path, fmiOnly: true);
+    ByteReader.readBytes(bytes, path: path);
 
 Uint8List writeTimed(RootDatasetByte rds,
     {String path = '', bool fast = true, bool fmiOnly = false, TransferSyntax targetTS}) {
@@ -157,7 +157,7 @@ Uint8List writeTimed(RootDatasetByte rds,
         '    at: $timestamp ...');
 
   timer.start();
-  final bytes = ByteDatasetWriter.writeBytes(rds, path: path, fmiOnly: fmiOnly, fast: fast);
+  final bytes = ByteDatasetWriter.writeBytes(rds, path: path);
   timer.stop();
   log.debug('  Elapsed time: ${timer.elapsed}');
   final msPerElement = (timer.elapsedMicroseconds ~/ total) ~/ 1000;

@@ -9,15 +9,16 @@ import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
-import 'package:dcm_convert/src/binary/base/reader/base/evr_reader.dart';
-import 'package:dcm_convert/src/binary/base/reader/base/ivr_reader.dart';
-import 'package:dcm_convert/src/binary/base/reader/base/reader_base.dart';
-import 'package:dcm_convert/src/decoding_parameters.dart';
-import 'package:dcm_convert/src/element_offsets.dart';
-import 'package:dcm_convert/src/io_utils.dart';
 import 'package:element/byte_element.dart';
 import 'package:element/tag_element.dart';
 import 'package:uid/uid.dart';
+
+import 'package:dcm_convert/src/binary/base/reader/base/evr_reader.dart';
+import 'package:dcm_convert/src/binary/base/reader/base/ivr_reader.dart';
+
+import 'package:dcm_convert/src/decoding_parameters.dart';
+import 'package:dcm_convert/src/element_offsets.dart';
+import 'package:dcm_convert/src/io_utils.dart';
 
 /// Returns a new ByteSequence.
 SQ _makeSequence(EBytes eb, Dataset parent, List<Item> items) =>
@@ -33,7 +34,7 @@ Item _makeItem(Dataset parent, {ElementList elements, SQ sequence, DSBytes eb}) 
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootDatasetByte].
-class ByteReader extends EvrReader {
+class ByteReader extends DcmReader {
   /// Creates a new [ByteReader], which is decoder for Binary DICOM
   /// (application/dicom).
   ByteReader(ByteData bd,
@@ -44,8 +45,8 @@ class ByteReader extends EvrReader {
       bool elementOffsetsEnabled = true,
       ElementOffsets inputOffsets})
       : super(bd, new RootDatasetByte(new RDSBytes(bd), path: path),
-            path, dParams, reUseBD: reUseBD) {
-    eMaker = makeBEFromEBytes;
+            path: path, reUseBD: reUseBD, dParams: dParams) {
+    elementMaker = makeBEFromEBytes;
     pixelDataMaker = makeBEPixelDataFromEBytes;
     sequenceMaker = _makeSequence;
     itemMaker = _makeItem;
@@ -66,18 +67,13 @@ class ByteReader extends EvrReader {
       new ByteReader.fromFile(new File(path), reUseBD: reUseBD, dParams: dParams);
 
   @override
-  RootDataset read() {
-     readFmi();
-    if (rds.transferSyntax.isEvr) {
-      evrRead();
-    } else {
-      final ivrReader = new IvrReader(bd, rds,  path: path, dParams:  dParams, reUseBD: reUseBD);
-      ivrRead();
-      return rds;
-    }
-  }
-  @override
   ElementList get elements => cds.elements;
+
+  @override
+  String elementInfo(Element e) => (e == null) ? 'Element e = null' : e.info;
+
+  @override
+  String itemInfo(Item item) => (item == null) ? 'Item item = null' : item.info;
 
   // **** DcmReaderInterface ****
 

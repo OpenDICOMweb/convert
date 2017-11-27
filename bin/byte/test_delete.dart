@@ -6,8 +6,8 @@
 
 import 'dart:io';
 
-import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/data/test_files.dart';
 import 'package:system/core.dart';
 
 /// A Program that reads a [File], decodes it into a [RootDatasetByte],
@@ -20,7 +20,7 @@ void main() {
 
   final f = pathToFile(path, mustExist: true);
   log.debug2('Reading: $f');
-  final rds = ByteReader.readFile(f, fast: true);
+  final rds = ByteReader.readFile(f);
   final eList = rds.remove(kPatientID);
   log..debug('bRoot.isRoot: ${rds.isRoot}')
   ..info0('patientID: "${rds.patientId}"')

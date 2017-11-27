@@ -7,8 +7,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/data/test_files.dart';
 import 'package:system/server.dart';
 
 
@@ -65,7 +65,7 @@ bool readWriteCheck(File file, {int reps = 1, bool fmiOnly = false}) {
   log.config('Reading: $file with ${bytes0.lengthInBytes} bytes', 1);
 
   if (bytes0 == null) return false;
-  final rds0 = ByteReader.readBytes(bytes0, path: file.path, fast: true);
+  final rds0 = ByteReader.readBytes(bytes0, path: file.path);
   log..debug('rds0 root: ${rds0.root}')
   ..debug('ParseInfo: ${rds0.parseInfo}');
   final e = rds0[0x00020010];

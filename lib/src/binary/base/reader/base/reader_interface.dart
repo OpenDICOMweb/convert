@@ -6,15 +6,14 @@
 
 import 'dart:typed_data';
 
-import 'package:element/byte_element.dart';
 import 'package:dataset/byte_dataset.dart';
-import 'package:uid/uid.dart';
-
 import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
+import 'package:element/byte_element.dart';
+import 'package:uid/uid.dart';
 
 typedef Element EReader();
 typedef Element EMaker(EBytes eb, int vrIndex);
-typedef PixelData PDMaker(EBytes eb, int vrIndex,
+typedef Element PDMaker(EBytes eb, int vrIndex,
     [TransferSyntax ts, VFFragments fragments]);
 typedef SQ SQMaker(EBytes eb, Dataset parent, List<Item> items);
 typedef Item ItemMaker(Dataset parent);
@@ -38,10 +37,10 @@ abstract class DcmReaderInterface {
   /// The current duplicate [List<Element>].
   List<Element> get duplicates => cds.elements.duplicates;
 
-  ByteData readFmi(RootDataset rds);
+  ByteData readFmi();
 
   Item readItem();
- // ByteData readRootDataset(RootDataset rds);
+  // ByteData readRootDataset();
 
   RootDataset read();
 
@@ -53,4 +52,13 @@ abstract class DcmReaderInterface {
 
   Element readSequence(int code, int eStart, int vrIndex);
 
+  // The methods below are prototypes for supplying
+  void readStartMsg(int eStart, int vrIndex, int code, String name, int vlf) {}
+
+  void readEndMsg(String name, Dataset ds) {}
+
+  /// Log the start of reading an element;
+  void logEReadStart(int eStart, int vrIndex, int code, String name, int vlf) {}
+
+  void logEEnd(int eStart, Element e) {}
 }

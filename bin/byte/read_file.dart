@@ -8,12 +8,11 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/data/test_files.dart';
-
 import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/data/test_files.dart';
+import 'package:dcm_convert/src/file_utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:system/server.dart';
-import 'package:dcm_convert/src/file_utils.dart';
 
 const String xx3 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
 const String xx2 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.5.5.dcm';
@@ -24,7 +23,7 @@ const String dcmDir = 'C:/odw/test_data/sfd/MG/DICOMDIR';
 const String evrLarge = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
 const String evrULength = 'c:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
 const String evrX = 'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840'
-    '.10008.5.1.4.1.1.88.67.dcm ';
+    '.10008.5.1.4.1.1.88.67.dcm';
 // Defined and Undefined datasets
 const String evrXLarge = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368';
 const String evrOWPixels = 'C:/odw/test_data/IM-0001-0001.dcm';
@@ -49,7 +48,7 @@ Future main() async {
 
   //for (var i = 0; i < testPaths0.length; i++) {
   for (var i = 0; i < testPaths0.length; i++) {
-    final fPath = testPaths0[i];
+    final fPath = evrX;
     // testPaths0[i];
 
     print('$i: path: $fPath');

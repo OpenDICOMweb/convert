@@ -8,14 +8,13 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
-import 'package:element/byte_element.dart';
-import 'package:system/core.dart';
-import 'package:tag/tag.dart';
-
 import 'package:dcm_convert/src/binary/base/reader/base/reader_base.dart';
 import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/errors.dart';
+import 'package:element/byte_element.dart';
+import 'package:system/core.dart';
+import 'package:tag/tag.dart';
 
 // Reader axioms
 // 1. The read index (rIndex) should always be at the last place read,
@@ -42,26 +41,20 @@ import 'package:dcm_convert/src/errors.dart';
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
 class EvrReader extends DcmReaderBase {
-  final bool isEVR = true;
-
   /// Creates a new [EvrReader]  where [rb].rIndex = 0.
-  EvrReader(ByteData bd, RootDataset rds,
-      {String path = '',
-      bool reUseBD = true,
-      DecodingParameters dParams = DecodingParameters.kNoChange})
+  EvrReader(ByteData bd, RootDataset rds, String path,
+      DecodingParameters dParams, {bool reUseBD = true})
       : super(bd, rds, path, dParams, reUseBD: reUseBD);
 
-  @override
-  ByteData readFmi(RootDataset rds) => _readFmi();
+  bool get isEVR => true;
 
   @override
-  RootDataset read() {
+  ByteData readFmi() => _readFmi();
+
+  @override
+  RootDataset evrRead() {
     cds = rds;
-    final fmiBD = readFmi(rds);
-    if (fmiBD == null) return null;
-
     final rdsStart = rb.index;
-    readDatasetDefinedLength(rds, rb.rIndex, rb.remaining);
     final rdsLength = rb.index - rdsStart;
     final rdsBD = rb.bd.buffer.asByteData(rdsStart, rdsLength);
     final dsBytes = new RDSBytes(fmiBD, rdsBD);
@@ -81,7 +74,7 @@ class EvrReader extends DcmReaderBase {
 
     // Note: this is only relevant for EVR
     if (tag != null) {
-      if (dParams.doCheckVR && isNotValidVR(code, vrIndex, tag)) {
+      if (dParams.doCheckVR && !isNotValidVR(code, vrIndex, tag)) {
         final vr = VR.lookupByCode(vrCode);
         log.error('VR $vr is not valid for $tag');
       }
@@ -98,20 +91,23 @@ class EvrReader extends DcmReaderBase {
       }
     }
     //TODO: fix order to most common Element type
-    if (_isShortVR(vrIndex)) return readShort(code, eStart, vrIndex);
+    if (_isShortVR(vrIndex)) return readEvrShort(code, eStart, vrIndex);
     if (_isSequenceVR(vrIndex)) return readSequence(code, eStart, vrIndex);
     if (_isLongVR(vrIndex)) return readLong(code, eStart, vrIndex);
-    if (_isUndefinedLengthVR(vrIndex)) return readMaybeUndefined(code, eStart, vrIndex);
-
-    return invalidVRIndexError(vrIndex);
+    if (_isUndefinedLengthVR(vrIndex))
+      return readMaybeUndefined(code, eStart, vrIndex);
+    //TODO: fix vrErrors in Tag.  Make VR a seperate package
+    invalidVRIndex(vrIndex, null, null);
+    return null;
   }
 
   /// Read a Short EVR Element, i.e. one with a 16-bit
   /// Value Field Length field. These Elements may not have
   /// a kUndefinedLength value.
-  Element readShort(int code, int eStart, int vrIndex) {
+  Element readEvrShort(int code, int eStart, int vrIndex) {
     final vlf = rb.uint16;
     rb + vlf;
+    readStartMsg(eStart, vrIndex, code, 'readEvrShort', vlf);
     return makeElement(code, eStart, vrIndex, vlf, EvrShort.make);
   }
 
@@ -209,7 +205,6 @@ class EvrReader extends DcmReaderBase {
   /// Returns true if a valid Preamble and Prefix where read.
   bool _readPrefix(ReadBuffer rb) {
     if (rb.rIndex != 0) return false;
-    rb + 128;
     return _isDcmPrefixPresent(rb);
   }
 
@@ -237,7 +232,7 @@ class EvrReader extends DcmReaderBase {
 
   // *** This is an older/slower version, but keep for debugging.
   /// Read as ASCII String
-  static bool _isAsciiPrefixPresent(ReadBuffer rb) {
+  static bool isAsciiPrefixPresent(ReadBuffer rb) {
     final chars = rb.readUint8View(4);
     final prefix = ASCII.decode(chars);
     if (prefix == 'DICM') {
@@ -262,7 +257,8 @@ bool _isShortVR(int vrIndex) =>
     vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
 
 bool _isUndefinedLengthVR(int vrIndex) =>
-    vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
+    vrIndex >= kVRMaybeUndefinedIndexMin &&
+    vrIndex <= kVRMaybeUndefinedIndexMax;
 
 bool _isLongVR(int vrIndex) =>
     vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;

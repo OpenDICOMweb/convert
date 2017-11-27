@@ -9,24 +9,24 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
+import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
+import 'package:dcm_convert/src/binary/base/reader/reader_interface_old.dart';
+import 'package:dcm_convert/src/decoding_parameters.dart';
+import 'package:dcm_convert/src/element_offsets.dart';
+import 'package:dcm_convert/src/errors.dart';
 import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/decoding_parameters.dart';
-import 'package:dcm_convert/src/element_offsets.dart';
-import 'package:dcm_convert/src/errors.dart';
-import 'package:dcm_convert/src/binary/base/reader/reader_interface_old.dart';
-import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
-
+part 'package:dcm_convert/src/binary/base/reader/read_common.dart';
 part 'package:dcm_convert/src/binary/base/reader/read_evr.dart';
 part 'package:dcm_convert/src/binary/base/reader/read_fmi.dart';
-//part 'package:dcm_convert/src/binary/base/reader/reader_info.dart';
 part 'package:dcm_convert/src/binary/base/reader/read_ivr.dart';
-//part 'package:dcm_convert/src/binary/base/reader/read_pixels.dart';
 part 'package:dcm_convert/src/binary/base/reader/read_root.dart';
-part 'package:dcm_convert/src/binary/base/reader/read_common.dart';
+//part 'package:dcm_convert/src/binary/base/reader/reader_info.dart';
+//part 'package:dcm_convert/src/binary/base/reader/read_pixels.dart';
+
 //part 'package:dcm_convert/src/binary/base/reader/read_utils.dart';
 
 // Reader axioms
@@ -47,7 +47,7 @@ typedef EBytes EBytesMaker(ByteData bd);
 
 typedef Element ElementMaker(EBytes eb, int vrIndex);
 
-typedef PixelData PixelDataMaker(EBytes eb, int vrIndex,
+typedef Element PixelDataMaker(EBytes eb, int vrIndex,
     [TransferSyntax ts, VFFragments fragments]);
 
 typedef SQ SequenceMaker(EBytes eb, Dataset _cds, List<Item> items);
@@ -144,14 +144,15 @@ abstract class DcmReader extends DcmReaderInterface {
   @override
   RootDataset read() {
     if (_pInfo.wasShortFile) return shortFileError();
-    return __readRootDataset(rds, path, dParams);
+    return __readRootDataset(rds);
   }
 
   @override
   bool readFmi(RootDataset rds) => _readFmi(rb, rds, dParams);
 
-  void readRootDataset(EReader eReader) => __readRootDataset(eReader);
+  void readRootDataset(EReader eReader) => __readRootDataset();
 
+  @override
   Element readDefinedLength(
           int code, int eStart, int vrIndex, int vlf, EBMaker ebMaker) =>
       __readLongDefinedLength(code, eStart, vrIndex, vlf, ebMaker);

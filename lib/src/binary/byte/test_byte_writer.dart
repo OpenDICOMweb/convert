@@ -30,7 +30,7 @@ class TestByteWriter extends ByteDatasetWriter {
             path: path,
             outputTS: outputTS,
             throwOnError: throwOnError,
-            reUseBuffer: reUseBD,
+            overwrite: reUseBD,
             encoding: encoding);
 
   /// Returns a [Uint8List] containing the encoded FMI.

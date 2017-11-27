@@ -8,15 +8,14 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
+import 'package:dcm_convert/src/binary/base/reader/base/reader_interface.dart';
+import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
+import 'package:dcm_convert/src/decoding_parameters.dart';
+import 'package:dcm_convert/src/errors.dart';
 import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:uid/uid.dart';
-
-import 'package:dcm_convert/src/decoding_parameters.dart';
-import 'package:dcm_convert/src/errors.dart';
-import 'package:dcm_convert/src/binary/base/reader/base/reader_interface.dart';
-import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
 
 // Reader axioms
 // 1. The read index (rIndex) should always be at the last place read,
@@ -51,25 +50,17 @@ ItemMaker itemMaker;
 ///  [Element] itself.
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
-abstract class DcmReaderBase extends DcmReaderInterface {
+abstract class DcmReaderBase {
   /// The source of the [Uint8List] being read.
   final String path;
-
-  @override
   final ReadBuffer rb;
-  @override
   final RootDataset rds;
-
   ByteData fmiBD;
 
   /// If true the [ByteData] buffer ([rb] will be reused.
   final bool reUseBD;
   final DecodingParameters dParams;
-  @override
   Dataset cds;
-
-  /// The [ByteData] being read.
-  // final int bdLength;
 
   /// Creates a new [DcmReaderBase]  where [rb].rIndex = 0.
   DcmReaderBase(ByteData bd, this.rds, this.path, this.dParams, {this.reUseBD = true})
@@ -84,6 +75,35 @@ abstract class DcmReaderBase extends DcmReaderInterface {
         reUseBD = rBase.reUseBD,
         dParams = rBase.dParams;
 
+  /// The current [Element] [Map].
+  List<Element> get elements => cds.elements;
+
+  /// The current duplicate [List<Element>].
+  List<Element> get duplicates => cds.elements.duplicates;
+
+  ByteData readFmi();
+
+  // ByteData readRootDataset();
+
+  RootDataset read();
+
+  Element readElement();
+
+  Element readSequence(int code, int eStart, int vrIndex);
+
+  // The methods below are prototypes for supplying
+  void readStartMsg(int eStart, int vrIndex, int code, String name, int vlf) {}
+
+  void readEndMsg(String name, Dataset ds) {}
+
+  /// Log the start of reading an element;
+  void logEReadStart(int eStart, int vrIndex, int code, String name, int vlf) {}
+
+  void logEEnd(int eStart, Element e) {}
+
+  /// The [ByteData] being read.
+  // final int bdLength;
+
   bool get isEvr => rds.isEvr;
 
   bool get isReadable => rb.isReadable;
@@ -94,41 +114,16 @@ abstract class DcmReaderBase extends DcmReaderInterface {
 
   bool hasRemaining(int n) => rb.hasRemaining(n);
 
-/*
-  @override
-  Element readDefinedLength(
-          int code, int eStart, int vrIndex, int vlf, EBMaker ebMaker) =>
-      __readDefinedLength(code, eStart, vrIndex, vlf, ebMaker);
-
   // There are four [Element]s that might have an Undefined Length value
   // (0xFFFFFFFF), [SQ], [OB], [OW], [UN]. If the length is the Undefined,
   // then it searches for the matching [kSequenceDelimitationItem32Bit] to
   // determine the length. Returns a [kUndefinedLength], which is used for
   // reading the value field of these [Element]s. Returns an [SQ] [Element].
 
-  bool isSequenceVR(int vrIndex) => vrIndex == 0;
-
-  bool isSpecialVR(int vrIndex) =>
-      vrIndex >= kVRSpecialIndexMin && vrIndex <= kVRSpecialIndexMax;
-
-  bool isNormalVR(int vrIndex) =>
-      vrIndex >= kVRNormalIndexMin && vrIndex <= kVRNormalIndexMax;
-
-  bool isMaybeUndefinedLengthVR(int vrIndex) =>
-      vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
-
-  bool isEvrLongVR(int vrIndex) =>
-      vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
-
-  bool isIvrDefinedLengthVR(int vrIndex) =>
-      vrIndex >= kVRIvrDefinedIndexMin && vrIndex <= kVRIvrDefinedIndexMax;
-*/
-
   final String kItemAsString = hex32(kItem32BitLE);
 
   /// Returns an [Item].
   // rIndex is @ delimiterFvr
-  @override
   Item readItem() {
     assert(rb.hasRemaining(8));
     final iStart = rb.rIndex;
@@ -153,6 +148,9 @@ abstract class DcmReaderBase extends DcmReaderInterface {
   }
 
   // **** This is one of the only two places Elements are added to the dataset.
+  // **** This is the other of the only two places Elements are added to the dataset.
+
+  // **** This is one of the only two places Elements are added to the dataset.
   void readDatasetDefinedLength(Dataset ds, int dsStart, int vfLength) {
     assert(vfLength != kUndefinedLength);
     final dsEnd = dsStart + vfLength;
@@ -165,7 +163,6 @@ abstract class DcmReaderBase extends DcmReaderInterface {
     }
   }
 
-  // **** This is the other of the only two places Elements are added to the dataset.
   void readDatasetUndefinedLength(Dataset ds) {
     while (!__isItemDelimiter()) {
       // Elements are always read into the current dataset.
@@ -270,7 +267,6 @@ abstract class DcmReaderBase extends DcmReaderInterface {
 
   /// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have
   /// kUndefinedValue.
-  @override
   Element readMaybeUndefinedLength(int code, int eStart, int vrIndex, int vlf) {
     // If VR is UN then this might be a Sequence
     if (vrIndex == kUNIndex) {
@@ -283,7 +279,6 @@ abstract class DcmReaderBase extends DcmReaderInterface {
   }
 
   // Finish reading a Long (32-bit Value Length Field) Defined Length Element
-  @override
   Element readDefinedLength(int code, int eStart, int vrIndex, int vlf) {
     assert(vlf != kUndefinedLength);
     rb + vlf;
@@ -378,7 +373,7 @@ abstract class DcmReaderBase extends DcmReaderInterface {
     return eMaker(eb, vrIndex);
   }
 
-  PixelData _makePixelData(
+  Element _makePixelData(
       int code, int eStart, int vrIndex, int endOfVF, bool undefined, EBMaker ebMaker,
       [VFFragments fragments]) {
     //_beyondPixelData = true;

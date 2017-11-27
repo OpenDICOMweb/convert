@@ -43,6 +43,7 @@ void __readRootDataset() {
 	log.debug('${_rb.ree} readRootDataset $_elementCount Elements read with '
 			          '${_rb.remaining} bytes remaining\nDatasets: ${_pInfo.nDatasets}');
 }
+
 /// Returns an [Item].
 // rIndex is @ delimiterFvr
 Item _readItem(Element eReader(), int count) {

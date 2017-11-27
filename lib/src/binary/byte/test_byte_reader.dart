@@ -8,23 +8,21 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
-import 'package:element/byte_element.dart';
-import 'package:uid/uid.dart';
-
 import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
+import 'package:element/byte_element.dart';
+import 'package:uid/uid.dart';
 
 /// External Interface for Testing Only!!!
 class TestByteReader extends ByteReader {
   /// Creates a new [TestByteReader].
   TestByteReader(ByteData bd,
       {String path = '',
-      bool fmiOnly = false,
       bool throwOnError = true,
       bool allowMissingFMI = false,
       TransferSyntax targetTS,
       bool reUseBD = true})
-      : super(bd, path: path, fmiOnly: fmiOnly, reUseBD: reUseBD);
+      : super(bd, path: path,  reUseBD: reUseBD);
 
 // **** These methods should not be used in the code above ****
 
@@ -32,7 +30,7 @@ class TestByteReader extends ByteReader {
   /// read successfully.
   TransferSyntax xReadFmi(RootDataset rds,
       {bool checkPreamble = true, bool allowMissingPrefix = false}) {
-    readFmi();
+    readFmi(rds);
     if (!rds.hasFmi || !rds.hasSupportedTransferSyntax) return null;
     return rds.transferSyntax;
   }
@@ -73,9 +71,6 @@ class TestByteReader extends ByteReader {
     final bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     final reader = new ByteReader(bd,
         path: path,
-        async: async,
-        fast: fast,
-        fmiOnly: fmiOnly,
         reUseBD: reUseBD,
         dParams: dParams);
     return reader.read();
@@ -93,7 +88,7 @@ class TestByteReader extends ByteReader {
         path: file.path,
         async: async,
         fast: fast,
-        fmiOnly: fmiOnly,
+
         reUseBD: reUseBD,
         dParams: dParams);
   }
@@ -108,9 +103,6 @@ class TestByteReader extends ByteReader {
           DecodingParameters dParams = DecodingParameters.kNoChange}) =>
       readFile(file, rds,
           path: path,
-          async: async,
-          fast: fast,
-          fmiOnly: fmiOnly,
           reUseBD: reUseBD,
           dParams: dParams);
 }
