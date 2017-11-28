@@ -14,7 +14,7 @@ import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/errors.dart';
 import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
-import 'package:tag/tag.dart';
+import 'package:vr/vr.dart';
 
 // Reader axioms
 // 1. The read index (rIndex) should always be at the last place read,
@@ -52,7 +52,7 @@ class EvrReader extends DcmReaderBase {
   ByteData readFmi() => _readFmi();
 
   @override
-  RootDataset evrRead() {
+  RootDataset read() {
     cds = rds;
     final rdsStart = rb.index;
     final rdsLength = rb.index - rdsStart;
@@ -108,7 +108,7 @@ class EvrReader extends DcmReaderBase {
     final vlf = rb.uint16;
     rb + vlf;
     readStartMsg(eStart, vrIndex, code, 'readEvrShort', vlf);
-    return makeElement(code, eStart, vrIndex, vlf, EvrShort.make);
+    return makeElement(code, eStart, vrIndex, vlf);
   }
 
   /// Read a Long EVR Element (not SQ) with a 32-bit vfLengthField,

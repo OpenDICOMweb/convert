@@ -12,6 +12,7 @@ import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
+import 'package:vr/vr.dart';
 
 class IvrReader extends DcmReaderBase {
   /// Creates a new [IvrReader]  where [rb].rIndex = 0.

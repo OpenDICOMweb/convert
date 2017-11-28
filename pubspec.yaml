@@ -32,7 +32,9 @@ dependencies:
   uid:
     path: C:/odw/sdk/uid
     version: ^0.6.5
-
+  vr:
+    path: C:/odw/sdk/vr
+    version: ^0.6.5
 
 dev_dependencies:
   benchmark_harness: ^1.0.4
