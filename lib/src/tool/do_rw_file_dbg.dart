@@ -83,7 +83,6 @@ $f
 }
 
 void showRDS(RootDatasetByte rds,  ByteReader reader) {
-
 	final e = rds[kPixelData];
 	final pdMsg =  (e == null)
 	? ' ** Pixel Data Element not present'
