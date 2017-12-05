@@ -4,17 +4,18 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:dataset/byte_dataset.dart';
-import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
-import 'package:dcm_convert/src/element_offsets.dart';
-import 'package:element/byte_element.dart';
+import 'package:dataset/dataset.dart';
+import 'package:element/element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
+import 'package:vr/vr.dart';
 
-abstract class DbgMixin {
+import 'package:dcm_convert/src/binary/base/reader/base/log_read_mixin_base.dart';
+import 'package:dcm_convert/src/binary/base/reader/base/read_buffer.dart';
+import 'package:dcm_convert/src/element_offsets.dart';
 
-  int elementCount = -1;
-  //  sys.l = Level.debug;
+abstract class LogReadMixin implements LogReadMixinBase {
+  int elementCount;
   ReadBuffer get rb;
   ParseInfo get pInfo;
   ElementOffsets get offsets;
@@ -32,7 +33,7 @@ abstract class DbgMixin {
   String get rmm => '| $_rrr  ';
 
   /// The end of reading something.
-  String get ree => '< $_rrr  ';
+  String get ree => '< $_rrr ';
 
   String get pad => ''.padRight('$_rrr'.length);
 
@@ -48,13 +49,11 @@ abstract class DbgMixin {
 
   void _msg(String offset, String name, int code, int start, int vrIndex,
       [int hdrLength, int vfLength = -1, int inc]) {
-    final hasLength =
-        hdrLength != null && vfLength != -1 && vfLength != kUndefinedLength;
+    final hasLength = hdrLength != null && vfLength != -1 && vfLength != kUndefinedLength;
     final sum = (hasLength) ? start + hdrLength + vfLength : -1;
 
-    final range = (hasLength)
-        ? '>$start + $hdrLength + $vfLength = $sum'
-        : '>$start + ???';
+    final range =
+        (hasLength) ? '>$start + $hdrLength + $vfLength = $sum' : '>$start + ???';
     final s = '$offset $name: ${dcm(code)} vr($vrIndex) $range';
     log.debug(s, inc);
   }
@@ -70,42 +69,69 @@ abstract class DbgMixin {
   void dbgDSReadEnd(String name, Dataset ds) =>
       log.debug('$ree #$elementCount $name ${ds.info}');
 
-
   String vlfToString(int vlf) =>
-      (vlf == null) ? "" : (vlf == kUndefinedLength) ? '0xFFFFFFFF' : '$vlf';
+      (vlf == null) ? '' : (vlf == kUndefinedLength) ? '0xFFFFFFFF' : '$vlf';
 
-  void dbgReadStart(int eStart, int vrIndex, int code, String name, [int vlf]) {
+  String _startReadElement(int code, int vrIndex, int eStart, int vlf, String name) {
     final vr = VR.lookupByIndex(vrIndex);
     final tag = Tag.lookup(code);
     final s = vlfToString(vlf);
-    final sb = new StringBuffer('$rbb ${dcm(code)} $vr $name $s');
+    final sb = new StringBuffer('$rbb ${dcm(code)} $vr length($s) $name');
     if (system.level == Level.debug2) sb.writeln('\n  $tag');
-    log.debug(sb.toString());
+    return sb.toString();
   }
 
-  void dbgReadEnd(int eStart, Element e) {
+  @override
+  void logStartRead(int code, int vrIndex, int eStart, int vlf, String name) {
+    final s = _startReadElement(code, vrIndex, eStart, vlf, name);
+    log.debug(s);
+  }
+
+  String _endReadElement(int eStart, Element e, String name, {bool ok = true}) {
     final eEnd = eStart - rb.index;
     assert(eEnd == eStart - rb.index);
     _doEndOfElementStats(e.code, eStart, e, ok);
-    final sb = new StringBuffer(
-        '$ree $e $eStart + vfLength(${e.vfLength}) = ${rb.index} :$remaining');
+/*    final sb = new StringBuffer(
+        '$ree $e $eStart + vlf(${e.vfLength}) = ${rb.index} :$remaining');*/
+    final sb = new StringBuffer('$ree $e :$remaining');
+    return sb.toString();
+  }
+
+  @override
+  void logEndRead(int eStart, Element e, String name, {bool ok = true}) {
+    final s = _endReadElement(eStart, e, name, ok: ok);
+    log.debug(s);
+  }
+
+  @override
+  void logStartSQRead(int code, int vrIndex, int eStart, int vlf, String name) {
+    final s = _startReadElement(code, vrIndex, eStart, vlf, name);
+    log.debug(s);
+    log.down;
+  }
+
+  @override
+  void logEndSQRead(int eStart, Element e, String name, {bool ok = true}) {
+    final s = _endReadElement(eStart, e, name, ok: ok);
+    log.up;
+    log.debug(s);
   }
 
   void _doEndOfElementStats(int code, int eStart, Element e, bool ok) {
     pInfo.nElements++;
     if (ok) {
-      pInfo.lastElementRead = e;
-      pInfo.endOfLastElement = rb.rIndex;
+      pInfo
+        ..lastElement = e
+        ..endOfLastElement = rb.index;
       if (e.isPrivate) pInfo.nPrivateElements++;
       if (e is SQ) {
-        pInfo.endOfLastSequence = rb.rIndex;
-        pInfo.lastSequenceRead = e;
+        pInfo
+          ..endOfLastSequence = rb.index
+          ..lastSequence = e;
       }
     } else {
       pInfo.nDuplicateElements++;
     }
-    if (e is! SQ) offsets.add(eStart, rb.rIndex, e);
+    if (e is! SQ) offsets.add(eStart, rb.index, e);
   }
-
-
 }

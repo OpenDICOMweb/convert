@@ -57,7 +57,7 @@ bool readWritePath(String path, {int reps = 1, bool fmiOnly = false}) {
 bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
   final Uint8List bytes0 = inFile.readAsBytesSync();
   final reader = new ByteReader(bytes0.buffer.asByteData());
-  final rds0 = reader.read();
+  final rds0 = reader.readRootDataset();
 /*  List<int> elementIndex0 = reader.elementIndex;*/
   log..info0(rds0.parseInfo)..info0(rds0.info);
 

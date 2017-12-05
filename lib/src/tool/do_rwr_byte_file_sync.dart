@@ -23,15 +23,15 @@ bool doRWRByteFileSync(File f, {bool fast = true, bool noisy = false}) {
   try {
     final Uint8List bytes = f.readAsBytesSync();
     final bd = bytes.buffer.asByteData();
-    final reader0 = new ByteReader(bd, path: f.pathTransferSyntax);
-    final rds0 = reader0.read();
+    final reader0 = new ByteReader(bd, path: f.path);
+    final rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
       log.info0('Bad File: ${f.path}');
       return false;
     }
     if (rds0.parseInfo == null) throw 'Bad File - No ParseInfo: $f';
-    final bytes0 = reader0.rootBytes;
+    final bytes0 = reader0.bd.buffer.asUint8List();
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');
@@ -46,7 +46,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     }
 
     if (noisy) {
-      final offsets = reader0.inputOffsets;
+      final offsets = reader0.offsets;
       for (var i = 0; i < offsets.length; i++) {
         print('$i: ${offsets.starts[i]} - ${offsets.ends[i]} ${offsets.elements[i]}');
       }
@@ -60,7 +60,7 @@ $pad    TS: ${rds0.transferSyntax}''');
       writer = new ByteDatasetWriter(rds0,
           elementOffsetsEnabled: true, inputOffsets: reader0.offsets);
     } else {
-      writer = new ByteDatasetWriter.toPath(rds0, outPathTransferSyntax);
+      writer = new ByteDatasetWriter.toPath(rds0, outPath);
     }
     final bytes1 = writer.write();
     log.debug('$pad    Encoded ${bytes1.length} bytes');
@@ -85,10 +85,10 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       reader1 = new ByteReader.fromPath(outPath);
     }
-    final rds1 = reader1.read();
+    final rds1 = reader1.readRootDataset();
     //   RootDatasetBytes rds1 = ByteReader.readPath(outPath);
     log
-      ..debug('$pad Read ${reader1.rootBytes.lengthInBytes} bytes')
+      ..debug('$pad Read ${reader1.bd.lengthInBytes} bytes')
       ..debug1('$pad DS1: $rds1');
 
     if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
@@ -127,8 +127,8 @@ $pad    TS: ${rds0.transferSyntax}''');
         log.warn('** rds0.length(${bList.length}) != rds1.length(${aList.length})');
       final length = aList.length;
       for (var i = 0; i < length; i++) {
-        final x = aList.elementAt(i) as ByteElement;
-        final y = bList.elementAt(i) as ByteElement;
+        final x = aList.elementAt(i);
+        final y = bList.elementAt(i);
         if (x.eStart != y.eStart ||
             x.code != y.code ||
             x.vrCode != y.vrCode ||

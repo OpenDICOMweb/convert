@@ -33,14 +33,15 @@ Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) asy
     final Uint8List bytes = await f.readAsBytes();
     final bd = bytes.buffer.asByteData();
     final reader0 = new ByteReader(bd);
-    final rds0 = reader0.read();
+    final rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
       log.info0('Bad File: ${f.path}');
       return false;
     }
     if (rds0.parseInfo == null) throw 'Bad File - No ParseInfo: $f';
-    final bytes0 = reader0.rootBytes;
+    //TODO: update reader and write to have method called bytes.
+    final bytes0 = reader0.bd.buffer.asUint8List();
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');

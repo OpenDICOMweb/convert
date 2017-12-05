@@ -20,7 +20,7 @@ import 'package:element/tag_element.dart';
 import 'package:uid/uid.dart';
 
 
-import 'package:dcm_convert/src/binary/base/writer/dcm_writer.dart';
+import 'package:dcm_convert/src/binary/base/writer/old/dcm_writer.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 import 'package:dcm_convert/src/io_utils.dart';
 

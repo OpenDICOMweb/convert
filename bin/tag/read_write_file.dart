@@ -18,8 +18,8 @@ void main() {
 
   log.info0('Reading: $path');
   final reader0 = new TagReader.fromPath(path);
-  final tagDS0 = reader0.read();
-  final bytes0 = reader0.rootBytes;
+  final tagDS0 = reader0.readRootDataset();
+  final bytes0 = reader0.bd.buffer.asUint8List();
   log
     ..debug('  Read ${bytes0.lengthInBytes} bytes')
     ..info0('  DS0: $tagDS0');
@@ -37,7 +37,7 @@ void main() {
   final reader1 = new TagReader.fromPath(path);
   final tagDS1 = TagReader.readPath(outPath);
   log
-    ..debug('  Read ${reader1.rootBytes.lengthInBytes} bytes')
+    ..debug('  Read ${reader1.bd.lengthInBytes} bytes')
     ..info0('  DS1: $tagDS1');
 
   if (tagDS0.parseInfo != tagDS1.parseInfo) {

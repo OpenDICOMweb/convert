@@ -138,7 +138,7 @@ Element __readUSQ(
     itemCount++;
   }
   log.debug('${_rb.ree} USQ Read $itemCount Items', -1);
-  final e =  _makeSequence(code, eStart, ebMaker, items);
+  final e =  _makeSequence(code, eStart, items);
   print('*** insert at $offsetIndex $eStart ${e.eStart} ${e.eEnd}');
   _inputOffsets.insertAt(offsetIndex, e.eStart, e.eEnd, e);
   return e;

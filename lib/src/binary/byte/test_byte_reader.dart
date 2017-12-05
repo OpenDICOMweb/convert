@@ -15,6 +15,7 @@ import 'package:uid/uid.dart';
 
 /// External Interface for Testing Only!!!
 class TestByteReader extends ByteReader {
+
   /// Creates a new [TestByteReader].
   TestByteReader(ByteData bd,
       {String path = '',
@@ -30,7 +31,7 @@ class TestByteReader extends ByteReader {
   /// read successfully.
   TransferSyntax xReadFmi(RootDataset rds,
       {bool checkPreamble = true, bool allowMissingPrefix = false}) {
-    readFmi(rds);
+    readFmi();
     if (!rds.hasFmi || !rds.hasSupportedTransferSyntax) return null;
     return rds.transferSyntax;
   }
@@ -51,7 +52,7 @@ class TestByteReader extends ByteReader {
 
   // Reads
   RootDatasetByte xReadDataset() {
-    while (isReadable) {
+    while (rb.isReadable) {
       var e = readElement();
       rds.add(e);
       e = rds[e.code];

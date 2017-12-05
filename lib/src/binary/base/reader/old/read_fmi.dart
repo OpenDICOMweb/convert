@@ -91,3 +91,4 @@ bool isAsciiPrefixPresent(ByteReader rb) {
     return false;
   }
 }
+

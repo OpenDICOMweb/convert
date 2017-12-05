@@ -4,71 +4,86 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
-import 'package:element/byte_element.dart';
-import 'package:element/tag_element.dart';
-import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/binary/byte/evr_byte_reader.dart';
-import 'package:dcm_convert/src/binary/byte/ivr_byte_reader.dart';
+import 'package:dcm_convert/src/binary/base/reader/base/evr_reader.dart';
+import 'package:dcm_convert/src/binary/base/reader/debug/log_read_mixin.dart';
+import 'package:dcm_convert/src/binary/byte/byte_reader_mixin.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
-import 'package:dcm_convert/src/io_utils.dart';
+
+final bool elementOffsetsEnabled = true;
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootDatasetByte].
-class ByteReader {
-  final ByteData bd;
-  final String path;
-  final bool reUseBD;
-  final DecodingParameters dParams;
+class EvrByteReader extends EvrReader with ByteReaderMixin, LogReadMixin {
+  @override
   final ElementOffsets offsets;
+  @override
+  final ParseInfo pInfo;
 
-  EvrByteReader _evrReader;
-  IvrByteReader _ivrReader;
+  factory EvrByteReader(ByteData bd,
+      {String path = '',
+      bool reUseBD = true,
+      DecodingParameters dParams = DecodingParameters.kNoChange}) {
+    final rds = new RootDatasetByte(new RDSBytes(bd), path: path);
+    return new EvrByteReader._(bd, rds, path, dParams, reUseBD);
+  }
 
-  /// Creates a new [ByteReader], which is decoder for Binary DICOM
+  /// Creates a new [EvrByteReader], which is decoder for Binary DICOM
   /// (application/dicom).
-  ByteReader(this.bd,
-      {this.path = '',
-      this.dParams = DecodingParameters.kNoChange,
-      this.reUseBD = true,
-      this.offsets});
+  EvrByteReader._(
+      ByteData bd, RootDataset rds, String path, DecodingParameters dParams, bool reUseBD)
+      : offsets = (elementOffsetsEnabled) ? new ElementOffsets() : null,
+        pInfo = new ParseInfo(rds),
+        super(bd, rds, path, dParams, reUseBD);
 
-  /// Creates a [ByteReader] from the contents of the [file].
-  factory ByteReader.fromFile(File file,
-      {DecodingParameters dParams = DecodingParameters.kNoChange, bool reUseBD = true}) {
+/*
+  /// Creates a [EvrByteReader] from the contents of the [file].
+  factory EvrByteReader.fromFile(File file,
+      {bool reUseBD = true, DecodingParameters dParams = DecodingParameters.kNoChange}) {
     final Uint8List bytes = file.readAsBytesSync();
     final bd = bytes.buffer.asByteData();
-    return new ByteReader(bd, path: file.path, reUseBD: reUseBD, dParams: dParams);
+    return new EvrByteReader(bd, path: file.path, reUseBD: reUseBD, dParams: dParams);
   }
 
   /// Creates a [EvrByteReader] from the contents of the [File] at [path].
-  factory ByteReader.fromPath(String path,
-          {DecodingParameters dParams = DecodingParameters.kNoChange,
-          bool reUseBD = true}) =>
-      new ByteReader.fromFile(new File(path), dParams: dParams,reUseBD: reUseBD);
+  factory EvrByteReader.fromPath(String path,
+          {bool reUseBD = true,
+          DecodingParameters dParams = DecodingParameters.kNoChange}) =>
+      new EvrByteReader.fromFile(new File(path), reUseBD: reUseBD, dParams: dParams);
+*/
+/*
 
-  ByteData readFmi() {
-    _evrReader = new EvrByteReader(bd, path: path, dParams: dParams, reUseBD: reUseBD);
-    final fmiBD = _evrReader.readFmi();
-    if (fmiBD != null) _evrReader.isFmiRead = true;
-    return fmiBD;
-  }
+  @override
+  ElementList get elements => cds.elements;
 
-  RootDataset readRootDataset() {
-    if (!_evrReader.isFmiRead) readFmi();
-    if (_evrReader.rds.transferSyntax.isEvr) {
-      return _evrReader.readRootDataset();
-    } else {
-      _ivrReader = new IvrByteReader(bd, path: path, dParams: dParams, reUseBD: reUseBD);
-      return _ivrReader.readRootDataset();
-    }
-  }
+  @override
+  Element makeElement(int code, int vrIndex, EBytes eb) => makeBEFromEBytes(eb, vrIndex);
+
+  @override
+  Element makePixelData(int code, int vrIndex, EBytes eb, {VFFragments fragments}) =>
+      makeBEPixelDataFromEBytes(eb, vrIndex);
+
+  /// Returns a new Sequence ([SQ]).
+  @override
+  SQ makeSequence(int code, EBytes eb, Dataset parent, List<Item> items) =>
+      new SQbyte.fromBytes(eb, parent, items);
+
+  @override
+  RootDataset makeRootDataset(RDSBytes dsBytes, [ElementList elements, String path]) =>
+      new RootDatasetByte(dsBytes, elements: elements, path: path);
+
+  /// Returns a new [ItemByte].
+  @override
+  Item makeItem(Dataset parent, {IDSBytes eb, ElementList elements, SQ sequence}) =>
+      new ItemByte(parent, eb);
+*/
+
+/*
 
   // **** DcmReaderInterface ****
 
@@ -83,7 +98,7 @@ class ByteReader {
       bool showStats = false,
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool elementOffsetsEnabled = true,
-      ElementOffsets offsets}) {
+      ElementOffsets inputOffsets}) {
     final bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     final reader = new EvrByteReader(bd, path: path, reUseBD: reUseBD, dParams: dParams);
     return reader.readRootDataset();
@@ -126,4 +141,6 @@ class ByteReader {
           bool showStats = false,
           DecodingParameters dParams = DecodingParameters.kNoChange}) =>
       readPath(path, reUseBD: reUseBD, showStats: showStats, dParams: dParams);
+*/
+
 }

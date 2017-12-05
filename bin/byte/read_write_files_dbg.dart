@@ -25,7 +25,7 @@ void main() {
 
   system.throwOnError = true;
   // *** Modify [paths] value to read/write a different file
-  final paths = testPaths0;
+  final paths = testEvrPaths;
   //paths.addAll(testPaths0);
  // paths.addAll(testPaths1);
  // paths.addAll(testPaths2);

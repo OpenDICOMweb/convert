@@ -17,20 +17,20 @@ import 'dart:typed_data';
 import 'package:dataset/byte_dataset.dart';
 import 'package:element/element.dart';
 import 'package:system/core.dart';
-import 'package:tag/vr.dart';
+import 'package:vr/vr.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/binary/base/writer/writer_interface.dart';
-import 'package:dcm_convert/src/binary/base/writer/write_buffer.dart';
+import 'writer_interface.dart';
+import 'write_buffer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 
-part 'package:dcm_convert/src/binary/base/writer/write_evr.dart';
-part 'package:dcm_convert/src/binary/base/writer/write_ivr.dart';
-part 'package:dcm_convert/src/binary/base/writer/write_fmi.dart';
-part 'package:dcm_convert/src/binary/base/writer/write_common.dart';
+part 'write_evr.dart';
+part 'write_ivr.dart';
+part 'write_fmi.dart';
+part 'write_common.dart';
 //part 'package:dcm_convert/src/binary/base/writer/write_utils.dart';
-part 'package:dcm_convert/src/binary/base/writer/write_vf.dart';
+part 'write_vf.dart';
 
 // The write buffer
 WriteBuffer _wb;

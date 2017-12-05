@@ -29,8 +29,8 @@ bool byteReadWriteFileChecked(String path,
   final f = new File(fPath);
   try {
     final reader0 = new ByteReader.fromFile(f);
-    final rds0 = reader0.read();
-    final bytes0 = reader0.rootBytes;
+    final rds0 = reader0.readRootDataset();
+    final bytes0 = reader0.bd.buffer.asUint8List();
     final e = rds0[kPixelData];
     if (e == null) log.warn('$pad ** Pixel Data Element not present');
 
@@ -54,7 +54,7 @@ bool byteReadWriteFileChecked(String path,
     } else {
       reader1 = new ByteReader.fromPath(outPath);
     }
-    final rds1 = reader1.read();
+    final rds1 = reader1.readRootDataset();
 
     if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
 

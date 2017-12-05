@@ -24,7 +24,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
   final Uint8List bytes = f.readAsBytesSync();
   final bd = bytes.buffer.asByteData();
   final reader0 = new ByteReader(bd);
-  final rds0 = reader0.read();
+  final rds0 = reader0.readRootDataset();
   showRDS(rds0, reader0);
 
   // TODO: move into dataset.warnings.
@@ -49,8 +49,8 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
   log.debug('$pad    Encoded ${bytes1.length} bytes');
 
   final bd1 = bytes1.buffer.asByteData();
-  final reader1 = new ByteReader(bd1, fast: true);
-  final rds1 = reader1.read();
+  final reader1 = new ByteReader(bd1);
+  final rds1 = reader1.readRootDataset();
   showRDS(rds1, reader1);
 
 
@@ -60,7 +60,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
   // If duplicates are present the [ElementOffsets]s will not be equal.
   if (!rds0.hasDuplicates) {
     //  Compare the data byte for byte
-    same = bytesEqual(reader0.rootBytes, reader1.rootBytes);
+    same = bytesEqual(reader0.bd.buffer.asUint8List(), reader1.bd.buffer.asUint8List());
     msg = (same != true) ? '**** Files were different!!!' : 'Files were identical.';
   } else {
     msg = '''
@@ -70,10 +70,10 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
 
   log.info('''\n
 $f  
-  Read ${reader0.rootBytes.lengthInBytes} bytes
+  Read ${reader0.bd.lengthInBytes} bytes
     DS0: ${rds0.info}'
     ${rds0.transferSyntax}
-    ${reader0.info}
+    $reader0
   Wrote ${bytes1.lengthInBytes} bytes
     $msg
     ${writer.info}
@@ -84,19 +84,19 @@ $f
 
 void showRDS(RootDatasetByte rds,  ByteReader reader) {
 
-	final PixelData e = rds[kPixelData];
+	final e = rds[kPixelData];
 	final pdMsg =  (e == null)
 	? ' ** Pixel Data Element not present'
 			: e.info;
 
-	final bytes0 = reader.rootBytes;
+	final bytes0 = reader.bd.buffer.asUint8List();
 
   log.debug('''\n
 Read ${bytes0.lengthInBytes} bytes
      RDS: ${rds.info}'
       TS: ${rds.transferSyntax}
   Pixels: $pdMsg
-  ${reader.info}
+  $reader
   ${rds.parseInfo.summary(rds)}
 ''');
 }

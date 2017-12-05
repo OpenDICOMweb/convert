@@ -16,7 +16,7 @@ import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
-import 'package:dcm_convert/src/binary/base/writer/dcm_writer.dart';
+import 'package:dcm_convert/src/binary/base/writer/old/dcm_writer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 import 'package:dcm_convert/src/io_utils.dart';

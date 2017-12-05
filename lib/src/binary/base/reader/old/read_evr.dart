@@ -59,7 +59,7 @@ Element _readEvrElement() {
     e = _readEvrMaybeUndefined(code, eStart, vrIndex);
     log.up;
   } else {
-    return invalidVRIndexError(vrIndex);
+    return invalidVRIndex(vrIndex);
   }
 
 	// Elements are always read into the current dataset.

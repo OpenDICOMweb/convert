@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dcm_convert/src/binary/byte/byte_reader.dart';
 import 'package:dcm_convert/src/binary/byte/write_bytes.dart';
 import 'package:dcm_convert/src/errors.dart';
 import 'package:dcm_convert/src/tool/job_utils.dart';
@@ -22,15 +23,15 @@ Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
   try {
     final Uint8List bytes = await f.readAsBytes();
     final bd = bytes.buffer.asByteData();
-    final reader0 = new ByteDatasetReader(bd);
-    final rds0 = reader0.read();
+    final reader0 = new ByteReader(bd);
+    final rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
       log.info0('Bad File: ${f.path}');
       return false;
     }
     if (rds0.parseInfo == null) throw 'Bad File - No ParseInfo: $f';
-    final bytes0 = reader0.rootBytes;
+    final bytes0 = reader0.bd.buffer.asUint8List();
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');
@@ -44,7 +45,7 @@ $pad    TS: ${rds0.transferSyntax}''');
       log.debug1('$pad  e: ${e.info}');
     }
 
-    final offsets = reader0.inputOffsets;
+    final offsets = reader0.offsets;
     for (var i = 0; i < offsets.length; i++) {
     	print('$i: ${offsets.starts[i]} - ${offsets.ends[i]} ${offsets.elements[i]}');
     }
@@ -55,7 +56,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     if (fast) {
       // Just write bytes don't write the file
       writer = new ByteDatasetWriter(rds0,
-          elementOffsetsEnabled: true, inputOffsets: reader0.inputOffsets);
+          elementOffsetsEnabled: true, inputOffsets: reader0.offsets);
     } else {
       writer = new ByteDatasetWriter.toPath(rds0, outPath);
     }
@@ -72,18 +73,18 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       log.debug('Re-reading: ${bytes1.length} bytes from $outPath');
     }
-    ByteDatasetReader reader1;
+    ByteReader reader1;
     if (fast) {
       // Just read bytes not file
-      reader1 = new ByteDatasetReader(
+      reader1 = new ByteReader(
           bytes1.buffer.asByteData(bytes1.offsetInBytes, bytes1.lengthInBytes));
     } else {
-      reader1 = new ByteDatasetReader.fromPath(outPath);
+      reader1 = new ByteReader.fromPath(outPath);
     }
-    final rds1 = reader1.read();
+    final rds1 = reader1.readRootDataset();
     //   RootDatasetBytes rds1 = ByteReader.readPath(outPath);
     log
-      ..debug('$pad Read ${reader1.rootBytes.lengthInBytes} bytes')
+      ..debug('$pad Read ${reader1.bd.lengthInBytes} bytes')
       ..debug1('$pad DS1: $rds1');
 
     if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
@@ -118,8 +119,8 @@ $pad    TS: ${rds0.transferSyntax}''');
     final bList = rds1.elements.elements;
     final length = (aList.length > bList.length) ? aList.length : bList.length;
     for (var i = 0; i < length; i++) {
-      final x = aList.elementAt(i) as ByteElement;
-      final y = bList.elementAt(i) as ByteElement;
+      final x = aList.elementAt(i);
+      final y = bList.elementAt(i);
       print('$i x: $x');
       print('$i y: $y');
       if (x.eStart != y.eStart) print('** Starts are different');

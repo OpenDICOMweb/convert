@@ -7,11 +7,12 @@
 import 'dart:io';
 
 import 'package:dataset/tag_dataset.dart';
-import 'package:dcm_convert/byte_convert.dart';
-import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/tools.dart';
 import 'package:system/server.dart';
 import 'package:vr/vr.dart';
+
+import 'package:dcm_convert/data/test_files.dart';
+import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/tools.dart';
 
 /// A Program that reads a [File], decodes it into a [ RootDatasetByte ],
 /// and then converts that into a [RootDatasetTag].

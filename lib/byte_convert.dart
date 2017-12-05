@@ -7,7 +7,7 @@
 export 'package:dataset/byte_dataset.dart';
 export 'package:dcm_convert/src/binary/base/reader/base/evr_reader.dart';
 export 'package:dcm_convert/src/binary/base/reader/base/ivr_reader.dart';
-export 'package:dcm_convert/src/binary/base/reader/base/reader_base.dart';
+export 'package:dcm_convert/src/binary/base/reader/base/dcm_reader_base.dart';
 export 'package:dcm_convert/src/binary/byte/byte_reader.dart';
 export 'package:dcm_convert/src/binary/byte/write_bytes.dart';
 export 'package:dcm_convert/src/binary/byte_read_utils.dart';
@@ -23,8 +23,8 @@ export 'package:entity/entity.dart';
 /*
 export 'package:dcm_convert/src/binary/base/writer/dcm_writer.dart';
 */
-//export 'package:dcm_convert/src/binary/tag/tag_reader.dart';
-//export 'package:dcm_convert/src/binary/tag/tag_writer.dart';
+export 'package:dcm_convert/src/binary/tag/tag_reader.dart';
+export 'package:dcm_convert/src/binary/tag/tag_writer.dart';
 
 
 

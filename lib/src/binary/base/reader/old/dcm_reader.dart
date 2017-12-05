@@ -9,21 +9,21 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
-import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
-import 'package:dcm_convert/src/binary/base/reader/reader_interface_old.dart';
+import 'package:dcm_convert/src/binary/base/reader/base/read_buffer.dart';
+import 'reader_interface_old.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/errors.dart';
 import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
-import 'package:tag/tag.dart';
+import 'package:vr/vr.dart';
 import 'package:uid/uid.dart';
 
-part 'package:dcm_convert/src/binary/base/reader/read_common.dart';
-part 'package:dcm_convert/src/binary/base/reader/read_evr.dart';
-part 'package:dcm_convert/src/binary/base/reader/read_fmi.dart';
-part 'package:dcm_convert/src/binary/base/reader/read_ivr.dart';
-part 'package:dcm_convert/src/binary/base/reader/read_root.dart';
+part 'read_common.dart';
+part 'read_evr.dart';
+part 'read_fmi.dart';
+part 'read_ivr.dart';
+part 'read_root.dart';
 //part 'package:dcm_convert/src/binary/base/reader/reader_info.dart';
 //part 'package:dcm_convert/src/binary/base/reader/read_pixels.dart';
 

@@ -14,7 +14,7 @@ import 'package:dcm_convert/src/utilities/file_list_reader.dart';
 void main() {
   // readFile(path0);
 
-  readFiles(testPaths0);
+  readFiles(testEvrPaths);
 }
 
 void readFile(String path) {

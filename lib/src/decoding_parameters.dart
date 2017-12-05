@@ -83,7 +83,7 @@ class DecodingParameters {
     this.allowMissingFMI = true,
     this.allowDuplicates = true,
     this.checkForUNSequence = true,
-    this.doCorrectVR = true,
+    this.doCorrectVR = false,
     this.doCheckVR = true,
     this.doConvertToNormalForm = false,
     this.doSeparateBulkdata = false,
