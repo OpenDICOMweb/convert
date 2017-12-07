@@ -60,7 +60,7 @@ Future main() async {
 
   final bytes = await readDcmPath(fPath);
   if (bytes == null) {
-    log.error('"$fPath" is not a valid DICOM file');
+    log.error('"$fPath" either does not exist or is not a valid DICOM file');
     return;
   }
   //   final bytes = await readFileAsync(file);

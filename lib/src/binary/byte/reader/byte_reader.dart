@@ -13,8 +13,8 @@ import 'package:element/byte_element.dart';
 import 'package:element/tag_element.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/binary/byte/evr_byte_reader.dart';
-import 'package:dcm_convert/src/binary/byte/ivr_byte_reader.dart';
+import 'package:dcm_convert/src/binary/byte/reader/evr_byte_reader.dart';
+import 'package:dcm_convert/src/binary/byte/reader/ivr_byte_reader.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/io_utils.dart';
@@ -28,7 +28,7 @@ class ByteReader {
   final DecodingParameters dParams;
   final ElementOffsets offsets;
 
-  EvrByteReader _evrReader;
+  final EvrByteReader evrReader;
   IvrByteReader _ivrReader;
 
   /// Creates a new [ByteReader], which is decoder for Binary DICOM
@@ -37,7 +37,8 @@ class ByteReader {
       {this.path = '',
       this.dParams = DecodingParameters.kNoChange,
       this.reUseBD = true,
-      this.offsets});
+      this.offsets})
+  : evrReader = new EvrByteReader(bd, path: path, dParams: dParams, reUseBD: reUseBD);
 
   /// Creates a [ByteReader] from the contents of the [file].
   factory ByteReader.fromFile(File file,
@@ -54,16 +55,16 @@ class ByteReader {
       new ByteReader.fromFile(new File(path), dParams: dParams,reUseBD: reUseBD);
 
   ByteData readFmi() {
-    _evrReader = new EvrByteReader(bd, path: path, dParams: dParams, reUseBD: reUseBD);
-    final fmiBD = _evrReader.readFmi();
-    if (fmiBD != null) _evrReader.isFmiRead = true;
+    final fmiBD = evrReader.readFmi();
+    if (fmiBD != null) evrReader.isFmiRead = true;
     return fmiBD;
   }
 
   RootDataset readRootDataset() {
-    if (!_evrReader.isFmiRead) readFmi();
-    if (_evrReader.rds.transferSyntax.isEvr) {
-      return _evrReader.readRootDataset();
+    if (!evrReader.isFmiRead) readFmi();
+
+    if (evrReader.rds.transferSyntax.isEvr) {
+      return evrReader.readRootDataset();
     } else {
       _ivrReader = new IvrByteReader(bd, path: path, dParams: dParams, reUseBD: reUseBD);
       return _ivrReader.readRootDataset();

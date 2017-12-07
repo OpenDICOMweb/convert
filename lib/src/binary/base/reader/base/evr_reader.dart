@@ -48,12 +48,12 @@ import 'package:dcm_convert/src/errors.dart';
 ///   return the empty [List] [].
 abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
   @override
-  bool  isEvr = true;
+  bool isEvr = true;
 
   /// Creates a new [EvrReader]  where [rb].rIndex = 0.
   EvrReader(
       ByteData bd, RootDataset rds, String path, DecodingParameters dParams, bool reUseBD)
-      : super(bd, rds, path, dParams, reUseBD);
+      : super(bd, rds, dParams, reUseBD);
 
   @override
   ByteData readFmi() {
@@ -62,21 +62,6 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
     final bd = _readFmi();
     isFmiRead = true;
     return bd;
-  }
-
-  @override
-  RootDataset readRootDataset() {
-    cds = rds;
-    if (!isFmiRead) readFmi();
-
-    super.readRootDataset();
-/*    final rdsStart = rb.index;
-    read(rds);
-    final rdsLength = rb.index - rdsStart;
-    final rdsBD = rb.bd.buffer.asByteData(rdsStart, rdsLength);
-    final dsBytes = new RDSBytes(fmiBD, rdsBD);
-    rds.dsBytes = dsBytes; */
-    return rds;
   }
 
   /// For EVR Datasets, all Elements are read by this method.
@@ -105,24 +90,23 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
         }
       }
     }
-    //TODO: fix order to most common Element type
+
     if (_isShortVR(vrIndex)) return readShort(code, vrIndex, eStart);
-    if (_isSequenceVR(vrIndex)) return readSequence(code, vrIndex, eStart);
     if (_isLongVR(vrIndex)) return readLong(code, vrIndex, eStart);
+    if (_isSequenceVR(vrIndex)) return readSequence(code, vrIndex, eStart);
     if (_isUndefinedLengthVR(vrIndex)) return readMaybeUndefined(code, vrIndex, eStart);
     invalidVRIndex(vrIndex, null, null);
     return null;
   }
 
-  /// Read a Short EVR Element, i.e. one with a 16-bit
-  /// Value Field Length field. These Elements may not have
-  /// a kUndefinedLength value.
+  /// Read a Short EVR Element, i.e. one with a 16-bit Value Field Length field.
+  /// These Elements can not have an kUndefinedLength value.
   Element readShort(int code, int vrIndex, int eStart) {
     final vlf = rb.uint16;
     rb + vlf;
-    logStartRead(code,  vrIndex, eStart, vlf, 'readEvrShort');
+    logStartRead(code, vrIndex, eStart, vlf, 'readEvrShort');
     final eb = rb.makeEvrShortEBytes(eStart);
-    final e =  makeElement(code, vrIndex, eb);
+    final e = makeElement(code, vrIndex, eb);
     logEndRead(eStart, e, 'readEvrShort');
     return e;
   }
@@ -134,7 +118,7 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
   Element readLong(int code, int vrIndex, int eStart) {
     rb + 2;
     final vlf = rb.uint32;
-    logStartRead(code,  vrIndex, eStart, vlf, 'readEvrLong');
+    logStartRead(code, vrIndex, eStart, vlf, 'readEvrLong');
     return _makeLong(code, vrIndex, eStart, vlf);
   }
 
@@ -160,7 +144,7 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
   Element readMaybeUndefined(int code, int vrIndex, int eStart) {
     rb + 2;
     final vlf = rb.uint32;
-    logStartRead(code,  vrIndex, eStart, vlf, 'readEvrMaybeUndefined');
+    logStartRead(code, vrIndex, eStart, vlf, 'readEvrMaybeUndefined');
     if (vlf != kUndefinedLength) return _makeLong(code, vrIndex, eStart, vlf);
 
     // If VR is UN then this might be a Sequence
@@ -184,7 +168,7 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
     assert(vrIndex == kSQIndex);
     rb + 2;
     final vlf = rb.uint32;
-    logStartSQRead(code,  vrIndex, eStart, vlf, 'readEvrSequence');
+    logStartSQRead(code, vrIndex, eStart, vlf, 'readEvrSequence');
     final items = (vlf == kUndefinedLength)
         ? readUSQ(code, vrIndex, eStart, vlf)
         : readDSQ(code, vrIndex, eStart, vlf);
@@ -204,10 +188,10 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
   int _lookupEvrVRIndex(int code, int eStart, int vrCode) {
     final vr = VR.lookupByCode(vrCode);
     if (vr == null) {
-  //    log.debug('${rb.rmm} ${dcm(code)} $eStart ${hex16(vrCode)}');
+      //    log.debug('${rb.rmm} ${dcm(code)} $eStart ${hex16(vrCode)}');
       rb.warn('VR is Null: vrCode(${hex16(vrCode)}, $vrCode) '
           '${dcm(code)} start: $eStart');
-      showNext(rb.index - 4);
+//      showNext(rb.index - 4);
     }
     return __vrToIndex(code, vr);
   }

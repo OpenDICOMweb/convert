@@ -24,8 +24,9 @@ abstract class IvrReader extends DcmReaderBase with LogReadMixinBase {
   final bool isEvr = false;
 
   /// Creates a new [IvrReader]  where [rb].rIndex = 0.
-  IvrReader(ByteData bd, RootDataset rds, String path, DecodingParameters dParams,
-            bool reUseBD) : super(bd, rds, path, dParams, reUseBD);
+  IvrReader(
+      ByteData bd, RootDataset rds, String path, DecodingParameters dParams, bool reUseBD)
+      : super(bd, rds, dParams, reUseBD);
 
   IvrReader.from(EvrReader r) : super.from(r);
 
@@ -63,8 +64,9 @@ abstract class IvrReader extends DcmReaderBase with LogReadMixinBase {
     assert(vlf != kUndefinedLength);
     rb + vlf;
     final eb = rb.makeEvrLongEBytes(eStart);
-    return (code == kPixelData) ? makePixelData(code, vrIndex, eb) : makeElement(
-        code, vrIndex, eb);
+    return (code == kPixelData)
+        ? makePixelData(code, vrIndex, eb)
+        : makeElement(code, vrIndex, eb);
   }
 
   /// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have
@@ -83,8 +85,8 @@ abstract class IvrReader extends DcmReaderBase with LogReadMixinBase {
     final fragments = readUndefinedLength(code, eStart, vrIndex, vlf);
     final eb = rb.makeEvrLongEBytes(eStart);
     return (code == kPixelData)
-           ? makePixelData(code, vrIndex, eb, fragments: fragments)
-           : makeElement(code, vrIndex, eb);
+        ? makePixelData(code, vrIndex, eb, fragments: fragments)
+        : makeElement(code, vrIndex, eb);
   }
 
   @override
@@ -92,8 +94,8 @@ abstract class IvrReader extends DcmReaderBase with LogReadMixinBase {
     assert(vrIndex == kSQIndex);
     final vlf = rb.uint32;
     final items = (vlf == kUndefinedLength)
-                  ? readUSQ(code, vrIndex, eStart, vlf)
-                  : readDSQ(code, vrIndex, eStart, vlf);
+        ? readUSQ(code, vrIndex, eStart, vlf)
+        : readDSQ(code, vrIndex, eStart, vlf);
     return _makeSequence(code, vrIndex, eStart, items);
   }
 
@@ -103,6 +105,7 @@ abstract class IvrReader extends DcmReaderBase with LogReadMixinBase {
     return makeSequence(code, eb, cds, items);
   }
 }
+
 bool _isSequenceVR(int vrIndex) => vrIndex == 0;
 
 bool _isSpecialVR(int vrIndex) =>

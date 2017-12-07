@@ -41,29 +41,26 @@ import 'package:dcm_convert/src/errors.dart';
 abstract class DcmReaderBase {
   final ReadBuffer rb;
   final RootDataset rds;
-
-  /// The source of the [Uint8List] being read.
-  final String path;
   ByteData fmiBD;
-
+  final DecodingParameters dParams;
   /// If true the [ByteData] buffer ([rb] will be reused.
   final bool reUseBD;
-  final DecodingParameters dParams;
+
+  /// The current Dataset.
   Dataset cds;
 
   /// Creates a new [DcmReaderBase]  where [rb].rIndex = 0.
   // ignore: avoid_positional_boolean_parameters
-  DcmReaderBase(ByteData bd, this.rds, this.path, this.dParams, this.reUseBD)
+  DcmReaderBase(ByteData bd, this.rds, this.dParams, this.reUseBD)
       : rb = new ReadBuffer(bd);
 
   DcmReaderBase.from(DcmReaderBase rBase)
-      : path = rBase.path,
-        rb = rBase.rb,
+      : rb = rBase.rb,
         rds = rBase.rds,
+        dParams = rBase.dParams,
         cds = rBase.cds,
         fmiBD = rBase.fmiBD,
-        reUseBD = rBase.reUseBD,
-        dParams = rBase.dParams;
+        reUseBD = rBase.reUseBD;
 
   // **** Interface ****
 
@@ -149,7 +146,7 @@ abstract class DcmReaderBase {
         : readDatasetDefinedLength(item, rb.index, vfLengthField);
 
     cds = parentDS;
-    final bd = rb.buffer.asByteData(iStart, rb.index- iStart);
+    final bd = rb.buffer.asByteData(iStart, rb.index - iStart);
     item.dsBytes = new IDSBytes(bd);
     return item;
   }
@@ -162,7 +159,7 @@ abstract class DcmReaderBase {
     assert(vfLength != kUndefinedLength);
     final dsEnd = dsStart + vfLength;
     assert(dsStart == rb.index);
-    while (rb.index< dsEnd) {
+    while (rb.index < dsEnd) {
       // Elements are always read into the current dataset.
       final e = readElement();
       final ok = ds.tryAdd(e);
@@ -199,8 +196,7 @@ abstract class DcmReaderBase {
   List<Item> readDSQ(int code, int vrIndex, int eStart, int vfLength) {
     assert(vfLength != kUndefinedLength);
     final items = <Item>[];
-    final vfStart = rb.index;
-    final eEnd = vfStart + vfLength;
+    final eEnd = rb.index + vfLength;
 
     while (rb.index < eEnd) {
       final item = readItem();
@@ -234,7 +230,7 @@ abstract class DcmReaderBase {
       break;
     }
     _readAndCheckDelimiterLength();
-    final endOfVF = rb.index- 8;
+    final endOfVF = rb.index - 8;
     return endOfVF;
   }
 
@@ -289,7 +285,6 @@ abstract class DcmReaderBase {
 
   /// Reads an encapsulated (compressed) [kPixelData] [Element].
   VFFragments _readPixelDataFragments(int code, int eStart, int vrIndex, int vlf) {
-    //  log.debug2('${rb.rmm} readPixelData Fragments', 1);
     assert(_isMaybeUndefinedLengthVR(vrIndex));
     _checkForOB(vrIndex, rds.transferSyntax);
     return _readFragments();
@@ -335,11 +330,13 @@ abstract class DcmReaderBase {
     final tag = Tag.lookup(code);
     if (tag == null) {
       rb.warn('Tag is Null: ${dcm(code)} start: $eStart');
-      showNext(rb.index- 4);
+// TODO: move to log/debug version
+//      showNext(rb.index - 4);
     }
     return tag;
   }
 
+  bool isValidVR(int code, int vrIndex, Tag tag) => _isValidVR(code, vrIndex, tag);
   bool _isValidVR(int code, int vrIndex, Tag tag) {
     if (vrIndex == kUNIndex) return true;
     if (tag.hasNormalVR && vrIndex == tag.vrIndex) return true;
@@ -361,8 +358,7 @@ abstract class DcmReaderBase {
 
   /// Returns true if there are only trailing zeros at the end of the
   /// Object being parsed.
-  Null zeroEncountered(int code) =>
-      throw new EndOfDataError('Zero encountered');
+  Null zeroEncountered(int code) => throw new EndOfDataError('Zero encountered');
 
   String failedTSErrorMsg(String path, Error x) => '''
 Invalid Transfer Syntax: "$path"\nException: $x\n 
@@ -377,82 +373,13 @@ Failed to read FMI: "$path"\nException: $x\n'
   @override
   String toString() => '$runtimeType: rds: $rds, cds: $cds';
 
-  Null shortFileError() {
+  Null shortFileError(String path) {
     final s = 'Short file error: length(${rb.lengthInBytes}) $path';
     rb.warn('$s');
     if (throwOnError) throw new ShortFileError('Length($rb.lengthInBytes) $path');
     return null;
   }
 
-  // Issue:
-  // **** Below this level is all for debugging and can be commented out for
-  // **** production.
-
-  void showNext(int start) {
-    if (isEvr) {
-      _showShortEVR(start);
-      _showLongEVR(start);
-      _showIVR(start);
-      _showShortEVR(start + 4);
-      _showLongEVR(start + 4);
-      _showIVR(start + 4);
-    } else {
-      _showIVR(start);
-      _showIVR(start + 4);
-    }
-  }
-
-  void _showShortEVR(int start) {
-    if (rb.hasRemaining(8)) {
-      final code = rb.getCode(start);
-      final vrCode = rb.getUint16(start + 4);
-      final vr = VR.lookupByCode(vrCode);
-      final vfLengthField = rb.getUint16(start + 6);
-      log.debug('**** Short EVR: ${dcm(code)} $vr vlf: $vfLengthField');
-    }
-  }
-
-  void _showLongEVR(int start) {
-    if (rb.hasRemaining(8)) {
-      final code = rb.getCode(start);
-      final vrCode = rb.getUint16(start + 4);
-      final vr = VR.lookupByCode(vrCode);
-      final vfLengthField = rb.getUint32(start + 8);
-      log.debug('**** Long EVR: ${dcm(code)} $vr vlf: $vfLengthField');
-    }
-  }
-
-  void _showIVR(int start) {
-    if (rb.hasRemaining(8)) {
-      final code = rb.getCode(start);
-      final tag = Tag.lookupByCode(code);
-      if (tag != null) log.debug(tag);
-      final vfLengthField = rb.getUint16(start + 4);
-      log.debug('**** IVR: ${dcm(code)} vlf: $vfLengthField');
-    }
-  }
-
-  String toVFLength(int vfl) => 'vfLengthField($vfl, ${hex32(vfl)})';
-  String toHadULength(int vfl) =>
-      'HadULength(${(vfl == kUndefinedLength) ? 'true': 'false'})';
-
-  void showReadIndex([int index, int before = 20, int after = 28]) {
-    index ??= rb.index;
-    if (index.isOdd) {
-      rb.warn('**** Index($index) is not at even offset ADDING 1');
-      index++;
-    }
-
-    for (var i = index - before; i < index; i += 2) {
-      log.debug('$i:   ${hex16(rb.getUint16 (i))} - ${rb.getUint16 (i)}');
-    }
-
-    log.debug('** ${hex16(rb.getUint16 (index))} - ${rb.getUint16 (index)}');
-
-    for (var i = index + 2; i < index + after; i += 2) {
-      log.debug('$i: ${hex16(rb.getUint16 (i))} - ${rb.getUint16 (i)}');
-    }
-  }
 }
 
 bool _isMaybeUndefinedLengthVR(int vrIndex) =>

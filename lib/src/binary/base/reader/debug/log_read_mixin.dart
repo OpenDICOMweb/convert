@@ -15,6 +15,7 @@ import 'package:dcm_convert/src/binary/base/reader/base/read_buffer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 
 abstract class LogReadMixin implements LogReadMixinBase {
+  bool get isEvr;
   int elementCount;
   ReadBuffer get rb;
   ParseInfo get pInfo;
@@ -35,15 +36,16 @@ abstract class LogReadMixin implements LogReadMixinBase {
   /// The end of reading something.
   String get ree => '< $_rrr ';
 
-  String get pad => ''.padRight('$_rrr'.length);
+//  String get pad => ''.padRight('$_rrr'.length);
 
   int get remaining => rb.remaining;
 
-  void sMsg(String name, int code, int start, int vrIndex,
+/*
+  void _sMsg(String name, int code, int start, int vrIndex,
           [int hdrLength, int vfLengthField = -1, int inc = 1]) =>
       _msg(rbb, name, code, start, vrIndex, hdrLength, vfLengthField, inc);
 
-  void mMsg(String name, int code, int start, int vrIndex,
+  void _mMsg(String name, int code, int start, int vrIndex,
           [int hdrLength, int vfLengthField = -1, int inc = 0]) =>
       _msg(rmm, name, code, start, vrIndex, hdrLength, vfLengthField, inc);
 
@@ -58,7 +60,7 @@ abstract class LogReadMixin implements LogReadMixinBase {
     log.debug(s, inc);
   }
 
-  void eMsg(int eNumber, Object e, int eStart, int eEnd, [int inc = -1]) {
+  void _eMsg(int eNumber, Object e, int eStart, int eEnd, [int inc = -1]) {
     final s = '$ree #$eNumber $e  |${rb.remaining} - $eEnd = ${rb.remaining -
       eEnd}';
     log.debug(s, inc);
@@ -68,6 +70,7 @@ abstract class LogReadMixin implements LogReadMixinBase {
 
   void dbgDSReadEnd(String name, Dataset ds) =>
       log.debug('$ree #$elementCount $name ${ds.info}');
+*/
 
   String vlfToString(int vlf) =>
       (vlf == null) ? '' : (vlf == kUndefinedLength) ? '0xFFFFFFFF' : '$vlf';
@@ -91,8 +94,6 @@ abstract class LogReadMixin implements LogReadMixinBase {
     final eEnd = eStart - rb.index;
     assert(eEnd == eStart - rb.index);
     _doEndOfElementStats(e.code, eStart, e, ok);
-/*    final sb = new StringBuffer(
-        '$ree $e $eStart + vlf(${e.vfLength}) = ${rb.index} :$remaining');*/
     final sb = new StringBuffer('$ree $e :$remaining');
     return sb.toString();
   }
@@ -106,15 +107,13 @@ abstract class LogReadMixin implements LogReadMixinBase {
   @override
   void logStartSQRead(int code, int vrIndex, int eStart, int vlf, String name) {
     final s = _startReadElement(code, vrIndex, eStart, vlf, name);
-    log.debug(s);
-    log.down;
+    log..debug(s)..down;
   }
 
   @override
   void logEndSQRead(int eStart, Element e, String name, {bool ok = true}) {
     final s = _endReadElement(eStart, e, name, ok: ok);
-    log.up;
-    log.debug(s);
+    log..up..debug(s);
   }
 
   void _doEndOfElementStats(int code, int eStart, Element e, bool ok) {
@@ -133,5 +132,75 @@ abstract class LogReadMixin implements LogReadMixinBase {
       pInfo.nDuplicateElements++;
     }
     if (e is! SQ) offsets.add(eStart, rb.index, e);
+  }
+
+
+  // **** Below this level is all for debugging and can be commented out for
+  // **** production.
+
+  void showNext(int start) {
+    if (isEvr) {
+      _showShortEVR(start);
+      _showLongEVR(start);
+      _showIVR(start);
+      _showShortEVR(start + 4);
+      _showLongEVR(start + 4);
+      _showIVR(start + 4);
+    } else {
+      _showIVR(start);
+      _showIVR(start + 4);
+    }
+  }
+
+  void _showShortEVR(int start) {
+    if (rb.hasRemaining(8)) {
+      final code = rb.getCode(start);
+      final vrCode = rb.getUint16(start + 4);
+      final vr = VR.lookupByCode(vrCode);
+      final vfLengthField = rb.getUint16(start + 6);
+      log.debug('**** Short EVR: ${dcm(code)} $vr vlf: $vfLengthField');
+    }
+  }
+
+  void _showLongEVR(int start) {
+    if (rb.hasRemaining(8)) {
+      final code = rb.getCode(start);
+      final vrCode = rb.getUint16(start + 4);
+      final vr = VR.lookupByCode(vrCode);
+      final vfLengthField = rb.getUint32(start + 8);
+      log.debug('**** Long EVR: ${dcm(code)} $vr vlf: $vfLengthField');
+    }
+  }
+
+  void _showIVR(int start) {
+    if (rb.hasRemaining(8)) {
+      final code = rb.getCode(start);
+      final tag = Tag.lookupByCode(code);
+      if (tag != null) log.debug(tag);
+      final vfLengthField = rb.getUint16(start + 4);
+      log.debug('**** IVR: ${dcm(code)} vlf: $vfLengthField');
+    }
+  }
+
+  String toVFLength(int vfl) => 'vfLengthField($vfl, ${hex32(vfl)})';
+  String toHadULength(int vfl) =>
+      'HadULength(${(vfl == kUndefinedLength) ? 'true': 'false'})';
+
+  void showReadIndex([int index, int before = 20, int after = 28]) {
+    index ??= rb.index;
+    if (index.isOdd) {
+      rb.warn('**** Index($index) is not at even offset ADDING 1');
+      index++;
+    }
+
+    for (var i = index - before; i < index; i += 2) {
+      log.debug('$i:   ${hex16(rb.getUint16 (i))} - ${rb.getUint16 (i)}');
+    }
+
+    log.debug('** ${hex16(rb.getUint16 (index))} - ${rb.getUint16 (index)}');
+
+    for (var i = index + 2; i < index + after; i += 2) {
+      log.debug('$i: ${hex16(rb.getUint16 (i))} - ${rb.getUint16 (i)}');
+    }
   }
 }

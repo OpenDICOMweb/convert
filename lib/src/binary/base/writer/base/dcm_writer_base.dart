@@ -10,7 +10,6 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
@@ -19,8 +18,9 @@ import 'package:system/core.dart';
 import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/src/binary/base/writer/base/write_buffer.dart';
-import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
+
+// ignore_for_file: avoid_positional_boolean_parameters
 
 /// A library for encoding [Dataset]s in the DICOM File Format.
 ///
@@ -36,45 +36,28 @@ import 'package:dcm_convert/src/encoding_parameters.dart';
 abstract class DcmWriterBase {
   final WriteBuffer wb;
   final RootDataset rds;
-
-  /// The target output [path] for the encoded data.
-  final String path;
-  final int minLength;
+  final int minBDLength;
   ByteData fmiBD;
-
-  /// The [TransferSyntax] for the encoded output. If null
-  /// the output will have the same [TransferSyntax] as the Root
-  /// [Dataset]. If the [TransferSyntax] of the Root [Dataset] is
-  /// null then it defaults to [Explicit VR Little Endian].
-  final TransferSyntax targetTS;
   final EncodingParameters eParams;
   final bool reUseBD;
-  final ParseInfo pInfo;
-  final bool elementOffsetsEnabled;
-  final ElementOffsets inputOffsets;
-  final ElementOffsets outputOffsets;
 
   Dataset cds;
-  int elementCount;
 
   /// Creates a new [DcmWriterBase], where [wIndex] = 0.
-  DcmWriterBase(this.rds,
-      {this.path,
-      EncodingParameters eParams,
-      TransferSyntax outputTS,
-      this.minLength,
-      this.reUseBD,
-      this.elementOffsetsEnabled = true,
-      this.inputOffsets})
-      : eParams = eParams ?? EncodingParameters.kNoChange,
-        targetTS = getOutputTS(rds, outputTS),
-        outputOffsets = (elementOffsetsEnabled) ? new ElementOffsets() : null,
-        pInfo = new ParseInfo(rds),
-        elementCount = -1,
-        cds = rds,
+  DcmWriterBase(this.rds, this.eParams, this.minBDLength, this.reUseBD)
+      : cds = rds,
         wb = (reUseBD)
-            ? _reuseByteListWriter(minLength)
-            : new WriteBuffer((minLength == null) ? defaultBufferLength : minLength);
+            ? _reuseByteListWriter(minBDLength)
+            : new WriteBuffer((minBDLength == null) ? defaultBufferLength : minBDLength);
+
+  DcmWriterBase.from(DcmWriterBase writer)
+      : cds = writer.rds,
+        wb = writer.wb,
+        rds = writer.rds,
+        minBDLength = writer.minBDLength,
+        fmiBD = writer.fmiBD,
+        eParams = writer.eParams,
+        reUseBD = writer.reUseBD;
 
   bool get isEvr => rds.isEvr;
 
@@ -109,127 +92,65 @@ abstract class DcmWriterBase {
 
   // **** Interface ****
 
-  /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
-  /// writes it to a Uint8List, and returns the [Uint8List].
-  Uint8List writeRootDataset(RootDataset rds);
-
   void writeElement(Element e);
 
   // **** End Interface ****
 
-  int itemCount;
+  /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
+  /// writes it to a Uint8List, and returns the [Uint8List].
+  Uint8List writeRootDataset(RootDataset rds) {
+    final dsStart = wb.index;
+    _writeDefinedLengthDataset(rds);
+    return wb.toUint8List(dsStart, wb.index - dsStart);
+  }
+
+  void writeDefinedLengthDataset(Item item) => _writeDefinedLengthDataset(item);
+
+  /// Writes a [Dataset] to the buffer.
+  void _writeDefinedLengthDataset(Dataset ds) {
+    wb..uint32(kItem32BitLE)..uint32(ds.vfLength);
+    // ignore: prefer_forEach
+    for (var e in ds.elements) {
+      writeElement(e);
+    }
+  }
+
+  /// Write all [Item]s in [items].
   void writeItems(List<Item> items) {
-    itemCount = 0;
-    log.debug('${wb.wbb} Writing ${items.length} Items', 1);
     for (var item in items) {
       final parentDS = cds;
       cds = item;
-
-      log.debug('${wb.wbb} Writing Item: $item', 1);
-      ((item.hasULength && !eParams.doConvertUndefinedLengths))
-          ? _writeUndefinedLengthDataset(item, itemCount)
-          : _writeDefinedLengthDataset(item, itemCount);
-
+      writeItem(item);
       cds = parentDS;
-      itemCount++;
-      log.debug('${wb.wee} Wrote Item: $item', -1);
     }
-    log.debug('${wb.wee} Wrote $itemCount Items', -1);
   }
 
-  void _writeUndefinedLengthDataset(Item item, int number) {
-    log.debug('${wb.wbb} Writing item #$itemCount', 1);
+  /// Write one [Item].
+  void writeItem(Item item) => ((item.hasULength && !eParams.doConvertUndefinedLengths))
+      ? _writeUndefinedLengthDataset(item)
+      : _writeDefinedLengthDataset(item);
+
+  void writeUndefinedLengthDataset(Item item) => _writeUndefinedLengthDataset(item);
+
+  void _writeUndefinedLengthDataset(Item item) {
     wb..uint32(kItem32BitLE)..uint32(kUndefinedLength);
+    // ignore: prefer_forEach
     for (var e in item.elements) {
-      log.debug('${wb.wbb} $e');
       writeElement(e);
     }
     wb..uint32(kItemDelimitationItem32BitLE)..uint32(0);
-    log.debug('${wb.wee} Wrote item #$itemCount', -1);
   }
 
-  /// Writes a [Dataset] to the buffer.
-  void _writeDefinedLengthDataset(Dataset ds, int number) {
-    wb..uint32(kItem32BitLE)..uint32(ds.vfLength);
-    for (var e in ds.elements) {
-      log.debug('${wb.wbb}  $e');
-      writeElement(e);
+  void writeEncapsulatedPixelData(Element e) {
+    assert(e.vfLengthField == kUndefinedLength);
+    for (final bytes in e.fragments.fragments) {
+      wb
+        ..uint32(kItem32BitLE)
+        ..uint32(bytes.lengthInBytes)
+        ..bytes(bytes);
     }
+    wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
   }
-
-//TODO: make this work for [async] == true and make that the default.
-  /// Writes [bytes] to [file].
-  void writeFile(Uint8List bytes, File file) {
-    if (file == null) throw new ArgumentError('$file is not a File');
-    file.writeAsBytesSync(bytes.buffer.asUint8List());
-    log.debug('Wrote ${bytes.lengthInBytes} bytes to "${file.path}"');
-  }
-
-  void doEndOfElementStats(int start, int end, Element e) {
-    pInfo.nElements++;
-    pInfo
-      ..lastElement = e
-      ..endOfLastElement = end;
-    if (e.isPrivate) pInfo.nPrivateElements++;
-    if (e is SQ) {
-      pInfo
-        ..endOfLastSequence = end
-        ..lastSequence = e;
-    }
-
-    if (e is! SQ && elementOffsetsEnabled) {
-      outputOffsets.add(start, end, e);
-
-      final iStart = inputOffsets.starts[elementCount];
-      final iEnd = inputOffsets.ends[elementCount];
-      final ie = inputOffsets.elements[elementCount];
-      if (iStart != start || iEnd != end || ie != e) {
-        log.debug('''
-**** Unequal Offset at Element $elementCount
-	** $iStart to $iEnd read $e
-  ** $start to $end wrote $e''');
-        throw 'badOffset';
-      }
-    }
-  }
-
-  void updatePInfoPixelData(Element e) {
-    log
-      ..debug('Pixel Data: ${e.info}')
-      ..debug('vfLength: ${e.vfLength}')
-      ..debug('vfLengthField: ${e.vfLengthField}')
-      ..debug('fragments: ${e.fragments.info}');
-    pInfo
-      ..pixelDataVR = e.vr
-      ..pixelDataStart = wb.wIndex
-      ..pixelDataLength = e.vfLength
-      ..pixelDataHadFragments = e.fragments != null
-      ..pixelDataHadUndefinedLength = e.vfLengthField == kUndefinedLength;
-  }
-
-  void showOffsets() {
-    log
-      ..info(' input offset length: ${inputOffsets.length}')
-      ..info('output offset length: ${outputOffsets.length}');
-    for (var i = 0; i < inputOffsets.length; i++) {
-      final iStart = inputOffsets.starts[i];
-      final iEnd = inputOffsets.ends[i];
-      final ioe = inputOffsets.elements[i];
-      final oStart = outputOffsets.starts[i];
-      final oEnd = outputOffsets.ends[i];
-      final ooe = outputOffsets.elements[i];
-
-      log
-        ..info('iStart: $iStart iEnd: $iEnd e: $ioe')
-        ..info('oStart: $oStart iEnd: $oEnd e: $ooe');
-    }
-  }
-
-/*
-  /// Testing interface
-  void xWriteElement(Element e, {bool isEvr = true}) =>
-      (isEvr) ? _writeEvrElement(e) : _writeIvrElement(e);
-*/
 
   /// The default [ByteData] buffer length, if none is provided.
   static const int defaultBufferLength = k1MB; //200 * k1MB;
@@ -250,7 +171,7 @@ abstract class DcmWriterBase {
     return _reuse;
   }
 
-  /// Returns the [targetTS] for the encoded output.
+  /// Returns the [outputTS] for the encoded output.
   static TransferSyntax getOutputTS(RootDataset rds, TransferSyntax outputTS) {
     if (outputTS == null) {
       return (rds.transferSyntax == null)
@@ -260,20 +181,17 @@ abstract class DcmWriterBase {
       return outputTS;
     }
   }
-
-// **** Private methods
-
-  void writeValueField(Element e) {
-    final bytes = e.vfBytes;
-    // print('bytes.length: ${bytes.lengthInBytes}');
-    wb.bytes(bytes);
-    if (bytes.length.isOdd) {
-      log.warn('**** Odd length: ${bytes.length}');
-      if (e.padChar.isNegative) return invalidVFLength(e.vfBytes.length, -1);
-      wb.uint8(e.padChar);
-    }
-  }
 }
+
+/*
+//TODO: make this work for [async] == true and make that the default.
+/// Writes [bytes] to [file].
+void writeFile(Uint8List bytes, File file) {
+  if (file == null) throw new ArgumentError('$file is not a File');
+  file.writeAsBytesSync(bytes.buffer.asUint8List());
+//    log.debug('Wrote ${bytes.lengthInBytes} bytes to "${file.path}"');
+}
+*/
 
 /*
 //TODO: make this work for [async] == true and make that the default.

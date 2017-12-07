@@ -11,7 +11,7 @@ import 'package:dataset/byte_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/debug/log_evr_reader.dart';
-import 'package:dcm_convert/src/binary/byte/evr_byte_reader.dart';
+import 'package:dcm_convert/src/binary/byte/reader/evr_byte_reader.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/io_utils.dart';

@@ -4,148 +4,119 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:typed_data';
-
 import 'package:dataset/dataset.dart';
 import 'package:element/element.dart';
 import 'package:system/core.dart';
-import 'package:uid/uid.dart';
 import 'package:vr/vr.dart';
 
 import 'package:dcm_convert/src/binary/base/writer/base/dcm_writer_base.dart';
-import 'package:dcm_convert/src/element_offsets.dart';
+import 'package:dcm_convert/src/binary/base/writer/base/evr_writer.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
+
+// ignore_for_file: avoid_positional_boolean_parameters
 
 class IvrWriter extends DcmWriterBase {
   @override
   final bool isEvr = false;
 
-  IvrWriter(RootDataset rds,
-      {String path,
-      TransferSyntax outputTS,
-      int minLength,
-      bool reUseBD = true,
-      EncodingParameters eParams = EncodingParameters.kNoChange,
-      bool elementOffsetsEnabled = true,
-      ElementOffsets inputOffsets})
-      : super(rds,
-            path: path,
-            eParams: eParams,
-            outputTS: outputTS,
-            minLength: minLength,
-            reUseBD: reUseBD,
-            elementOffsetsEnabled: elementOffsetsEnabled,
-            inputOffsets: inputOffsets);
+  IvrWriter(
+      RootDataset rds, EncodingParameters eParams, int minBDLenght, bool reUseBD)
+      : super(rds, eParams, minBDLenght, reUseBD);
 
-  @override
-  Uint8List writeRootDataset(RootDataset rds) {
-    final dsStart = wb.index;
-    log.debug('${wb.wbb} _writeIvrRootDataset $rds :${wb.remaining}', 1);
-
-    // ignore: prefer_forEach
-    for (var e in rds.elements) {
-      writeElement(e);
-    }
-
-    log.debug('${wb.wee} _writeIvrRootDataset  :${wb.remaining}', -1);
-    return wb.toUint8List(dsStart, wb.index - dsStart);
-  }
+  IvrWriter.from(EvrWriter evrWriter)
 
   @override
   void writeElement(Element e) {
-    elementCount++;
-    log.debug('${wb.wbb} _writeIvrElement $e :${wb.remaining}', 1);
-    final eStart = wb.wIndex;
     var vrIndex = e.vrIndex;
 
     if (_isSpecialVR(vrIndex)) {
+      // This should not happen
       vrIndex = VR.kUN.index;
       wb.warn('** vrIndex changed to VR.kUN.index');
     }
 
     if (_isIvrDefinedLengthVR(vrIndex)) {
-      _writeSimpleIvr(e);
+      _writeIvrDefinedLength(e);
     } else if (_isSequenceVR(vrIndex)) {
       _writeIvrSQ(e);
     } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
-      _writeIvrMaybeUndefined(e);
-    } else if (_isSpecialVR(vrIndex)) {
-      _writeIvrMaybeUndefined(e);
+      _writeIvrMaybeUndefinedLength(e);
+//    } else if (_isSpecialVR(vrIndex)) {
+//      _writeIvrMaybeUndefined(e);
     } else {
       throw new ArgumentError('Invalid VR: $e');
     }
-//  print('Level: ${log.indenter.level}');
-    log.debug('${wb.wee} _writeIvrElement ${e.dcm} ${e.keyword}');
-    pInfo.nElements++;
-    doEndOfElementStats(eStart, wb.wIndex, e);
+
+/* Flush when fully working
+    if (e.eStart != eStart) {
+      log.error('** e.eStart(${e.eStart} != eStart($eStart)');
+    }
+    if (e.eEnd != wb.wIndex) {
+      log.error('** e.eEnd(${e.eStart} != eEnd(${wb.wIndex})');
+    }
+*/
   }
 
-  void _writeSimpleIvr(Element e) {
-    log.debug('${wb.wbb} writeSimpleIvr $e :${wb.remaining}', 1);
-    _reallyWriteIvrDefinedLength(e);
+  void writeIvrDefinedLength(Element e) => _writeIvrDefinedLength(e);
+
+  /// Write a non-Sequence Element with a defined length in the Value Field Length field.
+  void _writeIvrDefinedLength(Element e) {
+    assert(e.vfLengthField != kUndefinedLength);
+    _writeIvrHeader(e, e.vfLength);
+    _writeValueField(e);
   }
 
-  void _writeIvrMaybeUndefined(Element e) {
-    log.debug('${wb.wbb} writeIvrMaybeUndefined $e :${wb.remaining}', 1);
-    pInfo.nMaybeUndefinedElements++;
-    return (e.hadULength && !eParams.doConvertUndefinedLengths)
-        ? _reallyWriteIvrUndefinedLength(e)
-        : _reallyWriteIvrDefinedLength(e);
+  void _writeIvrMaybeUndefinedLength(Element e) =>
+      (e.hadULength && !eParams.doConvertUndefinedLengths)
+          ? _writeIvrUndefinedLength(e)
+          : _writeIvrDefinedLength(e);
+
+  void writeIvrUndefinedLength(Element e) => _writeIvrUndefinedLength(e);
+
+  /// Write a non-Sequence Element with a Value Field Length field value of
+  /// kUndefinedLength.
+  void _writeIvrUndefinedLength(Element e) {
+    assert(e.vfLengthField == kUndefinedLength);
+    _writeIvrHeader(e, kUndefinedLength);
+    if (e.code == kPixelData) {
+      writeEncapsulatedPixelData(e);
+    } else {
+      _writeValueField(e);
+    }
+    wb.uint32(kSequenceDelimitationItem32BitLE);
   }
 
-  void _writeIvrSQ(SQ e) {
-    pInfo.nSequences++;
-    if (e.isPrivate) pInfo.nPrivateSequences++;
-    return (e.hadULength && !eParams.doConvertUndefinedLengths)
-        ? _writeIvrSQUndefinedLength(e)
-        : _writeIvrSQDefinedLength(e);
-  }
+  void _writeIvrSQ(SQ e) => (e.hadULength && !eParams.doConvertUndefinedLengths)
+      ? _writeIvrSQUndefinedLength(e)
+      : _writeIvrSQDefinedLength(e);
+
+  void writeIvrSQDefinedLength(SQ e) => _writeIvrSQDefinedLength(e);
 
   void _writeIvrSQDefinedLength(SQ e) {
-    log.debug('${wb.wbb} _writeIvrSQDefined $e :${wb.remaining}', 1);
-    pInfo.nDefinedLengthSequences++;
-    _reallyWriteIvrDefinedLength(e);
+    final eStart = wb.wIndex;
+    _writeIvrHeader(e, e.vfLength);
+    final vlfOffset = wb.wIndex - 4;
+    writeItems(e.items);
+    final vfLength = (wb.index - eStart) - 8;
+    wb.setUint32(vlfOffset, vfLength);
   }
+
+  void writeIvrSQUndefinedLength(SQ e) => _writeIvrSQUndefinedLength(e);
 
   void _writeIvrSQUndefinedLength(SQ e) {
-    log.debug('${wb.wbb} _writeIvrSQUndefined $e :${wb.remaining}', 1);
-    pInfo.nUndefinedLengthSequences++;
-    _reallyWriteIvrUndefinedLength(e);
+    _writeIvrHeader(e, kUndefinedLength);
+    writeItems(e.items);
+    wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
   }
 
-  void _reallyWriteIvrDefinedLength(Element e) {
-    assert(e.vfLengthField != kUndefinedLength);
-    if (e.code == kPixelData) {
-      updatePInfoPixelData(e);
-    } else {
-      log.debug('${wb.wmm} _writeSimpleIvr $e :${wb.remaining}', 1);
-    }
+  void _writeIvrHeader(Element e, int vfLengthField) {
     wb
       ..code(e.code)
-      ..uint32(e.vfLength);
-    _writeValueField(e);
-    pInfo.nLongElements++;
-  }
-
-  void _reallyWriteIvrUndefinedLength(Element e) {
-    assert(e.vfLengthField == kUndefinedLength);
-    if (e.code == kPixelData) {
-      updatePInfoPixelData(e);
-    } else {
-      log.debug('${wb.wbb} writeIvrUndefined $e :${wb.remaining}', 1);
-    }
-    wb
-      ..code(e.code)
-      ..uint32(kUndefinedLength);
-    _writeValueField(e);
-    wb.uint32(kSequenceDelimitationItem32BitLE);
-    if (e.code == kPixelData) pInfo.pixelDataEnd = wb.wIndex;
-    pInfo.nUndefinedLengthElements++;
+      ..uint32(vfLengthField);
   }
 
   void _writeValueField(Element e) {
     final bytes = e.vfBytes;
-    // print('bytes.length: ${bytes.lengthInBytes}');
     wb.bytes(bytes);
     if (bytes.length.isOdd) {
       log.warn('**** Odd length: ${bytes.length}');
@@ -162,12 +133,6 @@ bool _isSpecialVR(int vrIndex) =>
 
 bool _isMaybeUndefinedLengthVR(int vrIndex) =>
     vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
-
-bool _isEvrLongLengthVR(int vrIndex) =>
-    vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
-
-bool _isEvrShortLengthVR(int vrIndex) =>
-    vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
 
 bool _isIvrDefinedLengthVR(int vrIndex) =>
     vrIndex >= kVRIvrDefinedIndexMin && vrIndex <= kVRIvrDefinedIndexMax;

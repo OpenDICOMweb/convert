@@ -15,7 +15,12 @@ import 'package:element/element.dart';
 // The methods below are prototypes for supplying
 
 abstract class LogWriteMixinBase {
-  void logStartWrite(Element e) {}
 
-  void logEndWrite(int eStart, Element e) {}
+  void logStartWrite(Element e, String name) {}
+
+  void logEndWrite(int eStart, Element e, String name, {bool ok = true}) {}
+
+  void logStartSQWrite(Element e, String name) {}
+
+  void logEndSQWrite(int eStart, Element e, String name, {bool ok = true}) {}
 }
