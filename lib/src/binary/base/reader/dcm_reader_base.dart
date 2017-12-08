@@ -14,7 +14,7 @@ import 'package:tag/tag.dart';
 import 'package:vr/vr.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/base/read_buffer.dart';
+import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/errors.dart';
 
@@ -80,11 +80,6 @@ abstract class DcmReaderBase {
       new ItemByte(parent);
 
   // **** End of interface ****
-
-  bool get isFmiRead => _isFmiRead;
-  // ignore: prefer_final_fields
-  bool _isFmiRead = false;
-  set isFmiRead(bool v) => _isFmiRead ??= true;
 
   /// The current [Element] [Map].
   List<Element> get elements => cds.elements;
@@ -379,7 +374,6 @@ Failed to read FMI: "$path"\nException: $x\n'
     if (throwOnError) throw new ShortFileError('Length($rb.lengthInBytes) $path');
     return null;
   }
-
 }
 
 bool _isMaybeUndefinedLengthVR(int vrIndex) =>

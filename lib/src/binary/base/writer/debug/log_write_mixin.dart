@@ -8,8 +8,8 @@ import 'package:dataset/dataset.dart';
 import 'package:element/element.dart';
 import 'package:system/core.dart';
 
-import 'package:dcm_convert/src/binary/base/writer/base/log_write_mixin_base.dart';
-import 'package:dcm_convert/src/binary/base/writer/base/write_buffer.dart';
+import 'package:dcm_convert/src/binary/base/writer/log_write_mixin_base.dart';
+import 'package:dcm_convert/src/binary/base/writer/write_buffer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 
 abstract class LogWriteMixin implements LogWriteMixinBase {

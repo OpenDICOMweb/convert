@@ -7,7 +7,7 @@
 import 'package:dataset/tag_dataset.dart';
 import 'package:element/tag_element.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/base/dcm_reader_base.dart';
+import 'package:dcm_convert/src/binary/base/reader/dcm_reader_base.dart';
 
 abstract class TagReaderMixin implements DcmReaderBase {
   @override

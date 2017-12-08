@@ -5,7 +5,7 @@
 // See the AUTHORS file for other contributors.
 
 import 'package:dataset/byte_dataset.dart';
-import 'package:dcm_convert/src/binary/base/writer/base/write_buffer.dart';
+import 'package:dcm_convert/src/binary/base/writer/write_buffer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:element/byte_element.dart';
 import 'package:system/core.dart';

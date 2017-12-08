@@ -9,8 +9,8 @@ import 'dart:typed_data';
 import 'package:dataset/byte_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/base/evr_reader.dart';
-import 'package:dcm_convert/src/binary/base/reader/base/log_read_mixin_base.dart';
+import 'package:dcm_convert/src/binary/base/reader/evr_reader.dart';
+import 'package:dcm_convert/src/binary/base/reader/log_read_mixin_base.dart';
 import 'package:dcm_convert/src/binary/byte/reader/byte_reader_mixin.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 

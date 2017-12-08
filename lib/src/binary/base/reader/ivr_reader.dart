@@ -12,9 +12,9 @@ import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:vr/vr.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/base/dcm_reader_base.dart';
-import 'package:dcm_convert/src/binary/base/reader/base/evr_reader.dart';
-import 'package:dcm_convert/src/binary/base/reader/base/log_read_mixin_base.dart';
+import 'package:dcm_convert/src/binary/base/reader/dcm_reader_base.dart';
+import 'package:dcm_convert/src/binary/base/reader/evr_reader.dart';
+import 'package:dcm_convert/src/binary/base/reader/log_read_mixin_base.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
@@ -30,6 +30,17 @@ abstract class IvrReader extends DcmReaderBase with LogReadMixinBase {
 
   IvrReader.from(EvrReader r) : super.from(r);
 
+  @override
+  ByteData readFmi() => unsupportedError();
+
+/*
+  @override
+  RootDataset readRootDataset() {
+    if (!isFmiRead) throw 'FMI is not read';
+    return super.readRootDataset();
+  }
+*/
+
   /// All [Element]s are read by this method.
   @override
   Element readElement() {
@@ -42,7 +53,7 @@ abstract class IvrReader extends DcmReaderBase with LogReadMixinBase {
       return readIvrDefinedLength(code, eStart, vrIndex);
     if (_isSequenceVR(vrIndex)) return readSequence(code, eStart, vrIndex);
     if (_isMaybeUndefinedLengthVR(vrIndex))
-      return readMaybeUndefined(code, eStart, vrIndex);
+      return readMaybeUndefined(code, vrIndex, eStart);
     invalidVRIndex(vrIndex, null, null);
     return null;
   }
@@ -52,51 +63,69 @@ abstract class IvrReader extends DcmReaderBase with LogReadMixinBase {
     return _vrToIndex(code, vr);
   }
 
+  int _vrToIndex(int code, VR vr) {
+    var vrIndex = vr.index;
+    if (_isSpecialVR(vrIndex)) {
+      log.info1('-- Changing Special VR ${VR.lookupByIndex(vrIndex)}) to VR.kUN');
+      vrIndex = VR.kUN.index;
+    }
+    return vrIndex;
+  }
+
   /// Read an IVR Element (not SQ) with a 32-bit vfLengthField (vlf),
   /// but that cannot have kUndefinedValue.
   Element readIvrDefinedLength(int code, int eStart, int vrIndex) {
     final vlf = rb.uint32;
+    logStartRead(code, vrIndex, eStart, vlf, 'readIvrDefinedLength');
     assert(vlf != kUndefinedLength);
-    return makeIvr(code, vrIndex, eStart, vlf);
+    return _makeIvr(code, vrIndex, eStart, vlf);
   }
 
-  Element makeIvr(int code, int vrIndex, int eStart, int vlf) {
+  Element _makeIvr(int code, int vrIndex, int eStart, int vlf) {
     assert(vlf != kUndefinedLength);
     rb + vlf;
-    final eb = rb.makeEvrLongEBytes(eStart);
-    return (code == kPixelData)
+    final eb = rb.makeIvrEBytes(eStart);
+    final e = (code == kPixelData)
         ? makePixelData(code, vrIndex, eb)
         : makeElement(code, vrIndex, eb);
+    logEndRead(eStart, e, 'makeIvr');
+    return e;
   }
 
   /// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have
   /// kUndefinedValue.
   Element readMaybeUndefined(int code, int vrIndex, int eStart) {
     final vlf = rb.uint32;
-
+    logStartRead(code, vrIndex, eStart, vlf, 'readMaybeUndefined');
     // If VR is UN then this might be a Sequence
     if (vrIndex == kUNIndex && isUNSequence(vlf)) {
+      print('maybe UNSequence: $vrIndex $vlf');
       final items = readUSQ(code, vrIndex, eStart, vlf);
       return _makeSequence(code, vrIndex, eStart, items);
     }
 
-    if (vlf != kUndefinedLength) return makeIvr(code, vrIndex, eStart, vlf);
+    if (vlf != kUndefinedLength) return _makeIvr(code, vrIndex, eStart, vlf);
 
     final fragments = readUndefinedLength(code, eStart, vrIndex, vlf);
-    final eb = rb.makeEvrLongEBytes(eStart);
-    return (code == kPixelData)
+    final eb = rb.makeIvrEBytes(eStart);
+    final e = (code == kPixelData)
         ? makePixelData(code, vrIndex, eb, fragments: fragments)
         : makeElement(code, vrIndex, eb);
+    logEndRead(eStart, e, 'readMaybeUndefined');
+    return e;
   }
 
   @override
   Element readSequence(int code, int eStart, int vrIndex) {
     assert(vrIndex == kSQIndex);
     final vlf = rb.uint32;
+    logStartSQRead(code, vrIndex, eStart, vlf, 'readIvrSequence');
     final items = (vlf == kUndefinedLength)
         ? readUSQ(code, vrIndex, eStart, vlf)
         : readDSQ(code, vrIndex, eStart, vlf);
-    return _makeSequence(code, vrIndex, eStart, items);
+    final e = _makeSequence(code, vrIndex, eStart, items);
+    logEndSQRead(eStart, e, 'readIvrSequence');
+    return e;
   }
 
   SQ _makeSequence(int code, int vrIndex, int eStart, List<Item> items) {
@@ -116,12 +145,3 @@ bool _isMaybeUndefinedLengthVR(int vrIndex) =>
 
 bool _isIvrDefinedLengthVR(int vrIndex) =>
     vrIndex >= kVRIvrDefinedIndexMin && vrIndex <= kVRIvrDefinedIndexMax;
-
-int _vrToIndex(int code, VR vr) {
-  var vrIndex = vr.index;
-  if (_isSpecialVR(vrIndex)) {
-    log.info1('-- Changing Special VR ${VR.lookupByIndex(vrIndex)}) to VR.kUN');
-    vrIndex = VR.kUN.index;
-  }
-  return vrIndex;
-}

@@ -12,8 +12,6 @@ import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:vr/vr.dart';
 
-import 'package:dcm_convert/src/binary/byte/reader/byte_reader.dart';
-
 typedef Element<V> Maker<K, V>(K id, List<V> values,
     [int vfLength, VFFragments fragments]);
 
@@ -72,7 +70,7 @@ Element convertElement(Element be) {
   if (be is SQbyte) {
     te = convertSQ(be);
   } else if (be.code == kPixelData) {
-    te = ByteReader.makeTagElement(be.eBytes, be.vrIndex);
+    te = makeTagElementFromEBytes(be.eBytes, be.vrIndex);
     log.info0('PixelData\n  $be\n  $te');
   } else if (be is ByteElement) {
     te = makeTagElementFromEBytes(be.eBytes);

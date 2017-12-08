@@ -8,7 +8,7 @@ import 'dart:typed_data';
 
 import 'package:dataset/dataset.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/base/evr_reader.dart';
+import 'package:dcm_convert/src/binary/base/reader/evr_reader.dart';
 import 'package:dcm_convert/src/binary/base/reader/debug/log_read_mixin.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 

@@ -5,11 +5,18 @@
 // See the AUTHORS file for other contributors.
 
 export 'package:dataset/byte_dataset.dart';
-export 'package:dcm_convert/src/binary/base/reader/base/evr_reader.dart';
-export 'package:dcm_convert/src/binary/base/reader/base/ivr_reader.dart';
-export 'package:dcm_convert/src/binary/base/reader/base/dcm_reader_base.dart';
+export 'package:dcm_convert/src/binary/base/reader/dcm_reader_base.dart';
+export 'package:dcm_convert/src/binary/base/reader/evr_reader.dart';
+export 'package:dcm_convert/src/binary/base/reader/ivr_reader.dart';
+export 'package:dcm_convert/src/binary/base/writer/dcm_writer_base.dart';
+export 'package:dcm_convert/src/binary/base/writer/evr_writer.dart';
+export 'package:dcm_convert/src/binary/base/writer/ivr_writer.dart';
+
 export 'package:dcm_convert/src/binary/byte/reader/byte_reader.dart';
-export 'package:dcm_convert/src/binary/byte/write_bytes.dart';
+export 'package:dcm_convert/src/binary/byte/reader/byte_log_reader.dart';
+export 'package:dcm_convert/src/binary/byte/writer/byte_writer.dart';
+export 'package:dcm_convert/src/binary/byte/writer/byte_log_writer.dart';
+
 export 'package:dcm_convert/src/binary/byte_read_utils.dart';
 export 'package:dcm_convert/src/binary/convert_byte_to_tag.dart';
 export 'package:dcm_convert/src/decoding_parameters.dart';

@@ -10,8 +10,8 @@ import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:vr/vr.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/base/log_read_mixin_base.dart';
-import 'package:dcm_convert/src/binary/base/reader/base/read_buffer.dart';
+import 'package:dcm_convert/src/binary/base/reader/log_read_mixin_base.dart';
+import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 
 abstract class LogReadMixin implements LogReadMixinBase {
@@ -94,7 +94,7 @@ abstract class LogReadMixin implements LogReadMixinBase {
     final eEnd = eStart - rb.index;
     assert(eEnd == eStart - rb.index);
     _doEndOfElementStats(e.code, eStart, e, ok);
-    final sb = new StringBuffer('$ree $e :$remaining');
+    final sb = new StringBuffer('$ree $e $name :$remaining');
     return sb.toString();
   }
 

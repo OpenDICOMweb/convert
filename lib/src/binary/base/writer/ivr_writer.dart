@@ -9,8 +9,8 @@ import 'package:element/element.dart';
 import 'package:system/core.dart';
 import 'package:vr/vr.dart';
 
-import 'package:dcm_convert/src/binary/base/writer/base/dcm_writer_base.dart';
-import 'package:dcm_convert/src/binary/base/writer/base/evr_writer.dart';
+import 'package:dcm_convert/src/binary/base/writer/dcm_writer_base.dart';
+import 'package:dcm_convert/src/binary/base/writer/evr_writer.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
@@ -19,11 +19,11 @@ class IvrWriter extends DcmWriterBase {
   @override
   final bool isEvr = false;
 
-  IvrWriter(
-      RootDataset rds, EncodingParameters eParams, int minBDLenght, bool reUseBD)
-      : super(rds, eParams, minBDLenght, reUseBD);
+  IvrWriter(RootDataset rds, EncodingParameters eParams, int minBDLength, bool reUseBD)
+      : super(rds, eParams, minBDLength, reUseBD);
 
   IvrWriter.from(EvrWriter evrWriter)
+      : super(evrWriter.rds, evrWriter.eParams, evrWriter.minBDLength, evrWriter.reUseBD);
 
   @override
   void writeElement(Element e) {

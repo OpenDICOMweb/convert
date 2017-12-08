@@ -8,8 +8,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/src/binary/byte/reader/byte_reader.dart';
-import 'package:dcm_convert/src/binary/byte/write_bytes.dart';
+import 'package:dcm_convert/src/binary/byte/reader/byte_log_reader.dart';
+import 'package:dcm_convert/src/binary/byte/writer/byte_log_writer.dart';
 import 'package:dcm_convert/src/errors.dart';
 import 'package:dcm_convert/src/tool/job_utils.dart';
 import 'package:element/byte_element.dart';
@@ -23,7 +23,7 @@ Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
   try {
     final Uint8List bytes = await f.readAsBytes();
     final bd = bytes.buffer.asByteData();
-    final reader0 = new ByteReader(bd);
+    final reader0 = new ByteLogReader(bd);
     final rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -51,16 +51,15 @@ $pad    TS: ${rds0.transferSyntax}''');
     }
 
     // Write the Root Dataset
-    ByteDatasetWriter writer;
+    ByteLogWriter writer;
     final outPath = getTempFile(f.path, 'dcmout');
     if (fast) {
       // Just write bytes don't write the file
-      writer = new ByteDatasetWriter(rds0,
-          elementOffsetsEnabled: true, inputOffsets: reader0.offsets);
+      writer = new ByteLogWriter(rds0, inputOffsets: reader0.offsets);
     } else {
-      writer = new ByteDatasetWriter.toPath(rds0, outPath);
+      writer = new ByteLogWriter.toPath(rds0, outPath);
     }
-    final bytes1 = writer.write();
+    final bytes1 = writer.writeRootDataset(rds0);
     log.debug('$pad    Encoded ${bytes1.length} bytes');
 
     final wOffsets = writer.outputOffsets;
@@ -73,16 +72,16 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       log.debug('Re-reading: ${bytes1.length} bytes from $outPath');
     }
-    ByteReader reader1;
+    ByteLogReader reader1;
     if (fast) {
       // Just read bytes not file
-      reader1 = new ByteReader(
+      reader1 = new ByteLogReader(
           bytes1.buffer.asByteData(bytes1.offsetInBytes, bytes1.lengthInBytes));
     } else {
-      reader1 = new ByteReader.fromPath(outPath);
+      reader1 = new ByteLogReader.fromPath(outPath);
     }
     final rds1 = reader1.readRootDataset();
-    //   RootDatasetBytes rds1 = ByteReader.readPath(outPath);
+    //   RootDatasetBytes rds1 = ByteLogReader.readPath(outPath);
     log
       ..debug('$pad Read ${reader1.bd.lengthInBytes} bytes')
       ..debug1('$pad DS1: $rds1');

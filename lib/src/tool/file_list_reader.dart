@@ -56,7 +56,6 @@ class FileListIterator implements Iterator<String> {
       _dirIndex++;
       if (_dirIndex >= _dirList.length) return false;
       _fileIndex = 0;
-      if (_dirIndex >= _dirList.length) return false;
       _currentDir = _dirList.elementAt(_dirIndex);
       _fileIndex = 0;
       return true;

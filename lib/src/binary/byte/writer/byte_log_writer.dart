@@ -19,8 +19,8 @@ import 'package:dataset/tag_dataset.dart';
 import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/src/binary/base/writer/dcm_writer_base.dart';
-import 'package:dcm_convert/src/binary/byte/writer/evr_byte_writer.dart';
-import 'package:dcm_convert/src/binary/byte/writer/ivr_byte_writer.dart';
+import 'package:dcm_convert/src/binary/byte/writer/evr_byte_log_writer.dart';
+import 'package:dcm_convert/src/binary/byte/writer/ivr_byte_log_writer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 import 'package:dcm_convert/src/io_utils.dart';
@@ -28,62 +28,69 @@ import 'package:dcm_convert/src/io_utils.dart';
 /// A [class] for writing a [RootDatasetByte] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
 /// all LITTLE ENDIAN [TransferSyntax]es.
-class ByteWriter {
+class ByteLogWriter {
   final RootDataset rds;
   final String path;
   final bool overwrite;
-  final EncodingParameters eParams;
   final TransferSyntax outputTS;
   final int minBDLength;
   final bool reUseBD;
-  final EvrByteWriter evrWriter;
+  final EncodingParameters eParams;
+  final ElementOffsets inputOffsets;
+  final ElementOffsets outputOffsets;
+  final EvrByteLogWriter evrWriter;
 
-  IvrByteWriter _ivrWriter;
+  IvrByteLogWriter _ivrWriter;
 
-  /// Creates a new [ByteWriter] where index = 0.
-  ByteWriter(this.rds,
+  /// Creates a new [ByteLogWriter] where index = 0.
+  ByteLogWriter(this.rds,
       {this.path = '',
       this.eParams = EncodingParameters.kNoChange,
       this.outputTS,
       this.overwrite = false,
       this.minBDLength = DcmWriterBase.defaultBufferLength,
-      this.reUseBD = true})
-      : evrWriter = new EvrByteWriter(rds, eParams, minBDLength, reUseBD);
-
+      this.reUseBD = true,
+      this.inputOffsets})
+      : evrWriter =
+            new EvrByteLogWriter(rds, eParams, minBDLength, reUseBD, inputOffsets),
+        outputOffsets = (inputOffsets == null) ? null : new ElementOffsets();
 
   /// Writes the [RootDatasetByte] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
-  factory ByteWriter.toFile(RootDatasetByte ds, File file,
+  factory ByteLogWriter.toFile(RootDatasetByte ds, File file,
       {EncodingParameters eParams,
       TransferSyntax outputTS,
       bool overwrite = false,
       int minBDLength,
-      bool reUseBD = false}) {
+      bool reUseBD = false,
+      ElementOffsets inputOffsets}) {
     checkFile(file, overwrite: overwrite);
-    return new ByteWriter(ds,
+    return new ByteLogWriter(ds,
         path: file.path,
         eParams: eParams,
         outputTS: outputTS,
         overwrite: overwrite,
         minBDLength: minBDLength,
-        reUseBD: reUseBD);
+        reUseBD: reUseBD,
+        inputOffsets: inputOffsets);
   }
 
   /// Creates a new empty [File] from [path], writes the [RootDatasetByte]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  factory ByteWriter.toPath(RootDatasetByte ds, String path,
+  factory ByteLogWriter.toPath(RootDatasetByte ds, String path,
       {int minBDLength,
       bool overwrite = false,
       TransferSyntax targetTS,
       bool elementOffsetsEnabled = true,
       ElementOffsets inputOffsets}) {
     checkPath(path);
-    return new ByteWriter(ds,
+    return new ByteLogWriter(ds,
         minBDLength: minBDLength,
         path: path,
         overwrite: overwrite,
-        outputTS: targetTS);
+        outputTS: targetTS,
+        inputOffsets: inputOffsets);
   }
 
   /// Writes a [RootDatasetByte], and stores it in [rds], and returns it.
@@ -96,7 +103,7 @@ class ByteWriter {
     if (evrWriter.rds.transferSyntax.isEvr) {
       return evrWriter.writeRootDataset(rds);
     } else {
-      _ivrWriter = new IvrByteWriter(rds, eParams, minBDLength, reUseBD);
+      _ivrWriter = new IvrByteLogWriter.from(evrWriter);
       return _ivrWriter.writeRootDataset(rds);
     }
   }
@@ -110,11 +117,12 @@ class ByteWriter {
       bool elementOffsetsEnabled = true,
       ElementOffsets inputOffsets}) {
     checkRootDataset(rds);
-    final writer = new ByteWriter(rds,
+    final writer = new ByteLogWriter(rds,
         minBDLength: minBDLength,
         path: path,
         overwrite: reUseBD,
-        outputTS: outputTS);
+        outputTS: outputTS,
+        inputOffsets: inputOffsets);
     return writer.writeRootDataset(rds);
   }
 
@@ -146,12 +154,14 @@ class ByteWriter {
       bool fmiOnly = false,
       bool fast = false,
       TransferSyntax targetTS,
-      bool elementOffsetsEnabled = true}) {
+      bool elementOffsetsEnabled = true,
+      ElementOffsets inputOffsets}) {
     checkPath(path);
     return writeFile(ds, new File(path),
         minBDLength: minBDLength,
         overwrite: overwrite,
         targetTS: targetTS,
-        elementOffsetsEnabled: elementOffsetsEnabled);
+        elementOffsetsEnabled: elementOffsetsEnabled,
+        inputOffsets: inputOffsets);
   }
 }

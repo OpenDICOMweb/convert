@@ -9,7 +9,7 @@ import 'package:element/element.dart';
 import 'package:system/core.dart';
 import 'package:vr/vr.dart';
 
-import 'package:dcm_convert/src/binary/base/writer/base/evr_writer.dart';
+import 'package:dcm_convert/src/binary/base/writer/evr_writer.dart';
 import 'package:dcm_convert/src/binary/base/writer/debug/log_write_mixin.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';

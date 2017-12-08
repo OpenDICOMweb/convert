@@ -9,7 +9,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dcm_convert/src/binary/byte/reader/byte_reader.dart';
-import 'package:dcm_convert/src/binary/byte/write_bytes.dart';
+import 'package:dcm_convert/src/binary/byte/old/write_bytes.dart';
 import 'package:dcm_convert/src/errors.dart';
 import 'package:dcm_convert/src/tool/job_utils.dart';
 import 'package:element/byte_element.dart';

@@ -51,7 +51,7 @@ const String bas = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368.fmt'
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
 
-  final fPath = evr38690;
+  final fPath = ivrClean;
 
   print('path: $fPath');
   print(' out: ${getTempFile(fPath, 'dcmout')}');
@@ -64,7 +64,7 @@ Future main() async {
     return;
   }
   //   final bytes = await readFileAsync(file);
-  final rds = ByteReader.readBytes(bytes, path: fPath, showStats: true);
+  final rds = ByteLogReader.readBytes(bytes, path: fPath, showStats: true);
   if (rds == null) {
     log.warn('Invalid DICOM file: $fPath');
   } else {

@@ -61,8 +61,8 @@ bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
 /*  List<int> elementIndex0 = reader.elementIndex;*/
   log..info0(rds0.parseInfo)..info0(rds0.info);
 
-  final writer = new ByteDatasetWriter(rds0);
-  final bytes1 = writer.write();
+  final writer = new ByteLogWriter(rds0);
+  final bytes1 = writer.writeRootDataset(rds0);
 
 /*  List<int> elementIndex1 = writer.elementIndex.sublist(0, writer.nthElement);
   if (reader.nthElement != writer.nthElement)

@@ -23,8 +23,8 @@ class TagReader {
   final bool reUseBD;
   final DecodingParameters dParams;
   final ElementOffsets offsets;
+  final EvrTagReader evrReader;
 
-  EvrTagReader _evrReader;
   IvrTagReader _ivrReader;
 
   /// Creates a new [TagReader].
@@ -32,7 +32,8 @@ class TagReader {
       {this.path = '',
       this.dParams = DecodingParameters.kNoChange,
       this.reUseBD = true,
-      this.offsets});
+      this.offsets})
+      : evrReader = new EvrTagReader(bd, path: path, dParams: dParams, reUseBD: reUseBD);
 
   /// Creates a [TagReader] from the contents of the [file].
   factory TagReader.fromFile(File file,
@@ -48,17 +49,18 @@ class TagReader {
           bool reUseBD = true}) =>
       new TagReader.fromFile(new File(path), dParams: dParams, reUseBD: reUseBD);
 
+  bool isFmiRead = false;
+
   ByteData readFmi() {
-    _evrReader = new EvrTagReader(bd, path: path, dParams: dParams, reUseBD: reUseBD);
-    final fmiBD = _evrReader.readFmi();
-    if (fmiBD != null) _evrReader.isFmiRead = true;
+    final fmiBD = evrReader.readFmi();
+    isFmiRead = true;
     return fmiBD;
   }
 
   RootDataset readRootDataset() {
-    if (!_evrReader.isFmiRead) readFmi();
-    if (_evrReader.rds.transferSyntax.isEvr) {
-      return _evrReader.readRootDataset();
+    if (!isFmiRead) readFmi();
+    if (evrReader.rds.transferSyntax.isEvr) {
+      return evrReader.readRootDataset();
     } else {
       _ivrReader = new IvrTagReader(bd, path: path, dParams: dParams, reUseBD: reUseBD);
       return _ivrReader.readRootDataset();

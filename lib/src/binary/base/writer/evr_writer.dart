@@ -12,7 +12,7 @@ import 'package:system/core.dart';
 import 'package:uid/uid.dart';
 import 'package:vr/vr.dart';
 
-import 'package:dcm_convert/src/binary/base/writer/base/dcm_writer_base.dart';
+import 'package:dcm_convert/src/binary/base/writer/dcm_writer_base.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters

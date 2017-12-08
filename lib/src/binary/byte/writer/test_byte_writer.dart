@@ -11,7 +11,7 @@ import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 import 'package:uid/uid.dart';
 
-import 'package:dcm_convert/src/binary/byte/write_bytes.dart';
+import 'package:dcm_convert/src/binary/byte/old/write_bytes.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 
 /// A class designed for testing [ByteDatasetWriter].

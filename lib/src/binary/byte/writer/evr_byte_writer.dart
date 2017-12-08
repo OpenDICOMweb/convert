@@ -7,30 +7,18 @@
 import 'package:dataset/byte_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
 
-import 'package:dcm_convert/src/binary/base/writer/base/evr_writer.dart';
-import 'package:dcm_convert/src/binary/base/writer/debug/log_write_mixin.dart';
+import 'package:dcm_convert/src/binary/base/writer/evr_writer.dart';
+import 'package:dcm_convert/src/binary/base/writer/log_write_mixin_base.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
-import 'package:dcm_convert/src/element_offsets.dart';
 
-final bool elementOffsetsEnabled = true;
+// ignore_for_file: avoid_positional_boolean_parameters
 
-/// A decoder for Binary DICOM (application/dicom).
-/// The resulting [Dataset] is a [RootDatasetByte].
-class EvrByteWriter extends EvrWriter with LogWriteMixin {
-  @override
-  final ParseInfo pInfo;
-  @override
-  final ElementOffsets inputOffsets;
-  @override
-  final ElementOffsets outputOffsets;
-  @override
-  int elementCount;
+/// An encoder for Binary DICOM (application/dicom).
+class EvrByteWriter extends EvrWriter with LogWriteMixinBase {
 
-  /// Creates a new [EvrByteWriter], which is decoder for Binary DICOM
+  /// Creates a new [EvrByteWriter], which is an encoder for Binary DICOM
   /// (application/dicom).
-  EvrByteWriter(RootDataset rds, EncodingParameters eParams, int minBDLength,
-      bool reUseBD, this.inputOffsets)
-      : outputOffsets = (inputOffsets != null) ? new ElementOffsets() : null,
-        pInfo = new ParseInfo(rds),
-        super(rds, eParams, minBDLength, reUseBD);
+  EvrByteWriter(
+      RootDataset rds, EncodingParameters eParams, int minBDLength, bool reUseBD)
+      : super(rds, eParams, minBDLength, reUseBD);
 }

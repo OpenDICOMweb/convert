@@ -12,9 +12,9 @@ import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
 import 'package:vr/vr.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/base/dcm_reader_base.dart';
-import 'package:dcm_convert/src/binary/base/reader/base/log_read_mixin_base.dart';
-import 'package:dcm_convert/src/binary/base/reader/base/read_buffer.dart';
+import 'package:dcm_convert/src/binary/base/reader/dcm_reader_base.dart';
+import 'package:dcm_convert/src/binary/base/reader/log_read_mixin_base.dart';
+import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/errors.dart';
 
@@ -59,10 +59,16 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
   ByteData readFmi() {
     //TODO: make method an invalidReadIndex(int index)
     if (rb.index != 0) throw 'InvalidReadBufferIndex: ${rb.index}';
-    final bd = _readFmi();
-    isFmiRead = true;
-    return bd;
+    return _readFmi();
   }
+
+/*
+  @override
+  RootDataset readRootDataset() {
+    if (!isFmiRead) throw 'FMI is not read';
+    return (rds.transferSyntax.isEvr) ? super.readRootDataset() : null;
+  }
+*/
 
   /// For EVR Datasets, all Elements are read by this method.
   @override
@@ -98,6 +104,18 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
     invalidVRIndex(vrIndex, null, null);
     return null;
   }
+
+  int _lookupEvrVRIndex(int code, int eStart, int vrCode) {
+    final vr = VR.lookupByCode(vrCode);
+    if (vr == null) {
+      //    log.debug('${rb.rmm} ${dcm(code)} $eStart ${hex16(vrCode)}');
+      rb.warn('VR is Null: vrCode(${hex16(vrCode)}, $vrCode) '
+                  '${dcm(code)} start: $eStart');
+//      showNext(rb.index - 4);
+    }
+    return __vrToIndex(code, vr);
+  }
+
 
   /// Read a Short EVR Element, i.e. one with a 16-bit Value Field Length field.
   /// These Elements can not have an kUndefinedLength value.
@@ -181,19 +199,6 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
     assert(vrIndex == kSQIndex);
     final eb = rb.makeEvrLongEBytes(eStart);
     return makeSequence(code, eb, cds, items);
-  }
-
-  // **** Private methods
-
-  int _lookupEvrVRIndex(int code, int eStart, int vrCode) {
-    final vr = VR.lookupByCode(vrCode);
-    if (vr == null) {
-      //    log.debug('${rb.rmm} ${dcm(code)} $eStart ${hex16(vrCode)}');
-      rb.warn('VR is Null: vrCode(${hex16(vrCode)}, $vrCode) '
-          '${dcm(code)} start: $eStart');
-//      showNext(rb.index - 4);
-    }
-    return __vrToIndex(code, vr);
   }
 
   /// Reads File Meta Information ([Fmi]) and returns a Map<int, Element>
