@@ -22,7 +22,7 @@ Future<Uint8List> writeFile(RootDatasetByte rds, String path,
   if (fmiOnly) log.debug('    fmiOnly: $fmiOnly');
 
   //  timer.start();
-  final bytes = ByteLogWriter.writePath(rds, path, fmiOnly: fmiOnly);
+  final bytes = ByteWriter.writePath(rds, path);
   timer.stop();
 
   final msPerElement = (timer.elapsedMicroseconds ~/ total) ~/ 1000;

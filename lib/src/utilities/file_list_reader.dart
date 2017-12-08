@@ -43,7 +43,7 @@ class FileListReader {
       log.info0('$i Reading: $path ');
       try {
         success = byteReadWriteFileChecked(path, fileNumber: i);
-//        log.info0('${rds.parseInfo}');
+//        log.info0('${rds.pInfo}');
 //        log.info0('  Dataset: $rds');
         if (success == false) {
           failures.add('"$path "');

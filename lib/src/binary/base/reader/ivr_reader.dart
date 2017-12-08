@@ -33,14 +33,6 @@ abstract class IvrReader extends DcmReaderBase with LogReadMixinBase {
   @override
   ByteData readFmi() => unsupportedError();
 
-/*
-  @override
-  RootDataset readRootDataset() {
-    if (!isFmiRead) throw 'FMI is not read';
-    return super.readRootDataset();
-  }
-*/
-
   /// All [Element]s are read by this method.
   @override
   Element readElement() {

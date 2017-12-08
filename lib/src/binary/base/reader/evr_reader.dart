@@ -53,7 +53,9 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
   /// Creates a new [EvrReader]  where [rb].rIndex = 0.
   EvrReader(
       ByteData bd, RootDataset rds, String path, DecodingParameters dParams, bool reUseBD)
-      : super(bd, rds, dParams, reUseBD);
+      : super(bd, rds, dParams, reUseBD) {
+    print('EvrReader: $rds');
+  }
 
   @override
   ByteData readFmi() {
@@ -61,14 +63,6 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
     if (rb.index != 0) throw 'InvalidReadBufferIndex: ${rb.index}';
     return _readFmi();
   }
-
-/*
-  @override
-  RootDataset readRootDataset() {
-    if (!isFmiRead) throw 'FMI is not read';
-    return (rds.transferSyntax.isEvr) ? super.readRootDataset() : null;
-  }
-*/
 
   /// For EVR Datasets, all Elements are read by this method.
   @override
@@ -110,12 +104,11 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
     if (vr == null) {
       //    log.debug('${rb.rmm} ${dcm(code)} $eStart ${hex16(vrCode)}');
       rb.warn('VR is Null: vrCode(${hex16(vrCode)}, $vrCode) '
-                  '${dcm(code)} start: $eStart');
+          '${dcm(code)} start: $eStart');
 //      showNext(rb.index - 4);
     }
     return __vrToIndex(code, vr);
   }
-
 
   /// Read a Short EVR Element, i.e. one with a 16-bit Value Field Length field.
   /// These Elements can not have an kUndefinedLength value.
@@ -212,7 +205,8 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
     while (rb.isReadable) {
       final code = rb.peekCode;
       if (code >= 0x00030000) break;
-      rds.fmi.add(readElement());
+      final e = readElement();
+      rds.fmi.add(e);
     }
     final fmiEnd = rb.index;
 

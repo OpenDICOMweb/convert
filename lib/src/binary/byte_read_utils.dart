@@ -29,41 +29,41 @@ bool byteReadWriteFileChecked(String path,
 
   final f = new File(fPath);
   try {
-    final reader0 = new ByteLogReader.fromFile(f);
+    final reader0 = new ByteReader.fromFile(f);
     final rds0 = reader0.readRootDataset();
-    final bytes0 = reader0.bd.buffer.asUint8List();
+    final bytes0 = reader0.rb.bytes;
     final e = rds0[kPixelData];
     if (e == null) log.warn('$pad ** Pixel Data Element not present');
 
-    log..debug('${rds0.summary}')..debug('${rds0.parseInfo}');
+    log..debug('${rds0.summary}')..debug('${rds0.pInfo}');
 
     // Write the Root Dataset
-    ByteLogWriter writer;
+    ByteWriter writer;
     if (fast) {
       // Just write bytes not file
-      writer = new ByteLogWriter(rds0, inputOffsets: reader0.offsets);
+      writer = new ByteWriter(rds0, inputOffsets: reader0.offsets);
     } else {
-      writer = new ByteLogWriter.toPath(rds0, outPath);
+      writer = new ByteWriter.toPath(rds0, outPath);
     }
     final bytes1 = writer.writeRootDataset(rds0);
 
-    ByteLogReader reader1;
+    ByteReader reader1;
     if (fast) {
       // Just read bytes not file
-      reader1 = new ByteLogReader(
+      reader1 = new ByteReader(
           bytes1.buffer.asByteData(bytes1.offsetInBytes, bytes1.lengthInBytes));
     } else {
-      reader1 = new ByteLogReader.fromPath(outPath);
+      reader1 = new ByteReader.fromPath(outPath);
     }
     final rds1 = reader1.readRootDataset();
 
     if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
 
-    if (rds0.parseInfo != rds1.parseInfo) {
+    if (rds0.pInfo != rds1.pInfo) {
       log
         ..warn('$pad ** ParseInfo is Different!')
-        ..debug1('$pad rds0: ${rds0.parseInfo.summary(rds0)}')
-        ..debug1('$pad rds1: ${rds1.parseInfo.summary(rds1)}')
+        ..debug1('$pad rds0: ${rds0.pInfo.summary(rds0)}')
+        ..debug1('$pad rds1: ${rds1.pInfo.summary(rds1)}')
         ..debug2(rds0.format(new Formatter(maxDepth: -1)))
         ..debug2(rds1.format(new Formatter(maxDepth: -1)));
     }
@@ -97,7 +97,7 @@ bool byteReadWriteFileChecked(String path,
     rethrow;
   } catch (e) {
     log.error(e);
-   // if (throwOnError) rethrow;
+    // if (throwOnError) rethrow;
     rethrow;
   }
   return success;
@@ -120,7 +120,7 @@ RootDatasetByte readFileTimed(File file,
 
   RootDataset rds;
   timer.start();
-  rds = ByteLogReader.readBytes(bytes, path: path);
+  rds = ByteReader.readBytes(bytes, path: path);
 
   timer.stop();
   if (rds == null) {
@@ -143,7 +143,7 @@ RootDatasetByte readFileTimed(File file,
 }
 
 RootDatasetByte readFMI(Uint8List bytes, [String path = '']) =>
-    ByteLogReader.readBytes(bytes, path: path);
+    ByteReader.readBytes(bytes, path: path);
 
 Uint8List writeTimed(RootDatasetByte rds,
     {String path = '', bool fast = true, bool fmiOnly = false, TransferSyntax targetTS}) {
@@ -158,7 +158,7 @@ Uint8List writeTimed(RootDatasetByte rds,
         '    at: $timestamp ...');
 
   timer.start();
-  final bytes = ByteLogWriter.writeBytes(rds, path: path);
+  final bytes = ByteWriter.writeBytes(rds, path: path);
   timer.stop();
   log.debug('  Elapsed time: ${timer.elapsed}');
   final msPerElement = (timer.elapsedMicroseconds ~/ total) ~/ 1000;
@@ -167,7 +167,7 @@ Uint8List writeTimed(RootDatasetByte rds,
 }
 
 Future<Uint8List> writeFMI(RootDatasetByte rds, [String path]) async =>
-    await ByteLogWriter.writePath(rds, path, fmiOnly: true);
+    await ByteWriter.writePath(rds, path);
 
 Future<Uint8List> writeRoot(RootDatasetByte rds, {String path}) =>
-    ByteLogWriter.writePath(rds, path);
+    ByteWriter.writePath(rds, path);

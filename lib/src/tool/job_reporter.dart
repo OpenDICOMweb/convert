@@ -141,6 +141,8 @@ class JobReporter {
   String get _startMsg => '''Reading $total files '$_from'
 Started at $startTime''';
 
+  int get usPerFile => timer.elapsed.inMicroseconds ~/ total;
+
   String get _endMsg => '''\n
            Start at: $startTime
            Ended at: $_endTime
@@ -150,6 +152,8 @@ Started at $startTime''';
               Total: ${_success + _failure}
 Timer total elapsed: ${timer.elapsed}
       Timer average: ${timer.average(total)}
+  Microseconds/File: $usPerFile
+       Files/Second: ${1000000 ~/ usPerFile}
 $failures
 ''';
 }

@@ -13,9 +13,7 @@ export 'package:dcm_convert/src/binary/base/writer/evr_writer.dart';
 export 'package:dcm_convert/src/binary/base/writer/ivr_writer.dart';
 
 export 'package:dcm_convert/src/binary/byte/reader/byte_reader.dart';
-export 'package:dcm_convert/src/binary/byte/reader/byte_log_reader.dart';
 export 'package:dcm_convert/src/binary/byte/writer/byte_writer.dart';
-export 'package:dcm_convert/src/binary/byte/writer/byte_log_writer.dart';
 
 export 'package:dcm_convert/src/binary/byte_read_utils.dart';
 export 'package:dcm_convert/src/binary/convert_byte_to_tag.dart';

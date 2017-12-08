@@ -4,6 +4,8 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:typed_data';
+
 import 'package:dataset/tag_dataset.dart';
 import 'package:element/tag_element.dart';
 
@@ -30,11 +32,11 @@ abstract class TagReaderMixin implements DcmReaderBase {
       new SQtag.fromBytes(eb, parent, items);
 
   @override
-  RootDataset makeRootDataset(RDSBytes dsBytes, [ElementList elements, String path]) =>
-      new RootDatasetTag(dsBytes: dsBytes, path: path);
+  RootDataset makeRootDataset(ByteData bd, [ElementList elements, String path]) =>
+      new RootDatasetTag(bd: bd, path: path);
 
   /// Returns a new [Item].
   @override
-  Item makeItem(Dataset parent, {IDSBytes eb, ElementList elements, SQ sequence}) =>
-      new ItemTag(parent, eb);
+  Item makeItem(Dataset parent, {ByteData bd, ElementList elements, SQ sequence}) =>
+      new ItemTag(parent, bd);
 }

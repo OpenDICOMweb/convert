@@ -85,7 +85,7 @@ class FileResult {
     length = rds.length;
     ts = rds.transferSyntax;
     hasDuplicates = rds.hasDuplicates;
-    isShort = rds.parseInfo.wasShortFile;
+    isShort = rds.pInfo.wasShortFile;
     ts = rds.transferSyntax;
   }
 
@@ -93,9 +93,9 @@ class FileResult {
       ? ''
       : '      Duplicates: ${rds.elements.duplicates.length}\n';
 
-  String get parseErrors => (rds.parseInfo.hadParsingErrors) ? 'No\n' : 'Yes\n';
+  String get parseErrors => (rds.pInfo.hadParsingErrors) ? 'No\n' : 'Yes\n';
   String get isShortFile =>
-      (rds.parseInfo.wasShortFile) ? '' : '      Short file: $isShort\n';
+      (rds.pInfo.wasShortFile) ? '' : '      Short file: $isShort\n';
   String get problems => (hasProblem) ? '' : '  Has Problem(s): $hasProblem\n';
 
   String get timing => (times == null) ? '' : '$times';
@@ -111,7 +111,7 @@ $duplicates$parseErrors$isShortFile$problems''';
   String toString() => '''File Result for '${file.path}':
         FMI only: $fmiOnly
           Length: $length
-    Parse errors: ${rds.parseInfo.hadParsingErrors}
+    Parse errors: ${rds.pInfo.hadParsingErrors}
   Total Elements: ${rds.total}
   ''';
 }

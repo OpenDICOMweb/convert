@@ -14,5 +14,5 @@ void main() {
   final path = path1; //test6684_02;
   log.info0('TagReader: $path');
   final rds0 = TagReader.readPath(path);
-  log..info0('${rds0.parseInfo}')..info0('TagDataset: ${rds0.info}');
+  log..info0('${rds0.pInfo}')..info0('TagDataset: ${rds0.info}');
 }

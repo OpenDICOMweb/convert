@@ -59,9 +59,9 @@ bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
   final reader = new ByteReader(bytes0.buffer.asByteData());
   final rds0 = reader.readRootDataset();
 /*  List<int> elementIndex0 = reader.elementIndex;*/
-  log..info0(rds0.parseInfo)..info0(rds0.info);
+  log..info0(rds0.pInfo)..info0(rds0.info);
 
-  final writer = new ByteLogWriter(rds0);
+  final writer = new ByteWriter(rds0);
   final bytes1 = writer.writeRootDataset(rds0);
 
 /*  List<int> elementIndex1 = writer.elementIndex.sublist(0, writer.nthElement);
@@ -71,7 +71,7 @@ bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
     if (elementIndex0[i] != elementIndex1[i])
       print('$i: ${elementIndex0[i]} != ${elementIndex1[i]}');*/
   final rds1 = ByteReader.readBytes(bytes1);
-  log..info0(rds1.parseInfo)..info0(rds1.info);
+  log..info0(rds1.pInfo)..info0(rds1.info);
   final areDatasetsEqual = _compareDatasets(rds0, rds1);
   log.info0('$rds0 == $rds1: $areDatasetsEqual');
   final areBytesEqual = _bytesEqual(bytes0, bytes1, true);

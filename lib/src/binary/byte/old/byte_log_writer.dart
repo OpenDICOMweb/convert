@@ -28,7 +28,7 @@ import 'package:dcm_convert/src/io_utils.dart';
 /// A [class] for writing a [RootDatasetByte] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
 /// all LITTLE ENDIAN [TransferSyntax]es.
-class ByteLogWriter {
+class ByteWriter {
   final RootDataset rds;
   final String path;
   final bool overwrite;
@@ -82,7 +82,6 @@ class ByteLogWriter {
       {int minBDLength,
       bool overwrite = false,
       TransferSyntax targetTS,
-      bool elementOffsetsEnabled = true,
       ElementOffsets inputOffsets}) {
     checkPath(path);
     return new ByteLogWriter(ds,
@@ -114,7 +113,6 @@ class ByteLogWriter {
       String path = '',
       bool reUseBD = true,
       TransferSyntax outputTS,
-      bool elementOffsetsEnabled = true,
       ElementOffsets inputOffsets}) {
     checkRootDataset(rds);
     final writer = new ByteLogWriter(rds,
@@ -132,14 +130,12 @@ class ByteLogWriter {
       {int minBDLength,
       bool overwrite = false,
       TransferSyntax targetTS,
-      bool elementOffsetsEnabled = true,
       ElementOffsets inputOffsets}) async {
     checkFile(file, overwrite: overwrite);
     final bytes = writeBytes(ds,
         minBDLength: minBDLength,
         path: file.path,
         outputTS: targetTS,
-        elementOffsetsEnabled: elementOffsetsEnabled,
         inputOffsets: inputOffsets);
     await file.writeAsBytes(bytes);
     return bytes;
@@ -154,14 +150,12 @@ class ByteLogWriter {
       bool fmiOnly = false,
       bool fast = false,
       TransferSyntax targetTS,
-      bool elementOffsetsEnabled = true,
       ElementOffsets inputOffsets}) {
     checkPath(path);
     return writeFile(ds, new File(path),
         minBDLength: minBDLength,
         overwrite: overwrite,
         targetTS: targetTS,
-        elementOffsetsEnabled: elementOffsetsEnabled,
         inputOffsets: inputOffsets);
   }
 }

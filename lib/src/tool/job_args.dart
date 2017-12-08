@@ -24,7 +24,7 @@ class JobArgs {
   /// Report every n files processed
   int shortMsgEvery;
 
-  int longMsgEvery = 50000;
+  int longMsgEvery = 10000;
 
   /// The log Level for first run
   Level baseLevel;
@@ -107,7 +107,7 @@ class JobArgs {
     //TODO: need better name
     ..addOption('every',
         abbr: 'e',
-        defaultsTo: '100',
+        defaultsTo: '1000',
         callback: setShortInterval,
         help: 'print a progress message every n files processed"')
     // These next options are for the logger Level

@@ -9,43 +9,30 @@ import 'dart:typed_data';
 import 'package:dataset/byte_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/ivr_reader.dart';
-import 'package:dcm_convert/src/binary/base/reader/debug/log_read_mixin.dart';
-import 'package:dcm_convert/src/binary/byte/reader/byte_reader_mixin.dart';
 import 'package:dcm_convert/src/binary/byte/reader/evr_byte_log_reader.dart';
+import 'package:dcm_convert/src/binary/byte/reader/ivr_byte_reader.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
-import 'package:dcm_convert/src/element_offsets.dart';
 
-
-final bool elementOffsetsEnabled = true;
+// ignore_for_file: avoid_positional_boolean_parameters
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootDatasetByte].
-class IvrByteLogReader extends IvrReader with ByteReaderMixin, LogReadMixin {
-  @override
-  final ParseInfo pInfo;
-  @override
-  final ElementOffsets offsets;
-
-
-  factory IvrByteLogReader(ByteData bd,
+class IvrByteLogReader extends IvrByteReader {
+  /// Creates a new [IvrByteLogReader].
+  IvrByteLogReader(ByteData bd, RootDatasetByte rds,
       {String path = '',
-      bool reUseBD = true,
-      DecodingParameters dParams = DecodingParameters.kNoChange}) {
-    final rds = new RootDatasetByte(new RDSBytes(bd), path: path);
-    return new IvrByteLogReader._(bd, rds, path, dParams, reUseBD);
-  }
+      DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool reUseBD = true})
+      : super(bd, rds, path: path, dParams: dParams, reUseBD: reUseBD);
 
-  /// Creates a new [IvrByteLogReader], which is decoder for Binary DICOM
-  /// (application/dicom).
-  IvrByteLogReader._(
-      ByteData bd, RootDataset rds, String path, DecodingParameters dParams, bool reUseBD)
-      : offsets = (elementOffsetsEnabled) ? new ElementOffsets() : null,
-        pInfo = new ParseInfo(rds),
-        super(bd, rds, path, dParams, reUseBD);
+  IvrByteLogReader.from(EvrByteLogReader reader) : super.from(reader);
 
-  IvrByteLogReader.from(EvrByteLogReader reader)
-      : pInfo = reader.pInfo,
-        offsets = reader.offsets,
-        super.from(reader);
+/*
+  ElementOffsets get offsets => _offsets ??= new ElementOffsets();
+  ElementOffsets _offsets;
+
+  ParseInfo get pInfo => _pInfo ??= rds.pInfo;
+  ParseInfo _pInfo;
+*/
+
 }

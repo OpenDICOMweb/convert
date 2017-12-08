@@ -10,11 +10,16 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'package:dataset/dataset.dart';
 import 'package:element/element.dart';
+
+import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
+import 'package:dcm_convert/src/element_offsets.dart';
 
 // The methods below are prototypes for supplying
 
 abstract class LogReadMixinBase {
+
   void logStartRead(int code, int vrIndex, int eStart, int vlf, String name) {}
 
   void logEndRead(int eStart, Element e, String name, {bool ok}) {}

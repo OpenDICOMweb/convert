@@ -16,7 +16,10 @@ import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
+import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/errors.dart';
+
+// ignore_for_file: avoid_positional_boolean_parameters
 
 // Reader axioms
 // 1. The read index (rIndex) should always be at the last place read,
@@ -43,6 +46,7 @@ abstract class DcmReaderBase {
   final RootDataset rds;
   ByteData fmiBD;
   final DecodingParameters dParams;
+
   /// If true the [ByteData] buffer ([rb] will be reused.
   final bool reUseBD;
 
@@ -52,7 +56,10 @@ abstract class DcmReaderBase {
   /// Creates a new [DcmReaderBase]  where [rb].rIndex = 0.
   // ignore: avoid_positional_boolean_parameters
   DcmReaderBase(ByteData bd, this.rds, this.dParams, this.reUseBD)
-      : rb = new ReadBuffer(bd);
+      : rb = new ReadBuffer(bd),
+        cds = rds {
+    print('DcmReaderBase rds: $rds cds: $cds');
+  }
 
   DcmReaderBase.from(DcmReaderBase rBase)
       : rb = rBase.rb,
@@ -66,17 +73,30 @@ abstract class DcmReaderBase {
 
   bool get isEvr;
 
+  int elementCount;
+  ElementOffsets get offsets => _offsets ??= new ElementOffsets();
+  ElementOffsets _offsets;
+
+  ParseInfo get pInfo => _pInfo ??= rds.pInfo;
+  ParseInfo _pInfo;
+
+  ByteData readFmi();
+
+  Element readElement();
+
+  Element readSequence(int code, int eStart, int vrIndex);
+
   Element makeElement(int code, int vrIndex, EBytes eb);
 
   Element makePixelData(int code, int vrIndex, EBytes eb, {VFFragments fragments});
 
   SQ makeSequence(int code, EBytes eb, Dataset parent, List<Item> items);
 
-  RootDataset makeRootDataset(RDSBytes dsBytes, [ElementList elements, String path]) =>
-      new RootDatasetByte(dsBytes, elements: elements, path: path);
+  RootDataset makeRootDataset(ByteData bd, [ElementList elements, String path]) =>
+      new RootDatasetByte(bd, elements: elements, path: path);
 
   /// Returns a new [Item].
-  Item makeItem(Dataset parent, {IDSBytes eb, ElementList elements, SQ sequence}) =>
+  Item makeItem(Dataset parent, {ByteData bd, ElementList elements, SQ sequence}) =>
       new ItemByte(parent);
 
   // **** End of interface ****
@@ -103,12 +123,6 @@ abstract class DcmReaderBase {
 
   final String kItemAsString = hex32(kItem32BitLE);
 
-  ByteData readFmi();
-
-  Element readElement();
-
-  Element readSequence(int code, int eStart, int vrIndex);
-
   /// Reads a [RootDataset] from _this_. The FMI, if any, should already be read.
   RootDataset readRootDataset() {
     cds = rds;
@@ -116,8 +130,8 @@ abstract class DcmReaderBase {
     readDatasetDefinedLength(rds, rb.index, rb.remaining);
     final rdsLength = rb.index - rdsStart;
     final rdsBD = rb.bd.buffer.asByteData(rdsStart, rdsLength);
-    final dsBytes = new RDSBytes(fmiBD, rdsBD);
-    rds.dsBytes = dsBytes;
+    final dsBytes = new RDSBytes(rdsBD, fmiBD);
+    rds.bytes = dsBytes;
     return rds;
   }
 
@@ -142,7 +156,7 @@ abstract class DcmReaderBase {
 
     cds = parentDS;
     final bd = rb.buffer.asByteData(iStart, rb.index - iStart);
-    item.dsBytes = new IDSBytes(bd);
+    item.bytes = new IDSBytes(bd);
     return item;
   }
 

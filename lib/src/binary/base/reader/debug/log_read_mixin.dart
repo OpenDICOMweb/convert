@@ -15,8 +15,8 @@ import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 
 abstract class LogReadMixin implements LogReadMixinBase {
+
   bool get isEvr;
-  int elementCount;
   ReadBuffer get rb;
   ParseInfo get pInfo;
   ElementOffsets get offsets;
@@ -131,7 +131,7 @@ abstract class LogReadMixin implements LogReadMixinBase {
     } else {
       pInfo.nDuplicateElements++;
     }
-    if (e is! SQ) offsets.add(eStart, rb.index, e);
+    if (offsets != null && e is! SQ) offsets.add(eStart, rb.index, e);
   }
 
 

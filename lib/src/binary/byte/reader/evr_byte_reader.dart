@@ -14,23 +14,22 @@ import 'package:dcm_convert/src/binary/base/reader/log_read_mixin_base.dart';
 import 'package:dcm_convert/src/binary/byte/reader/byte_reader_mixin.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 
-final bool elementOffsetsEnabled = true;
+// ignore_for_file: avoid_positional_boolean_parameters
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootDatasetByte].
 class EvrByteReader extends EvrReader with ByteReaderMixin, LogReadMixinBase {
-
-  factory EvrByteReader(ByteData bd,
+  /// Creates a new [EvrByteReader].
+  EvrByteReader(ByteData bd, RootDatasetByte rds,
       {String path = '',
-      bool reUseBD = true,
-      DecodingParameters dParams = DecodingParameters.kNoChange}) {
-    final rds = new RootDatasetByte(new RDSBytes(bd), path: path);
-    return new EvrByteReader._(bd, rds, path, dParams, reUseBD);
-  }
-
-  /// Creates a new [EvrByteReader], which is decoder for Binary DICOM
-  /// (application/dicom).
-  EvrByteReader._(
-      ByteData bd, RootDataset rds, String path, DecodingParameters dParams, bool reUseBD)
+      DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool reUseBD = true})
       : super(bd, rds, path, dParams, reUseBD);
+
+  /// Creates a new [EvrByteReader].
+  EvrByteReader.internal(ByteData bd, RootDatasetByte rds, String path,
+      DecodingParameters dParams, bool reUseBD)
+      : super(bd, rds, path, dParams, reUseBD) {
+    print('EvrReader: $rds');
+  }
 }

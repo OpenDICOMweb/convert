@@ -40,11 +40,11 @@ void main() {
     ..debug('  Read ${reader1.bd.lengthInBytes} bytes')
     ..info0('  DS1: $tagDS1');
 
-  if (tagDS0.parseInfo != tagDS1.parseInfo) {
+  if (tagDS0.pInfo != tagDS1.pInfo) {
     log
       ..warn('  *** ParseInfo is Different!')
-      ..debug('  ${tagDS0.parseInfo}')
-      ..debug('  ${tagDS1.parseInfo}')
+      ..debug('  ${tagDS0.pInfo}')
+      ..debug('  ${tagDS1.pInfo}')
       ..debug2(tagDS0.format(new Formatter(maxDepth: -1)))
       ..debug2(tagDS1.format(new Formatter(maxDepth: -1)));
   }

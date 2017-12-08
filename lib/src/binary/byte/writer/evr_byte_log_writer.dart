@@ -14,8 +14,6 @@ import 'package:dcm_convert/src/element_offsets.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 
-final bool elementOffsetsEnabled = true;
-
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootDatasetByte].
 class EvrByteLogWriter extends EvrWriter with LogWriteMixin {

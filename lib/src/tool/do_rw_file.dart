@@ -39,13 +39,13 @@ Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) asy
       log.info0('Bad File: ${f.path}');
       return false;
     }
-    if (rds0.parseInfo == null) throw 'Bad File - No ParseInfo: $f';
+    if (rds0.pInfo == null) throw 'Bad File - No ParseInfo: $f';
     //TODO: update reader and write to have method called bytes.
     final bytes0 = reader0.bd.buffer.asUint8List();
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');
-    if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.summary(rds0)}');
+    if (rds0.pInfo != null) log.debug('$pad    ${rds0.pInfo.summary(rds0)}');
 
     // TODO: move into dataset.warnings.
     final e = rds0[kPixelData];

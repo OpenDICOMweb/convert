@@ -96,6 +96,6 @@ Read ${bytes0.lengthInBytes} bytes
       TS: ${rds.transferSyntax}
   Pixels: $pdMsg
   $reader
-  ${rds.parseInfo.summary(rds)}
+  ${rds.pInfo.summary(rds)}
 ''');
 }

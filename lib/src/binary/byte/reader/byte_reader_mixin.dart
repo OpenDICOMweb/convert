@@ -4,12 +4,16 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:typed_data';
+
 import 'package:dataset/byte_dataset.dart';
 import 'package:element/byte_element.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/dcm_reader_base.dart';
 
 abstract class ByteReaderMixin implements DcmReaderBase {
+  @override
+  RootDataset rds;
   @override
   Dataset cds;
 
@@ -29,11 +33,11 @@ abstract class ByteReaderMixin implements DcmReaderBase {
       new SQbyte.fromBytes(eb, parent, items);
 
   @override
-  RootDataset makeRootDataset(RDSBytes dsBytes, [ElementList elements, String path]) =>
-      new RootDatasetByte(dsBytes, elements: elements, path: path);
+  RootDataset makeRootDataset(ByteData bd, [ElementList elements, String path]) =>
+      new RootDatasetByte(bd, elements: elements, path: path);
 
   /// Returns a new [ItemByte].
   @override
-  Item makeItem(Dataset parent, {IDSBytes eb, ElementList elements, SQ sequence}) =>
-      new ItemByte(parent, eb);
+  Item makeItem(Dataset parent, {ByteData bd, ElementList elements, SQ sequence}) =>
+      new ItemByte(parent, bd);
 }

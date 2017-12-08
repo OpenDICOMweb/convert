@@ -165,7 +165,7 @@ class EvrWriter extends DcmWriterBase {
     //  if (encoding.doUpdateFMI) return writeODWFMI();
     if (rds is! RootDataset) log.error('Not _rootDS');
     if (!rds.hasFmi) {
-      final pInfo = rds.parseInfo;
+      final pInfo = rds.pInfo;
       assert(pInfo.hadPrefix == false || !eParams.doAddMissingFMI);
       log.warn('Root Dataset does not have FMI: $rds');
       if (!eParams.allowMissingFMI || !eParams.doAddMissingFMI) {
@@ -198,7 +198,7 @@ class EvrWriter extends DcmWriterBase {
   /// beginning of the encoding.
   bool writePrefix(RootDataset rds, {bool cleanPreamble = true}) {
     if (rds is! RootDataset) log.error('Not rds');
-    final pInfo = rds.parseInfo;
+    final pInfo = rds.pInfo;
     return (pInfo.preambleAllZeros || eParams.doCleanPreamble)
         ? writeCleanPrefix()
         : writeExistingPrefix(pInfo);

@@ -8,12 +8,14 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/src/binary/byte/reader/byte_log_reader.dart';
-import 'package:dcm_convert/src/binary/byte/writer/byte_log_writer.dart';
-import 'package:dcm_convert/src/errors.dart';
-import 'package:dcm_convert/src/tool/job_utils.dart';
 import 'package:element/byte_element.dart';
 import 'package:system/core.dart';
+
+import 'package:dcm_convert/src/binary/byte/reader/byte_reader.dart';
+import 'package:dcm_convert/src/binary/byte/writer/byte_writer.dart';
+import 'package:dcm_convert/src/errors.dart';
+import 'package:dcm_convert/src/tool/job_utils.dart';
+
 
 Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
   //TODO: improve output
@@ -23,19 +25,19 @@ Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
   try {
     final Uint8List bytes = await f.readAsBytes();
     final bd = bytes.buffer.asByteData();
-    final reader0 = new ByteLogReader(bd);
+    final reader0 = new ByteReader(bd);
     final rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
       log.info0('Bad File: ${f.path}');
       return false;
     }
-    if (rds0.parseInfo == null) throw 'Bad File - No ParseInfo: $f';
-    final bytes0 = reader0.bd.buffer.asUint8List();
+    if (rds0.pInfo == null) throw 'Bad File - No ParseInfo: $f';
+    final bytes0 = reader0.bytes;
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');
-    if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.summary(rds0)}');
+    if (rds0.pInfo != null) log.debug('$pad    ${rds0.pInfo.summary(rds0)}');
 
     // TODO: move into dataset.warnings.
     final e = rds0[kPixelData];
@@ -51,13 +53,13 @@ $pad    TS: ${rds0.transferSyntax}''');
     }
 
     // Write the Root Dataset
-    ByteLogWriter writer;
+    ByteWriter writer;
     final outPath = getTempFile(f.path, 'dcmout');
     if (fast) {
       // Just write bytes don't write the file
-      writer = new ByteLogWriter(rds0, inputOffsets: reader0.offsets);
+      writer = new ByteWriter(rds0, inputOffsets: reader0.offsets);
     } else {
-      writer = new ByteLogWriter.toPath(rds0, outPath);
+      writer = new ByteWriter.toPath(rds0, outPath);
     }
     final bytes1 = writer.writeRootDataset(rds0);
     log.debug('$pad    Encoded ${bytes1.length} bytes');
@@ -72,26 +74,25 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       log.debug('Re-reading: ${bytes1.length} bytes from $outPath');
     }
-    ByteLogReader reader1;
+    ByteReader reader1;
     if (fast) {
       // Just read bytes not file
-      reader1 = new ByteLogReader(
-          bytes1.buffer.asByteData(bytes1.offsetInBytes, bytes1.lengthInBytes));
+      reader1 = new ByteReader(bytes1.buffer.asByteData());
     } else {
-      reader1 = new ByteLogReader.fromPath(outPath);
+      reader1 = new ByteReader.fromPath(outPath);
     }
     final rds1 = reader1.readRootDataset();
-    //   RootDatasetBytes rds1 = ByteLogReader.readPath(outPath);
+    //   RootDatasetBytes rds1 = ByteWriter.readPath(outPath);
     log
       ..debug('$pad Read ${reader1.bd.lengthInBytes} bytes')
       ..debug1('$pad DS1: $rds1');
 
     if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
-    if (rds0.parseInfo != rds1.parseInfo) {
+    if (rds0.pInfo != rds1.pInfo) {
       log
         ..warn('$pad ** ParseInfo is Different!')
-        ..debug1('$pad rds0: ${rds0.parseInfo.summary(rds0)}')
-        ..debug1('$pad rds1: ${rds1.parseInfo.summary(rds1)}')
+        ..debug1('$pad rds0: ${rds0.pInfo.summary(rds0)}')
+        ..debug1('$pad rds1: ${rds1.pInfo.summary(rds1)}')
         ..debug2(rds0.format(new Formatter(maxDepth: -1)))
         ..debug2(rds1.format(new Formatter(maxDepth: -1)));
     }

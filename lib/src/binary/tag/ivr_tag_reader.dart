@@ -9,35 +9,22 @@ import 'dart:typed_data';
 import 'package:dataset/byte_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/evr_reader.dart';
-import 'package:dcm_convert/src/binary/base/reader/debug/log_read_mixin.dart';
+import 'package:dcm_convert/src/binary/base/reader/ivr_reader.dart';
+import 'package:dcm_convert/src/binary/tag/evr_tag_reader.dart';
 import 'package:dcm_convert/src/binary/tag/tag_reader_mixin.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
-import 'package:dcm_convert/src/element_offsets.dart';
 
-final bool elementOffsetsEnabled = true;
+// ignore_for_file: avoid_positional_boolean_parameters
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootDatasetByte].
-class IvrTagReader extends EvrReader with TagReaderMixin, LogReadMixin {
-  @override
-  final ElementOffsets offsets;
-  @override
-  final ParseInfo pInfo;
-
-  factory IvrTagReader(ByteData bd,
+class IvrTagReader extends IvrReader with TagReaderMixin {
+  /// Creates a new [IvrTagReader].
+  IvrTagReader(ByteData bd, RootDatasetByte rds,
       {String path = '',
-      bool reUseBD = true,
-      DecodingParameters dParams = DecodingParameters.kNoChange}) {
-    final rds = new RootDatasetByte(new RDSBytes(bd), path: path);
-    return new IvrTagReader._(bd, rds, path, dParams, reUseBD);
-  }
+      DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool reUseBD = true})
+      : super(bd, rds, path, dParams, reUseBD);
 
-  /// Creates a new [IvrTagReader], which is decoder for Binary DICOM
-  /// (application/dicom).
-  IvrTagReader._(
-      ByteData bd, RootDataset rds, String path, DecodingParameters dParams, bool reUseBD)
-      : offsets = (elementOffsetsEnabled) ? new ElementOffsets() : null,
-        pInfo = new ParseInfo(rds),
-        super(bd, rds, path, dParams, reUseBD);
+  IvrTagReader.from(EvrTagReader reader) : super.from(reader);
 }

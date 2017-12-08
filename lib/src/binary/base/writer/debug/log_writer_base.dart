@@ -28,14 +28,14 @@ import 'package:dcm_convert/src/encoding_parameters.dart';
 /// Does not currently support BIG ENDIAN which is retired.
 ///
 /// _Notes_:
-///   1. In all cases [LogWriterBase] writes the Value Fields as they
+///   1. In all cases [WriterBase] writes the Value Fields as they
 ///   are in the data; thus, all Value Fields should have an even length.
 ///   2. All String manipulation should be handled in the attribute itself.
 // Note: There are four [Element]s that might have an Undefined Length value
 // (0xFFFFFFFF), [SQ], [OB], [OW], [UN].
-abstract class LogWriterBase extends DcmWriterBase {
-  /// Creates a new [LogWriterBase], where [wIndex] = 0.
-  LogWriterBase(
+abstract class WriterBase extends DcmWriterBase {
+  /// Creates a new [WriterBase], where [wIndex] = 0.
+  WriterBase(
       RootDataset rds, EncodingParameters eParams, int minBDLength, bool reUseBD)
       : super(rds, eParams, minBDLength, reUseBD);
 

@@ -16,9 +16,12 @@ import 'package:system/server.dart';
 import 'package:dcm_convert/src/file_utils.dart';
 
 const String xx3 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
-const String xx2 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.5.5.dcm';
-const String xx1 = 'C:/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm';
-const String xx0 = 'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm';
+const String xx2 =
+    'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.5.5.dcm';
+const String xx1 =
+    'C:/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm';
+const String xx0 =
+    'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm';
 const String xxx = 'C:/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
 const String dcmDir = 'C:/odw/test_data/sfd/MG/DICOMDIR';
 const String evrLarge = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
@@ -43,12 +46,13 @@ const String ivrWithGroupLengths = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy
 const String bar = 'C:/odw/test_data/mweb/10 Patient IDs/04443352';
 
 const String bas = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368.fmt';
+
 //Urgent: bug with path20
 Future main() async {
-  Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
- // for (var i = 0; i < 1; i++) {
-  for (var i = 0; i < testEvrPaths.length; i++) {
-    final fPath = testEvrPaths[i];
+  Server.initialize(name: 'ReadFile', level: Level.info, throwOnError: true);
+  // for (var i = 0; i < 1; i++) {
+  for (var i = 0; i < testPaths2.length; i++) {
+    final fPath = testPaths2[i];
 
     print('$i: path: $fPath');
     print(' out: ${getTempFile(fPath, 'dcmout')}');
@@ -60,20 +64,23 @@ Future main() async {
       log.error('"$fPath" is not a valid DICOM file');
       return;
     }
-    //   final bytes = await readFileAsync(file);
-    final rds = ByteReader.readBytes(bytes, path: fPath, showStats: true);
+
+    final doLogging = system.level > Level.debug;
+    final rds =
+        ByteReader.readBytes(bytes, path: fPath, doLogging: doLogging, showStats: true);
+
     if (rds == null) {
       log.warn('Invalid DICOM file: $fPath');
     } else {
-      if (rds.parseInfo != null) {
+      if (rds.pInfo != null) {
         final infoPath = '${path.withoutExtension(fPath)}.info';
         log.info('infoPath: $infoPath');
-        final sb = new StringBuffer('${rds.parseInfo.summary(rds)}\n')
+        final sb = new StringBuffer('${rds.pInfo.summary(rds)}\n')
           ..write('Bytes Dataset: ${rds.summary}');
         new File(infoPath)..writeAsStringSync(sb.toString());
         log.debug(sb.toString());
 
-     //   final formatter = new Formatter.withIndenter(-1, Indenter.basic);
+        //   final formatter = new Formatter.withIndenter(-1, Indenter.basic);
         final formatter = new Formatter(maxDepth: -1);
         final fmtPath = '${path.withoutExtension(fPath)}.fmt';
         log.info('fmtPath: $fmtPath');

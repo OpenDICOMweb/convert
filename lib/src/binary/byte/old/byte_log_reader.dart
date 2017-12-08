@@ -10,33 +10,29 @@ import 'dart:typed_data';
 import 'package:dataset/byte_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
 
+import 'package:dcm_convert/src/binary/byte/reader/byte_reader.dart';
 import 'package:dcm_convert/src/binary/byte/reader/evr_byte_log_reader.dart';
 import 'package:dcm_convert/src/binary/byte/reader/ivr_byte_log_reader.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/io_utils.dart';
 
+// ignore_for_file: avoid_positional_boolean_parameters
+
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [RootDatasetByte].
 class ByteLogReader {
-  final ByteData bd;
-  final String path;
-  final bool reUseBD;
-  final DecodingParameters dParams;
-  final ElementOffsets offsets;
-
-  final EvrByteLogReader evrReader;
+  final EvrByteLogReader _evrReader;
   IvrByteLogReader _ivrReader;
 
   /// Creates a new [ByteLogReader], which is decoder for Binary DICOM
   /// (application/dicom).
-  ByteLogReader(this.bd,
-      {this.path = '',
-      this.dParams = DecodingParameters.kNoChange,
-      this.reUseBD = true,
-      this.offsets})
-      : evrReader =
-            new EvrByteLogReader(bd, path: path, dParams: dParams, reUseBD: reUseBD);
+  ByteLogReader(ByteData bd,
+      {String path = '',
+      DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool reUseBD = true})
+      : _evrReader = new EvrByteLogReader(bd, new RootDatasetByte(bd, path: path),
+            path: path, dParams: dParams, reUseBD: reUseBD);
 
   /// Creates a [ByteLogReader] from the contents of the [file].
   factory ByteLogReader.fromFile(File file,
@@ -54,20 +50,21 @@ class ByteLogReader {
 
   bool isFmiRead = false;
 
+  @override
   ByteData readFmi() {
-    final fmiBD = evrReader.readFmi();
+    final fmiBD = _evrReader.readFmi();
     isFmiRead = true;
     return fmiBD;
   }
 
+  @override
   RootDataset readRootDataset() {
     if (!isFmiRead) readFmi();
 
-    if (evrReader.rds.transferSyntax.isEvr) {
-      return evrReader.readRootDataset();
+    if (_evrReader.rds.transferSyntax.isEvr) {
+      return _evrReader.readRootDataset();
     } else {
-      _ivrReader =
-          new IvrByteLogReader.from(evrReader);
+      _ivrReader = new IvrByteLogReader.from(_evrReader);
       return _ivrReader.readRootDataset();
     }
   }
@@ -76,9 +73,8 @@ class ByteLogReader {
   static RootDataset readBytes(Uint8List bytes,
       {String path = '',
       bool reUseBD = true,
-      bool showStats = false,
+      bool showStats = true,
       DecodingParameters dParams = DecodingParameters.kNoChange,
-      bool elementOffsetsEnabled = true,
       ElementOffsets offsets}) {
     final bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
     final reader = new ByteLogReader(bd, path: path, reUseBD: reUseBD, dParams: dParams);
@@ -88,7 +84,7 @@ class ByteLogReader {
   /// Reads the [RootDataset] from a [File].
   static RootDataset readFile(File file,
       {bool reUseBD: true,
-      bool showStats = false,
+      bool showStats = true,
       DecodingParameters dParams = DecodingParameters.kNoChange}) {
     checkFile(file);
     return readBytes(file.readAsBytesSync(),
@@ -97,10 +93,7 @@ class ByteLogReader {
 
   /// Reads the [RootDataset] from a [path] ([File] or URL).
   static RootDataset readPath(String path,
-      {bool async: true,
-      bool fast = true,
-      bool fmiOnly = false,
-      bool reUseBD = true,
+      {bool reUseBD = true,
       bool showStats = false,
       DecodingParameters dParams = DecodingParameters.kNoChange}) {
     checkPath(path);

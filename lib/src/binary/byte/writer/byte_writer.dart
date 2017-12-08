@@ -35,10 +35,13 @@ class ByteWriter {
   final EncodingParameters eParams;
   final TransferSyntax outputTS;
   final int minBDLength;
+  final ElementOffsets inputOffsets;
   final bool reUseBD;
-  final EvrByteWriter evrWriter;
-
+  final bool doLogging;
+  final bool showStats;
+  final EvrByteWriter _evrWriter;
   IvrByteWriter _ivrWriter;
+  ElementOffsets outputOffsets;
 
   /// Creates a new [ByteWriter] where index = 0.
   ByteWriter(this.rds,
@@ -47,9 +50,11 @@ class ByteWriter {
       this.outputTS,
       this.overwrite = false,
       this.minBDLength = DcmWriterBase.defaultBufferLength,
-      this.reUseBD = true})
-      : evrWriter = new EvrByteWriter(rds, eParams, minBDLength, reUseBD);
-
+      this.inputOffsets,
+      this.reUseBD = true,
+      this.doLogging = false,
+      this.showStats = false})
+      : _evrWriter = new EvrByteWriter(rds, eParams, minBDLength, reUseBD);
 
   /// Writes the [RootDatasetByte] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
@@ -58,7 +63,10 @@ class ByteWriter {
       TransferSyntax outputTS,
       bool overwrite = false,
       int minBDLength,
-      bool reUseBD = false}) {
+      ElementOffsets inputOffsets,
+      bool reUseBD = false,
+      bool doLogging = false,
+      bool showStats = false}) {
     checkFile(file, overwrite: overwrite);
     return new ByteWriter(ds,
         path: file.path,
@@ -66,35 +74,46 @@ class ByteWriter {
         outputTS: outputTS,
         overwrite: overwrite,
         minBDLength: minBDLength,
-        reUseBD: reUseBD);
+        inputOffsets: inputOffsets,
+        reUseBD: reUseBD,
+        doLogging: doLogging,
+        showStats: showStats);
   }
 
   /// Creates a new empty [File] from [path], writes the [RootDatasetByte]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
   factory ByteWriter.toPath(RootDatasetByte ds, String path,
-      {int minBDLength,
+      {EncodingParameters eParams,
+      TransferSyntax outputTS,
       bool overwrite = false,
-      TransferSyntax targetTS,
-      bool elementOffsetsEnabled = true,
-      ElementOffsets inputOffsets}) {
+      int minBDLength,
+      ElementOffsets inputOffsets,
+      bool reUseBD = false,
+      bool doLogging = false,
+      bool showStats = false}) {
     checkPath(path);
     return new ByteWriter(ds,
-        minBDLength: minBDLength,
         path: path,
+        eParams: eParams,
+        outputTS: outputTS,
         overwrite: overwrite,
-        outputTS: targetTS);
+        minBDLength: minBDLength,
+        inputOffsets: inputOffsets,
+        reUseBD: reUseBD,
+        doLogging: doLogging,
+        showStats: showStats);
   }
 
   /// Writes a [RootDatasetByte], and stores it in [rds], and returns it.
-  Uint8List writeFmi() => evrWriter.writeFmi();
+  Uint8List writeFmi() => _evrWriter.writeFmi();
 
   /// Reads a [RootDatasetByte], and stores it in [rds], and returns it.
   Uint8List writeRootDataset(RootDataset rds) {
-    if (!evrWriter.isFmiWritten) writeFmi();
+    if (!_evrWriter.isFmiWritten) writeFmi();
 
-    if (evrWriter.rds.transferSyntax.isEvr) {
-      return evrWriter.writeRootDataset(rds);
+    if (_evrWriter.rds.transferSyntax.isEvr) {
+      return _evrWriter.writeRootDataset(rds);
     } else {
       _ivrWriter = new IvrByteWriter(rds, eParams, minBDLength, reUseBD);
       return _ivrWriter.writeRootDataset(rds);
@@ -103,36 +122,51 @@ class ByteWriter {
 
   /// Writes the [RootDatasetByte] to a [Uint8List], and returns the [Uint8List].
   static Uint8List writeBytes(RootDatasetByte rds,
-      {int minBDLength,
-      String path = '',
-      bool reUseBD = true,
+      {String path = '',
+      EncodingParameters eParams,
       TransferSyntax outputTS,
-      bool elementOffsetsEnabled = true,
-      ElementOffsets inputOffsets}) {
+      bool overwrite = false,
+      int minBDLength,
+      ElementOffsets inputOffsets,
+      bool reUseBD = false,
+      bool doLogging = false,
+      bool showStats = false}) {
     checkRootDataset(rds);
     final writer = new ByteWriter(rds,
-        minBDLength: minBDLength,
         path: path,
-        overwrite: reUseBD,
-        outputTS: outputTS);
+        eParams: eParams,
+        outputTS: outputTS,
+        overwrite: overwrite,
+        minBDLength: minBDLength,
+        inputOffsets: inputOffsets,
+        reUseBD: reUseBD,
+        doLogging: doLogging,
+        showStats: showStats);
     return writer.writeRootDataset(rds);
   }
 
   /// Writes the [RootDatasetByte] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
   static Future<Uint8List> writeFile(RootDatasetByte ds, File file,
-      {int minBDLength,
+      {EncodingParameters eParams,
+      TransferSyntax outputTS,
       bool overwrite = false,
-      TransferSyntax targetTS,
-      bool elementOffsetsEnabled = true,
-      ElementOffsets inputOffsets}) async {
+      int minBDLength,
+      ElementOffsets inputOffsets,
+      bool reUseBD = false,
+      bool doLogging = false,
+      bool showStats = false}) async {
     checkFile(file, overwrite: overwrite);
     final bytes = writeBytes(ds,
-        minBDLength: minBDLength,
         path: file.path,
-        outputTS: targetTS,
-        elementOffsetsEnabled: elementOffsetsEnabled,
-        inputOffsets: inputOffsets);
+        eParams: eParams,
+        outputTS: outputTS,
+        overwrite: overwrite,
+        minBDLength: minBDLength,
+        inputOffsets: inputOffsets,
+        reUseBD: reUseBD,
+        doLogging: doLogging,
+        showStats: showStats);
     await file.writeAsBytes(bytes);
     return bytes;
   }
@@ -141,17 +175,23 @@ class ByteWriter {
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
   static Future<Uint8List> writePath(RootDatasetByte ds, String path,
-      {int minBDLength,
+      {EncodingParameters eParams,
+      TransferSyntax outputTS,
       bool overwrite = false,
-      bool fmiOnly = false,
-      bool fast = false,
-      TransferSyntax targetTS,
-      bool elementOffsetsEnabled = true}) {
+      int minBDLength,
+      ElementOffsets inputOffsets,
+      bool reUseBD = false,
+      bool doLogging = false,
+      bool showStats = false}) {
     checkPath(path);
     return writeFile(ds, new File(path),
-        minBDLength: minBDLength,
+        eParams: eParams,
+        outputTS: outputTS,
         overwrite: overwrite,
-        targetTS: targetTS,
-        elementOffsetsEnabled: elementOffsetsEnabled);
+        minBDLength: minBDLength,
+        inputOffsets: inputOffsets,
+        reUseBD: reUseBD,
+        doLogging: doLogging,
+        showStats: showStats);
   }
 }

@@ -63,15 +63,15 @@ Future main() async {
     log.error('"$fPath" either does not exist or is not a valid DICOM file');
     return;
   }
-  //   final bytes = await readFileAsync(file);
-  final rds = ByteLogReader.readBytes(bytes, path: fPath, showStats: true);
+
+  final rds = ByteReader.readBytes(bytes, path: fPath, doLogging: true, showStats: true);
   if (rds == null) {
     log.warn('Invalid DICOM file: $fPath');
   } else {
-    if (rds.parseInfo != null) {
+    if (rds.pInfo != null) {
       final infoPath = '${path.withoutExtension(fPath)}.info';
       log.info('infoPath: $infoPath');
-      final sb = new StringBuffer('${rds.parseInfo.summary(rds)}\n')
+      final sb = new StringBuffer('${rds.pInfo.summary(rds)}\n')
         ..write('Bytes Dataset: ${rds.summary}');
       new File(infoPath)..writeAsStringSync(sb.toString());
       log.debug(sb.toString());

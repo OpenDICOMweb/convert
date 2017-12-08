@@ -15,9 +15,8 @@ import 'package:dcm_convert/src/errors.dart';
 import 'package:dcm_convert/src/file_utils.dart';
 import 'package:dcm_convert/src/io_utils.dart';
 
-
 Future<Uint8List> readFileFast(File f, {bool fast = true}) async =>
-	(fast) ? await f.readAsBytes() : 		f.readAsBytesSync();
+    (fast) ? await f.readAsBytes() : f.readAsBytesSync();
 
 Future<Uint8List> readFileAsync(File f) async {
   final bytes = await f.readAsBytes();
@@ -30,47 +29,55 @@ Uint8List readFileSync(File f) => f.readAsBytesSync();
 //Urgent make sure garbage is not being retained
 //Urgent Test async
 Future<bool> doReadByteFile(File f,
-    {bool throwOnError = false, bool fast = true, bool isAsync = true}) async {
-	system.throwOnError = throwOnError;
-	system.level = Level.warn0;
+    {bool fast = true,
+    bool isAsync = true,
+    bool showStats = true}) async {
   final pad = ''.padRight(5);
   final cPath = cleanPath(f.path);
+  RootDataset rds0;
 
   try {
-	  final  bytes = await readDcmPath(cPath);
-	  if (bytes == null) return false;
-	  final bd = bytes.buffer.asByteData();
-	  final reader0 = new ByteReader(bd, path: cPath);
-	  final rds0 = reader0.readRootDataset();
+    final bytes = await readDcmPath(cPath);
+    if (bytes == null) return false;
+    final bd = bytes.buffer.asByteData();
+
+    final doLogging = system.level > Level.debug;
+    final reader0 = new ByteReader(bd, path: cPath, doLogging: doLogging);
+
+    rds0 = reader0.readRootDataset();
     if (rds0 == null) {
       log.info0('Unreadable File: $cPath');
       return false;
     }
-    if (rds0.parseInfo == null) {
-      log.info0('Bad File - No ParseInfo: $cPath');
+
+/*
+    if (rds0.pInfo == null) {
+      log.info0('No ParseInfo: $cPath');
       return false;
     }
-    if (rds0.parseInfo != null) log.debug('$pad    ${rds0.parseInfo.summary(rds0)}');
+*/
+
+    if (rds0.pInfo != null) log.debug('$pad    ${rds0.pInfo.summary(rds0)}');
 
 // TODO: move into dataset.warnings.
-	  final e = rds0[kPixelData];
+    final e = rds0[kPixelData];
     if (e == null) {
       log.info1('$pad ** Pixel Data Element not present');
     } else {
       log.debug1('$pad  e: ${e.info}');
     }
-
     if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
 
-    if (rds0 != null) log.info1('$pad Success!');
-    return true;
   } on ShortFileError {
     log.warn('$pad ** Short File(${f.lengthSync()} bytes): $cPath');
     if (throwOnError) rethrow;
   } on InvalidTransferSyntax catch (e) {
     log.error(e);
-    if (throwOnError) rethrow;
     return false;
+  } catch (e) {
+    log.error(e);
   }
-  return false;
+  if (rds0 != null) log.info1('$pad Success!');
+//  print('summary: ${rds0.summary}');
+  return true;
 }
