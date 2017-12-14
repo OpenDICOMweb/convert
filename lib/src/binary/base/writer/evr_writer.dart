@@ -17,6 +17,8 @@ import 'package:dcm_convert/src/encoding_parameters.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 
+//Urgent Jim: add to EvrULength at appropriate places
+
 class EvrWriter extends DcmWriterBase {
   @override
   final bool isEvr = true;

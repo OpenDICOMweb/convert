@@ -77,8 +77,13 @@ abstract class DcmReaderBase {
   ElementOffsets get offsets => _offsets ??= new ElementOffsets();
   ElementOffsets _offsets;
 
-  ParseInfo get pInfo => _pInfo ??= rds.pInfo;
+  ParseInfo get pInfo => _pInfo ??= getParseInfo();
   ParseInfo _pInfo;
+  ParseInfo getParseInfo() {
+    final p = new ParseInfo(rds);
+    rds.pInfo = p;
+    return p;
+  }
 
   ByteData readFmi();
 

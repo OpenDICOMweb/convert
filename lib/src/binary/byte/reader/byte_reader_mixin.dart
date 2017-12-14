@@ -13,9 +13,9 @@ import 'package:dcm_convert/src/binary/base/reader/dcm_reader_base.dart';
 
 abstract class ByteReaderMixin implements DcmReaderBase {
   @override
-  RootDataset rds;
+  RootDataset get rds;
   @override
-  Dataset cds;
+  Dataset get cds;
 
   @override
   ElementList get elements => cds.elements;

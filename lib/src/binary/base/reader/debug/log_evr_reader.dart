@@ -11,22 +11,12 @@ import 'package:dataset/dataset.dart';
 import 'package:dcm_convert/src/binary/base/reader/evr_reader.dart';
 import 'package:dcm_convert/src/binary/base/reader/debug/log_read_mixin.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
-import 'package:dcm_convert/src/element_offsets.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 
 /// Creates a new [EvrReader]  where [rb].rIndex = 0.
 abstract class LogEvrReader extends EvrReader with LogReadMixin {
-  LogEvrReader(ByteData bd, RootDataset rds, String path, DecodingParameters dParams,
-      bool reUseBD, ElementOffsets offsets, ParseInfo pInfo)
+  LogEvrReader(
+      ByteData bd, RootDataset rds, String path, DecodingParameters dParams, bool reUseBD)
       : super(bd, rds, path, dParams, reUseBD);
-
-/*
-  ElementOffsets get offsets => _offsets ??= new ElementOffsets();
-  ElementOffsets _offsets;
-
-  ParseInfo get pInfo => _pInfo ??= rds.pInfo;
-  ParseInfo _pInfo;
-*/
-
 }

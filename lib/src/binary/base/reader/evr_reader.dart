@@ -20,6 +20,7 @@ import 'package:dcm_convert/src/errors.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 
+//Urgent Jim: add to EvrULength at appropriate places
 // Reader axioms
 // 1. eStart is always the first byte of the Element being read and eEnd is always
 //    the end of the Element be
@@ -217,6 +218,8 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
 
     final ts = rds.transferSyntax;
     log.info1('TS: $ts');
+    final sopClass = rds.sopClass;
+    log.info1('SopClass: $sopClass');
     if (!system.isSupportedTransferSyntax(ts.asString)) {
       return invalidTransferSyntax(ts);
     }
