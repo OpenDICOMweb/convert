@@ -10,35 +10,36 @@ import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:vr/vr.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/log_read_mixin_base.dart';
-import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
+import 'package:dcm_convert/src/binary/base/writer/log_write_mixin_base.dart';
+import 'package:dcm_convert/src/binary/base/writer/write_buffer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 
-abstract class LogReadMixin implements LogReadMixinBase {
+abstract class LogWriteMixin implements LogWriteMixinBase {
 
   bool get isEvr;
-  ReadBuffer get rb;
+  WriteBuffer get wb;
   ParseInfo get pInfo;
-  ElementOffsets get offsets;
+  ElementOffsets get inputOffsets;
+  ElementOffsets get outputOffsets;
 
 // **** these next four are utilities for logger
   /// The current readIndex as a string.
-  String get _rrr => 'R@${rb.index.toString().padLeft(5, '0')}';
+  String get _www => 'R@${wb.index.toString().padLeft(5, '0')}';
 
-  String get rrr => '$_rrr';
+  String get www => '$_www';
 
   /// The beginning of reading something.
-  String get rbb => '> $_rrr';
+  String get wbb => '> $_www';
 
   /// In the middle of reading something.
-  String get rmm => '| $_rrr  ';
+  String get wmm => '| $_www  ';
 
   /// The end of reading something.
-  String get ree => '< $_rrr ';
+  String get wee => '< $_www ';
 
 //  String get pad => ''.padRight('$_rrr'.length);
 
-  int get remaining => rb.remaining;
+  int get remaining => wb.remaining;
 
 /*
   void _sMsg(String name, int code, int start, int vrIndex,
@@ -66,54 +67,53 @@ abstract class LogReadMixin implements LogReadMixinBase {
     log.debug(s, inc);
   }
 
-  void dbgDSReadStart(String name) => log.debug('$rbb $name');
+  void dbgDSWriteStart(String name) => log.debug('$rbb $name');
 
-  void dbgDSReadEnd(String name, Dataset ds) =>
+  void dbgDSWriteEnd(String name, Dataset ds) =>
       log.debug('$ree #$elementCount $name ${ds.info}');
 */
 
   String vlfToString(int vlf) =>
       (vlf == null) ? '' : (vlf == kUndefinedLength) ? '0xFFFFFFFF' : '$vlf';
 
-  String _startReadElement(int code, int vrIndex, int eStart, int vlf, String name) {
-    final vr = VR.lookupByIndex(vrIndex);
-    final tag = Tag.lookup(code);
-    final s = vlfToString(vlf);
-    final sb = new StringBuffer('$rbb ${dcm(code)} $vr length($s) $name');
+  String _startWriteElement(Element e, String name) {
+    final vr = VR.lookupByIndex(e.vrIndex);
+    final tag = Tag.lookup(e.code);
+    final s = vlfToString(e.vfLengthField);
+    final sb = new StringBuffer('$wbb ${dcm(e.code)} $vr length($s) $name');
     if (system.level == Level.debug2) sb.writeln('\n  $tag');
     return sb.toString();
   }
 
   @override
-  void logStartRead(int code, int vrIndex, int eStart, int vlf, String name) {
-    final s = _startReadElement(code, vrIndex, eStart, vlf, name);
+  void logStartWrite(Element e, String name) {
+    final s = _startWriteElement(e, name);
     log.debug(s);
   }
 
-  String _endReadElement(int eStart, Element e, String name, {bool ok = true}) {
-    final eEnd = eStart - rb.index;
-    assert(eEnd == eStart - rb.index);
+  String _endWriteElement(int eStart, Element e, String name, {bool ok = true}) {
+    final eEnd = eStart - wb.index;
+    assert(eEnd == eStart - wb.index);
     _doEndOfElementStats(e.code, eStart, e, ok);
-    final sb = new StringBuffer('$ree $e $name :$remaining');
+    final sb = new StringBuffer('$wee $e $name :$remaining');
     return sb.toString();
   }
 
   @override
-  void logEndRead(int eStart, Element e, String name, {bool ok = true}) {
-    final test = '$e';
-    final s = _endReadElement(eStart, e, name, ok: ok);
+  void logEndWrite(int eStart, Element e, String name, {bool ok = true}) {
+    final s = _endWriteElement(eStart, e, name, ok: ok);
     log.debug(s);
   }
 
   @override
-  void logStartSQRead(int code, int vrIndex, int eStart, int vlf, String name) {
-    final s = _startReadElement(code, vrIndex, eStart, vlf, name);
+  void logStartSQWrite(Element e, String name) {
+    final s = _startWriteElement(e, name);
     log..debug(s)..down;
   }
 
   @override
-  void logEndSQRead(int eStart, Element e, String name, {bool ok = true}) {
-    final s = _endReadElement(eStart, e, name, ok: ok);
+  void logEndSQWrite(int eStart, Element e, String name, {bool ok = true}) {
+    final s = _endWriteElement(eStart, e, name, ok: ok);
     log..up..debug(s);
   }
 
@@ -122,25 +122,25 @@ abstract class LogReadMixin implements LogReadMixinBase {
     if (ok) {
       pInfo
         ..lastElement = e
-        ..endOfLastElement = rb.index;
+        ..endOfLastElement = wb.index;
       if (e.isPrivate) pInfo.nPrivateElements++;
       if (e is SQ) {
         pInfo
-          ..endOfLastSequence = rb.index
+          ..endOfLastSequence = wb.index
           ..lastSequence = e;
       }
     } else {
       pInfo.nDuplicateElements++;
     }
-    if (offsets != null && e is! SQ) offsets.add(eStart, rb.index, e);
+    if (outputOffsets != null && e is! SQ) outputOffsets.add(eStart, wb.index, e);
   }
 
 
   // **** Below this level is all for debugging and can be commented out for
   // **** production.
 
-/* Flush at V0.9.0
-  void _showNext(int start) {
+/*
+  void showNext(int start) {
     if (isEvr) {
       _showShortEVR(start);
       _showLongEVR(start);
@@ -154,32 +154,33 @@ abstract class LogReadMixin implements LogReadMixinBase {
     }
   }
 
+
   void _showShortEVR(int start) {
-    if (rb.hasRemaining(8)) {
-      final code = rb.getCode(start);
-      final vrCode = rb.getUint16(start + 4);
+    if (wb.hasRemaining(8)) {
+      final code = wb.getCode(start);
+      final vrCode = wb.getUint16(start + 4);
       final vr = VR.lookupByCode(vrCode);
-      final vfLengthField = rb.getUint16(start + 6);
+      final vfLengthField = wb.getUint16(start + 6);
       log.debug('**** Short EVR: ${dcm(code)} $vr vlf: $vfLengthField');
     }
   }
 
   void _showLongEVR(int start) {
-    if (rb.hasRemaining(8)) {
-      final code = rb.getCode(start);
-      final vrCode = rb.getUint16(start + 4);
+    if (wb.hasRemaining(8)) {
+      final code = wb.getCode(start);
+      final vrCode = wb.getUint16(start + 4);
       final vr = VR.lookupByCode(vrCode);
-      final vfLengthField = rb.getUint32(start + 8);
+      final vfLengthField = wb.getUint32(start + 8);
       log.debug('**** Long EVR: ${dcm(code)} $vr vlf: $vfLengthField');
     }
   }
 
   void _showIVR(int start) {
-    if (rb.hasRemaining(8)) {
-      final code = rb.getCode(start);
+    if (wb.hasRemaining(8)) {
+      final code = wb.getCode(start);
       final tag = Tag.lookupByCode(code);
       if (tag != null) log.debug(tag);
-      final vfLengthField = rb.getUint16(start + 4);
+      final vfLengthField = wb.getUint16(start + 4);
       log.debug('**** IVR: ${dcm(code)} vlf: $vfLengthField');
     }
   }
@@ -188,21 +189,21 @@ abstract class LogReadMixin implements LogReadMixinBase {
   String toHadULength(int vfl) =>
       'HadULength(${(vfl == kUndefinedLength) ? 'true': 'false'})';
 
-  void showReadIndex([int index, int before = 20, int after = 28]) {
-    index ??= rb.index;
+  void showWriteIndex([int index, int before = 20, int after = 28]) {
+    index ??= wb.index;
     if (index.isOdd) {
-      rb.warn('**** Index($index) is not at even offset ADDING 1');
+      wb.warn('**** Index($index) is not at even offset ADDING 1');
       index++;
     }
 
     for (var i = index - before; i < index; i += 2) {
-      log.debug('$i:   ${hex16(rb.getUint16 (i))} - ${rb.getUint16 (i)}');
+      log.debug('$i:   ${hex16(wb.getUint16 (i))} - ${wb.getUint16 (i)}');
     }
 
-    log.debug('** ${hex16(rb.getUint16 (index))} - ${rb.getUint16 (index)}');
+    log.debug('** ${hex16(wb.getUint16 (index))} - ${wb.getUint16 (index)}');
 
     for (var i = index + 2; i < index + after; i += 2) {
-      log.debug('$i: ${hex16(rb.getUint16 (i))} - ${rb.getUint16 (i)}');
+      log.debug('$i: ${hex16(wb.getUint16 (i))} - ${wb.getUint16 (i)}');
     }
   }
 }

@@ -195,39 +195,10 @@ abstract class DcmReaderBase {
   /// _delimiter length_ field, and returns _true_.
   bool _isItemDelimiter() => _checkForDelimiter(kItemDelimitationItem32BitLE);
 
-  /// Reads a [kUndefinedLength] Sequence.
-  List<Item> readUSQ(int code, int vrIndex, int eStart, int uLength) {
-    assert(uLength == kUndefinedLength);
-    final items = <Item>[];
-    while (!_isSequenceDelimiter()) {
-      final item = readItem();
-      items.add(item);
-    }
-    return items;
-  }
-
-  /// Reads a defined [vfLength].
-  List<Item> readDSQ(int code, int vrIndex, int eStart, int vfLength) {
-    assert(vfLength != kUndefinedLength);
-    final items = <Item>[];
-    final eEnd = rb.index + vfLength;
-
-    while (rb.index < eEnd) {
-      final item = readItem();
-      items.add(item);
-    }
-    final end = rb.index;
-    assert(eEnd == end, '$eEnd == $end');
-    return items;
-  }
 
   // If VR is UN then this might be a Sequence
   bool isUNSequence(int delimiter) =>
       (delimiter == kSequenceDelimitationItem32BitLE) || (delimiter == kItem);
-
-  /// If the sequence delimiter is found at the current _read index_, reads the
-  /// _delimiter_, reads and checks the _delimiter length_ field, and returns _true_.
-  bool _isSequenceDelimiter() => _checkForDelimiter(kSequenceDelimitationItem32BitLE);
 
   // When this method is called, the [rIndex] should be at the beginning
   // of the Value Field. When it returns the [rIndex] be at the end of
@@ -243,10 +214,15 @@ abstract class DcmReaderBase {
       if (uint16 != kSequenceDelimiterLast16Bits) continue;
       break;
     }
-    _readAndCheckDelimiterLength();
+    final length = rb.uint32;
+    if (length != 0) rb.warn('Encountered non-zero delimiter length($length)');
     final endOfVF = rb.index - 8;
     return endOfVF;
   }
+
+  /// If the sequence delimiter is found at the current _read index_, reads the
+  /// _delimiter_, reads and checks the _delimiter length_ field, and returns _true_.
+  bool isSequenceDelimiter() => _checkForDelimiter(kSequenceDelimitationItem32BitLE);
 
   /// Returns true if the [target] delimiter is found. If the target
   /// delimiter is found the _read index_ is advanced to the end of the delimiter
@@ -255,7 +231,8 @@ abstract class DcmReaderBase {
     final delimiter = rb.uint32Peek;
     if (target == delimiter) {
       rb + 4;
-      _readAndCheckDelimiterLength();
+      final length = rb.uint32;
+      if (length != 0) rb.warn('Encountered non-zero delimiter length($length)');
       return true;
     }
     return false;
@@ -393,6 +370,15 @@ Failed to read FMI: "$path"\nException: $x\n'
     if (throwOnError) throw new ShortFileError('Length($rb.lengthInBytes) $path');
     return null;
   }
+
+  // **** Logging Interface ****
+  void logStartRead(int code, int vrIndex, int eStart, int vlf, String name) {}
+
+  void logEndRead(int eStart, Element e, String name, {bool ok}) {}
+
+  void logStartSQRead(int code, int vrIndex, int eStart, int vlf, String name) {}
+
+  void logEndSQRead(int eStart, Element e, String name, {bool ok = true}) {}
 }
 
 bool _isMaybeUndefinedLengthVR(int vrIndex) =>

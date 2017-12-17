@@ -61,9 +61,10 @@ class IvrWriter extends DcmWriterBase {
 
   /// Write a non-Sequence Element with a defined length in the Value Field Length field.
   void _writeIvrDefinedLength(Element e) {
+    int padChar = (e.vrIndex == kUIIndex) ? kNull : kSpace;
     assert(e.vfLengthField != kUndefinedLength);
     _writeIvrHeader(e, e.vfLength);
-    _writeValueField(e);
+    _writeValueField(e, padChar);
   }
 
   void _writeIvrMaybeUndefinedLength(Element e) =>
@@ -81,7 +82,7 @@ class IvrWriter extends DcmWriterBase {
     if (e.code == kPixelData) {
       writeEncapsulatedPixelData(e);
     } else {
-      _writeValueField(e);
+      _writeValueField(e, kNull);
     }
     wb.uint32(kSequenceDelimitationItem32BitLE);
   }
@@ -115,7 +116,7 @@ class IvrWriter extends DcmWriterBase {
       ..uint32(vfLengthField);
   }
 
-  void _writeValueField(Element e) {
+  void _writeValueField(Element e, int padChar) {
     final bytes = e.vfBytes;
     wb.bytes(bytes);
     if (bytes.length.isOdd) {

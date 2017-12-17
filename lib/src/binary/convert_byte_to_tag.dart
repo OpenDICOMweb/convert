@@ -104,7 +104,7 @@ SQ convertSQ(SQ sq) {
   final parentBDS = currentBDS;
   final parentTDS = currentTDS;
   for (var i = 0; i < sq.items.length; i++) {
-    currentBDS = sq.items[i];
+    currentBDS = sq.items.elementAt(i);
     currentTDS = new ItemTag(parentTDS, currentBDS.bytes.bd);
     tItems[i] = convertDataset(currentBDS, currentTDS);
   }

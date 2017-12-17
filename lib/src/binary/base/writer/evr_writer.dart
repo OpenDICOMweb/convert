@@ -60,11 +60,12 @@ class EvrWriter extends DcmWriterBase {
 
   /// Write an EVR Element with a short Value Length field.
   void _writeShortEvr(Element e) {
+    int padChar = (e.vrIndex == kUIIndex) ? kNull : kSpace;
     wb
       ..code(e.code)
       ..uint16(e.vrCode)
       ..uint16(e.vfLength);
-    _writeValueField(e);
+    _writeValueField(e, padChar);
   }
 
   /// Write a non-Sequence EVR Element with a long Value Length field
@@ -72,7 +73,7 @@ class EvrWriter extends DcmWriterBase {
   void _writeLongEvrDefinedLength(Element e) {
     assert(e.vfLengthField != kUndefinedLength);
     _writeEvrLongHeader(e, e.vfLength);
-    _writeValueField(e);
+    _writeValueField(e, kSpace);
   }
 
   /// Write a non-Sequence Element (OB, OW, UN) that may have an undefined length
@@ -88,7 +89,7 @@ class EvrWriter extends DcmWriterBase {
     if (e.code == kPixelData) {
       writeEncapsulatedPixelData(e);
     } else {
-      _writeValueField(e);
+      _writeValueField(e, kSpace);
     }
     wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
   }
@@ -123,12 +124,12 @@ class EvrWriter extends DcmWriterBase {
       ..uint32(vfLengthField);
   }
 
-  void _writeValueField(Element e) {
+  void _writeValueField(Element e, int padChar) {
     final bytes = e.vfBytes;
     wb.bytes(bytes);
     if (bytes.length.isOdd) {
       log.warn('**** Odd length: ${bytes.length}');
-      if (e.padChar.isNegative) return invalidVFLength(e.vfBytes.length, -1);
+   //   if (e.padChar.isNegative) return invalidVFLength(e.vfBytes.length, -1);
       wb.uint8(e.padChar);
     }
   }

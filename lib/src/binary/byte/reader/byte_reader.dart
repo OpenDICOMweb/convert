@@ -79,7 +79,7 @@ class ByteReader {
 
   bool isFmiRead = false;
 
-  ReadBuffer get rb => _evrReader.rb;
+  ReadBuffer get rb => _evrReader.wb;
   Uint8List get bytes => rb.bytes;
   ElementOffsets get offsets => _evrReader.offsets;
 

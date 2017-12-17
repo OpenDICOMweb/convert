@@ -13,7 +13,6 @@ import 'package:system/core.dart';
 import 'package:vr/vr.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/dcm_reader_base.dart';
-import 'package:dcm_convert/src/binary/base/reader/log_read_mixin_base.dart';
 import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/errors.dart';
@@ -47,7 +46,7 @@ import 'package:dcm_convert/src/errors.dart';
 ///  [Element] itself.
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
-abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
+abstract class EvrReader extends DcmReaderBase {
   @override
   bool isEvr = true;
 
@@ -103,10 +102,7 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
   int _lookupEvrVRIndex(int code, int eStart, int vrCode) {
     final vr = VR.lookupByCode(vrCode);
     if (vr == null) {
-      //    log.debug('${rb.rmm} ${dcm(code)} $eStart ${hex16(vrCode)}');
-      rb.warn('VR is Null: vrCode(${hex16(vrCode)}, $vrCode) '
-          '${dcm(code)} start: $eStart');
-//      showNext(rb.index - 4);
+      rb.warn('Null VR: vrCode(${hex16(vrCode)}, $vrCode) ${dcm(code)} start: $eStart');
     }
     return __vrToIndex(code, vr);
   }
@@ -160,13 +156,11 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
     if (vlf != kUndefinedLength) return _makeLong(code, vrIndex, eStart, vlf);
 
     // If VR is UN then this might be a Sequence
-    if (vrIndex == kUNIndex && isUNSequence(vlf)) {
-      final items = readUSQ(code, vrIndex, eStart, vlf);
-      return _makeSequence(code, vrIndex, eStart, items);
-    }
+    if (vrIndex == kUNIndex && isUNSequence(vlf))
+      return _readUSQ(code, vrIndex, eStart, vlf);
 
     final fragments = readUndefinedLength(code, eStart, vrIndex, vlf);
-    final eb = rb.makeEvrLongEBytes(eStart);
+    final eb = rb.makeIvrULengthEBytes(eStart);
     final e = (code == kPixelData)
         ? makePixelData(code, vrIndex, eb, fragments: fragments)
         : makeElement(code, vrIndex, eb);
@@ -176,24 +170,68 @@ abstract class EvrReader extends DcmReaderBase implements LogReadMixinBase {
 
   /// Read an EVR Sequence.
   @override
-  Element readSequence(int code, int vrIndex, int eStart) {
+  SQ readSequence(int code, int vrIndex, int eStart) {
     assert(vrIndex == kSQIndex);
     rb + 2;
     final vlf = rb.uint32;
     logStartSQRead(code, vrIndex, eStart, vlf, 'readEvrSequence');
-    final items = (vlf == kUndefinedLength)
-        ? readUSQ(code, vrIndex, eStart, vlf)
-        : readDSQ(code, vrIndex, eStart, vlf);
-    final e = _makeSequence(code, vrIndex, eStart, items);
-    logEndSQRead(eStart, e, 'readEvrSequence');
+    return (vlf == kUndefinedLength)
+        ? _readUSQ(code, vrIndex, eStart,vlf)
+        : _readDSQ(code, vrIndex, eStart, vlf);
+  }
+
+
+  /// Reads a [kUndefinedLength] Sequence.
+  SQ _readUSQ(int code, int vrIndex, int eStart, int vlf) {
+    assert(vrIndex == kSQIndex);
+    assert(vlf == kUndefinedLength);
+    final items = <Item>[];
+    while (!isSequenceDelimiter()) {
+      final item = readItem();
+      items.add(item);
+    }
+    final eb = rb.makeEvrULengthEBytes(eStart);
+    final e = makeSequence(code, eb, cds, items);
+    logEndSQRead(eStart, e, 'readEvrSequenceULength');
     return e;
   }
 
-  SQ _makeSequence(int code, int vrIndex, int eStart, List<Item> items) {
+  /// Reads a defined [vfl].
+  SQ _readDSQ(int code, int vrIndex, int eStart, int vfl) {
     assert(vrIndex == kSQIndex);
+    assert(vfl != kUndefinedLength);
+    final items = <Item>[];
+    final eEnd = rb.index + vfl;
+
+    while (rb.index < eEnd) {
+      final item = readItem();
+      items.add(item);
+    }
+    final end = rb.index;
+    assert(eEnd == end, '$eEnd == $end');
     final eb = rb.makeEvrLongEBytes(eStart);
-    return makeSequence(code, eb, cds, items);
+    final e = makeSequence(code, eb, cds, items);
+    logEndSQRead(eStart, e, 'readEvrSequenceDLength');
+    return e;
   }
+
+/*
+  SQ _readSequenceDLength(int code, int vrIndex, int eStart, int vlf) {
+    final items = readDSQ(code, vrIndex, eStart, vlf);
+    final eb = rb.makeEvrLongEBytes(eStart);
+    final e = makeSequence(code, eb, cds, items);
+    logEndSQRead(eStart, e, 'readEvrSequenceDLength');
+    return e;
+  }
+
+  SQ _readSequenceULength(int code, int vrIndex, int eStart, int vlf) {
+    final items = readUSQ(code, vrIndex, eStart, vlf);
+    final eb = rb.makeEvrULengthEBytes(eStart);
+    final e = makeSequence(code, eb, cds, items);
+    logEndSQRead(eStart, e, 'readEvrSequenceULength');
+    return e;
+  }
+*/
 
   /// Reads File Meta Information ([Fmi]) and returns a Map<int, Element>
   /// if any [Fmi] [Element]s were present; otherwise, returns null.

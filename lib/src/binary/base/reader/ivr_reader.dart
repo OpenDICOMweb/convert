@@ -14,12 +14,11 @@ import 'package:vr/vr.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/dcm_reader_base.dart';
 import 'package:dcm_convert/src/binary/base/reader/evr_reader.dart';
-import 'package:dcm_convert/src/binary/base/reader/log_read_mixin_base.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 
-abstract class IvrReader extends DcmReaderBase with LogReadMixinBase {
+abstract class IvrReader extends DcmReaderBase {
   @override
   final bool isEvr = false;
 
@@ -90,11 +89,8 @@ abstract class IvrReader extends DcmReaderBase with LogReadMixinBase {
     final vlf = rb.uint32;
     logStartRead(code, vrIndex, eStart, vlf, 'readMaybeUndefined');
     // If VR is UN then this might be a Sequence
-    if (vrIndex == kUNIndex && isUNSequence(vlf)) {
-      print('maybe UNSequence: $vrIndex $vlf');
-      final items = readUSQ(code, vrIndex, eStart, vlf);
-      return _makeSequence(code, vrIndex, eStart, items);
-    }
+    if (vrIndex == kUNIndex && isUNSequence(vlf))
+      return _readUSQ(code, vrIndex, eStart, vlf);
 
     if (vlf != kUndefinedLength) return _makeIvr(code, vrIndex, eStart, vlf);
 
@@ -112,19 +108,46 @@ abstract class IvrReader extends DcmReaderBase with LogReadMixinBase {
     assert(vrIndex == kSQIndex);
     final vlf = rb.uint32;
     logStartSQRead(code, vrIndex, eStart, vlf, 'readIvrSequence');
-    final items = (vlf == kUndefinedLength)
-        ? readUSQ(code, vrIndex, eStart, vlf)
-        : readDSQ(code, vrIndex, eStart, vlf);
-    final e = _makeSequence(code, vrIndex, eStart, items);
-    logEndSQRead(eStart, e, 'readIvrSequence');
+    return (vlf == kUndefinedLength)
+        ? _readUSQ(code, vrIndex, eStart, vlf)
+        : _readDSQ(code, vrIndex, eStart, vlf);
+  }
+
+  /// Reads a [kUndefinedLength] Sequence.
+  SQ _readUSQ(int code, int vrIndex, int eStart, int vlf) {
+    assert(vrIndex == kSQIndex);
+    assert(vlf == kUndefinedLength);
+    final items = <Item>[];
+    //TODO: What the performance cost of not integrating isSequenceDelimiter?
+    while (!isSequenceDelimiter()) {
+      final item = readItem();
+      items.add(item);
+    }
+    final eb = rb.makeIvrULengthEBytes(eStart);
+    final e = makeSequence(code, eb, cds, items);
+    logEndSQRead(eStart, e, 'readEvrSequenceULength');
     return e;
   }
 
-  SQ _makeSequence(int code, int vrIndex, int eStart, List<Item> items) {
+  /// Reads a defined [vfl].
+  SQ _readDSQ(int code, int vrIndex, int eStart, int vfl) {
     assert(vrIndex == kSQIndex);
+    assert(vfl != kUndefinedLength);
+    final items = <Item>[];
+    final eEnd = rb.index + vfl;
+
+    while (rb.index < eEnd) {
+      final item = readItem();
+      items.add(item);
+    }
+    final end = rb.index;
+    assert(eEnd == end, '$eEnd == $end');
     final eb = rb.makeIvrEBytes(eStart);
-    return makeSequence(code, eb, cds, items);
+    final e = makeSequence(code, eb, cds, items);
+    logEndSQRead(eStart, e, 'readEvrSequenceDLength');
+    return e;
   }
+
 }
 
 bool _isSequenceVR(int vrIndex) => vrIndex == 0;
