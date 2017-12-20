@@ -75,7 +75,7 @@ abstract class IvrReader extends DcmReaderBase {
   Element _makeIvr(int code, int vrIndex, int eStart, int vlf) {
     assert(vlf != kUndefinedLength);
     rb + vlf;
-    final eb = rb.makeIvrEBytes(eStart);
+    final eb = rb.makeIvrEBytes(eStart, vrIndex);
     final e = (code == kPixelData)
         ? makePixelData(code, vrIndex, eb)
         : makeElement(code, vrIndex, eb);
@@ -95,7 +95,7 @@ abstract class IvrReader extends DcmReaderBase {
     if (vlf != kUndefinedLength) return _makeIvr(code, vrIndex, eStart, vlf);
 
     final fragments = readUndefinedLength(code, eStart, vrIndex, vlf);
-    final eb = rb.makeIvrEBytes(eStart);
+    final eb = rb.makeIvrEBytes(eStart, vrIndex);
     final e = (code == kPixelData)
         ? makePixelData(code, vrIndex, eb, fragments: fragments)
         : makeElement(code, vrIndex, eb);
@@ -123,7 +123,7 @@ abstract class IvrReader extends DcmReaderBase {
       final item = readItem();
       items.add(item);
     }
-    final eb = rb.makeIvrULengthEBytes(eStart);
+    final eb = rb.makeIvrULengthEBytes(eStart, vrIndex);
     final e = makeSequence(code, eb, cds, items);
     logEndSQRead(eStart, e, 'readEvrSequenceULength');
     return e;
@@ -142,7 +142,7 @@ abstract class IvrReader extends DcmReaderBase {
     }
     final end = rb.index;
     assert(eEnd == end, '$eEnd == $end');
-    final eb = rb.makeIvrEBytes(eStart);
+    final eb = rb.makeIvrEBytes(eStart, vrIndex);
     final e = makeSequence(code, eb, cds, items);
     logEndSQRead(eStart, e, 'readEvrSequenceDLength');
     return e;

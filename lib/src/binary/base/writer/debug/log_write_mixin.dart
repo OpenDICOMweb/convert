@@ -139,7 +139,7 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
   String vlfToString(int vlf) =>
       (vlf == null) ? '' : (vlf == kUndefinedLength) ? '0xFFFFFFFF' : '$vlf';
 
-  String _startWriteElement(Element e, String name) {
+  String _startWriteElement(int eStart, Element e, String name) {
     final vr = e.vr;
     final tag = e.tag;
     final code = e.code;
@@ -150,8 +150,8 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
   }
 
   @override
-  void logStartWrite(Element e, String name) {
-    final s = _startWriteElement(e, name);
+  void logStartWrite(int eStart, Element e, String name) {
+    final s = _startWriteElement(eStart, e, name);
     log.debug(s);
   }
 
@@ -169,8 +169,8 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
   }
 
   @override
-  void logStartSQWrite(Element e, String name) {
-    final s = _startWriteElement(e, name);
+  void logStartSQWrite(int eStart, Element e, String name) {
+    final s = _startWriteElement(eStart, e, name);
     log
       ..debug(s)
       ..down;

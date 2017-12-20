@@ -43,9 +43,12 @@ bool byteReadWriteFileChecked(String path,
       // Just write bytes not file
       writer = new ByteWriter(rds0, inputOffsets: reader0.offsets);
     } else {
-      writer = new ByteWriter.toPath(rds0, outPath);
+      writer = new ByteWriter.toPath(rds0, outPath, inputOffsets: reader0.offsets);
     }
-    final bytes1 = writer.writeRootDataset(rds0);
+    final bytes1 = writer.writeRootDataset();
+    log.debug('Bytes written: offset(${bytes1.offsetInBytes}) '
+                  'length(${bytes1.lengthInBytes})\n');
+
 
     ByteReader reader1;
     if (fast) {

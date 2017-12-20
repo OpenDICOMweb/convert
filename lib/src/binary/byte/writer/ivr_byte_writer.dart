@@ -9,6 +9,7 @@ import 'package:dataset/tag_dataset.dart';
 
 import 'package:dcm_convert/src/binary/base/writer/ivr_writer.dart';
 import 'package:dcm_convert/src/binary/base/writer/log_write_mixin_base.dart';
+import 'package:dcm_convert/src/binary/byte/writer/evr_byte_writer.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
@@ -22,6 +23,5 @@ class IvrByteWriter extends IvrWriter with LogWriteMixinBase {
       RootDataset rds, EncodingParameters eParams, int minBDLength, bool reUseBD)
       : super(rds, eParams, minBDLength, reUseBD);
 
-  IvrByteWriter.from(IvrByteWriter writer)
-      : super(writer.rds, writer.eParams, writer.minBDLength, writer.reUseBD);
+  IvrByteWriter.from(EvrByteWriter writer) : super.from(writer);
 }

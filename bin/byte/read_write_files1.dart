@@ -62,7 +62,7 @@ bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
   log..info0(rds0.pInfo)..info0(rds0.info);
 
   final writer = new ByteWriter(rds0);
-  final bytes1 = writer.writeRootDataset(rds0);
+  final bytes1 = writer.writeRootDataset();
 
 /*  List<int> elementIndex1 = writer.elementIndex.sublist(0, writer.nthElement);
   if (reader.nthElement != writer.nthElement)

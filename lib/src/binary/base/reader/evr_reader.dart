@@ -113,7 +113,7 @@ abstract class EvrReader extends DcmReaderBase {
     final vlf = rb.uint16;
     rb + vlf;
     logStartRead(code, vrIndex, eStart, vlf, 'readEvrShort');
-    final eb = rb.makeEvrShortEBytes(eStart);
+    final eb = rb.makeEvrShortEBytes(eStart, vrIndex);
     final e = makeElement(code, vrIndex, eb);
     logEndRead(eStart, e, 'readEvrShort');
     return e;
@@ -133,7 +133,7 @@ abstract class EvrReader extends DcmReaderBase {
   Element _makeLong(int code, int vrIndex, int eStart, int vlf) {
     assert(vlf != kUndefinedLength);
     rb + vlf;
-    final eb = rb.makeEvrLongEBytes(eStart);
+    final eb = rb.makeEvrLongEBytes(eStart, vrIndex);
     final e = (code == kPixelData)
         ? makePixelData(code, vrIndex, eb)
         : makeElement(code, vrIndex, eb);
@@ -160,7 +160,7 @@ abstract class EvrReader extends DcmReaderBase {
       return _readUSQ(code, vrIndex, eStart, vlf);
 
     final fragments = readUndefinedLength(code, eStart, vrIndex, vlf);
-    final eb = rb.makeIvrULengthEBytes(eStart);
+    final eb = rb.makeIvrULengthEBytes(eStart, vrIndex);
     final e = (code == kPixelData)
         ? makePixelData(code, vrIndex, eb, fragments: fragments)
         : makeElement(code, vrIndex, eb);
@@ -176,10 +176,9 @@ abstract class EvrReader extends DcmReaderBase {
     final vlf = rb.uint32;
     logStartSQRead(code, vrIndex, eStart, vlf, 'readEvrSequence');
     return (vlf == kUndefinedLength)
-        ? _readUSQ(code, vrIndex, eStart,vlf)
+        ? _readUSQ(code, vrIndex, eStart, vlf)
         : _readDSQ(code, vrIndex, eStart, vlf);
   }
-
 
   /// Reads a [kUndefinedLength] Sequence.
   SQ _readUSQ(int code, int vrIndex, int eStart, int vlf) {
@@ -190,7 +189,7 @@ abstract class EvrReader extends DcmReaderBase {
       final item = readItem();
       items.add(item);
     }
-    final eb = rb.makeEvrULengthEBytes(eStart);
+    final eb = rb.makeEvrULengthEBytes(eStart, vrIndex);
     final e = makeSequence(code, eb, cds, items);
     logEndSQRead(eStart, e, 'readEvrSequenceULength');
     return e;
@@ -209,7 +208,7 @@ abstract class EvrReader extends DcmReaderBase {
     }
     final end = rb.index;
     assert(eEnd == end, '$eEnd == $end');
-    final eb = rb.makeEvrLongEBytes(eStart);
+    final eb = rb.makeEvrLongEBytes(eStart, vrIndex);
     final e = makeSequence(code, eb, cds, items);
     logEndSQRead(eStart, e, 'readEvrSequenceDLength');
     return e;
@@ -236,6 +235,7 @@ abstract class EvrReader extends DcmReaderBase {
   /// Reads File Meta Information ([Fmi]) and returns a Map<int, Element>
   /// if any [Fmi] [Element]s were present; otherwise, returns null.
   ByteData _readFmi() {
+    rds.preamble = rb.toByteData(0, 132);
     if (!_readPrefix(rb)) {
       rb.index = 0;
       return null;

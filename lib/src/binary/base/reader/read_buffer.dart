@@ -10,6 +10,7 @@ import 'package:element/element.dart';
 import 'package:system/core.dart';
 
 import 'package:dcm_convert/src/binary/base/byte_list.dart';
+import 'package:dcm_convert/src/binary/base/padding_chars.dart';
 
 class ReadBuffer extends ByteList {
   /// The underlying data buffer.
@@ -172,12 +173,30 @@ class ReadBuffer extends ByteList {
     return v;
   }
 
+  // If the vr has a padding char and if padding is present remove it.
+  int _getLength(int eStart, int vrIndex) {
+    final padChar = paddingChar(vrIndex);
+    var length = _index - eStart;
+    //TODO: need more context
+    if (length.isOdd) log.warn('Value Field with odd length: "s"');
+    if (padChar >= 0) {
+      final char = bd.getUint8(_index - 1);
+      if (char == kSpace || char == kNull) {
+        length--;
+        if (char != padChar) log.warn(
+            '** Warning: Invalid Padding Char($char) should be $padChar');
+      }
+    }
+    return length;
+  }
+
   /// Returns [EBytes] for an [EvrShort] [Element]. [eStart] is the index
   /// of the first byte of _this_ [EBytes], and [index] must be the index
   /// of the byte after the last byte of the [Element]. [EvrShort] [Element]s
   /// always have a defined length.
-  EBytes makeEvrShortEBytes(int eStart) {
-    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, _index - eStart);
+  EBytes  makeEvrShortEBytes(int eStart, int vrIndex) {
+    final length = _getLength(eStart, vrIndex);
+    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, length);
     return EvrShort.make(ebd);
   }
 
@@ -185,8 +204,9 @@ class ReadBuffer extends ByteList {
   /// of the first byte of _this_ [EBytes], and [index] must be the index
   /// of the byte after the last byte of the [Element]. [EvrLong] [Element]s
   /// MUST always have a defined length.
-  EBytes makeEvrLongEBytes(int eStart) {
-    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, _index - eStart);
+  EBytes makeEvrLongEBytes(int eStart, int vrIndex) {
+    final length = _getLength(eStart, vrIndex);
+    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, length);
     return EvrLong.make(ebd);
   }
 
@@ -195,8 +215,9 @@ class ReadBuffer extends ByteList {
   /// [index] must be the index of the byte after the last byte of the [Element].
   /// [EvrLong] [Element]s MUST always have kUndefinedLength in the Value Field
   /// length field.
-  EBytes makeEvrULengthEBytes(int eStart) {
-    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, _index - eStart);
+  EBytes makeEvrULengthEBytes(int eStart, int vrIndex) {
+    final length = _getLength(eStart, vrIndex);
+    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, length);
     return EvrULength.make(ebd);
   }
 
@@ -204,8 +225,9 @@ class ReadBuffer extends ByteList {
   /// the index of the first byte of _this_ [EBytes], and [index] must be the index
   /// of the byte after the last byte of the [Element]. [Ivr] [Element]s MUST always
   /// have a defined length.
-  EBytes makeIvrEBytes(int eStart) {
-    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, _index - eStart);
+  EBytes makeIvrEBytes(int eStart, int vrIndex) {
+    final length = _getLength(eStart, vrIndex);
+    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, length);
     return Ivr.make(ebd);
   }
 
@@ -214,8 +236,9 @@ class ReadBuffer extends ByteList {
   /// [index] must be the index of the byte after the last byte of the [Element].
   /// [EvrLong] [Element]s MUST always have kUndefinedLength in the Value Field
   /// length field.
-  EBytes makeIvrULengthEBytes(int eStart) {
-    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, _index - eStart);
+  EBytes makeIvrULengthEBytes(int eStart, int vrIndex) {
+    final length = _getLength(eStart, vrIndex);
+    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, length);
     return EvrULength.make(ebd);
   }
 

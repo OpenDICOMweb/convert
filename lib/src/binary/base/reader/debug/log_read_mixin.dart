@@ -79,7 +79,7 @@ abstract class LogReadMixin implements LogReadMixinBase {
     final vr = VR.lookupByIndex(vrIndex);
     final tag = Tag.lookup(code);
     final s = vlfToString(vlf);
-    final sb = new StringBuffer('$rbb ${dcm(code)} $vr length($s) $name');
+    final sb = new StringBuffer('> R@$eStart ${dcm(code)} $vr length($s) $name');
     if (system.level == Level.debug2) sb.writeln('\n  $tag');
     return sb.toString();
   }
@@ -91,16 +91,15 @@ abstract class LogReadMixin implements LogReadMixinBase {
   }
 
   String _endReadElement(int eStart, Element e, String name, {bool ok = true}) {
-    final eEnd = eStart - rb.index;
-    assert(eEnd == eStart - rb.index);
+    assert(rb.index.isEven);
+    final eEnd = rb.index;
     _doEndOfElementStats(e.code, eStart, e, ok);
-    final sb = new StringBuffer('$ree $e $name :$remaining');
+    final sb = new StringBuffer('< R@$eEnd $e $name :$remaining');
     return sb.toString();
   }
 
   @override
   void logEndRead(int eStart, Element e, String name, {bool ok = true}) {
-    final test = '$e';
     final s = _endReadElement(eStart, e, name, ok: ok);
     log.debug(s);
   }

@@ -16,11 +16,11 @@ import 'package:element/element.dart';
 
 abstract class LogWriteMixinBase {
 
-  void logStartWrite(Element e, String name) {}
+  void logStartWrite(int eStart, Element e, String name) {}
 
   void logEndWrite(int eStart, Element e, String name, {bool ok = true}) {}
 
-  void logStartSQWrite(Element e, String name) {}
+  void logStartSQWrite(int eStart, Element e, String name) {}
 
   void logEndSQWrite(int eStart, Element e, String name, {bool ok = true}) {}
 }

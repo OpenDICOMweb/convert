@@ -61,11 +61,13 @@ class IvrWriter extends DcmWriterBase {
 
   /// Write a non-Sequence Element with a defined length in the Value Field Length field.
   void _writeIvrDefinedLength(Element e) {
-    int padChar = (e.vrIndex == kUIIndex) ? kNull : kSpace;
     assert(e.vfLengthField != kUndefinedLength);
     _writeIvrHeader(e, e.vfLength);
-    _writeValueField(e, padChar);
+    _writeValueField(e, _getPadChar(e));
   }
+
+  int _getPadChar(Element e) =>
+      (e is StringBase) ? (e.vrIndex == kUIIndex) ? kNull : kSpace : kNull;
 
   void _writeIvrMaybeUndefinedLength(Element e) =>
       (e.hadULength && !eParams.doConvertUndefinedLengths)

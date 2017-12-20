@@ -11,6 +11,7 @@ import 'package:dataset/byte_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
+import 'package:dcm_convert/src/binary/base/reader/evr_reader.dart';
 import 'package:dcm_convert/src/binary/byte/reader/evr_byte_reader.dart';
 import 'package:dcm_convert/src/binary/byte/reader/evr_byte_log_reader.dart';
 import 'package:dcm_convert/src/binary/byte/reader/ivr_byte_reader.dart';
@@ -29,7 +30,7 @@ class ByteReader {
   final bool doLogging;
   final bool showStats;
   final RootDatasetByte rds;
-  final dynamic _evrReader;
+  final EvrReader _evrReader;
   IvrByteReader _ivrReader;
 
   /// Creates a new [ByteReader], which is decoder for Binary DICOM
@@ -59,7 +60,7 @@ class ByteReader {
             ? new EvrByteLogReader(bd, rds,
                 path: path, dParams: dParams, reUseBD: reUseBD)
             : new EvrByteReader(bd, new RootDatasetByte(bd, path: path),
-                path: path, dParams: dParams, reUseBD: reUseBD){
+                path: path, dParams: dParams, reUseBD: reUseBD) {
     print('EvrReader: $rds');
   }
 
@@ -79,7 +80,7 @@ class ByteReader {
 
   bool isFmiRead = false;
 
-  ReadBuffer get rb => _evrReader.wb;
+  ReadBuffer get rb => _evrReader.rb;
   Uint8List get bytes => rb.bytes;
   ElementOffsets get offsets => _evrReader.offsets;
 

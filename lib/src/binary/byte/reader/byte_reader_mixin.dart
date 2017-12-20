@@ -25,7 +25,7 @@ abstract class ByteReaderMixin implements DcmReaderBase {
 
   @override
   Element makePixelData(int code, int vrIndex, EBytes eb, {VFFragments fragments}) =>
-      makeBEPixelDataFromEBytes(eb, vrIndex);
+      makeBEPixelDataFromEBytes(eb, vrIndex, rds.transferSyntax, fragments);
 
   /// Returns a new Sequence ([SQ]).
   @override

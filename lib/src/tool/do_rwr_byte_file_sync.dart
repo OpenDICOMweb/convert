@@ -61,7 +61,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       writer = new ByteWriter.toPath(rds0, outPath);
     }
-    final bytes1 = writer.writeRootDataset(rds0);
+    final bytes1 = writer.writeRootDataset();
     log.debug('$pad    Encoded ${bytes1.length} bytes');
 
     if (noisy) {

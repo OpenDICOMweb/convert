@@ -76,26 +76,26 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
   String vlfToString(int vlf) =>
       (vlf == null) ? '' : (vlf == kUndefinedLength) ? '0xFFFFFFFF' : '$vlf';
 
-  String _startWriteElement(Element e, String name) {
+  String _startWriteElement(int eStart, Element e, String name) {
     final vr = VR.lookupByIndex(e.vrIndex);
     final tag = Tag.lookup(e.code);
     final s = vlfToString(e.vfLengthField);
-    final sb = new StringBuffer('$wbb ${dcm(e.code)} $vr length($s) $name');
+    final sb = new StringBuffer('> W$eStart ${dcm(e.code)} $vr length($s) $name');
     if (system.level == Level.debug2) sb.writeln('\n  $tag');
     return sb.toString();
   }
 
   @override
-  void logStartWrite(Element e, String name) {
-    final s = _startWriteElement(e, name);
+  void logStartWrite(int eStart, Element e, String name) {
+    final s = _startWriteElement(eStart, e, name);
     log.debug(s);
   }
 
   String _endWriteElement(int eStart, Element e, String name, {bool ok = true}) {
-    final eEnd = eStart - wb.index;
-    assert(eEnd == eStart - wb.index);
+    final eEnd = wb.index;
+    assert(wb.index.isEven);
     _doEndOfElementStats(e.code, eStart, e, ok);
-    final sb = new StringBuffer('$wee $e $name :$remaining');
+    final sb = new StringBuffer('> W$eEnd $e $name :$remaining');
     return sb.toString();
   }
 
@@ -106,8 +106,8 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
   }
 
   @override
-  void logStartSQWrite(Element e, String name) {
-    final s = _startWriteElement(e, name);
+  void logStartSQWrite(int eStart, Element e, String name) {
+    final s = _startWriteElement(eStart, e, name);
     log..debug(s)..down;
   }
 

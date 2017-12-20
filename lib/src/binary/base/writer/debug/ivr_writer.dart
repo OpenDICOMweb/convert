@@ -36,7 +36,7 @@ class LogIvrWriter extends IvrWriter with LogWriteMixin {
 
   @override
   void writeElement(Element e) {
-    logStartWrite(e, 'writeIvrElement');
+    logStartWrite(wb.index, e, 'writeIvrElement');
     elementCount++;
     final eStart = wb.wIndex;
     var vrIndex = e.vrIndex;

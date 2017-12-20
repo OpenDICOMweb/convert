@@ -19,8 +19,12 @@ import 'package:dataset/tag_dataset.dart';
 import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/src/binary/base/writer/dcm_writer_base.dart';
+import 'package:dcm_convert/src/binary/base/writer/evr_writer.dart';
+import 'package:dcm_convert/src/binary/base/writer/ivr_writer.dart';
 import 'package:dcm_convert/src/binary/byte/writer/evr_byte_writer.dart';
+import 'package:dcm_convert/src/binary/byte/writer/evr_byte_log_writer.dart';
 import 'package:dcm_convert/src/binary/byte/writer/ivr_byte_writer.dart';
+import 'package:dcm_convert/src/binary/byte/writer/ivr_byte_log_writer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 import 'package:dcm_convert/src/io_utils.dart';
@@ -39,8 +43,8 @@ class ByteWriter {
   final bool reUseBD;
   final bool doLogging;
   final bool showStats;
-  final EvrByteWriter _evrWriter;
-  IvrByteWriter _ivrWriter;
+  final EvrWriter _evrWriter;
+  IvrWriter _ivrWriter;
   ElementOffsets outputOffsets;
 
   /// Creates a new [ByteWriter] where index = 0.
@@ -52,9 +56,13 @@ class ByteWriter {
       this.minBDLength = DcmWriterBase.defaultBufferLength,
       this.inputOffsets,
       this.reUseBD = true,
-      this.doLogging = false,
+      this.doLogging = true,
       this.showStats = false})
-      : _evrWriter = new EvrByteWriter(rds, eParams, minBDLength, reUseBD);
+      : _evrWriter = (doLogging)
+            ? new EvrByteLogWriter(rds, eParams, minBDLength, reUseBD, inputOffsets)
+            : new EvrByteWriter(rds, eParams, minBDLength, reUseBD) {
+    print('EvrWriter: $_evrWriter');
+  }
 
   /// Writes the [RootDatasetByte] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
@@ -65,7 +73,7 @@ class ByteWriter {
       int minBDLength,
       ElementOffsets inputOffsets,
       bool reUseBD = false,
-      bool doLogging = false,
+      bool doLogging = true,
       bool showStats = false}) {
     checkFile(file, overwrite: overwrite);
     return new ByteWriter(ds,
@@ -90,7 +98,7 @@ class ByteWriter {
       int minBDLength,
       ElementOffsets inputOffsets,
       bool reUseBD = false,
-      bool doLogging = false,
+      bool doLogging = true,
       bool showStats = false}) {
     checkPath(path);
     return new ByteWriter(ds,
@@ -105,17 +113,18 @@ class ByteWriter {
         showStats: showStats);
   }
 
-  /// Writes a [RootDatasetByte], and stores it in [rds], and returns it.
   Uint8List writeFmi() => _evrWriter.writeFmi();
 
   /// Reads a [RootDatasetByte], and stores it in [rds], and returns it.
-  Uint8List writeRootDataset(RootDataset rds) {
-    if (!_evrWriter.isFmiWritten) writeFmi();
+  Uint8List writeRootDataset() {
+    if (!_evrWriter.isFmiWritten) _evrWriter.writeFmi();
 
     if (_evrWriter.rds.transferSyntax.isEvr) {
       return _evrWriter.writeRootDataset(rds);
     } else {
-      _ivrWriter = new IvrByteWriter(rds, eParams, minBDLength, reUseBD);
+      _ivrWriter = (doLogging)
+                   ? new IvrByteLogWriter.from(_evrWriter)
+                   : new IvrByteWriter.from(_evrWriter);
       return _ivrWriter.writeRootDataset(rds);
     }
   }
@@ -129,7 +138,7 @@ class ByteWriter {
       int minBDLength,
       ElementOffsets inputOffsets,
       bool reUseBD = false,
-      bool doLogging = false,
+      bool doLogging = true,
       bool showStats = false}) {
     checkRootDataset(rds);
     final writer = new ByteWriter(rds,
@@ -142,7 +151,7 @@ class ByteWriter {
         reUseBD: reUseBD,
         doLogging: doLogging,
         showStats: showStats);
-    return writer.writeRootDataset(rds);
+    return writer.writeRootDataset();
   }
 
   /// Writes the [RootDatasetByte] to a [Uint8List], and then writes the
@@ -154,7 +163,7 @@ class ByteWriter {
       int minBDLength,
       ElementOffsets inputOffsets,
       bool reUseBD = false,
-      bool doLogging = false,
+      bool doLogging = true,
       bool showStats = false}) async {
     checkFile(file, overwrite: overwrite);
     final bytes = writeBytes(ds,
@@ -181,7 +190,7 @@ class ByteWriter {
       int minBDLength,
       ElementOffsets inputOffsets,
       bool reUseBD = false,
-      bool doLogging = false,
+      bool doLogging = true,
       bool showStats = false}) {
     checkPath(path);
     return writeFile(ds, new File(path),

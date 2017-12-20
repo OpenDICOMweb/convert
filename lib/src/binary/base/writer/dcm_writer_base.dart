@@ -101,7 +101,7 @@ abstract class DcmWriterBase {
   Uint8List writeRootDataset(RootDataset rds) {
     final dsStart = wb.index;
     _writeDefinedLengthDataset(rds);
-    return wb.toUint8List(dsStart, wb.index - dsStart);
+    return wb.toUint8List(0, wb.index - dsStart);
   }
 
   void writeDefinedLengthDataset(Item item) => _writeDefinedLengthDataset(item);
