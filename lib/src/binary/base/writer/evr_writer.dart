@@ -12,8 +12,8 @@ import 'package:system/core.dart';
 import 'package:uid/uid.dart';
 import 'package:vr/vr.dart';
 
-import 'package:dcm_convert/src/binary/base/writer/dcm_writer_base.dart';
 import 'package:dcm_convert/src/binary/base/padding_chars.dart';
+import 'package:dcm_convert/src/binary/base/writer/dcm_writer_base.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
@@ -240,9 +240,11 @@ class EvrWriter extends DcmWriterBase {
     return true;
   }
 
+/* Flush if not used
   void writePrivateInformation(Uid uid, ByteData privateInfo) {
     wb.ascii(uid.asString);
   }
+*/
 
   // **** Logging Interface ****
   void logStartWrite(int eStart, Element e, String name) {}
@@ -267,5 +269,3 @@ bool _isLongVR(int vrIndex) =>
 
 bool _isShortVR(int vrIndex) =>
     vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
-
-

@@ -9,6 +9,7 @@ import 'package:element/element.dart';
 import 'package:system/core.dart';
 import 'package:vr/vr.dart';
 
+import 'package:dcm_convert/src/binary/base/padding_chars.dart';
 import 'package:dcm_convert/src/binary/base/writer/dcm_writer_base.dart';
 import 'package:dcm_convert/src/binary/base/writer/evr_writer.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
@@ -122,8 +123,12 @@ class IvrWriter extends DcmWriterBase {
     final bytes = e.vfBytes;
     wb.bytes(bytes);
     if (bytes.length.isOdd) {
-      log.warn('**** Odd length: ${bytes.length}');
-      if (e.padChar.isNegative) return invalidVFLength(e.vfBytes.length, -1);
+      log.debug('Odd length VF: ${bytes.length}');
+      final padChar = paddingChar(e.vrIndex);
+      if (padChar.isNegative) {
+        wb.error('Writing padding to a non-padded VR: $e');
+        invalidVFLength(e.vfBytes.length, -1);
+      }
       wb.uint8(e.padChar);
     }
   }

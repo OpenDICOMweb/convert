@@ -10,6 +10,7 @@ import 'dart:typed_data';
 import 'package:system/core.dart';
 
 import 'package:dcm_convert/src/binary/base/byte_list.dart';
+import 'package:dcm_convert/src/binary/base/padding_chars.dart';
 
 class WriteBuffer extends ByteList {
   /// The underlying data buffer.
@@ -139,6 +140,7 @@ class WriteBuffer extends ByteList {
     _wIndex = _wIndex + length;
   }
 
+  /*
   /// Writes [bytes], which contains Code Units to the output [bd],
   /// ensuring that an even number of bytes are written, by adding
   /// a padding character if necessary.
@@ -156,6 +158,7 @@ class WriteBuffer extends ByteList {
 
   /// Writes an [UTF8] [String] to the output [bd].
   void utf8(String s, [int offset = 0, int limit]) => _writeVF(UTF8.encode(s), kSpace);
+*/
 
   ByteData bdView([int start = 0, int end]) {
     final offset = _getOffset(start, length);
