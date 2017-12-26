@@ -51,9 +51,9 @@ void main() {
 
   // Compare [Dataset]s
   if (reader0.offsets == writer.outputOffsets) {
-    log.info0('ElementOffsetss are identical.');
+    log.info0('ElementOffsets are identical.');
   } else {
-    log.info0('ElementOffsetss are different!');
+    log.info0('ElementOffsets are different!');
   }
 
   // Compare [Dataset]s

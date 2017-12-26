@@ -37,11 +37,11 @@ class IvrWriter extends DcmWriterBase {
     }
 
     if (_isIvrDefinedLengthVR(vrIndex)) {
-      _writeIvrDefinedLength(e);
+      _writeIvrDefinedLength(e, vrIndex);
     } else if (_isSequenceVR(vrIndex)) {
-      _writeIvrSQ(e);
+      _writeIvrSQ(e, vrIndex);
     } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
-      _writeIvrMaybeUndefinedLength(e);
+      _writeIvrMaybeUndefinedLength(e, vrIndex);
 //    } else if (_isSpecialVR(vrIndex)) {
 //      _writeIvrMaybeUndefined(e);
     } else {
@@ -58,10 +58,11 @@ class IvrWriter extends DcmWriterBase {
 */
   }
 
-  void writeIvrDefinedLength(Element e) => _writeIvrDefinedLength(e);
+  void writeIvrDefinedLength(Element e, int vrIndex) =>
+      _writeIvrDefinedLength(e, vrIndex);
 
   /// Write a non-Sequence Element with a defined length in the Value Field Length field.
-  void _writeIvrDefinedLength(Element e) {
+  void _writeIvrDefinedLength(Element e, int vrIndex) {
     assert(e.vfLengthField != kUndefinedLength);
     _writeIvrHeader(e, e.vfLength);
     _writeValueField(e, _getPadChar(e));
@@ -70,16 +71,17 @@ class IvrWriter extends DcmWriterBase {
   int _getPadChar(Element e) =>
       (e is StringBase) ? (e.vrIndex == kUIIndex) ? kNull : kSpace : kNull;
 
-  void _writeIvrMaybeUndefinedLength(Element e) =>
+  void _writeIvrMaybeUndefinedLength(Element e, int vrIndex) =>
       (e.hadULength && !eParams.doConvertUndefinedLengths)
-          ? _writeIvrUndefinedLength(e)
-          : _writeIvrDefinedLength(e);
+          ? _writeIvrUndefinedLength(e, vrIndex)
+          : _writeIvrDefinedLength(e, vrIndex);
 
-  void writeIvrUndefinedLength(Element e) => _writeIvrUndefinedLength(e);
+  void writeIvrUndefinedLength(Element e, int vrIndex) =>
+      _writeIvrUndefinedLength(e, vrIndex);
 
   /// Write a non-Sequence Element with a Value Field Length field value of
   /// kUndefinedLength.
-  void _writeIvrUndefinedLength(Element e) {
+  void _writeIvrUndefinedLength(Element e, int vrIndex) {
     assert(e.vfLengthField == kUndefinedLength);
     _writeIvrHeader(e, kUndefinedLength);
     if (e.code == kPixelData) {
@@ -90,13 +92,14 @@ class IvrWriter extends DcmWriterBase {
     wb.uint32(kSequenceDelimitationItem32BitLE);
   }
 
-  void _writeIvrSQ(SQ e) => (e.hadULength && !eParams.doConvertUndefinedLengths)
-      ? _writeIvrSQUndefinedLength(e)
-      : _writeIvrSQDefinedLength(e);
+  void _writeIvrSQ(SQ e, int vrIndex) =>
+      (e.hadULength && !eParams.doConvertUndefinedLengths)
+          ? _writeIvrSQUndefinedLength(e, vrIndex)
+          : _writeIvrSQDefinedLength(e, vrIndex);
 
-  void writeIvrSQDefinedLength(SQ e) => _writeIvrSQDefinedLength(e);
+  void writeIvrSQDefinedLength(SQ e, int vrIndex) => _writeIvrSQDefinedLength(e, vrIndex);
 
-  void _writeIvrSQDefinedLength(SQ e) {
+  void _writeIvrSQDefinedLength(SQ e, int vrIndex) {
     final eStart = wb.wIndex;
     _writeIvrHeader(e, e.vfLength);
     final vlfOffset = wb.wIndex - 4;
@@ -105,9 +108,10 @@ class IvrWriter extends DcmWriterBase {
     wb.setUint32(vlfOffset, vfLength);
   }
 
-  void writeIvrSQUndefinedLength(SQ e) => _writeIvrSQUndefinedLength(e);
+  void writeIvrSQUndefinedLength(SQ e, int vrIndex) =>
+      _writeIvrSQUndefinedLength(e, vrIndex);
 
-  void _writeIvrSQUndefinedLength(SQ e) {
+  void _writeIvrSQUndefinedLength(SQ e, int vrIndex) {
     _writeIvrHeader(e, kUndefinedLength);
     writeItems(e.items);
     wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);

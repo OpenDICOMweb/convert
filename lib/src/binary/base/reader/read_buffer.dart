@@ -176,7 +176,7 @@ class ReadBuffer extends ByteList {
   // If the vr has a padding char and if padding is present remove it.
   int _getLength(int eStart, int vrIndex) {
     var length = _index - eStart;
-    if (length.isOdd) log.warn('Value Field with odd length: "s"');
+    if (length.isOdd) log.warn('Value Field with odd length: $length');
     final padChar = paddingChar(vrIndex);
     if (padChar >= 0) {
       final char = bd.getUint8(_index - 1);

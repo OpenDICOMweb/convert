@@ -70,19 +70,19 @@ Element convertElement(Element be) {
   if (be is SQbyte) {
     te = convertSQ(be);
   } else if (be.code == kPixelData) {
-    te = makeTagElementFromEBytes(be.eBytes, be.vrIndex);
+    te = TagElement.from(be);
     log.info0('PixelData\n  $be\n  $te');
   } else if (be is ByteElement) {
-    te = makeTagElementFromEBytes(be.eBytes);
+    te = TagElement.from(be);
   } else if (be is PrivateCreator) {
     if (be.vr != VR.kLO)
       _warn(be.code, 'Private Creator e.vr(${be.vr}) should be VR.kLO');
     if (vrCode != VR.kLO.code) throw 'Invalid Tag VR: ${tag.vr} should be VR.kLO';
     assert(tag is PCTag && tag.name == be.asString);
-    te = makeTagElementFromEBytes(be.eBytes);
+    te = TagElement.from(be);
     pcElements[be.asString] = te;
   } else if (tag is PDTag) {
-    te = makeTagElementFromEBytes(be.eBytes);
+    te = TagElement.from(be);
   } else {
     throw 'Invalid Tag: $tag';
   }
@@ -105,7 +105,7 @@ SQ convertSQ(SQ sq) {
   final parentTDS = currentTDS;
   for (var i = 0; i < sq.items.length; i++) {
     currentBDS = sq.items.elementAt(i);
-    currentTDS = new ItemTag(parentTDS, currentBDS.bytes.bd);
+    currentTDS = new ItemTag(parentTDS, currentBDS.dsBytes.bd);
     tItems[i] = convertDataset(currentBDS, currentTDS);
   }
   currentBDS = parentBDS;

@@ -58,7 +58,7 @@ abstract class EvrReader extends DcmReaderBase {
   }
 
   @override
-  ByteData readFmi() {
+  int readFmi() {
     //TODO: make method an invalidReadIndex(int index)
     if (rb.index != 0) throw 'InvalidReadBufferIndex: ${rb.index}';
     return _readFmi();
@@ -71,6 +71,7 @@ abstract class EvrReader extends DcmReaderBase {
     final code = rb.code;
     final tag = checkCode(code, eStart);
     final vrCode = rb.uint16;
+    print('@$eStart ${dcm(code)} ${hex16(vrCode)}');
     var vrIndex = _lookupEvrVRIndex(code, eStart, vrCode);
 
     // Note: this is only relevant for EVR
@@ -111,6 +112,7 @@ abstract class EvrReader extends DcmReaderBase {
   /// These Elements can not have an kUndefinedLength value.
   Element readShort(int code, int vrIndex, int eStart) {
     final vlf = rb.uint16;
+    if (vlf.isOdd) print('Odd vlf: $vlf');
     rb + vlf;
     logStartRead(code, vrIndex, eStart, vlf, 'readEvrShort');
     final eb = rb.makeEvrShortEBytes(eStart, vrIndex);
@@ -201,6 +203,7 @@ abstract class EvrReader extends DcmReaderBase {
     assert(vfl != kUndefinedLength);
     final items = <Item>[];
     final eEnd = rb.index + vfl;
+    print('vfl: $vfl eEnd: $eEnd');
 
     while (rb.index < eEnd) {
       final item = readItem();
@@ -234,20 +237,19 @@ abstract class EvrReader extends DcmReaderBase {
 
   /// Reads File Meta Information ([Fmi]) and returns a Map<int, Element>
   /// if any [Fmi] [Element]s were present; otherwise, returns null.
-  ByteData _readFmi() {
+  int _readFmi() {
     rds.preamble = rb.toByteData(0, 132);
     if (!_readPrefix(rb)) {
       rb.index = 0;
-      return null;
+      return -1;
     }
-    final fmiStart = rb.index;
+    assert(rb.index == 132, 'Non-Prefix start index: ${rb.index}');
     while (rb.isReadable) {
       final code = rb.peekCode;
       if (code >= 0x00030000) break;
       final e = readElement();
       rds.fmi.add(e);
     }
-    final fmiEnd = rb.index;
 
     if (!rb.hasRemaining(dParams.shortFileThreshold - rb.index)) {
       throw new EndOfDataError(
@@ -264,8 +266,7 @@ abstract class EvrReader extends DcmReaderBase {
     if (dParams.targetTS != null && ts != dParams.targetTS)
       return invalidTransferSyntax(ts, dParams.targetTS);
 
-    // Assumes that FMI always starts at rb.index == 0.
-    return rb.bd.buffer.asByteData(fmiStart, fmiEnd);
+    return rb.index;
   }
 
   /// Reads the Preamble (128 bytes) and Prefix ('DICM') of a PS3.10 DICOM File Format.

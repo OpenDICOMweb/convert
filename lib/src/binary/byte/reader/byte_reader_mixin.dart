@@ -21,7 +21,8 @@ abstract class ByteReaderMixin implements DcmReaderBase {
   ElementList get elements => cds.elements;
 
   @override
-  Element makeElement(int code, int vrIndex, EBytes eb) => makeBEFromEBytes(eb, vrIndex);
+  Element makeElement(int code, int vrIndex, EBytes eb) =>
+      ByteElement.fromEBytes(eb, vrIndex);
 
   @override
   Element makePixelData(int code, int vrIndex, EBytes eb, {VFFragments fragments}) =>

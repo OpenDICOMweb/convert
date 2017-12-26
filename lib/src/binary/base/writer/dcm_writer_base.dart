@@ -99,16 +99,11 @@ abstract class DcmWriterBase {
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].
   Uint8List writeRootDataset(RootDataset rds) {
-    final dsStart = wb.index;
-    _writeDefinedLengthDataset(rds);
-    return wb.toUint8List(0, wb.index - dsStart);
+    _writeDataset(rds);
+    return wb.toUint8List(0, wb.index);
   }
 
-  void writeDefinedLengthDataset(Item item) => _writeDefinedLengthDataset(item);
-
-  /// Writes a [Dataset] to the buffer.
-  void _writeDefinedLengthDataset(Dataset ds) {
-    wb..uint32(kItem32BitLE)..uint32(ds.vfLength);
+  void _writeDataset(Dataset ds) {
     // ignore: prefer_forEach
     for (var e in ds.elements) {
       writeElement(e);
@@ -127,29 +122,40 @@ abstract class DcmWriterBase {
 
   /// Write one [Item].
   void writeItem(Item item) => ((item.hasULength && !eParams.doConvertUndefinedLengths))
-      ? _writeUndefinedLengthDataset(item)
-      : _writeDefinedLengthDataset(item);
+                               ? _writeUndefinedLengthItem(item)
+                               : _writeDefinedLengthItem(item);
 
-  void writeUndefinedLengthDataset(Item item) => _writeUndefinedLengthDataset(item);
+  void writeDefinedLengthItem(Item item) => _writeDefinedLengthItem(item);
+  void writeUndefinedLengthItem(Item item) => _writeUndefinedLengthItem(item);
 
-  void _writeUndefinedLengthDataset(Item item) {
+  /// Writes a [Dataset] to the buffer.
+  void _writeDefinedLengthItem(Item item) {
+    wb..uint32(kItem32BitLE)..uint32(item.vfLength);
+    _writeDataset(item);
+  }
+
+  void _writeUndefinedLengthItem(Item item) {
     wb..uint32(kItem32BitLE)..uint32(kUndefinedLength);
-    // ignore: prefer_forEach
-    for (var e in item.elements) {
-      writeElement(e);
-    }
+    _writeDataset(item);
     wb..uint32(kItemDelimitationItem32BitLE)..uint32(0);
   }
 
   void writeEncapsulatedPixelData(Element e) {
     assert(e.vfLengthField == kUndefinedLength);
-    for (final bytes in e.fragments.fragments) {
+    for (final fragment in e.fragments.fragments) {
+      print('fragment(${fragment.lengthInBytes})');
       wb
         ..uint32(kItem32BitLE)
-        ..uint32(bytes.lengthInBytes)
-        ..bytes(bytes);
+        ..uint32(fragment.lengthInBytes)
+        ..bytes(fragment);
+      // If odd length write padding byte
+      if (fragment.length.isOdd) {
+        log.warn('Odd length(${fragment.lengthInBytes}) fragment');
+        wb.uint8(0);
+      }
     }
-    wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
+  //  wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
+    print('End of pixelData: ${wb.index}');
   }
 
   /// The default [ByteData] buffer length, if none is provided.

@@ -44,7 +44,7 @@ import 'package:dcm_convert/src/errors.dart';
 abstract class DcmReaderBase {
   final ReadBuffer rb;
   final RootDataset rds;
-  ByteData fmiBD;
+  ByteData bd;
   final DecodingParameters dParams;
 
   /// If true the [ByteData] buffer ([rb] will be reused.
@@ -66,7 +66,7 @@ abstract class DcmReaderBase {
         rds = rBase.rds,
         dParams = rBase.dParams,
         cds = rBase.cds,
-        fmiBD = rBase.fmiBD,
+        bd = rBase.bd,
         reUseBD = rBase.reUseBD;
 
   // **** Interface ****
@@ -85,7 +85,7 @@ abstract class DcmReaderBase {
     return p;
   }
 
-  ByteData readFmi();
+  void readFmi();
 
   Element readElement();
 
@@ -128,15 +128,16 @@ abstract class DcmReaderBase {
 
   final String kItemAsString = hex32(kItem32BitLE);
 
-  /// Reads a [RootDataset] from _this_. The FMI, if any, should already be read.
-  RootDataset readRootDataset() {
+  /// Reads a [RootDataset] from _this_. The FMI, if any, MUST already be read.
+  RootDataset readRootDataset(int fmiEnd) {
     cds = rds;
     final rdsStart = rb.index;
-    readDatasetDefinedLength(rds, rb.index, rb.remaining);
+    print('** readRootDataset: ${rb.index} : ${rb.remaining}');
+    readDatasetDefinedLength(rds, rdsStart, rb.remaining);
     final rdsLength = rb.index - rdsStart;
-    final rdsBD = rb.bd.buffer.asByteData(rdsStart, rdsLength);
-    final dsBytes = new RDSBytes(rdsBD, fmiBD);
-    rds.bytes = dsBytes;
+    print('** readRootDataset: rdsLength = $rdsLength');
+    bd = rb.bd.buffer.asByteData(rdsStart, rdsLength);
+    rds.dsBytes = new RDSBytes(bd, fmiEnd);
     return rds;
   }
 
@@ -161,7 +162,7 @@ abstract class DcmReaderBase {
 
     cds = parentDS;
     final bd = rb.buffer.asByteData(iStart, rb.index - iStart);
-    item.bytes = new IDSBytes(bd);
+    item.dsBytes = new IDSBytes(bd);
     return item;
   }
 
@@ -171,8 +172,8 @@ abstract class DcmReaderBase {
   // **** This is one of the only two places Elements are added to the dataset.
   void readDatasetDefinedLength(Dataset ds, int dsStart, int vfLength) {
     assert(vfLength != kUndefinedLength);
-    final dsEnd = dsStart + vfLength;
     assert(dsStart == rb.index);
+    final dsEnd = dsStart + vfLength;
     while (rb.index < dsEnd) {
       // Elements are always read into the current dataset.
       final e = readElement();
@@ -194,7 +195,6 @@ abstract class DcmReaderBase {
   /// If the item delimiter _kItemDelimitationItem32Bit_, reads and checks the
   /// _delimiter length_ field, and returns _true_.
   bool _isItemDelimiter() => _checkForDelimiter(kItemDelimitationItem32BitLE);
-
 
   // If VR is UN then this might be a Sequence
   bool isUNSequence(int delimiter) =>
@@ -297,6 +297,7 @@ abstract class DcmReaderBase {
     do {
       assert(delimiter == kItem32BitLE, 'Invalid Item code: ${dcm(delimiter)}');
       final vlf = rb.uint32;
+      print('fragment vlf: $vlf');
       assert(vlf != kUndefinedLength, 'Invalid length: ${dcm(vlf)}');
 
       final startOfVF = rb.index;

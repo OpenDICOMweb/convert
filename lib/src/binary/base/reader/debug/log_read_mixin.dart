@@ -91,7 +91,6 @@ abstract class LogReadMixin implements LogReadMixinBase {
   }
 
   String _endReadElement(int eStart, Element e, String name, {bool ok = true}) {
-    assert(rb.index.isEven);
     final eEnd = rb.index;
     _doEndOfElementStats(e.code, eStart, e, ok);
     final sb = new StringBuffer('< R@$eEnd $e $name :$remaining');

@@ -4,13 +4,11 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:system/core.dart';
 
 import 'package:dcm_convert/src/binary/base/byte_list.dart';
-import 'package:dcm_convert/src/binary/base/padding_chars.dart';
 
 class WriteBuffer extends ByteList {
   /// The underlying data buffer.
@@ -92,7 +90,8 @@ class WriteBuffer extends ByteList {
 
   void code(int code) {
     assert(code >= 0 && code < kItem, 'Value out of range: $code');
-    assert(_wIndex.isEven && _hasRemaining(4));
+//    assert(_wIndex.isEven && _hasRemaining(4));
+    assert(_hasRemaining(4));
     _maybeGrow(4);
     writeCode(_wIndex, code);
     _wIndex += 4;

@@ -70,24 +70,24 @@ abstract class WriterBase extends DcmWriterBase {
   }
 
   @override
-  void writeUndefinedLengthDataset(Item item) {
+  void writeUndefinedLengthItem(Item item) {
     log.debug('${wb.wbb} Writing item #$itemCount', 1);
     ((item.hasULength && !eParams.doConvertUndefinedLengths))
-        ? _writeUndefinedLengthDataset(item)
-        : _writeDefinedLengthDataset(item);
+        ? _writeUndefinedLengthItem(item)
+        : _writeDefinedLengthItem(item);
     log.debug('${wb.wee} Wrote item #$itemCount', -1);
   }
 
-  void _writeUndefinedLengthDataset(Item item) {
+  void _writeUndefinedLengthItem(Item item) {
     log.debug('${wb.wbb} Writing item #$itemCount', 1);
-    super.writeUndefinedLengthDataset(item);
+    super.writeUndefinedLengthItem(item);
     log.debug('${wb.wee} Wrote item #$itemCount', -1);
   }
 
   /// Writes a [Dataset] to the buffer.
-  void _writeDefinedLengthDataset(Dataset ds) {
+  void _writeDefinedLengthItem(Dataset ds) {
     log.debug('${wb.wbb} Writing $ds #$itemCount', 1);
-    super.writeDefinedLengthDataset(ds);
+    super.writeDefinedLengthItem(ds);
     log.debug('${wb.wee} Wrote item #$itemCount', -1);
   }
 

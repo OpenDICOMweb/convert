@@ -84,19 +84,20 @@ class ByteReader {
   Uint8List get bytes => rb.bytes;
   ElementOffsets get offsets => _evrReader.offsets;
 
-  ByteData readFmi() => _evrReader.readFmi();
+  int readFmi() => _evrReader.readFmi();
 
   RootDataset readRootDataset() {
     RootDatasetByte ds;
-    if (!isFmiRead) readFmi();
+    var fmiEnd = -1;
+    if (!isFmiRead) fmiEnd = readFmi();
 
     if (_evrReader.rds.transferSyntax.isEvr) {
-      ds = _evrReader.readRootDataset();
+      ds = _evrReader.readRootDataset(fmiEnd);
     } else {
       _ivrReader = (doLogging)
           ? new IvrByteLogReader.from(_evrReader)
           : new IvrByteReader.from(_evrReader);
-      ds = _ivrReader.readRootDataset();
+      ds = _ivrReader.readRootDataset(fmiEnd);
     }
     if (showStats) _evrReader.rds.summary;
     return ds;

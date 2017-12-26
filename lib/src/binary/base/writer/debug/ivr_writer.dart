@@ -49,13 +49,13 @@ class LogIvrWriter extends IvrWriter with LogWriteMixin {
 
     log.debug('${wb.wbb} #$elementCount writeIvrElement $e :${wb.remaining}', 1);
     if (_isIvrDefinedLengthVR(vrIndex)) {
-      _writeIvrDefinedLength(e);
+      _writeIvrDefinedLength(e, vrIndex);
     } else if (_isSequenceVR(vrIndex)) {
-      _writeIvrSQ(e);
+      _writeIvrSQ(e, vrIndex);
     } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
-      _writeIvrMaybeUndefined(e);
+      _writeIvrMaybeUndefined(e, vrIndex);
 //    } else if (_isSpecialVR(vrIndex)) {
-//      _writeIvrMaybeUndefined(e);
+//      _writeIvrMaybeUndefined(e, vrIndex);
     } else {
       throw new ArgumentError('Invalid VR: $e');
     }
@@ -73,46 +73,46 @@ class LogIvrWriter extends IvrWriter with LogWriteMixin {
   }
 
   /// Write a non-Sequence Element with a defined length in the Value Field Length field.
-  void _writeIvrDefinedLength(Element e) {
+  void _writeIvrDefinedLength(Element e, int vrIndex) {
     log.debug('${wb.wbb} writeSimpleIvr $e :${wb.remaining}', 1);
-    super.writeIvrDefinedLength(e);
+    super.writeIvrDefinedLength(e, vrIndex);
     pInfo.nLongElements++;
   }
 
-  void _writeIvrMaybeUndefined(Element e) {
+  void _writeIvrMaybeUndefined(Element e, int vrIndex) {
     log.debug('${wb.wbb} writeIvrMaybeUndefined $e :${wb.remaining}', 1);
     pInfo.nMaybeUndefinedElements++;
     return (e.hadULength && !eParams.doConvertUndefinedLengths)
-        ? _writeIvrUndefinedLength(e)
-        : _writeIvrDefinedLength(e);
+        ? _writeIvrUndefinedLength(e, vrIndex)
+        : _writeIvrDefinedLength(e, vrIndex);
   }
 
   /// Write a non-Sequence Element with a Value Field Length field value of
   /// kUndefinedLength.
-  void _writeIvrUndefinedLength(Element e) {
+  void _writeIvrUndefinedLength(Element e, int vrIndex) {
     assert(e.vfLengthField == kUndefinedLength);
     log.debug('${wb.wmm} writeIvrUndefined $e :${wb.remaining}');
-    super.writeIvrUndefinedLength(e);
+    super.writeIvrUndefinedLength(e, vrIndex);
     if (e.code == kPixelData) pInfo.pixelDataEnd = wb.wIndex;
     pInfo.nUndefinedLengthElements++;
     log.debug('${wb.wbb} writeIvrUndefined $e :${wb.remaining}', 1);
   }
 
-  void _writeIvrSQ(SQ e) {
+  void _writeIvrSQ(SQ e, int vrIndex) {
     pInfo.nSequences++;
     if (e.isPrivate) pInfo.nPrivateSequences++;
     return (e.hadULength && !eParams.doConvertUndefinedLengths)
-        ? _writeIvrSQUndefinedLength(e)
-        : _writeIvrSQDefinedLength(e);
+        ? _writeIvrSQUndefinedLength(e, vrIndex)
+        : _writeIvrSQDefinedLength(e, vrIndex);
   }
 
-  void _writeIvrSQDefinedLength(SQ e) {
+  void _writeIvrSQDefinedLength(SQ e, int vrIndex) {
     log.debug('${wb.wbb} _writeIvrSQDefined $e :${wb.remaining}', 1);
     final index = outputOffsets.reserveSlot;
     pInfo.nDefinedLengthSequences++;
     final eStart = wb.wIndex;
 
-    super.writeIvrSQDefinedLength(e);
+    super.writeIvrSQDefinedLength(e, vrIndex);
 
     final eEnd = wb.wIndex;
     assert(e.vfLength + 8 == e.eEnd - e.eStart, '${e.vfLength}, $eEnd - $eStart');
@@ -120,11 +120,11 @@ class LogIvrWriter extends IvrWriter with LogWriteMixin {
     outputOffsets.insertAt(index, eStart, eEnd, e);
   }
 
-  void _writeIvrSQUndefinedLength(SQ e) {
+  void _writeIvrSQUndefinedLength(SQ e, int vrIndex) {
     log.debug('${wb.wbb} _writeIvrSQUndefined $e :${wb.remaining}', 1);
     final index = outputOffsets.reserveSlot;
     final eStart = wb.wIndex;
-    super.writeIvrSQUndefinedLength(e);
+    super.writeIvrSQUndefinedLength(e, vrIndex);
     pInfo.nUndefinedLengthSequences++;
     outputOffsets.insertAt(index, eStart, wb.index, e);
   }

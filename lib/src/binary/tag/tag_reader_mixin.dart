@@ -20,11 +20,11 @@ abstract class TagReaderMixin implements DcmReaderBase {
 
   @override
   Element makeElement(int code, int vrIndex, EBytes eb) =>
-      makeTagElementFromEBytes(eb, vrIndex);
+      TagElement.fromEB(eb, vrIndex);
 
   @override
   Element makePixelData(int code, int vrIndex, EBytes eb, {VFFragments fragments}) =>
-      makeTagElementFromEBytes(eb, vrIndex);
+      TagElement.fromEB(eb, vrIndex);
 
   /// Returns a new Sequence ([SQ]).
   @override

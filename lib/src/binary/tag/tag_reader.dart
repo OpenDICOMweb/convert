@@ -33,7 +33,8 @@ class TagReader {
       this.dParams = DecodingParameters.kNoChange,
       this.reUseBD = true,
       this.offsets})
-      : _evrReader = new EvrTagReader(bd, new RootDatasetTag(bd: bd, path: path), path:
+      : _evrReader = new EvrTagReader(bd, new RootDatasetTag(bd: bd, path: path),
+                                          path:
   path, dParams:
   dParams, reUseBD: reUseBD);
 
@@ -53,19 +54,20 @@ class TagReader {
 
   bool isFmiRead = false;
 
-  ByteData readFmi() {
-    final fmiBD = _evrReader.readFmi();
+  int readFmi() {
+    final fmiEnd = _evrReader.readFmi();
     isFmiRead = true;
-    return fmiBD;
+    return fmiEnd;
   }
 
   RootDataset readRootDataset() {
-    if (!isFmiRead) readFmi();
+    var fmiEnd = -1;
+    if (!isFmiRead) fmiEnd = readFmi();
     if (_evrReader.rds.transferSyntax.isEvr) {
-      return _evrReader.readRootDataset();
+      return _evrReader.readRootDataset(fmiEnd);
     } else {
       _ivrReader = new IvrTagReader.from(_evrReader);
-      return _ivrReader.readRootDataset();
+      return _ivrReader.readRootDataset(fmiEnd);
     }
   }
 
