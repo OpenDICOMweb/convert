@@ -5,7 +5,7 @@
 // See the   AUTHORS file for other contributors.
 
 import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/bd_convert.dart';
 import 'package:system/server.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';

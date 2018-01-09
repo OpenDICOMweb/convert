@@ -10,7 +10,6 @@ import 'package:element/element.dart';
 import 'package:system/core.dart';
 
 import 'package:dcm_convert/src/binary/base/byte_list.dart';
-import 'package:dcm_convert/src/binary/base/padding_chars.dart';
 
 class ReadBuffer extends ByteList {
   /// The underlying data buffer.
@@ -34,7 +33,7 @@ class ReadBuffer extends ByteList {
 
   /// Moves the [index] forward/backward. Returns the new [index].
   int _indexAdd(int n) {
-    assert(_hasRemaining(n), 'hasRemaining($n) +$remaining');
+    assert(_hasRemaining(n), 'hasRemaining($n) +$_remaining');
     final index = _index + n;
     return _setIndexTo(index);
   }
@@ -145,7 +144,7 @@ class ReadBuffer extends ByteList {
   /// Peek at next tag - doesn't move the [_index].
   int get peekCode => _peekCode();
   int _peekCode() {
-    assert(_index.isEven && _hasRemaining(4));
+    assert(_index.isEven && _hasRemaining(4), '@$_index : $_remaining');
     final group = getUint16(_index);
     final elt = getUint16(_index + 2);
     return (group << 16) + elt;
@@ -173,29 +172,68 @@ class ReadBuffer extends ByteList {
     return v;
   }
 
+/*
   // If the vr has a padding char and if padding is present remove it.
-  int _getLength(int eStart, int vrIndex) {
-    var length = _index - eStart;
-    if (length.isOdd) log.warn('Value Field with odd length: $length');
+  int _getLength(int eStart, int vrIndex, int headerLength) {
+    // assert(headerLength == 8 || headerLength == 12);
+    var eLength = _index - eStart;
+    print('index: $_index eStart: $eStart eLength: $eLength');
+    assert(eLength >= 0);
+    if (eLength == headerLength) return eLength;
+
     final padChar = paddingChar(vrIndex);
     if (padChar >= 0) {
       final char = bd.getUint8(_index - 1);
       if (char == kSpace || char == kNull) {
-        length--;
-        if (char != padChar) log.warn(
-            '** Warning: Invalid Padding Char($char) should be $padChar');
+        eLength--;
+        if (char != padChar)
+          log.warn('** Warning: Invalid Padding Char($char) should be $padChar');
       }
     }
-    return length;
+    assert(eLength >= 0);
+    return eLength;
   }
+*/
 
+  /// Returns [ByteData] for an [EvrShort] [Element]. [eStart] is the index
+  /// of the first byte of _this_ [ByteData], and [index] must be the index
+  /// of the byte after the last byte of the [Element]. [EvrShort] [Element]s
+  /// always have a defined length.
+  ByteData makeShortEvrByteData(int eStart, int vrIndex) =>
+      _makeByteData(eStart, vrIndex, 8);
+
+  /// Returns [ByteData] for an [EvrLong] [Element] with a kUndefinedLength Value
+  /// Field length. [eStart] is the index of the first byte of _this_ [ByteData], and
+  /// [index] must be the index of the byte after the last byte of the [Element].
+  /// [EvrLong] [Element]s MUST always have kUndefinedLength in the Value Field
+  /// length field.
+  ByteData makeLongEvrByteData(int eStart, int vrIndex) =>
+      _makeByteData(eStart, vrIndex, 12);
+
+  /// Returns [ByteData] for an [IVR] [Element] with defined length. [eStart] is
+  /// the index of the first byte of _this_ [ByteData], and [index] must be the index
+  /// of the byte after the last byte of the [Element]. [Ivr] [Element]s MUST always
+  /// have a defined length.
+  ByteData makeIvrByteData(int eStart, int vrIndex) =>
+      _makeByteData(eStart, vrIndex, 8);
+
+  ByteData _makeByteData(int eStart, int vrIndex, int headerLength) {
+    final eLength = _index - eStart;
+    assert(eLength >= headerLength && eLength.isEven,
+    'Element with odd eLength: $eLength');
+    return bd.buffer.asByteData(bd.offsetInBytes + eStart, eLength);
+  }
+  /*
   /// Returns [EBytes] for an [EvrShort] [Element]. [eStart] is the index
   /// of the first byte of _this_ [EBytes], and [index] must be the index
   /// of the byte after the last byte of the [Element]. [EvrShort] [Element]s
   /// always have a defined length.
-  EBytes  makeEvrShortEBytes(int eStart, int vrIndex) {
-    final length = _getLength(eStart, vrIndex);
-    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, length);
+  EBytes makeEvrShortEBytes(int eStart, int vrIndex) {
+    final eLength = _index - eStart;
+    assert(eLength >= 8 && eLength.isEven, 'Element with odd eLength: $eLength');
+    print('@$_index eStart: $eStart vrIndex: ${VR.lookupByIndex(vrIndex)} eLength: '
+              '$eLength');
+    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, eLength);
     return EvrShort.make(ebd);
   }
 
@@ -204,8 +242,9 @@ class ReadBuffer extends ByteList {
   /// of the byte after the last byte of the [Element]. [EvrLong] [Element]s
   /// MUST always have a defined length.
   EBytes makeEvrLongEBytes(int eStart, int vrIndex) {
-    final length = _getLength(eStart, vrIndex);
-    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, length);
+    final eLength = _index - eStart;
+    assert(eLength >= 12 && eLength.isEven, 'Element with odd eLength: $eLength');
+    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, eLength);
     return EvrLong.make(ebd);
   }
 
@@ -215,8 +254,9 @@ class ReadBuffer extends ByteList {
   /// [EvrLong] [Element]s MUST always have kUndefinedLength in the Value Field
   /// length field.
   EBytes makeEvrULengthEBytes(int eStart, int vrIndex) {
-    final length = _getLength(eStart, vrIndex);
-    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, length);
+    final eLength = _index - eStart;
+    assert(eLength >= 12 && eLength.isEven, 'Element with odd eLength: $eLength');
+    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, eLength);
     return EvrULength.make(ebd);
   }
 
@@ -225,8 +265,9 @@ class ReadBuffer extends ByteList {
   /// of the byte after the last byte of the [Element]. [Ivr] [Element]s MUST always
   /// have a defined length.
   EBytes makeIvrEBytes(int eStart, int vrIndex) {
-    final length = _getLength(eStart, vrIndex);
-    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, length);
+    final eLength = _index - eStart;
+    assert(eLength >= 8 && eLength.isEven, 'Element with odd eLength: $eLength');
+    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, eLength);
     return Ivr.make(ebd);
   }
 
@@ -236,11 +277,12 @@ class ReadBuffer extends ByteList {
   /// [EvrLong] [Element]s MUST always have kUndefinedLength in the Value Field
   /// length field.
   EBytes makeIvrULengthEBytes(int eStart, int vrIndex) {
-    final length = _getLength(eStart, vrIndex);
-    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, length);
+    final eLength = _index - eStart;
+    assert(eLength >= 8 && eLength.isEven, 'Element with odd eLength: $eLength');
+    final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, eLength);
     return EvrULength.make(ebd);
   }
-
+*/
   ByteData toByteData(int offset, int lengthInBytes) =>
       bd.buffer.asByteData(bd.offsetInBytes + offset, lengthInBytes);
 

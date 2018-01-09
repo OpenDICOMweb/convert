@@ -7,7 +7,7 @@
 import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
-import 'package:element/byte_element.dart';
+import 'package:element/bd_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:vr/vr.dart';
@@ -18,7 +18,7 @@ import 'package:dcm_convert/src/decoding_parameters.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 
-abstract class IvrReader extends DcmReaderBase {
+abstract class IvrReader<V> extends DcmReaderBase<V> {
   @override
   final bool isEvr = false;
 
@@ -27,7 +27,7 @@ abstract class IvrReader extends DcmReaderBase {
       ByteData bd, RootDataset rds, String path, DecodingParameters dParams, bool reUseBD)
       : super(bd, rds, dParams, reUseBD);
 
-  IvrReader.from(EvrReader r) : super.from(r);
+  IvrReader.from(EvrReader reader) : super.from(reader);
 
   @override
   ByteData readFmi() => unsupportedError();
@@ -75,10 +75,10 @@ abstract class IvrReader extends DcmReaderBase {
   Element _makeIvr(int code, int vrIndex, int eStart, int vlf) {
     assert(vlf != kUndefinedLength);
     rb + vlf;
-    final eb = rb.makeIvrEBytes(eStart, vrIndex);
+    final eb = rb.makeIvrByteData(eStart, vrIndex);
     final e = (code == kPixelData)
-        ? makePixelData(code, vrIndex, eb)
-        : makeElement(code, vrIndex, eb);
+        ? Ivr.makePixelData(code, vrIndex, eb)
+        : Ivr.make(code, vrIndex, eb);
     logEndRead(eStart, e, 'makeIvr');
     return e;
   }
@@ -95,10 +95,10 @@ abstract class IvrReader extends DcmReaderBase {
     if (vlf != kUndefinedLength) return _makeIvr(code, vrIndex, eStart, vlf);
 
     final fragments = readUndefinedLength(code, eStart, vrIndex, vlf);
-    final eb = rb.makeIvrEBytes(eStart, vrIndex);
+    final bd = rb.makeIvrByteData(eStart, vrIndex);
     final e = (code == kPixelData)
-        ? makePixelData(code, vrIndex, eb, fragments: fragments)
-        : makeElement(code, vrIndex, eb);
+        ? makePixelData(code, vrIndex, bd, rds.transferSyntax, fragments)
+        : makeElementFromBD(code, vrIndex, bd);
     logEndRead(eStart, e, 'readMaybeUndefined');
     return e;
   }
@@ -123,8 +123,8 @@ abstract class IvrReader extends DcmReaderBase {
       final item = readItem();
       items.add(item);
     }
-    final eb = rb.makeIvrULengthEBytes(eStart, vrIndex);
-    final e = makeSequence(code, eb, cds, items);
+    final bd = rb.makeIvrByteData(eStart, vrIndex);
+    final e = makeSequence(code, cds, items, bd);
     logEndSQRead(eStart, e, 'readEvrSequenceULength');
     return e;
   }
@@ -142,8 +142,8 @@ abstract class IvrReader extends DcmReaderBase {
     }
     final end = rb.index;
     assert(eEnd == end, '$eEnd == $end');
-    final eb = rb.makeIvrEBytes(eStart, vrIndex);
-    final e = makeSequence(code, eb, cds, items);
+    final bd = rb.makeIvrByteData(eStart, vrIndex);
+    final e = makeSequence(code, cds, items, bd);
     logEndSQRead(eStart, e, 'readEvrSequenceDLength');
     return e;
   }

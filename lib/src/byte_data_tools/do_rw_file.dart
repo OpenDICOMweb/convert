@@ -8,11 +8,11 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/src/binary/byte/reader/byte_reader.dart';
-import 'package:dcm_convert/src/binary/byte/old/write_bytes.dart';
+import 'package:dcm_convert/src/binary/byte_data/reader/bd_reader.dart';
+import 'package:dcm_convert/src/binary/byte_data/writer/bd_writer.dart';
 import 'package:dcm_convert/src/errors.dart';
-import 'package:dcm_convert/src/tool/job_utils.dart';
-import 'package:element/byte_element.dart';
+import 'package:dcm_convert/src/byte_data_tools/job_utils.dart';
+import 'package:element/bd_element.dart';
 import 'package:path/path.dart' as  path;
 import 'package:system/core.dart';
 
@@ -32,7 +32,7 @@ Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) asy
   try {
     final Uint8List bytes = await f.readAsBytes();
     final bd = bytes.buffer.asByteData();
-    final reader0 = new ByteReader(bd);
+    final reader0 = new BDReader(bd);
     final rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -56,15 +56,15 @@ $pad    TS: ${rds0.transferSyntax}''');
     }
 
     // Write the Root Dataset
-    ByteDatasetWriter writer;
+    BDWriter writer;
     if (fast) {
       // Just write bytes don't write the file
-      writer = new ByteDatasetWriter(rds0);
+      writer = new BDWriter(rds0);
     } else {
       final outPath = getTempFile(f.path, 'dcmout');
-      writer = new ByteDatasetWriter.toPath(rds0, outPath);
+      writer = new BDWriter.toPath(rds0, outPath);
     }
-    final bytes1 = writer.write();
+    final bytes1 = writer.writeRootDataset();
     log.debug('$pad    Encoded ${bytes1.length} bytes');
 
     // Urgent Jim if file has dups then no test is done. Fix it.

@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dataset/byte_dataset.dart';
-import 'package:element/byte_element.dart';
+import 'package:element/bd_element.dart';
 import 'package:system/core.dart';
 import 'package:vr/vr.dart';
 
@@ -19,7 +19,6 @@ import 'package:dcm_convert/src/errors.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 
-//Urgent Jim: add to EvrULength at appropriate places
 // Reader axioms
 // 1. eStart is always the first byte of the Element being read and eEnd is always
 //    the end of the Element be
@@ -46,16 +45,14 @@ import 'package:dcm_convert/src/errors.dart';
 ///  [Element] itself.
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
-abstract class EvrReader extends DcmReaderBase {
+abstract class EvrReader extends DcmReaderBase<int> {
   @override
   bool isEvr = true;
 
   /// Creates a new [EvrReader]  where [rb].rIndex = 0.
   EvrReader(
       ByteData bd, RootDataset rds, String path, DecodingParameters dParams, bool reUseBD)
-      : super(bd, rds, dParams, reUseBD) {
-    print('EvrReader: $rds');
-  }
+      : super(bd, rds, dParams, reUseBD);
 
   @override
   int readFmi() {
@@ -71,7 +68,7 @@ abstract class EvrReader extends DcmReaderBase {
     final code = rb.code;
     final tag = checkCode(code, eStart);
     final vrCode = rb.uint16;
-    print('@$eStart ${dcm(code)} ${hex16(vrCode)}');
+    log.debug2('@$eStart ${dcm(code)} ${hex16(vrCode)} $tag');
     var vrIndex = _lookupEvrVRIndex(code, eStart, vrCode);
 
     // Note: this is only relevant for EVR
@@ -93,7 +90,7 @@ abstract class EvrReader extends DcmReaderBase {
     }
 
     if (_isShortVR(vrIndex)) return readShort(code, vrIndex, eStart);
-    if (_isLongVR(vrIndex)) return readLong(code, vrIndex, eStart);
+    if (_isLongVR(vrIndex)) return readLongDefinedLength(code, vrIndex, eStart);
     if (_isSequenceVR(vrIndex)) return readSequence(code, vrIndex, eStart);
     if (_isUndefinedLengthVR(vrIndex)) return readMaybeUndefined(code, vrIndex, eStart);
     invalidVRIndex(vrIndex, null, null);
@@ -112,11 +109,12 @@ abstract class EvrReader extends DcmReaderBase {
   /// These Elements can not have an kUndefinedLength value.
   Element readShort(int code, int vrIndex, int eStart) {
     final vlf = rb.uint16;
-    if (vlf.isOdd) print('Odd vlf: $vlf');
-    rb + vlf;
+    if (vlf.isOdd) log.error('Odd vlf: $vlf');
     logStartRead(code, vrIndex, eStart, vlf, 'readEvrShort');
-    final eb = rb.makeEvrShortEBytes(eStart, vrIndex);
-    final e = makeElement(code, vrIndex, eb);
+
+    rb + vlf;
+    final eb = rb.makeShortEvrByteData(eStart, vrIndex);
+    final e = makeElementFromBD(code, vrIndex, eb);
     logEndRead(eStart, e, 'readEvrShort');
     return e;
   }
@@ -125,7 +123,7 @@ abstract class EvrReader extends DcmReaderBase {
   /// which cannot have the value kUndefinedValue.
   ///
   /// Reads one of OD, OF, OL, UC, UR, or UT.
-  Element readLong(int code, int vrIndex, int eStart) {
+  Element readLongDefinedLength(int code, int vrIndex, int eStart) {
     rb + 2;
     final vlf = rb.uint32;
     logStartRead(code, vrIndex, eStart, vlf, 'readEvrLong');
@@ -135,10 +133,10 @@ abstract class EvrReader extends DcmReaderBase {
   Element _makeLong(int code, int vrIndex, int eStart, int vlf) {
     assert(vlf != kUndefinedLength);
     rb + vlf;
-    final eb = rb.makeEvrLongEBytes(eStart, vrIndex);
+    final bd = rb.makeLongEvrByteData(eStart, vrIndex);
     final e = (code == kPixelData)
-        ? makePixelData(code, vrIndex, eb)
-        : makeElement(code, vrIndex, eb);
+        ? makePixelData(code, vrIndex, bd)
+        : makeElementFromBD(code, vrIndex, bd);
     logEndRead(eStart, e, 'readEvrLong');
     return e;
   }
@@ -162,10 +160,10 @@ abstract class EvrReader extends DcmReaderBase {
       return _readUSQ(code, vrIndex, eStart, vlf);
 
     final fragments = readUndefinedLength(code, eStart, vrIndex, vlf);
-    final eb = rb.makeIvrULengthEBytes(eStart, vrIndex);
+    final eb = rb.makeIvrByteData(eStart, vrIndex);
     final e = (code == kPixelData)
-        ? makePixelData(code, vrIndex, eb, fragments: fragments)
-        : makeElement(code, vrIndex, eb);
+        ? makePixelData(code, vrIndex, eb, rds.transferSyntax, fragments)
+        : makeElementFromBD(code, vrIndex, eb);
     logEndRead(eStart, e, 'readEvrMaybeUndefined');
     return e;
   }
@@ -191,8 +189,8 @@ abstract class EvrReader extends DcmReaderBase {
       final item = readItem();
       items.add(item);
     }
-    final eb = rb.makeEvrULengthEBytes(eStart, vrIndex);
-    final e = makeSequence(code, eb, cds, items);
+    final bd = rb.makeLongEvrByteData(eStart, vrIndex);
+    final e = makeSequence(code, cds, items, bd);
     logEndSQRead(eStart, e, 'readEvrSequenceULength');
     return e;
   }
@@ -203,7 +201,7 @@ abstract class EvrReader extends DcmReaderBase {
     assert(vfl != kUndefinedLength);
     final items = <Item>[];
     final eEnd = rb.index + vfl;
-    print('vfl: $vfl eEnd: $eEnd');
+    log.debug2('vfl: $vfl eEnd: $eEnd');
 
     while (rb.index < eEnd) {
       final item = readItem();
@@ -211,8 +209,8 @@ abstract class EvrReader extends DcmReaderBase {
     }
     final end = rb.index;
     assert(eEnd == end, '$eEnd == $end');
-    final eb = rb.makeEvrLongEBytes(eStart, vrIndex);
-    final e = makeSequence(code, eb, cds, items);
+    final bd = rb.makeLongEvrByteData(eStart, vrIndex);
+    final e = makeSequence(code, cds, items, bd);
     logEndSQRead(eStart, e, 'readEvrSequenceDLength');
     return e;
   }
@@ -238,12 +236,14 @@ abstract class EvrReader extends DcmReaderBase {
   /// Reads File Meta Information ([Fmi]) and returns a Map<int, Element>
   /// if any [Fmi] [Element]s were present; otherwise, returns null.
   int _readFmi() {
-    rds.preamble = rb.toByteData(0, 132);
+    assert(rb.index == 0, 'Non-Zero Read Buffer Index');
+
     if (!_readPrefix(rb)) {
       rb.index = 0;
       return -1;
     }
     assert(rb.index == 132, 'Non-Prefix start index: ${rb.index}');
+    print('r@${rb.index}');
     while (rb.isReadable) {
       final code = rb.peekCode;
       if (code >= 0x00030000) break;
@@ -258,8 +258,6 @@ abstract class EvrReader extends DcmReaderBase {
 
     final ts = rds.transferSyntax;
     log.info1('TS: $ts');
-    final sopClass = rds.sopClass;
-    log.info1('SopClass: $sopClass');
     if (!system.isSupportedTransferSyntax(ts.asString)) {
       return invalidTransferSyntax(ts);
     }
@@ -279,8 +277,11 @@ abstract class EvrReader extends DcmReaderBase {
   /// Read as 32-bit integer. This is faster
   bool _isDcmPrefixPresent(ReadBuffer rb) {
     rb + 128;
+    print('r@${rb.index}');
     final prefix = rb.uint32;
+    print('r@${rb.index}');
     if (prefix == kDcmPrefix) {
+      print('prefix: ${hex32(prefix)}');
       return true;
     } else {
       rb.warn('No DICOM Prefix present');

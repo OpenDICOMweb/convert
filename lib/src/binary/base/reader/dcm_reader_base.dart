@@ -7,8 +7,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dataset/byte_dataset.dart';
-import 'package:element/byte_element.dart';
+import 'package:dataset/bd_dataset.dart';
+import 'package:dataset/tag_dataset.dart';
+import 'package:element/bd_element.dart';
+import 'package:element/tag_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:vr/vr.dart';
@@ -41,7 +43,7 @@ import 'package:dcm_convert/src/errors.dart';
 ///  [Element] itself.
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
-abstract class DcmReaderBase {
+abstract class DcmReaderBase<V> {
   final ReadBuffer rb;
   final RootDataset rds;
   ByteData bd;
@@ -91,18 +93,27 @@ abstract class DcmReaderBase {
 
   Element readSequence(int code, int eStart, int vrIndex);
 
-  Element makeElement(int code, int vrIndex, EBytes eb);
+  // **** BDElement Constructors
 
-  Element makePixelData(int code, int vrIndex, EBytes eb, {VFFragments fragments});
+  /// Returns a new [Element] created from [ByteData].
+  Element makeElementFromBD(int code, int vrIndex, ByteData bd);
 
-  SQ makeSequence(int code, EBytes eb, Dataset parent, List<Item> items);
+  /// Returns a new [Element] created from [Iterable<V>] [values].
+  Element makeElementFromList(int code, int vrIndex, Iterable<V> values);
 
-  RootDataset makeRootDataset(ByteData bd, [ElementList elements, String path]) =>
-      new RootDatasetByte(bd, elements: elements, path: path);
+  /// Returns a new Pixel Data Element, which must be one of:
+  /// [OBPixelData], [OWPixelData], or [UNPixelData];
+  Element makePixelData(int code, int vrIndex, ByteData bd,
+      [TransferSyntax ts, VFFragments fragments]);
+
+  /// Returns a new Sequence ([SQ]) created from [List<Item>].
+  SQ makeSequence(int code, Dataset parent, List<Item> items, ByteData bd);
+
+  /// Returns a new [RootDataset].
+  RootDataset makeRootDataset({ByteData bd, ElementList elements, String path});
 
   /// Returns a new [Item].
-  Item makeItem(Dataset parent, {ByteData bd, ElementList elements, SQ sequence}) =>
-      new ItemByte(parent);
+  Item makeItem(Dataset parent, {ByteData bd, ElementList elements, SQ sequence});
 
   // **** End of interface ****
 

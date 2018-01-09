@@ -130,6 +130,13 @@ class WriteBuffer extends ByteList {
   }
 
   /// Writes [bytes] to the output [bd].
+  bool writeZeros(int length) {
+    _maybeGrow(length);
+    for (var i = 0, j = _wIndex; i < length; i++, j++) setUint8(j, 0);
+    _wIndex = _wIndex + length;
+    return true;
+  }
+  /// Writes [bytes] to the output [bd].
   void bytes(Uint8List bytes) => _writeBytes(bytes);
 
   void _writeBytes(Uint8List bytes) {

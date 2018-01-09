@@ -7,7 +7,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/bd_convert.dart';
 import 'package:path/path.dart' as p;
 import 'package:system/server.dart';
 import 'package:timer/timer.dart';
@@ -15,7 +15,7 @@ import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/data/test_directories.dart';
 import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/src/binary/byte_read_utils.dart';
+import 'package:dcm_convert/src/binary/byte/byte_read_utils.dart';
 import 'package:dcm_convert/src/binary/compare_bytes.dart';
 
 
@@ -56,7 +56,7 @@ bool readWritePath(String path, {int reps = 1, bool fmiOnly = false}) {
 
 bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
   final Uint8List bytes0 = inFile.readAsBytesSync();
-  final reader = new ByteReader(bytes0.buffer.asByteData());
+  final reader = new BDReader(bytes0.buffer.asByteData());
   final rds0 = reader.readRootDataset();
 /*  List<int> elementIndex0 = reader.elementIndex;*/
   log..info0(rds0.pInfo)..info0(rds0.info);
@@ -70,7 +70,7 @@ bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
   for (int i = 0; i < reader.nthElement; i++)
     if (elementIndex0[i] != elementIndex1[i])
       print('$i: ${elementIndex0[i]} != ${elementIndex1[i]}');*/
-  final rds1 = ByteReader.readBytes(bytes1);
+  final rds1 = BDReader.readBytes(bytes1);
   log..info0(rds1.pInfo)..info0(rds1.info);
   final areDatasetsEqual = _compareDatasets(rds0, rds1);
   log.info0('$rds0 == $rds1: $areDatasetsEqual');
@@ -111,12 +111,12 @@ FileResult readWriteFileTiming(File file,
       return null;
     }
 
-    final rds0 = ByteReader.readBytes(bytes0);
+    final rds0 = BDReader.readBytes(bytes0);
     final readDS0 = timer.elapsed;
     final bytes1 = writeTimed(rds0, path: path);
     final writeDS0 = timer.elapsed;
 
-    final rds1 = ByteReader.readBytes(bytes1);
+    final rds1 = BDReader.readBytes(bytes1);
     final readDS1 = timer.elapsed;
 
     //TODO: make this work?

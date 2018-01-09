@@ -8,7 +8,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/byte_convert.dart.old';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/src/file_utils.dart';
 import 'package:path/path.dart' as path;
@@ -51,7 +51,7 @@ const String bas = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368.fmt'
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
 
-  final fPath = evrXLarge;
+  final fPath = evrLarge;
 
   print('path: $fPath');
   print(' out: ${getTempFile(fPath, 'dcmout')}');
@@ -62,6 +62,8 @@ Future main() async {
   if (bytes == null) {
     log.error('"$fPath" either does not exist or is not a valid DICOM file');
     return;
+  } else {
+    stdout.writeln('  Length in bytes: ${bytes.lengthInBytes}');
   }
 
   final rds = ByteReader.readBytes(bytes, path: fPath, doLogging: true, showStats: true);

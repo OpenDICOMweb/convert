@@ -4,7 +4,7 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:dcm_convert/tools.dart';
+import 'package:dcm_convert/byte_tools.dart';
 import 'package:system/server.dart';
 
 //TODO: modify so that it takes the following arguments

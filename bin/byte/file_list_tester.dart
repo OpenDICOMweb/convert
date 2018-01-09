@@ -6,7 +6,7 @@
 
 import 'dart:io';
 
-import 'package:dcm_convert/tools.dart';
+import 'package:dcm_convert/byte_tools.dart';
 import 'package:system/server.dart';
 
 final String dir0 =

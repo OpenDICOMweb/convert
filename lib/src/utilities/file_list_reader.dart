@@ -5,7 +5,7 @@
 // See the AUTHORS file for other contributors.
 
 import 'package:dataset/dataset.dart';
-import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/bd_convert.dart';
 import 'package:system/core.dart';
 
 class FileListReader {

@@ -7,11 +7,13 @@
 import 'dart:typed_data';
 
 import 'package:dataset/tag_dataset.dart';
+import 'package:element/bd_element.dart';
 import 'package:element/tag_element.dart';
+import 'package:uid/uid.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/dcm_reader_base.dart';
 
-abstract class TagReaderMixin implements DcmReaderBase {
+abstract class TagReaderMixin implements DcmReaderBase<int> {
   @override
   Dataset cds;
 
@@ -19,21 +21,24 @@ abstract class TagReaderMixin implements DcmReaderBase {
   ElementList get elements => cds.elements;
 
   @override
-  Element makeElement(int code, int vrIndex, EBytes eb) =>
-      TagElement.fromEB(eb, vrIndex);
+  Element makeBDElement(int code, int vrIndex, ByteData bd) =>
+      TagElement.fromBD(BDElement.make(code, vrIndex, bd), vrIndex);
 
   @override
-  Element makePixelData(int code, int vrIndex, EBytes eb, {VFFragments fragments}) =>
-      TagElement.fromEB(eb, vrIndex);
+  Element makePixelData(int code, int vrIndex, BDElement bd,
+      [TransferSyntax ts, VFFragments fragments]) =>
+      TagElement.fromEB(bd, vrIndex);
 
   /// Returns a new Sequence ([SQ]).
   @override
-  SQ makeSequence(int code, EBytes eb, Dataset parent, List<Item> items) =>
-      new SQtag.fromBytes(eb, parent, items);
+  SQ makeSequence(int code, ByteData bd, Dataset parent, List<Item> items) {
+
+  }
+      new SQtag.fromBytes(bd, parent, items);
 
   @override
   RootDataset makeRootDataset(ByteData bd, [ElementList elements, String path]) =>
-      new RootDatasetTag(bd: bd, path: path);
+      new TagRootDataset(bd: bd, path: path);
 
   /// Returns a new [Item].
   @override

@@ -6,7 +6,7 @@
 
 import 'dart:io';
 
-import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/byte_convert.dart.old';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:system/core.dart';
 

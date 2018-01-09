@@ -60,9 +60,7 @@ class ByteReader {
             ? new EvrByteLogReader(bd, rds,
                 path: path, dParams: dParams, reUseBD: reUseBD)
             : new EvrByteReader(bd, new RootDatasetByte(bd, path: path),
-                path: path, dParams: dParams, reUseBD: reUseBD) {
-    print('EvrReader: $rds');
-  }
+                path: path, dParams: dParams, reUseBD: reUseBD);
 
   /// Creates a [ByteReader] from the contents of the [file].
   factory ByteReader.fromFile(File file,

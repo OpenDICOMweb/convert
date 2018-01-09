@@ -10,7 +10,7 @@ const List<int> kPaddingByVRIndex = const <int>[
   // Sequence == 0
   -1,
   // EVR Long maybe undefined
-  kNull, -1, kNull,
+  -1, -1, -1,
   // EVR Long
   -1, -1, -1, kSpace, kSpace, kSpace,
   // EVR Short

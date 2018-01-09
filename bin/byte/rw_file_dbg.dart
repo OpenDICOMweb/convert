@@ -10,7 +10,7 @@ import 'package:system/core.dart';
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:system/server.dart';
 
-import 'package:dcm_convert/src/tool/do_rwr_byte_file_sync.dart';
+import 'package:dcm_convert/src/byte_tools/do_rwr_byte_file_sync.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 

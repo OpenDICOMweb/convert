@@ -11,7 +11,8 @@ import 'package:element/byte_element.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/dcm_reader_base.dart';
 
-abstract class ByteReaderMixin implements DcmReaderBase {
+
+abstract class ByteReaderMixin implements DcmReaderBase<int> {
   @override
   RootDataset get rds;
   @override
@@ -21,7 +22,7 @@ abstract class ByteReaderMixin implements DcmReaderBase {
   ElementList get elements => cds.elements;
 
   @override
-  Element makeElement(int code, int vrIndex, EBytes eb) =>
+  Element makeBDElement(int code, int vrIndex, EBytes eb) =>
       ByteElement.fromEBytes(eb, vrIndex);
 
   @override

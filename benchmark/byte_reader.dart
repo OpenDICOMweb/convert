@@ -8,7 +8,7 @@ import 'dart:io';
 
 import 'package:benchmark_harness/benchmark_harness.dart';
 import 'package:timer/timer.dart';
-import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/bd_convert.dart';
 import 'package:system/server.dart';
 
 import 'test_files.dart';
@@ -60,7 +60,7 @@ void readFileTest(File inFile, {int reps = 1, bool fmiOnly = false}) {
 	final bytes0 = inFile.readAsBytesSync();
   final timer = new Timer();
   for (var i = 0; i < reps; i++) {
-    ByteReader.readBytes(bytes0);
+    BDReader.readBytes(bytes0);
   }
   timer.stop();
   print('readFileTest Time: ${timer.elapsed}');

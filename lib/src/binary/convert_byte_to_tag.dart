@@ -4,9 +4,9 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:dataset/byte_dataset.dart';
+import 'package:dataset/bd_dataset.dart';
 import 'package:dataset/tag_dataset.dart';
-import 'package:element/byte_element.dart';
+import 'package:element/bd_element.dart';
 import 'package:element/tag_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
@@ -19,10 +19,10 @@ Dataset currentBDS;
 Dataset currentTDS;
 int nElements = 0;
 
-RootDatasetTag convertByteDSToTagDS<V>(RootDatasetByte rootBDS) {
+TagRootDataset convertByteDSToTagDS<V>(BDRootDataset rootBDS) {
   log.level = Level.warn1;
   currentBDS = rootBDS;
-  final rootTDS = new RootDatasetTag.from(rootBDS);
+  final rootTDS = new TagRootDataset.from(rootBDS);
   log.debug('tRoot.isRoot: ${rootTDS.isRoot}');
 
   convertDataset(rootBDS, rootTDS);
@@ -67,12 +67,12 @@ Element convertElement(Element be) {
   }
 
   Element te;
-  if (be is SQbyte) {
+  if (be is SQ) {
     te = convertSQ(be);
   } else if (be.code == kPixelData) {
     te = TagElement.from(be);
     log.info0('PixelData\n  $be\n  $te');
-  } else if (be is ByteElement) {
+  } else if (be is BDElement) {
     te = TagElement.from(be);
   } else if (be is PrivateCreator) {
     if (be.vr != VR.kLO)
@@ -100,12 +100,12 @@ Element convertElement(Element be) {
 }
 
 SQ convertSQ(SQ sq) {
-  final tItems = new List<ItemTag>(sq.items.length);
+  final tItems = new List<TagItem>(sq.items.length);
   final parentBDS = currentBDS;
   final parentTDS = currentTDS;
   for (var i = 0; i < sq.items.length; i++) {
     currentBDS = sq.items.elementAt(i);
-    currentTDS = new ItemTag(parentTDS, currentBDS.dsBytes.bd);
+    currentTDS = new TagItem(parentTDS, currentBDS.dsBytes.bd);
     tItems[i] = convertDataset(currentBDS, currentTDS);
   }
   currentBDS = parentBDS;

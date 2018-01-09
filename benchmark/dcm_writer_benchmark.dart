@@ -7,7 +7,7 @@
 import 'dart:io';
 
 import 'package:benchmark_harness/benchmark_harness.dart';
-import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/bd_convert.dart';
 import 'package:system/server.dart';
 import 'package:timer/timer.dart';
 
@@ -59,13 +59,13 @@ void main() {
 
 bool writeFileTest(File inFile, {int reps = 1, bool fmiOnly = false}) {
 	final bytes0 = inFile.readAsBytesSync();
-  final rds0 = ByteReader.readBytes(bytes0);
-	final bytes1 = ByteWriter.writeBytes(rds0, path: '');
+  final rds0 = BDReader.readBytes(bytes0);
+	final bytes1 = BDWriter.writeBytes(rds0, path: '');
   if (!bytesEqual(bytes0, bytes1)) throw 'Error in DcmWrite';
 
 	final timer = new Timer();
   for (var i = 0; i < reps; i++) {
-    ByteWriter.writeBytes(rds0, path: '');
+    BDWriter.writeBytes(rds0, path: '');
   }
 
   print('writeFileTest Time: ${timer.elapsed}');

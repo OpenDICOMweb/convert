@@ -158,7 +158,16 @@ abstract class DcmWriterBase {
     print('End of pixelData: ${wb.index}');
   }
 
-  /// The default [ByteData] buffer length, if none is provided.
+  // **** Logging Interface ****
+  void logStartWrite(Element e, String name) {}
+
+  void logEndWrite(int eStart, Element e, String name, {bool ok}) {}
+
+  void logStartSQWrite(Element e, String name) {}
+
+  void logEndSQWrite(int eStart, Element e, String name, {bool ok}) {}
+
+/// The default [ByteData] buffer length, if none is provided.
   static const int defaultBufferLength = k1MB; //200 * k1MB;
 
   /// If [_reuse] is true the [ByteData] buffer is stored here.

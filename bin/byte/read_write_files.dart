@@ -7,23 +7,17 @@
 import 'package:system/core.dart';
 
 import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/byte_convert.dart.old';
 import 'package:system/server.dart';
 
-String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
 void main() {
-  Server.initialize(name: 'read_write_file', level: Level.info);
+  Server.initialize(name: 'read_write_file', level: Level.info1, throwOnError: true);
 
   // *** Modify [paths] value to read/write a different file
-  final paths = <String>[]
-  //paths.addAll(testPaths0);
- // paths.addAll(testPaths1);
- // paths.addAll(testPaths2);
-   ..addAll(testErrors);
+  final paths = testEvrPaths;
 
   for (var i = 0; i < paths.length; i++) {
-    byteReadWriteFileChecked(paths[i],fileNumber:  i);
+    byteReadWriteFileChecked(paths[i], fileNumber: i);
   }
 }
-

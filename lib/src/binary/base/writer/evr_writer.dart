@@ -11,8 +11,8 @@ import 'package:element/element.dart';
 import 'package:system/core.dart';
 import 'package:vr/vr.dart';
 
-import 'package:dcm_convert/src/binary/base/padding_chars.dart';
 import 'package:dcm_convert/src/binary/base/writer/dcm_writer_base.dart';
+import 'package:dcm_convert/src/binary/base/padding_chars.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
@@ -35,11 +35,11 @@ class EvrWriter extends DcmWriterBase {
       vrIndex = VR.kUN.index;
       wb.warn('** vrIndex changed to VR.kUN.index');
     }
-
+    print('** @${wb.index} $e');
     if (_isShortVR(vrIndex)) {
       writeShort(e, vrIndex);
     } else if (_isLongVR(vrIndex)) {
-      writeLong(e, vrIndex);
+      writeLongDefinedLength(e, vrIndex);
     } else if (_isSequenceVR(vrIndex)) {
       writeSequence(e, vrIndex);
     } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
@@ -60,26 +60,36 @@ class EvrWriter extends DcmWriterBase {
 
   /// Write an EVR Element with a short Value Length field.
   void writeShort(Element e, int vrIndex) {
-    logStartWrite(wb.index, e, 'writeEvrShort');
-    var length = e.vfLength;
-    final isOddLength = length.isOdd;
-    length = (isOddLength) ? length + 1 : length;
+    final eStart = wb.index;
+    assert(eStart.isEven);
+    logStartWrite(e, 'writeEvrShort');
+
+    final isOddLength = e.vfLength.isOdd;
+    final length = e.vfLength + (isOddLength ? 1 : 0);
+
+    assert(_isShortVR(e.vrIndex));
+    assert(length.isEven);
+    assert(length >= 0 && length <= kMaxLongVF, 'length: $length');
     wb
       ..code(e.code)
       ..uint16(e.vrCode)
       ..uint16(length);
+    assert(wb.index.isEven);
     _writeValueField(e, isOddLength);
-    logEndWrite(wb.index, e, 'writeEvrShort');
+    logEndWrite(eStart, e, 'writeEvrShort');
   }
 
   /// Write a non-Sequence EVR Element with a long Value Length field
   /// and a _defined length_.
-  void writeLong(Element e, int vrIndex) {
-    logStartWrite(wb.index, e, 'writeEvrLong');
+  void writeLongDefinedLength(Element e, int vrIndex) {
+    logStartWrite(e, 'writeEvrLong');
+
     assert(e.vfLengthField != kUndefinedLength);
-    final isOddLength = _writeEvrLongHeader(e, e.vfLength);
+    final eStart = wb.index;
+    assert(eStart.isEven);
+    final isOddLength = _writeEvrDefinedLengthHeader(e, e.vfLength);
     _writeValueField(e, isOddLength);
-    logEndWrite(wb.index, e, 'writeEvrLong');
+    logEndWrite(eStart, e, 'writeEvrLong');
   }
 
   /// Write a non-Sequence Element (OB, OW, UN) that may have an undefined length
@@ -88,23 +98,27 @@ class EvrWriter extends DcmWriterBase {
     if (e.hadULength && !eParams.doConvertUndefinedLengths) {
       _writeLongEvrUndefinedLength(e, vrIndex);
     } else {
-      writeLong(e, vrIndex);
+      writeLongDefinedLength(e, vrIndex);
     }
 //    logEndWrite(wb.index, e, 'writeEvrMaybeUndefined');
   }
 
   /// Write a non-Sequence _undefined length_ Element.
   void _writeLongEvrUndefinedLength(Element e, int vrIndex) {
-    logStartWrite(wb.index, e, 'writeEvrUndefinedLength');
-    assert(e.vfLengthField == kUndefinedLength);
-    final isOddLength =_writeEvrLongHeader(e, kUndefinedLength);
+    logStartWrite(e, 'writeEvrUndefinedLength');
+
+    assert(_isLongVR(vrIndex) && e.vfLengthField == kUndefinedLength);
+    final eStart = wb.index;
+    assert(eStart.isEven);
+    _writeEvrUndefinedLengthHeader(e);
     if (e.code == kPixelData) {
       writeEncapsulatedPixelData(e);
     } else {
-      _writeValueField(e, isOddLength);
+      _writeValueField(e, e.vfLength.isOdd);
     }
     wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
-    logEndWrite(wb.index, e, 'writeEvrUndefinedLength');
+    assert(wb.index.isEven);
+    logEndWrite(eStart, e, 'writeEvrUndefinedLength');
   }
 
   /// Write a Sequence Element.
@@ -116,52 +130,87 @@ class EvrWriter extends DcmWriterBase {
   /// Write an EVR Sequence with _defined length_.
   // Note: A Sequence cannot have an _odd_ length.
   void _writeEvrSQDefinedLength(SQ e, int vrIndex) {
-    logStartSQWrite(wb.index, e, 'writeEvrDefinedLengthSequence');
+    logStartSQWrite(e, 'writeEvrDefinedLengthSequence');
+
+    assert(e is SQ && vrIndex == kSQIndex);
     final eStart = wb.wIndex;
-    _writeEvrLongHeader(e);
+    assert(eStart.isEven);
+    _writeEvrDefinedLengthHeader(e, e.vfLengthField);
     final vlfOffset = wb.wIndex - 4;
     writeItems(e.items);
     final vfLength = (wb.index - eStart) - 12;
+    assert(vfLength.isEven && wb.index.isEven);
     wb.setUint32(vlfOffset, vfLength);
-    logEndSQWrite(wb.index, e, 'writeEvrDefinedLengthSequence');
+
+    logEndSQWrite(eStart, e, 'writeEvrDefinedLengthSequence');
   }
 
   /// Write an EVR Sequence with _defined length_.
   // Note: A Sequence cannot have an _odd_ length.
   void _writeEvrSQUndefinedLength(SQ e, int vrIndex) {
-    logStartSQWrite(wb.index, e, 'writeEvrUndefinedLengthSequence');
-    _writeEvrLongHeader(e, kUndefinedLength);
+    logStartSQWrite(e, 'writeEvrUndefinedLengthSequence');
+
+    assert(e is SQ && vrIndex == kSQIndex);
+    final eStart = wb.index;
+    assert(eStart.isEven);
+    _writeEvrUndefinedLengthHeader(e);
     writeItems(e.items);
     wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
-    logEndSQWrite(wb.index, e, 'writeEvrUndefinedLengthSequence');
+    assert(wb.index.isEven);
+    logEndSQWrite(eStart, e, 'writeEvrUndefinedLengthSequence');
   }
 
-  bool _writeEvrLongHeader(Element e, [int vfLengthField]) {
-    var length = e.vfLength;
-    vfLengthField ??= length;
-    final isOddLength = length.isOdd;
-    length = (isOddLength) ? length + 1 : length;
+  /// Write a Long Header with [kUndefinedLength] length.
+  bool _writeEvrUndefinedLengthHeader(Element e) {
+    assert(e != null && wb.index.isEven);
+    assert(_isNotShortVR(e.vrIndex), 'vrIndex: ${e.vrIndex}');
+    print('e: $e');
+    __writeEvrLongHeader(e,  kUndefinedLength);
+    return e.vfLength.isOdd;
+  }
+
+  /// Write a Long Header with defined length.
+  bool _writeEvrDefinedLengthHeader(Element e, int vfLength) {
+    assert(e != null && vfLength != null && wb.index.isEven);
+    assert(_isNotShortVR(e.vrIndex), 'vrIndex: ${e.vrIndex}');
+    print('e: $e');
+    final isOddLength = vfLength.isOdd;
+    final length = vfLength + (isOddLength ? 1 : 0);
+    assert(length.isEven);
+    assert(length >= 0 && length < kUndefinedLength, 'length: $length');
+    __writeEvrLongHeader(e,  vfLength);
+    return isOddLength;
+  }
+
+  void __writeEvrLongHeader(Element e, int vfLength) {
+    assert(e != null && vfLength != null && wb.index.isEven);
+    assert(_isNotShortVR(e.vrIndex), 'vrIndex: ${e.vrIndex}');
     wb
       ..code(e.code)
       ..uint16(e.vrCode)
       ..uint16(0)
-      ..uint32(vfLengthField);
-    return isOddLength;
+      ..uint32(vfLength);
+    assert(wb.index.isEven);
   }
 
-  void _writeValueField(Element e, bool isOddLength) {
-    final bytes = e.vfBytes;
-    wb.bytes(bytes);
-    if (isOddLength) {
-      log.debug('Writing pad char for: $e');
-      final padChar = paddingChar(e.vrIndex);
-      if (padChar.isNegative) {
-        wb.error('Padding a non-padded Element: $e');
-        return invalidVFLength(e.vfBytes.length, -1);
-      }
-      wb.uint8(e.padChar);
-      log.debug('End Writing pad char for: @${wb.index}');
+  void _writeValueField(Element e, bool lengthIsOdd) {
+    assert(wb.index.isEven);
+    wb.bytes(e.vfBytes);
+    if (lengthIsOdd) _writePaddingChar(e);
+    assert(wb.index.isEven);
+  }
+
+  void _writePaddingChar(Element e) {
+    assert(wb.index.isOdd, 'vfLength: ${e.vfLength} - $e');
+    log.debug('Writing pad char for: $e');
+    final padChar = paddingChar(e.vrIndex);
+    if (padChar.isNegative) {
+      wb.error('Padding a non-padded Element: $e');
+      return invalidVFLength(e.vfBytes.length, -1);
     }
+    wb.uint8(padChar);
+    assert(wb.index.isEven);
+    log.debug('${wb.wmm} End Writing pad char ($padChar) for: @${wb.index}');
   }
 
   // **** External interface for debugging and monitoring
@@ -171,7 +220,8 @@ class EvrWriter extends DcmWriterBase {
 
   /// Write a non-Sequence EVR Element with a long Value Length field
   /// and a _defined length_.
-  void writeLongEvrDefinedLength(Element e, int vrIndex) => writeLong(e, vrIndex);
+  void writeLongEvrDefinedLength(Element e, int vrIndex) =>
+      writeLongDefinedLength(e, vrIndex);
 
   /// Write a non-Sequence Element (OB, OW, UN) that may have an undefined length
   void writeEvrMaybeUndefined(Element e, int vrIndex) => writeMaybeUndefined(e, vrIndex);
@@ -233,23 +283,30 @@ class EvrWriter extends DcmWriterBase {
   /// beginning of the encoding.
   bool writePrefix(RootDataset rds, {bool cleanPreamble = true}) {
     if (rds is! RootDataset) log.error('Not rds');
-    return (rds.preamble == null || eParams.doCleanPreamble)
+    return (rds.prefix == kEmptyByteData || eParams.doCleanPreamble)
         ? writeCleanPrefix()
         : writeExistingPrefix();
   }
 
+  /// Writes a new Open DICOMweb FMI.
+  bool writeCleanPrefix() => wb.writeZeros(128);
+
+/* Flush when working
   /// Writes a new Open DICOMweb FMI.
   bool writeCleanPrefix() {
     for (var i = 0; i < 128; i++) wb.uint8(0);
     wb.uint32(kDcmPrefix);
     return true;
   }
+*/
 
   /// Writes a new Open DICOMweb FMI.
   bool writeExistingPrefix() {
-    assert(rds.preamble != null && !eParams.doCleanPreamble);
+    assert(rds.prefix != kEmptyByteData && !eParams.doCleanPreamble);
     final preamble = rds.preamble;
     for (var i = 0; i < 128; i++) wb.uint8(preamble.getUint8(i));
+    final prefix = rds.prefix;
+  //  for (var i = 0; i < 4; i++) wb.uint8(prefix.getUint8(i));
     wb.uint32(kDcmPrefix);
     return true;
   }
@@ -259,15 +316,6 @@ class EvrWriter extends DcmWriterBase {
     wb.ascii(uid.asString);
   }
 */
-
-  // **** Logging Interface ****
-  void logStartWrite(int eStart, Element e, String name) {}
-
-  void logEndWrite(int eStart, Element e, String name, {bool ok}) {}
-
-  void logStartSQWrite(int eStart, Element e, String name) {}
-
-  void logEndSQWrite(int eStart, Element e, String name, {bool ok}) {}
 }
 
 bool _isSequenceVR(int vrIndex) => vrIndex == 0;
@@ -283,3 +331,5 @@ bool _isLongVR(int vrIndex) =>
 
 bool _isShortVR(int vrIndex) =>
     vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
+
+bool _isNotShortVR(int vrIndex) => !_isShortVR(vrIndex);

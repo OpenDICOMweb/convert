@@ -4,10 +4,10 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:dataset/byte_dataset.dart';
+import 'package:dataset/bd_dataset.dart';
 import 'package:dcm_convert/src/binary/base/writer/write_buffer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
-import 'package:element/byte_element.dart';
+import 'package:element/bd_element.dart';
 import 'package:system/core.dart';
 import 'package:tag/tag.dart';
 import 'package:vr/vr.dart';

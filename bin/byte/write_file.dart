@@ -7,7 +7,7 @@
 import 'dart:async' hide Timer;
 import 'dart:typed_data';
 
-import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/byte_convert.dart.old';
 import 'package:system/core.dart';
 import 'package:timer/timer.dart';
 import 'package:uid/uid.dart';

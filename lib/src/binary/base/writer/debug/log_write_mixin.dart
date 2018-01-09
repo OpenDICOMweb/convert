@@ -139,7 +139,13 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
   String vlfToString(int vlf) =>
       (vlf == null) ? '' : (vlf == kUndefinedLength) ? '0xFFFFFFFF' : '$vlf';
 
-  String _startWriteElement(int eStart, Element e, String name) {
+  @override
+  void logStartWrite(Element e, String name) {
+    final s = _startWriteElement(e, name);
+    log.debug(s);
+  }
+
+  String _startWriteElement(Element e, String name) {
     final vr = e.vr;
     final tag = e.tag;
     final code = e.code;
@@ -150,38 +156,28 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
   }
 
   @override
-  void logStartWrite(int eStart, Element e, String name) {
-    final s = _startWriteElement(eStart, e, name);
+  void logEndWrite(int eStart, Element e, String name, {bool ok = true}) {
+    final s = _endWriteElement(eStart, e, name, ok: ok);
     log.debug(s);
   }
 
   String _endWriteElement(int eStart, Element e, String name, {bool ok = true}) {
-    final eEnd = eStart - wb.index;
+    final eEnd = wb.index;
     _doEndOfElementStats(e.code, eStart, e, ok);
     final sb = new StringBuffer('$wee $e $eStart - $eEnd = ${eEnd - eStart}:$remaining');
     return sb.toString();
   }
 
   @override
-  void logEndWrite(int eStart, Element e, String name, {bool ok = true}) {
-    final s = _endWriteElement(eStart, e, name, ok: ok);
-    log.debug(s);
-  }
-
-  @override
-  void logStartSQWrite(int eStart, Element e, String name) {
-    final s = _startWriteElement(eStart, e, name);
-    log
-      ..debug(s)
-      ..down;
+  void logStartSQWrite(Element e, String name) {
+    final s = _startWriteElement(e, name);
+    log..debug(s)..down;
   }
 
   @override
   void logEndSQWrite(int eStart, Element e, String name, {bool ok = true}) {
     final s = _endWriteElement(eStart, e, name, ok: ok);
-    log
-      ..up
-      ..debug(s);
+    log..up..debug(s);
   }
 
   void _doEndOfElementStats(int code, int eStart, Element e, bool ok) {

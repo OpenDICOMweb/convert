@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:dcm_convert/data/test_files.dart';
 
-import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/byte_convert.dart.old';
 import 'package:path/path.dart' as path;
 import 'package:system/server.dart';
 import 'package:dcm_convert/src/file_utils.dart';

@@ -35,7 +35,7 @@ class LogEvrWriter extends EvrWriter with LogWriteMixin {
 
   @override
   void writeElement(Element e) {
-    logStartWrite(wb.index, e, 'writeEvrElement');
+    logStartWrite(e, 'writeEvrElement');
     elementCount++;
     final eStart = wb.wIndex;
     var vrIndex = e.vrIndex;
@@ -50,7 +50,7 @@ class LogEvrWriter extends EvrWriter with LogWriteMixin {
     if (_isEvrShortLengthVR(vrIndex)) {
       writeShort(e, vrIndex);
     } else if (_isEvrLongLengthVR(vrIndex)) {
-      writeLong(e, vrIndex);
+      writeLongDefinedLength(e, vrIndex);
     } else if (_isSequenceVR(vrIndex)) {
       writeSequence(e, vrIndex);
     } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
@@ -80,7 +80,7 @@ class LogEvrWriter extends EvrWriter with LogWriteMixin {
 
   /// Write a non-Sequence _defined length_ Element.
   @override
-  void writeLong(Element e, int vrIndex) {
+  void writeLongDefinedLength(Element e, int vrIndex) {
     log.debug('${wb.wbb} writeLongEvrDefinedLength $e :${wb.remaining}', 1);
     super.writeLongEvrDefinedLength(e, vrIndex);
     pInfo.nLongElements++;
@@ -95,7 +95,7 @@ class LogEvrWriter extends EvrWriter with LogWriteMixin {
     pInfo.nMaybeUndefinedElements++;
     return (e.hadULength && !eParams.doConvertUndefinedLengths)
         ? _writeLongEvrUndefinedLength(e, vrIndex)
-        : writeLong(e, vrIndex);
+        : writeLongDefinedLength(e, vrIndex);
   }
 
   void _writeLongEvrUndefinedLength(Element e, int vrIndex) {

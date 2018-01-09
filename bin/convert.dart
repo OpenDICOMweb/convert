@@ -11,11 +11,11 @@ import 'package:system/server.dart';
 import 'package:vr/vr.dart';
 
 import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/byte_convert.dart';
-import 'package:dcm_convert/tools.dart';
+import 'package:dcm_convert/bd_convert.dart';
+import 'package:dcm_convert/byte_data_tools.dart';
 
 /// A Program that reads a [File], decodes it into a [ RootDatasetByte ],
-/// and then converts that into a [RootDatasetTag].
+/// and then converts that into a [TagRootDataset].
 void main(List<String> args) {
   Server.initialize(name: 'convert', level: Level.info0);
 
@@ -32,7 +32,7 @@ void main(List<String> args) {
   // Short circuiting args for testing
   final pathList = [path0];
 
-  RootDatasetTag rds;
+  TagRootDataset rds;
   for (var path in pathList) {
     try {
       rds = convertPath(path, fmiOnly: false);
@@ -44,16 +44,16 @@ void main(List<String> args) {
   stdout.write(rds.summary);
 }
 
-RootDatasetTag convertPath(String path, {int reps = 1, bool fmiOnly = false}) {
+TagRootDataset convertPath(String path, {int reps = 1, bool fmiOnly = false}) {
   final f = pathToFile(path, mustExist: true);
   return convertFile(f, reps: reps, fmiOnly: fmiOnly);
 }
 
-RootDatasetTag convertFile(File file, {int reps = 1, bool fmiOnly = false}) {
+TagRootDataset convertFile(File file, {int reps = 1, bool fmiOnly = false}) {
   final log = new Logger('convertFile', Level.info)
     ..level = Level.warn1
     ..debug2('Reading: $file');
-  final bRoot = ByteReader.readFile(file);
+  final bRoot = BDReader.readFile(file);
   print('TS: ${bRoot.transferSyntax}');
   log
     ..debug('bRoot.isRoot: ${bRoot.isRoot}')

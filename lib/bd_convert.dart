@@ -12,10 +12,10 @@ export 'package:dcm_convert/src/binary/base/writer/dcm_writer_base.dart';
 export 'package:dcm_convert/src/binary/base/writer/evr_writer.dart';
 export 'package:dcm_convert/src/binary/base/writer/ivr_writer.dart';
 
-export 'package:dcm_convert/src/binary/byte/reader/byte_reader.dart';
-export 'package:dcm_convert/src/binary/byte/writer/byte_writer.dart';
+export 'package:dcm_convert/src/binary/byte_data/reader/bd_reader.dart';
+export 'package:dcm_convert/src/binary/byte_data/writer/bd_writer.dart';
+export 'package:dcm_convert/src/binary/byte_data/byte_read_utils.dart';
 
-export 'package:dcm_convert/src/binary/byte_read_utils.dart';
 export 'package:dcm_convert/src/binary/convert_byte_to_tag.dart';
 export 'package:dcm_convert/src/decoding_parameters.dart';
 export 'package:dcm_convert/src/element_offsets.dart';
@@ -23,11 +23,9 @@ export 'package:dcm_convert/src/encoding_parameters.dart';
 export 'package:dcm_convert/src/errors.dart';
 export 'package:dcm_convert/src/io_utils.dart';
 export 'package:dcm_convert/src/utilities/file_list_reader.dart';
-export 'package:element/byte_element.dart';
+export 'package:element/bd_element.dart';
 export 'package:entity/entity.dart';
-/*
-export 'package:dcm_convert/src/binary/base/writer/dcm_writer.dart';
-*/
+
 export 'package:dcm_convert/src/binary/tag/tag_reader.dart';
 export 'package:dcm_convert/src/binary/tag/tag_writer.dart';
 

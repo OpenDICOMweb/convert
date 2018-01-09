@@ -33,7 +33,7 @@ class TagReader {
       this.dParams = DecodingParameters.kNoChange,
       this.reUseBD = true,
       this.offsets})
-      : _evrReader = new EvrTagReader(bd, new RootDatasetTag(bd: bd, path: path),
+      : _evrReader = new EvrTagReader(bd, new TagRootDataset(bd: bd, path: path),
                                           path:
   path, dParams:
   dParams, reUseBD: reUseBD);
@@ -73,7 +73,7 @@ class TagReader {
 
   // TODO: add Async argument and make it the default
   /// Reads only the File Meta Information (FMI), if present.
-  static RootDatasetTag readBytes(Uint8List bytes,
+  static TagRootDataset readBytes(Uint8List bytes,
       {String path = '',
       bool async = true,
       bool fast = true,
@@ -87,7 +87,7 @@ class TagReader {
     return rds;
   }
 
-  static RootDatasetTag readFile(File file,
+  static TagRootDataset readFile(File file,
       {bool async: true,
       bool fast = true,
       bool fmiOnly = false,
@@ -98,7 +98,7 @@ class TagReader {
         path: file.path, async: async, fast: fast, fmiOnly: fmiOnly, dParams: dParams);
   }
 
-  static RootDatasetTag readPath(String path,
+  static TagRootDataset readPath(String path,
           {bool async: true,
           bool fast = true,
           bool fmiOnly = false,

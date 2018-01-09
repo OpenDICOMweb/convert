@@ -9,8 +9,8 @@ import 'dart:io';
 
 import 'package:system/core.dart';
 
-import 'package:dcm_convert/src/tool/job_args.dart';
-import 'package:dcm_convert/src/tool/job_reporter.dart';
+import 'package:dcm_convert/src/byte_tools/job_args.dart';
+import 'package:dcm_convert/src/byte_tools/job_reporter.dart';
 import 'package:dcm_convert/src/io_utils.dart';
 
 // **** change this name when testing

@@ -7,7 +7,7 @@
 import 'dart:io';
 
 import 'package:dataset/tag_dataset.dart';
-import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/bd_convert.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as p;
 import 'package:timer/timestamp.dart';
@@ -76,7 +76,7 @@ void readFileList(List<File> files, {bool fmiOnly = false}) {
   final filesCount = files.length;
 
   var count = -1;
-  RootDatasetTag rds;
+  TagRootDataset rds;
   final success = <String>[];
   final failure = <String>[];
   for (var file in files) {

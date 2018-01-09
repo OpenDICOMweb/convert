@@ -7,7 +7,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dcm_convert/byte_convert.dart';
+import 'package:dcm_convert/bd_convert.dart';
 import 'package:path/path.dart' as path;
 
 int getFieldWidth(int total) => '$total'.length;

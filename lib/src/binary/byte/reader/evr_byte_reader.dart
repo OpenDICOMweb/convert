@@ -20,7 +20,7 @@ import 'package:dcm_convert/src/decoding_parameters.dart';
 /// The resulting [Dataset] is a [RootDatasetByte].
 class EvrByteReader extends EvrReader with ByteReaderMixin, LogReadMixinBase {
   /// Creates a new [EvrByteReader].
-  EvrByteReader(ByteData bd, RootDatasetByte rds,
+  EvrByteReader(EBytes eb, RootDatasetByte rds,
       {String path = '',
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD = true})
