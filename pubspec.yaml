@@ -1,6 +1,6 @@
 # TODO: figure out why "convert" doesn't work for name.
-name: dcm_convert
-version: 0.6.5
+name: convert
+version: 0.7.0
 description: A package for encoding/decoding DICOM binary, json, ...
 author: Jim Philbin <jfphilbin@gmail.com>
 

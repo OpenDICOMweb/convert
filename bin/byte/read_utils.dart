@@ -8,12 +8,9 @@ import 'dart:async' hide Timer;
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dcm_convert/byte_convert.dart.old';
-import 'package:logger/logger.dart';
+import 'package:convert/bd_convert.dart';
 import 'package:path/path.dart' as p;
-import 'package:system/core.dart';
-import 'package:timer/timer.dart';
-import 'package:uid/uid.dart';
+import 'package:core/core.dart';
 
 final Formatter format = new Formatter();
 
@@ -66,7 +63,7 @@ Timings for ${file.path}
 
 class FileResult {
   File file;
-  RootDatasetByte rds;
+  BDRootDataset rds;
   bool fmiOnly;
   TransferSyntax targetTS;
   FileTiming times;
@@ -217,7 +214,7 @@ FileResult readFileWithResult(File file,
   final start = timer.split;
   final bytes = file.readAsBytesSync();
   final readBD = timer.split;
-  final rds = ByteReader.readBytes(bytes, path: file.path);
+  final rds = BDReader.readBytes(bytes, path: file.path);
   timer.stop();
   if (rds == null) return null;
   final stop = timer.elapsed;
@@ -300,7 +297,7 @@ ResultSet readFileList(List<File> files,
   return results;
 }
 
-void formatDataset(RootDatasetByte rds, {bool includePrivate = true}) {
+void formatDataset(BDRootDataset rds, {bool includePrivate = true}) {
   final z = new Formatter(maxDepth: 146);
   log.debug(rds.format(z));
 }

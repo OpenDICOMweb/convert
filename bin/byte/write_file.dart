@@ -7,12 +7,10 @@
 import 'dart:async' hide Timer;
 import 'dart:typed_data';
 
-import 'package:dcm_convert/byte_convert.dart.old';
-import 'package:system/core.dart';
-import 'package:timer/timer.dart';
-import 'package:uid/uid.dart';
+import 'package:convert/bd_convert.dart';
+import 'package:core/core.dart';
 
-Future<Uint8List> writeFile(RootDatasetByte rds, String path,
+Future<Uint8List> writeFile(BDRootDataset rds, String path,
     {bool fmiOnly = false, TransferSyntax outputTS}) {
   final timer = new Timer();
   final total = rds.total;
@@ -22,7 +20,7 @@ Future<Uint8List> writeFile(RootDatasetByte rds, String path,
   if (fmiOnly) log.debug('    fmiOnly: $fmiOnly');
 
   //  timer.start();
-  final bytes = ByteWriter.writePath(rds, path);
+  final bytes = BDWriter.writePath(rds, path);
   timer.stop();
 
   final msPerElement = (timer.elapsedMicroseconds ~/ total) ~/ 1000;

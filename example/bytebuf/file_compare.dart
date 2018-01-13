@@ -7,7 +7,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/bytebuf.dart';
+import 'package:convert/bd_convert.dart';
 
 void main(List<String> args) {
   // var compare = new FileCompare(path1, path2);

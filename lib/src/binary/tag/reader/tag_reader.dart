@@ -10,10 +10,10 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:dcm_convert/src/binary/tag/reader/evr_tag_reader.dart';
-import 'package:dcm_convert/src/binary/tag/reader/ivr_tag_reader.dart';
-import 'package:dcm_convert/src/decoding_parameters.dart';
-import 'package:dcm_convert/src/element_offsets.dart';
+import 'package:convert/src/binary/tag/reader/evr_tag_reader.dart';
+import 'package:convert/src/binary/tag/reader/ivr_tag_reader.dart';
+import 'package:convert/src/decoding_parameters.dart';
+import 'package:convert/src/element_offsets.dart';
 
 /// Creates a new [TagReader], which is decoder for Binary DICOM
 /// (application/dicom).

@@ -6,12 +6,11 @@
 
 import 'dart:typed_data';
 
-import 'package:common/logger.dart';
 import 'package:core/core.dart';
-import 'package:dictionary/tag.dart';
 
-import 'package:dcm_convert/src/dicom_no_tag/test_dcm_byte_reader.dart';
-import 'package:dcm_convert/src/dicom_no_tag/test_dcm_byte_writer.dart';
+
+import 'package:convert/convert.dart';
+import 'package:convert/convert.dart';
 
 /// Logger
 Logger log = new Logger("read_write_element");
@@ -34,12 +33,12 @@ bool elementTest(Element e0, List values) {
 
   // Write the element
   var bd = new ByteData(4096);
-  TestDcmByteWriter writer = new TestDcmByteWriter(new RootByteDataset(bd));
+  TestDcmBDWriter writer = new TestDcmBDWriter(new RootByteDataset(bd));
   writer.xWritePublicElement(e1);
   int wIndex = writer.wIndex;
 
   // Read the element
-  RootTagDataset rds1 = new RootTagDataset.empty();
+  TagRootDataset rds1 = new TagRootDataset.empty();
   TestDcmByteReader reader = new TestDcmByteReader.fromList(writer.bytes, rds1);
   Element e3 = reader.xReadPublicElement();
   int rIndex = reader.rIndex;

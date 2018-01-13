@@ -6,13 +6,13 @@
 
 import 'dart:io';
 
-import 'package:dcm_convert/data/test_directories.dart';
-import 'package:dcm_convert/byte_convert.dart.old';
+import 'package:convert/data/test_directories.dart';
+import 'package:convert/bd_convert.dart';
 import 'package:path/path.dart' as p;
-import 'package:system/core.dart';
-import 'package:timer/timer.dart';
+import 'package:core/core.dart';
 
-import 'package:dcm_convert/src/binary/byte/byte_read_utils.dart';
+
+import 'package:convert/src/binary/byte_data/byte_read_utils.dart';
 
 
 final String dir0 =

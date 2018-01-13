@@ -6,13 +6,9 @@
 
 import 'dart:typed_data';
 
-import 'package:common/logger.dart';
-import 'package:dcm_convert/convert.dart';
+import 'package:convert/convert.dart';
 import 'package:core/core.dart';
-import 'package:dictionary/dictionary.dart';
 
-/// Logger
-Logger log = new Logger("read_write_element", watermark: Severity.debug);
 
 /// Simple [Element] test
 void main(List<String> args) {
@@ -28,12 +24,12 @@ void main(List<String> args) {
 }
 
 bool writeReadElementTest<E>(TagElement<E> e0, [PrivateCreator pc]) {
-  log.debug('writeReadElement: ${e0.info}');
+  log.debug('writeReadElement: $e0');
   // Create Dataset DS0 and write E0
-  RootTagDataset rds0 = new RootTagDataset.empty();
+  TagRootDataset rds0 = new TagRootDataset.empty();
   DcmTagWriter writer0 = new DcmTagWriter(rds0);
   writer0.xWritePublicElement(e0);
-  int wIndex0 = writer0.wIndex;
+  int wIndex0 = writer0.index;
   log.debug('wIndex0($wIndex0)');
 
   // Now read the Dataset from the bytes.
@@ -47,19 +43,19 @@ bool writeReadElementTest<E>(TagElement<E> e0, [PrivateCreator pc]) {
   TagElement e1;
   if (e0.tag is PTag) {
     e1 = rBuf0.xReadPublicElement();
-    log.debug('PTag: ${e1.info}');
+    log.debug('PTag: $e1');
   } else if (e0.tag is PCTag) {
     pc0 = rBuf0.xReadPrivateCreator();
-    log.debug('PCTag: ${pc0.info}');
+    log.debug('PCTag: $pc0');
   } else if (e0.tag is PDTag) {
     e1 = rBuf0.xReadPrivateData(pc0);
-    log.debug('PDTag: ${e1.info}');
+    log.debug('PDTag: $e1');
   } else if (e0.tag is PrivateGroupLengthTag) {
     e1 = rBuf0.xReadPrivateData(pc0);
-    log.debug('PrivateGroupLengthTag: ${e1.info}');
+    log.debug('PrivateGroupLengthTag: $e1');
   } else if (e0.tag is PrivateTag) {
     e1 = rBuf0.xReadPrivateData(pc0);
-    log.debug('PrivateTag.illegal: ${e1.info}');
+    log.debug('PrivateTag.illegal: $e1');
   }
   rIndex0 = rBuf0.rIndex;
 
@@ -111,13 +107,13 @@ TagElement<E> writeReadDataset<E>(RootTDataset ds0, TagElement<E> e0) {
 void testPublicElement() {
   Tag e0Tag = PTag.lookupCode(0x00020000, VR.kUL);
   UL e0 = new UL(e0Tag, [128]);
-  log.debug('e0: ${e0.info}');
+  log.debug('e0: $e0');
   bool v = writeReadElementTest(e0);
   log.debug('expect true: $v');
 
   e0Tag = PTag.lookupCode(0x00080000, VR.kUL);
   e0 = new UL(e0Tag, [128]);
-  log.debug('e0: ${e0.info}');
+  log.debug('e0: $e0');
   v = writeReadElementTest(e0);
   log.debug('expect true: $v');
 
@@ -127,7 +123,7 @@ void testPublicElement() {
 void testPrivateGroupLengthElement() {
   Tag e0Tag = PTag.lookupCode(0x00090000, VR.kUL);
   UL e0 = new UL(e0Tag, [128]);
-  log.debug('e0: ${e0.info}');
+  log.debug('e0: $e0');
   bool v = writeReadElementTest(e0);
   log.debug('expect true: $v');
 

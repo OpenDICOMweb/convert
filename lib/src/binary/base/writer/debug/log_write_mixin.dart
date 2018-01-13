@@ -6,9 +6,9 @@
 
 import 'package:core/core.dart';
 
-import 'package:dcm_convert/src/binary/base/writer/log_write_mixin_base.dart';
-import 'package:dcm_convert/src/binary/base/writer/write_buffer.dart';
-import 'package:dcm_convert/src/element_offsets.dart';
+import 'package:convert/src/binary/base/writer/log_write_mixin_base.dart';
+import 'package:convert/src/binary/base/writer/write_buffer.dart';
+import 'package:convert/src/element_offsets.dart';
 
 abstract class LogWriteMixin implements LogWriteMixinBase {
   int get elementCount;

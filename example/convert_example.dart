@@ -4,7 +4,7 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the   AUTHORS file for other contributors.
 
-//import 'package:dcm_convert/dcm.dart';
+//import 'package:convert/dcm.dart';
 
 void main() {
   //TODO

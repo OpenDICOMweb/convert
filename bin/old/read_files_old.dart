@@ -7,9 +7,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/byte_convert.dart';
-import 'package:dcm_convert/data/test_files.dart';
-import 'package:system/server.dart';
+import 'package:convert/byte_convert.dart';
+import 'package:convert/data/test_files.dart';
+import 'package:core/server.dart';
 
 
 //Urgent: use badFileList2 - fix indentation

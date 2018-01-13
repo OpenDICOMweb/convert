@@ -9,9 +9,9 @@ import 'dart:typed_data';
 
 import 'package:common/common.dart';
 import 'package:core/core.dart';
-import 'package:dictionary/dictionary.dart';
 
-import 'package:dcm_convert/src/bytebuf/bytebuf.dart';
+
+import 'package:convert/src/bytebuf/bytebuf.dart';
 
 //TODO:
 //  1. Move all [String] trimming and validation to the Element.  The reader

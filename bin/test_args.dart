@@ -6,7 +6,7 @@
 
 import 'dart:io';
 
-import 'package:dcm_convert/byte_data_tools.dart';
+import 'package:convert/byte_data_tools.dart';
 
 void main(List<String> args) {
   JobArgs jobArgs;

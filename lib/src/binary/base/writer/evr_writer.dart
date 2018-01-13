@@ -11,9 +11,9 @@ import 'dart:typed_data';
 import 'package:core/core.dart';
 
 
-import 'package:dcm_convert/src/binary/base/writer/dcm_writer_base.dart';
-import 'package:dcm_convert/src/binary/base/padding_chars.dart';
-import 'package:dcm_convert/src/encoding_parameters.dart';
+import 'package:convert/src/binary/base/writer/dcm_writer_base.dart';
+import 'package:convert/src/binary/base/padding_chars.dart';
+import 'package:convert/src/encoding_parameters.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 

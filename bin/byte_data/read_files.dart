@@ -8,12 +8,12 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/data/test_files.dart';
+import 'package:convert/data/test_files.dart';
 
-import 'package:dcm_convert/bd_convert.dart';
+import 'package:convert/bd_convert.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
-import 'package:dcm_convert/src/file_utils.dart';
+import 'package:convert/src/file_utils.dart';
 
 const String xx3 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
 const String xx2 =

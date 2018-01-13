@@ -7,11 +7,11 @@
 import 'dart:async' hide Timer;
 import 'dart:io';
 
-import 'package:system/core.dart';
+import 'package:core/core.dart';
 
-import 'package:dcm_convert/src/byte_tools/job_args.dart';
-import 'package:dcm_convert/src/byte_tools/job_reporter.dart';
-import 'package:dcm_convert/src/io_utils.dart';
+import 'package:convert/src/byte_tools/job_args.dart';
+import 'package:convert/src/byte_tools/job_reporter.dart';
+import 'package:convert/src/io_utils.dart';
 
 // **** change this name when testing
 const String defaultDirName = 'C:/odw/test_data';

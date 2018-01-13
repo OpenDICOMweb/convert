@@ -4,11 +4,11 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the   AUTHORS file for other contributors.
 
-import 'package:system/core.dart';
+import 'package:core/core.dart';
 
-import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/byte_convert.dart.old';
-import 'package:system/server.dart';
+import 'package:convert/data/test_files.dart';
+import 'package:convert/bd_convert.dart';
+import 'package:core/server.dart';
 
 
 void main() {

@@ -7,16 +7,14 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/bd_convert.dart';
+import 'package:convert/bd_convert.dart';
 import 'package:path/path.dart' as p;
-import 'package:system/server.dart';
-import 'package:timer/timer.dart';
-import 'package:uid/uid.dart';
+import 'package:core/server.dart';
 
-import 'package:dcm_convert/data/test_directories.dart';
-import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/src/binary/byte/byte_read_utils.dart';
-import 'package:dcm_convert/src/binary/compare_bytes.dart';
+import 'package:convert/data/test_directories.dart';
+import 'package:convert/data/test_files.dart';
+import 'package:convert/src/binary/byte_data/byte_read_utils.dart';
+import 'package:convert/src/binary/compare_bytes.dart';
 
 
 //TODO: move to appropriate place
@@ -61,7 +59,7 @@ bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
 /*  List<int> elementIndex0 = reader.elementIndex;*/
   log..info0(rds0.pInfo)..info0(rds0.info);
 
-  final writer = new ByteWriter(rds0);
+  final writer = new BDWriter(rds0);
   final bytes1 = writer.writeRootDataset();
 
 /*  List<int> elementIndex1 = writer.elementIndex.sublist(0, writer.nthElement);
@@ -152,7 +150,7 @@ FileResult readWriteFileTiming(File file,
   return result;
 }
 
-bool _compareDatasets(RootDatasetByte rds0, RootDatasetByte rds1,
+bool _compareDatasets(BDRootDataset rds0, BDRootDataset rds1,
     [bool throwOnError = true]) {
   final v = compareByteDatasets(rds0, rds1);
   if (!v) {

@@ -4,8 +4,8 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See the AUTHORS file for other contributors.
 
-export 'package:dcm_convert/src/binary/compare_bytes.dart';
+export 'package:convert/src/binary/compare_bytes.dart';
 
-export 'src/bytebuf/bytebuf.dart';
-export 'src/bytebuf/bytebuf_reader.dart';
-export 'src/bytebuf/bytebuf_writer.dart';
+export 'package:convert/src/bytebuf/bytebuf.dart';
+export 'package:convert/src/bytebuf/bytebuf_reader.dart';
+export 'package:convert/src/bytebuf/bytebuf_writer.dart';

@@ -13,13 +13,13 @@ String _out;
 String add(String s) => _out += s;
 
 String addSlice(String s, [int offset= 0, int length]) {
-  length = ((length == null) || (length > s.length)) ? s.length : length;
+  length ??= ((length == null) || (length > s.length)) ? s.length : length;
   return _out += s.substring(offset, length);
 }
 
 String basicListToString(List<String> values) {
   _out += '[';
-  for(int i = 0; i < values.length; i++) {
+  for(var i = 0; i < values.length; i++) {
     if (i != values.length - 1) {
       _out += '"s",';
     } else {
@@ -36,7 +36,7 @@ String toBase64(Uint8List values) => _out += '"${BASE64.encode(values)}"';
 
 String toNumber(num value) => '${value.toString()}';
 
-toList(List v) => '[ ${v.join(",")}';
+String toList(List v) => '[ ${v.join(",")}';
 
 
 

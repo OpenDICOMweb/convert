@@ -9,7 +9,7 @@ import 'dart:convert';
 import 'package:logger/logger.dart';
 
 import 'package:core/core.dart';
-import 'package:system/core.dart';
+import 'package:core/core.dart';
 import 'json_type.dart';
 
 //TODO:

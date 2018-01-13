@@ -9,15 +9,15 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
-import 'package:dcm_convert/src/binary/base/reader/evr_reader.dart';
-import 'package:dcm_convert/src/binary/byte_data/reader/evr_bd_reader.dart';
-import 'package:dcm_convert/src/binary/byte_data/reader/evr_logging_bd_reader.dart';
-import 'package:dcm_convert/src/binary/byte_data/reader/ivr_bd_reader.dart';
-import 'package:dcm_convert/src/binary/byte_data/reader/ivr_logging_bd_reader.dart';
-import 'package:dcm_convert/src/decoding_parameters.dart';
-import 'package:dcm_convert/src/element_offsets.dart';
-import 'package:dcm_convert/src/io_utils.dart';
+import 'package:convert/src/binary/base/reader/read_buffer.dart';
+import 'package:convert/src/binary/base/reader/evr_reader.dart';
+import 'package:convert/src/binary/byte_data/reader/evr_bd_reader.dart';
+import 'package:convert/src/binary/byte_data/reader/evr_logging_bd_reader.dart';
+import 'package:convert/src/binary/byte_data/reader/ivr_bd_reader.dart';
+import 'package:convert/src/binary/byte_data/reader/ivr_logging_bd_reader.dart';
+import 'package:convert/src/decoding_parameters.dart';
+import 'package:convert/src/element_offsets.dart';
+import 'package:convert/src/io_utils.dart';
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [BDRootDataset].

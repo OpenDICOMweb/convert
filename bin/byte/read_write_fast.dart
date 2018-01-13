@@ -6,13 +6,13 @@
 
 import 'dart:io';
 
-import 'package:dcm_convert/bd_convert.dart';
+import 'package:convert/bd_convert.dart';
 import 'package:path/path.dart' as p;
-import 'package:system/server.dart';
-import 'package:timer/timer.dart';
+import 'package:core/server.dart';
 
-//import 'package:dcm_convert/data/test_directories.dart';
-import 'package:dcm_convert/data/test_files.dart';
+
+//import 'package:convert/data/test_directories.dart';
+import 'package:convert/data/test_files.dart';
 
 
 void main() {

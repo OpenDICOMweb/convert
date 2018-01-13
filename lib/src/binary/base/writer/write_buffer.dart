@@ -8,7 +8,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:dcm_convert/src/binary/base/byte_list.dart';
+import 'package:convert/src/binary/base/byte_list.dart';
 
 class WriteBuffer extends ByteList {
   /// The underlying data buffer.

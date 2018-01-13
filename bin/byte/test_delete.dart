@@ -6,11 +6,11 @@
 
 import 'dart:io';
 
-import 'package:dcm_convert/byte_convert.dart.old';
-import 'package:dcm_convert/data/test_files.dart';
-import 'package:system/core.dart';
+import 'package:convert/bd_convert.dart';
+import 'package:convert/data/test_files.dart';
+import 'package:core/core.dart';
 
-/// A Program that reads a [File], decodes it into a [RootDatasetByte],
+/// A Program that reads a [File], decodes it into a [BDRootDataset],
 /// and then converts that into a [RootDataset].
 void main() {
   system.log.level = Level.info;
@@ -20,7 +20,7 @@ void main() {
 
   final f = pathToFile(path, mustExist: true);
   log.debug2('Reading: $f');
-  final rds = ByteReader.readFile(f);
+  final rds = BDReader.readFile(f);
   final eList = rds.remove(kPatientID);
   log..debug('bRoot.isRoot: ${rds.isRoot}')
   ..info0('patientID: "${rds.patientId}"')

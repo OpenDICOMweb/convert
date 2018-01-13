@@ -6,7 +6,7 @@
 
 import 'package:core/core.dart';
 
-import 'package:dcm_convert/bd_convert.dart';
+import 'package:convert/bd_convert.dart';
 
 
 class FileListReader {

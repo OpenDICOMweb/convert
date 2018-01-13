@@ -11,10 +11,10 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:dcm_convert/src/binary/byte_data/reader/bd_reader.dart';
-import 'package:dcm_convert/src/binary/byte_data/writer/bd_writer.dart';
-import 'package:dcm_convert/src/errors.dart';
-import 'package:dcm_convert/src/byte_data_tools/job_utils.dart';
+import 'package:convert/src/binary/byte_data/reader/bd_reader.dart';
+import 'package:convert/src/binary/byte_data/writer/bd_writer.dart';
+import 'package:convert/src/errors.dart';
+import 'package:convert/src/byte_data_tools/job_utils.dart';
 
 
 Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
@@ -82,7 +82,7 @@ $pad    TS: ${rds0.transferSyntax}''');
       reader1 = new BDReader.fromPath(outPath);
     }
     final rds1 = reader1.readRootDataset();
-    //   RootDatasetBytes rds1 = BDWriter.readPath(outPath);
+    //   BDRootDatasets rds1 = BDWriter.readPath(outPath);
     log
       ..debug('$pad Read ${reader1.bd.lengthInBytes} bytes')
       ..debug1('$pad DS1: $rds1');

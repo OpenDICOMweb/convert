@@ -16,16 +16,16 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:dcm_convert/src/binary/base/writer/dcm_writer_base.dart';
-import 'package:dcm_convert/src/binary/base/writer/evr_writer.dart';
-import 'package:dcm_convert/src/binary/base/writer/ivr_writer.dart';
-import 'package:dcm_convert/src/binary/tag/writer/evr_tag_writer.dart';
-import 'package:dcm_convert/src/binary/tag/writer/evr_logging_tag_writer.dart';
-import 'package:dcm_convert/src/binary/byte_data/writer/ivr_bd_writer.dart';
-import 'package:dcm_convert/src/binary/byte_data/writer/ivr_logging_bd_writer.dart';
-import 'package:dcm_convert/src/element_offsets.dart';
-import 'package:dcm_convert/src/encoding_parameters.dart';
-import 'package:dcm_convert/src/io_utils.dart';
+import 'package:convert/src/binary/base/writer/dcm_writer_base.dart';
+import 'package:convert/src/binary/base/writer/evr_writer.dart';
+import 'package:convert/src/binary/base/writer/ivr_writer.dart';
+import 'package:convert/src/binary/tag/writer/evr_tag_writer.dart';
+import 'package:convert/src/binary/tag/writer/evr_logging_tag_writer.dart';
+import 'package:convert/src/binary/byte_data/writer/ivr_bd_writer.dart';
+import 'package:convert/src/binary/byte_data/writer/ivr_logging_bd_writer.dart';
+import 'package:convert/src/element_offsets.dart';
+import 'package:convert/src/encoding_parameters.dart';
+import 'package:convert/src/io_utils.dart';
 
 /// A [class] for writing a [TagRootDataset] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding

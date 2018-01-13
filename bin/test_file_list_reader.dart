@@ -6,8 +6,8 @@
 
 import 'dart:async';
 
-import 'package:dcm_convert/src/byte_data_tools/file_list_reader.dart';
-import 'package:dcm_convert/src/file_utils.dart';
+import 'package:convert/src/byte_data_tools/file_list_reader.dart';
+import 'package:convert/src/file_utils.dart';
 
 const Map<String, List<String>> badTransferSyntax = const <String, List<String>>{
 	'C:/odw/test_data/mweb/': const <String>[

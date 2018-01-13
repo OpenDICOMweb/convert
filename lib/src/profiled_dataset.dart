@@ -5,15 +5,15 @@
 // See the AUTHORS file for other contributors.
 
 /* TODO: uncomment when ready to finish
-import 'package:dictionary/dictionary.dart';
+
 
 import 'package:core/byte_dataset.dart';
 import 'package:core/core.dart';
 
 
 
-RootTDataset convert(RootDatasetBytes byteDS) {
-  RootDatasetBytes byteDS;
+RootTDataset convert(BDRootDatasets byteDS) {
+  BDRootDatasets byteDS;
   RootTDataset tagDS;
 
   TElement convertElement(Element e) {
@@ -63,13 +63,13 @@ TElement convertSequence(Tag tag, ByteSQ bSQ) {
     tagDS.add(convertElement(e));
 }
 
-class ProfiledDataset extends RootDatasetBytes {
-  RootDatasetBytes original;
+class ProfiledDataset extends BDRootDatasets {
+  BDRootDatasets original;
 
   ProfiledDataset(this.original, {bool replaceAllUids = true})
       : super.from(original);
 
-  static toProfiledDataset(RootDatasetBytes rds) {
+  static toProfiledDataset(BDRootDatasets rds) {
 
   }
 

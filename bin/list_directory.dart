@@ -7,7 +7,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dcm_convert/src/io_utils.dart';
+import 'package:convert/src/io_utils.dart';
 
 Future main() async {
   final  dir = new Directory('C:/odw/test_data');

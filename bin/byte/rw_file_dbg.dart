@@ -5,12 +5,12 @@
 // See the   AUTHORS file for other contributors.
 
 import 'dart:io';
-import 'package:system/core.dart';
+import 'package:core/core.dart';
 
-import 'package:dcm_convert/data/test_files.dart';
-import 'package:system/server.dart';
+import 'package:convert/data/test_files.dart';
+import 'package:core/server.dart';
 
-import 'package:dcm_convert/src/byte_tools/do_rwr_byte_file_sync.dart';
+import 'package:convert/src/byte_tools/do_rwr_byte_file_sync.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 

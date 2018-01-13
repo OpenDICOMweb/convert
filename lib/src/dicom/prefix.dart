@@ -6,7 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:dcm_convert/src/dicom/decoder_bytebuf.dart';
+import 'package:convert/src/dicom/decoder_bytebuf.dart';
 import 'package:logger/logger.dart';
 
 /// A DICOM File Prefix

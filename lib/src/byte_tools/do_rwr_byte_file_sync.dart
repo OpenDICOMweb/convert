@@ -7,12 +7,12 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/src/binary/byte_data/reader/bd_reader.dart';
-import 'package:dcm_convert/src/binary/byte_data/writer/bd_writer.dart';
-import 'package:dcm_convert/src/errors.dart';
-import 'package:dcm_convert/src/byte_tools/job_utils.dart';
+import 'package:convert/src/binary/byte_data/reader/bd_reader.dart';
+import 'package:convert/src/binary/byte_data/writer/bd_writer.dart';
+import 'package:convert/src/errors.dart';
+import 'package:convert/src/byte_tools/job_utils.dart';
 import 'package:element/byte_element.dart';
-import 'package:system/core.dart';
+import 'package:core/core.dart';
 
 bool doRWRByteFileSync(File f, {bool fast = true, bool noisy = false}) {
   //TODO: improve output

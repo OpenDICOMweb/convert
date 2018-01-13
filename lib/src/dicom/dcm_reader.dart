@@ -7,9 +7,9 @@
 import 'dart:typed_data';
 
 import 'package:common/common.dart';
-import 'package:dcm_convert/src/bytebuf/bytebuf.dart';
+import 'package:convert/src/bytebuf/bytebuf.dart';
 import 'package:core/core.dart';
-import 'package:dictionary/dictionary.dart';
+
 
 //TODO: remove log.debug when working
 

@@ -6,10 +6,10 @@
 
 import 'dart:io';
 
-import 'package:dcm_convert/byte_data_tools.dart';
+import 'package:convert/byte_data_tools.dart';
 import 'package:core/server.dart';
 
-//import 'package:dcm_convert/data/test_directories.dart';
+//import 'package:convert/data/test_directories.dart';
 
 /// rwdir is a fast correctness checker for the convert package.
 ///

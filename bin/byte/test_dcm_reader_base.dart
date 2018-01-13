@@ -8,12 +8,12 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dcm_convert/byte_convert.dart.old';
+import 'package:convert/bd_convert.dart';
 
-import 'package:dcm_convert/src/binary/byte/reader/evr_byte_log_reader.dart';
-import 'package:dcm_convert/src/file_utils.dart';
+import 'package:convert/src/binary/byte_data/reader/evr_logging_bd_reader.dart';
+import 'package:convert/src/file_utils.dart';
 import 'package:path/path.dart' as path;
-import 'package:system/server.dart';
+import 'package:core/server.dart';
 
 const String evrXLarge = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368';
 
@@ -34,8 +34,8 @@ Future main() async {
   }
 
   final bd = new ByteData(10);
-  final rds = new RootDatasetByte(bd);
-  final reader = new EvrByteLogReader(bd, rds);
+  final rds = new BDRootDataset(bd);
+  final reader = new EvrLogReaderBD(bd, rds);
   print('rds: ${reader.rds}');
 
   print('sopClass: ${rds.sopClass}');

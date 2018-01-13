@@ -7,7 +7,7 @@
 import 'package:core/server.dart';
 import 'package:test/test.dart';
 
-import 'package:dcm_convert/src/binary/base/writer/old/write_buffer.dart';
+import 'package:convert/src/binary/base/writer/write_buffer.dart';
 
 void main() {
   Server.initialize(name: 'byte_date_writer.dart', level: Level.debug);

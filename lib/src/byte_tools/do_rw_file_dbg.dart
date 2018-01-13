@@ -7,12 +7,12 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dataset/byte_dataset.dart';
-import 'package:dcm_convert/src/binary/byte/reader/byte_reader.dart';
-import 'package:dcm_convert/src/binary/byte/writer/byte_writer.dart';
-import 'package:dcm_convert/src/byte_tools/job_utils.dart';
-import 'package:element/byte_element.dart';
-import 'package:system/core.dart';
+import 'package:core/core.dart';
+
+import 'package:convert/src/binary/byte_data/reader/bd_reader.dart';
+import 'package:convert/src/binary/byte/writer/byte_writer.dart';
+import 'package:convert/src/byte_tools/job_utils.dart';
+
 
 /// Read a file then write it to a buffer.
 bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
@@ -23,7 +23,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
 
   final Uint8List bytes = f.readAsBytesSync();
   final bd = bytes.buffer.asByteData();
-  final reader0 = new ByteReader(bd);
+  final reader0 = new BDReader(bd);
   final rds0 = reader0.readRootDataset();
   showRDS(rds0, reader0);
 
@@ -37,19 +37,19 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
 
   // Write the Root Dataset
   log.info('Writing $rds0');
-  ByteWriter writer;
+  BDWriter writer;
   if (fast) {
     // Just write bytes don't write the file
-    writer = new ByteWriter(rds0);
+    writer = new BDWriter(rds0);
   } else {
     final outPath = getTempFile(f.path, 'dcmout');
-    writer = new ByteWriter.toPath(rds0, outPath);
+    writer = new BDWriter.toPath(rds0, outPath);
   }
-  final bytes1 = writer.write();
+  final bytes1 = writer.writeRootDataset();
   log.debug('$pad    Encoded ${bytes1.length} bytes');
 
   final bd1 = bytes1.buffer.asByteData();
-  final reader1 = new ByteReader(bd1);
+  final reader1 = new BDReader(bd1);
   final rds1 = reader1.readRootDataset();
   showRDS(rds1, reader1);
 
@@ -76,13 +76,13 @@ $f
     $reader0
   Wrote ${bytes1.lengthInBytes} bytes
     $msg
-    ${writer.info}
+    $writer
     
   ''');
   return same;
 }
 
-void showRDS(RootDatasetByte rds,  ByteReader reader) {
+void showRDS(BDRootDataset rds,  BDReader reader) {
 	final e = rds[kPixelData];
 	final pdMsg =  (e == null)
 	? ' ** Pixel Data Element not present'

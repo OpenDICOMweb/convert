@@ -8,12 +8,12 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/ivr_reader.dart';
-import 'package:dcm_convert/src/binary/base/reader/log_read_mixin_base.dart';
-import 'package:dcm_convert/src/binary/tag/reader/evr_tag_reader.dart';
-import 'package:dcm_convert/src/binary/byte_data/reader/bd_reader_mixin.dart';
-import 'package:dcm_convert/src/binary/tag/reader/tag_reader_mixin.dart';
-import 'package:dcm_convert/src/decoding_parameters.dart';
+import 'package:convert/src/binary/base/reader/ivr_reader.dart';
+import 'package:convert/src/binary/base/reader/log_read_mixin_base.dart';
+import 'package:convert/src/binary/tag/reader/evr_tag_reader.dart';
+import 'package:convert/src/binary/byte_data/reader/bd_reader_mixin.dart';
+import 'package:convert/src/binary/tag/reader/tag_reader_mixin.dart';
+import 'package:convert/src/decoding_parameters.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 

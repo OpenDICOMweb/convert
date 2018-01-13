@@ -9,10 +9,10 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/dcm_reader_base.dart';
-import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
-import 'package:dcm_convert/src/decoding_parameters.dart';
-import 'package:dcm_convert/src/errors.dart';
+import 'package:convert/src/binary/base/reader/dcm_reader_base.dart';
+import 'package:convert/src/binary/base/reader/read_buffer.dart';
+import 'package:convert/src/decoding_parameters.dart';
+import 'package:convert/src/errors.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 

@@ -6,4 +6,4 @@
 
 
 /// A MINT+HTML Encoder
-export 'package:dcm_convert/mint_html.dart';
+export 'package:convert/mint_html.dart';

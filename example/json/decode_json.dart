@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:core/core.dart';
-import 'package:dictionary/dictionary.dart';
+
 
 void main(List<String> args) {
   // ArgParser parser = getArgParser();

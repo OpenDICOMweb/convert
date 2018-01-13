@@ -8,9 +8,9 @@ import 'dart:io';
 
 import 'package:core/core.dart';
 
-import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/bd_convert.dart';
-import 'package:dcm_convert/src/utilities/file_list_reader.dart';
+import 'package:convert/data/test_files.dart';
+import 'package:convert/bd_convert.dart';
+import 'package:convert/src/utilities/file_list_reader.dart';
 
 void main() {
   // readFile(path0);

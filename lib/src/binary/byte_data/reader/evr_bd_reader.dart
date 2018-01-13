@@ -8,9 +8,9 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:dcm_convert/src/binary/base/reader/evr_reader.dart';
-import 'package:dcm_convert/src/binary/tag/reader/tag_reader_mixin.dart';
-import 'package:dcm_convert/src/decoding_parameters.dart';
+import 'package:convert/src/binary/base/reader/evr_reader.dart';
+import 'package:convert/src/binary/tag/reader/tag_reader_mixin.dart';
+import 'package:convert/src/decoding_parameters.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 

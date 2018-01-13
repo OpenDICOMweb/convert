@@ -6,14 +6,13 @@
 
 import 'dart:typed_data';
 
-import 'package:logger/logger.dart';
 import 'package:core/core.dart';
 
 import '../bytebuf/bytebuf.dart';
 
 //TODO: Add type variable for [Element<E>] once [Dataset] supports it.
 /// Encoder for DICOM File Format octet streams (Uint8List)
-/// [JsonEncoder] reads dicom+json SOP Instances and returns a [RootJSONDataset].
+/// [JsonEncoder] reads dicom+json SOP Instances and returns a [JsonRootDataset].
 
 /// An extension to ByteBuf used for encoding JSON.
 ///
@@ -63,9 +62,9 @@ class JsonEncoder extends ByteBuf {
   //     super.sublist(start, end);
 
   void encode(Study study) {
-    Formatter fmt = new Formatter();
-    for (Series series in study.series)
-      for (Instance instance in series.instances)
+    final fmt = new Formatter();
+    for (var series in study.series)
+      for (var instance in series.instances)
         writeInstance(instance, fmt);
   }
 
@@ -86,10 +85,10 @@ class JsonEncoder extends ByteBuf {
   ///         }
   ///     }
   void writeDataset(Dataset ds, Formatter fmt) {
-    for (Element e in ds.map.values) {
+    for (var e in ds.elements) {
       fmt.down;
-      writeString('\n$fmt"${e.tag.hex}": {'
-          '\n$fmt"vr": "${e.vr.id}",'
+      writeString('\n$fmt"${e.dcm}": {'
+          '\n$fmt"vr": "${e.vrId}",'
           '\n$fmt"Value": [\n');
       writeValues(e, fmt);
       writeString('\n$fmt]\n$fmt\}');

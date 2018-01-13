@@ -4,6 +4,8 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'package:core/core.dart';
+
 import 'json_encoder.dart';
 import 'json_type.dart';
 

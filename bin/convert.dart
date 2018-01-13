@@ -8,9 +8,9 @@ import 'dart:io';
 
 import 'package:core/server.dart';
 
-import 'package:dcm_convert/data/test_files.dart';
-import 'package:dcm_convert/bd_convert.dart';
-import 'package:dcm_convert/byte_data_tools.dart';
+import 'package:convert/data/test_files.dart';
+import 'package:convert/bd_convert.dart';
+import 'package:convert/byte_data_tools.dart';
 
 /// A Program that reads a [File], decodes it into a [RootDataset],
 /// and then converts that into a [TagRootDataset].
