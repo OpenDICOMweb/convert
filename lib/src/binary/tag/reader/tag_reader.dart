@@ -7,11 +7,11 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dataset/tag_dataset.dart';
-import 'package:system/core.dart';
 
-import 'package:dcm_convert/src/binary/tag/evr_tag_reader.dart';
-import 'package:dcm_convert/src/binary/tag/ivr_tag_reader.dart';
+import 'package:core/core.dart';
+
+import 'package:dcm_convert/src/binary/tag/reader/evr_tag_reader.dart';
+import 'package:dcm_convert/src/binary/tag/reader/ivr_tag_reader.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
 

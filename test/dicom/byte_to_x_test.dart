@@ -4,7 +4,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:system/server.dart';
+import 'package:core/server.dart';
 import 'package:test/test.dart';
 
 void main() {

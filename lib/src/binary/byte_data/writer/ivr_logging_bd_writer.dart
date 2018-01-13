@@ -4,8 +4,7 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:dataset/bd_dataset.dart';
-import 'package:dataset/tag_dataset.dart';
+import 'package:core/core.dart';
 
 import 'package:dcm_convert/src/binary/base/writer/ivr_writer.dart';
 import 'package:dcm_convert/src/binary/base/writer/debug/log_write_mixin.dart';

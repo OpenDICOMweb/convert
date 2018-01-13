@@ -6,7 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:system/server.dart';
+import 'package:core/server.dart';
 import 'package:test/test.dart';
 
 import '../../lib/src/bytebuf/bytebuf.dart';

@@ -4,10 +4,10 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:dataset/dataset.dart';
-import 'package:element/element.dart';
-import 'package:system/core.dart';
-import 'package:vr/vr.dart';
+
+
+import 'package:core/core.dart';
+
 
 import 'package:dcm_convert/src/binary/base/writer/dcm_writer_base.dart';
 import 'package:dcm_convert/src/binary/base/writer/evr_writer.dart';

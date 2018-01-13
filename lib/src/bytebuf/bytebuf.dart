@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:system/core.dart';
+import 'package:core/core.dart';
 
 // ignore_for_file: avoid_returning_this
 

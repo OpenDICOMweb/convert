@@ -7,10 +7,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dataset/byte_dataset.dart';
-import 'package:element/bd_element.dart';
-import 'package:system/core.dart';
-import 'package:vr/vr.dart';
+import 'package:core/core.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/dcm_reader_base.dart';
 import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
@@ -74,8 +71,8 @@ abstract class EvrReader extends DcmReaderBase<int> {
     // Note: this is only relevant for EVR
     if (tag != null) {
       if (dParams.doCheckVR && isNotValidVR(code, vrIndex, tag)) {
-        final vr = VR.lookupByCode(vrCode);
-        log.error('VR $vr is not valid for $tag');
+        final vrIndex = vrIndexFromCode(vrCode);
+        log.error('VR $vrIndex is not valid for $tag');
       }
 
       if (dParams.doCorrectVR) {
@@ -98,11 +95,15 @@ abstract class EvrReader extends DcmReaderBase<int> {
   }
 
   int _lookupEvrVRIndex(int code, int eStart, int vrCode) {
-    final vr = VR.lookupByCode(vrCode);
-    if (vr == null) {
+    var vrIndex = vrIndexFromCode(vrCode);
+    if (vrIndex == null) {
       rb.warn('Null VR: vrCode(${hex16(vrCode)}, $vrCode) ${dcm(code)} start: $eStart');
     }
-    return __vrToIndex(code, vr);
+    if (_isSpecialVR(vrIndex)) {
+      log.info1('-- Changing Special VR ${vrIdFromIndex(vrIndex)}) to VR.kUN');
+      vrIndex = VR.kUN.index;
+    }
+    return vrIndex;
   }
 
   /// Read a Short EVR Element, i.e. one with a 16-bit Value Field Length field.
@@ -233,7 +234,7 @@ abstract class EvrReader extends DcmReaderBase<int> {
   }
 */
 
-  /// Reads File Meta Information ([Fmi]) and returns a Map<int, Element>
+  /// Reads File Meta Information (FMI) and returns a Map<int, Element>
   /// if any [Fmi] [Element]s were present; otherwise, returns null.
   int _readFmi() {
     assert(rb.index == 0, 'Non-Zero Read Buffer Index');
@@ -320,12 +321,3 @@ bool _isUndefinedLengthVR(int vrIndex) =>
 
 bool _isLongVR(int vrIndex) =>
     vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
-
-int __vrToIndex(int code, VR vr) {
-  var vrIndex = vr.index;
-  if (_isSpecialVR(vrIndex)) {
-    log.info1('-- Changing Special VR ${VR.lookupByIndex(vrIndex)}) to VR.kUN');
-    vrIndex = VR.kUN.index;
-  }
-  return vrIndex;
-}

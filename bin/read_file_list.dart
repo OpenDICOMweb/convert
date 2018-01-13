@@ -5,7 +5,7 @@
 // See the AUTHORS file for other contributors.
 
 import 'package:dcm_convert/byte_tools.dart';
-import 'package:system/server.dart';
+import 'package:core/server.dart';
 
 //TODO: modify so that it takes the following arguments
 // 1. dirname

@@ -4,8 +4,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:element/element.dart';
-import 'package:system/core.dart';
+import 'package:core/core.dart';
 
 class ElementOffsets {
 	int index = 0;

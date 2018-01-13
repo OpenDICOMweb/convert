@@ -7,12 +7,11 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dataset/byte_dataset.dart';
+import 'package:core/core.dart';
+
 import 'package:dcm_convert/src/binary/byte_data/reader/bd_reader.dart';
 import 'package:dcm_convert/src/binary/byte_data/writer/bd_writer.dart';
 import 'package:dcm_convert/src/byte_data_tools/job_utils.dart';
-import 'package:element/bd_element.dart';
-import 'package:system/core.dart';
 
 /// Read a file then write it to a buffer.
 bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
@@ -82,7 +81,7 @@ $f
   return same;
 }
 
-void showRDS(RootDatasetByte rds,  BDReader reader) {
+void showRDS(BDRootDataset rds,  BDReader reader) {
 	final e = rds[kPixelData];
 	final pdMsg =  (e == null)
 	? ' ** Pixel Data Element not present'

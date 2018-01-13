@@ -4,9 +4,11 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the   AUTHORS file for other contributors.
 
+import 'package:core/server.dart';
+
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/bd_convert.dart';
-import 'package:system/server.dart';
+
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
@@ -30,7 +32,7 @@ void main() {
 
   // Write a File
   final writer = new TagWriter.toPath(tagDS0, outPath);
-  final bytes1 = writer.write();
+  final bytes1 = writer.writeRootDataset();
   log
     ..debug('  Wrote ${bytes1.length} bytes')
     ..info0('Re-reading: $outPath');

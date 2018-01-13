@@ -6,21 +6,18 @@
 
 import 'package:core/core.dart';
 
-import 'package:dcm_convert/src/binary/base/writer/ivr_writer.dart';
+import 'package:dcm_convert/src/binary/base/writer/evr_writer.dart';
 import 'package:dcm_convert/src/binary/base/writer/log_write_mixin_base.dart';
-import 'package:dcm_convert/src/binary/byte_data/writer/evr_bd_writer.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 
 /// An encoder for Binary DICOM (application/dicom).
-class IvrBDWriter extends IvrWriter with LogWriteMixinBase {
+class EvrTagWriter extends EvrWriter with LogWriteMixinBase {
 
-  /// Creates a new [IvrBDWriter], which is decoder for Binary DICOM
+  /// Creates a new [EvrTagWriter], which is an encoder for Binary DICOM
   /// (application/dicom).
-  IvrBDWriter(
+  EvrTagWriter(
       RootDataset rds, EncodingParameters eParams, int minBDLength, bool reUseBD)
       : super(rds, eParams, minBDLength, reUseBD);
-
-  IvrBDWriter.from(EvrBDWriter writer) : super.from(writer);
 }

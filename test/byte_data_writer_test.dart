@@ -4,7 +4,7 @@
 // Author: Binayak Behera <binayak.b@mwebware.com> -
 // See the AUTHORS file for other contributors.
 
-import 'package:system/server.dart';
+import 'package:core/server.dart';
 import 'package:test/test.dart';
 
 import 'package:dcm_convert/src/binary/base/writer/old/write_buffer.dart';

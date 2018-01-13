@@ -4,16 +4,15 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:number/number.dart';
-import 'package:system/core.dart';
+import 'package:core/core.dart';
 
 void main(List<String> args) {
-  print('kItem: ${Int32.hex(kItem)} $kItem');
+  print('kItem: ${hex32(kItem)} $kItem');
   print(
-      'kSequenceDelimitationItem: ${Int32.hex(kSequenceDelimitationItem)} $kSequenceDelimitationItem');
+      'kSequenceDelimitationItem: ${hex32(kSequenceDelimitationItem)} $kSequenceDelimitationItem');
   print(
-      'kItemDelimitationItem: ${Int32.hex(kItemDelimitationItem)} $kItemDelimitationItem');
+      'kItemDelimitationItem: ${hex32(kItemDelimitationItem)} $kItemDelimitationItem');
   print(
-      'kUndefinedLength: ${Int32.hex(kUndefinedLength)} '
+      'kUndefinedLength: ${hex32(kUndefinedLength)} '
           '$kUndefinedLength');
 }

@@ -6,10 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:dataset/tag_dataset.dart';
-import 'package:element/bd_element.dart';
-import 'package:element/tag_element.dart';
-import 'package:uid/uid.dart';
+import 'package:core/core.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/dcm_reader_base.dart';
 
@@ -20,26 +17,21 @@ abstract class TagReaderMixin implements DcmReaderBase<int> {
   @override
   Dataset get cds;
 
-  @override
   Element makeTagElement(int code, int vrIndex, BDElement bd) =>
       TagElement.make(bd.tag, vrIndex, bd.values);
 
-  @override
   Element makeTagPixelData(int code, int vrIndex, BDElement bd,
                            [TransferSyntax ts, VFFragments fragments]) {
 
   }
 
-  @override
   SQ makeTagSequence(int code, BDElement bd, Dataset parent, List<Item> items) {
 
   }
 
-  @override
   RootDataset makeTagRootDataset(ByteData bd, int fmiEnd, String path) =>
       new TagRootDataset(bd: bd, fmiEnd: fmiEnd, path: path);
 
-  @override
   RootDataset makeTagRootDatasetFromBD(ByteData bd, int fmiEnd, String path) =>
       new TagRootDataset(bd: bd, fmiEnd: fmiEnd, path: path);
 

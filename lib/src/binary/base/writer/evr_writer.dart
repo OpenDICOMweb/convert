@@ -6,10 +6,10 @@
 
 import 'dart:typed_data';
 
-import 'package:dataset/dataset.dart';
-import 'package:element/element.dart';
-import 'package:system/core.dart';
-import 'package:vr/vr.dart';
+
+
+import 'package:core/core.dart';
+
 
 import 'package:dcm_convert/src/binary/base/writer/dcm_writer_base.dart';
 import 'package:dcm_convert/src/binary/base/padding_chars.dart';
@@ -305,7 +305,7 @@ class EvrWriter extends DcmWriterBase {
     assert(rds.prefix != kEmptyByteData && !eParams.doCleanPreamble);
     final preamble = rds.preamble;
     for (var i = 0; i < 128; i++) wb.uint8(preamble.getUint8(i));
-    final prefix = rds.prefix;
+   // final prefix = rds.prefix;
   //  for (var i = 0; i < 4; i++) wb.uint8(prefix.getUint8(i));
     wb.uint32(kDcmPrefix);
     return true;

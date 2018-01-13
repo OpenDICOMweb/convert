@@ -4,7 +4,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See /[package]/AUTHORS file for other contributors.
 
-import 'package:uid/uid.dart';
+import 'package:core/core.dart';
 
 class DecodingParameters {
 	final int shortFileThreshold;

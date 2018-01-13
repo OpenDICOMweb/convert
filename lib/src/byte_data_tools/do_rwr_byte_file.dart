@@ -8,8 +8,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:element/bd_element.dart';
-import 'package:system/core.dart';
+
+import 'package:core/core.dart';
 
 import 'package:dcm_convert/src/binary/byte_data/reader/bd_reader.dart';
 import 'package:dcm_convert/src/binary/byte_data/writer/bd_writer.dart';

@@ -4,13 +4,11 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:dataset/bd_dataset.dart';
+import 'package:core/core.dart';
+
 import 'package:dcm_convert/src/binary/base/writer/write_buffer.dart';
 import 'package:dcm_convert/src/element_offsets.dart';
-import 'package:element/bd_element.dart';
-import 'package:system/core.dart';
-import 'package:tag/tag.dart';
-import 'package:vr/vr.dart';
+
 
 abstract class DbgMixin {
   int elementCount = -1;
@@ -72,7 +70,7 @@ abstract class DbgMixin {
       (vlf == null) ? '' : (vlf == kUndefinedLength) ? '0xFFFFFFFF' : '$vlf';
 
   void dbgWriteStart(int eStart, int vrIndex, int code, String name, [int vlf]) {
-    final vr = VR.lookupByIndex(vrIndex);
+    final vr = vrIdFromIndex(vrIndex);
     final tag = Tag.lookup(code);
     final s = vlfToString(vlf);
     final sb = new StringBuffer('$wbb ${dcm(code)} $vr $name $s');

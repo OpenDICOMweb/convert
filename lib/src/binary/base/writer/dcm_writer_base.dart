@@ -12,10 +12,10 @@
 
 import 'dart:typed_data';
 
-import 'package:dataset/byte_dataset.dart';
-import 'package:element/element.dart';
-import 'package:system/core.dart';
-import 'package:uid/uid.dart';
+
+
+import 'package:core/core.dart';
+
 
 import 'package:dcm_convert/src/binary/base/writer/write_buffer.dart';
 import 'package:dcm_convert/src/encoding_parameters.dart';

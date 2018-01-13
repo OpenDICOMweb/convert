@@ -5,8 +5,10 @@
 // See the AUTHORS file for other contributors.
 
 import 'dart:io' show Platform;
+
 import 'package:args/args.dart';
-import 'package:logger/logger.dart';
+import 'package:core/core.dart';
+
 
 class JobArgs {
   /// The name of the program that is running

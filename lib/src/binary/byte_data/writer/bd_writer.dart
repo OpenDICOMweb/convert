@@ -14,9 +14,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dataset/bd_dataset.dart';
-import 'package:dataset/tag_dataset.dart';
-import 'package:uid/uid.dart';
+import 'package:core/core.dart';
 
 import 'package:dcm_convert/src/binary/base/writer/dcm_writer_base.dart';
 import 'package:dcm_convert/src/binary/base/writer/evr_writer.dart';
@@ -113,10 +111,9 @@ class BDWriter {
 
   Uint8List writeFmi() => _evrWriter.writeFmi();
 
-  /// Reads a [BDRootDataset], and stores it in [rds], and returns it.
+  /// Writes a [BDRootDataset] to a [Uint8List], then returns it.
   Uint8List writeRootDataset() {
     if (!_evrWriter.isFmiWritten) _evrWriter.writeFmi();
-
     if (_evrWriter.rds.transferSyntax.isEvr) {
       return _evrWriter.writeRootDataset(rds);
     } else {

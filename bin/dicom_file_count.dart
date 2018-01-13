@@ -6,7 +6,7 @@
 
 import 'dart:io';
 
-import 'package:logger/logger.dart';
+import 'package:core/server.dart';
 import 'package:path/path.dart' as p;
 
 

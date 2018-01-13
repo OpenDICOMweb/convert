@@ -4,9 +4,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:dataset/dataset.dart';
-import 'package:element/element.dart';
-import 'package:system/core.dart';
+import 'package:core/core.dart';
 
 import 'package:dcm_convert/src/binary/base/writer/log_write_mixin_base.dart';
 import 'package:dcm_convert/src/binary/base/writer/write_buffer.dart';
@@ -26,7 +24,7 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
       ..debug('vfLengthField: ${e.vfLengthField}')
       ..debug('fragments: ${e.fragments.info}');
     pInfo
-      ..pixelDataVR = e.vr
+      ..pixelDataVRIndex = e.vrIndex
       ..pixelDataStart = wb.wIndex
       ..pixelDataLength = e.vfLength
       ..pixelDataHadFragments = e.fragments != null
@@ -146,7 +144,7 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
   }
 
   String _startWriteElement(Element e, String name) {
-    final vr = e.vr;
+    final vr = vrIdFromIndex(e.vrIndex);
     final tag = e.tag;
     final code = e.code;
     final s = vlfToString(e.vfLengthField);

@@ -6,15 +6,13 @@
 
 import 'dart:io';
 
-import 'package:dataset/tag_dataset.dart';
-import 'package:system/server.dart';
-import 'package:vr/vr.dart';
+import 'package:core/server.dart';
 
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/bd_convert.dart';
 import 'package:dcm_convert/byte_data_tools.dart';
 
-/// A Program that reads a [File], decodes it into a [ RootDatasetByte ],
+/// A Program that reads a [File], decodes it into a [RootDataset],
 /// and then converts that into a [TagRootDataset].
 void main(List<String> args) {
   Server.initialize(name: 'convert', level: Level.info0);
@@ -107,10 +105,10 @@ TagRootDataset convertFile(File file, {int reps = 1, bool fmiOnly = false}) {
       error = true;
       log.error('Code Not Equal be.code(${be.code}) != te.code(${te.code})');
     }
-    if (be.vr != te.vr) {
-      if (be.vr == VR.kUN && be.isPrivate) {
+    if (be.vrIndex != te.vrIndex) {
+      if (be.vrIndex == kUNIndex && be.isPrivate) {
         log
-          ..info0('--- ${dcm(be.code)} was ${be.vr} now ${te.vr}')
+          ..info0('--- ${dcm(be.code)} was ${be.vrIndex} now ${te.vrIndex}')
           ..info0('     ${te.tag}');
       } else {
         error = true;
@@ -118,7 +116,7 @@ TagRootDataset convertFile(File file, {int reps = 1, bool fmiOnly = false}) {
       }
     }
     if (be.length != te.length) {
-      if (be.vr == VR.kUN) {
+      if (be.vrIndex == kUNIndex) {
         log.info0('--- ${dcm(be.code)} was ${be.values.length} '
             'now ${te.values.length}');
       } else {

@@ -6,14 +6,12 @@
 
 import 'dart:typed_data';
 
-import 'package:dataset/bd_dataset.dart';
-import 'package:element/bd_element.dart';
-import 'package:uid/uid.dart';
+import 'package:core/core.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/ivr_reader.dart';
 import 'package:dcm_convert/src/binary/byte_data/reader/evr_bd_reader.dart';
 import 'package:dcm_convert/src/binary/byte_data/reader/bd_reader_mixin.dart';
-import 'package:dcm_convert/src/binary/byte_data/reader/tag_reader_mixin.dart';
+import 'package:dcm_convert/src/binary/tag/reader/tag_reader_mixin.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
 
 /// A decoder for Binary DICOM (application/dicom).
@@ -27,22 +25,6 @@ class IvrReaderBD extends IvrReader<int> with BDReaderMixin, TagReaderMixin {
       : super(bd, rds, path, dParams, reUseBD);
 
   IvrReaderBD.from(EvrReaderBD reader) : super.from(reader);
-
-/*
-  @override
-  Element makeElementFromBD(int code, int vrIndex, ByteData bd) =>
-      Ivr.make(code, vrIndex, bd);
-
-  @override
-  Element makePixelData(int code, int vrIndex, ByteData bd,
-          [TransferSyntax ts, VFFragments fragments]) =>
-      Ivr.makePixelData(code, vrIndex, bd, ts, fragments);
-
-  /// Returns a new Sequence ([SQ]).
-  @override
-  SQ makeSequence(int code, Dataset parent, Iterable<Item> items, [ByteData bd]) =>
-      Ivr.makeSequence(code, bd, parent, items);
-*/
 
   static final BDElementMaker make = Ivr.make;
 }

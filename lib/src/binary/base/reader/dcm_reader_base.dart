@@ -7,14 +7,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dataset/bd_dataset.dart';
-import 'package:dataset/tag_dataset.dart';
-import 'package:element/bd_element.dart';
-import 'package:element/tag_element.dart';
-import 'package:system/core.dart';
-import 'package:tag/tag.dart';
-import 'package:vr/vr.dart';
-import 'package:uid/uid.dart';
+import 'package:core/core.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
 import 'package:dcm_convert/src/decoding_parameters.dart';
@@ -294,7 +287,7 @@ abstract class DcmReaderBase<V> {
 
   void _checkForOB(int vrIndex, TransferSyntax ts) {
     if (vrIndex != kOBIndex && vrIndex != kUNIndex) {
-      final vr = VR.lookupByIndex(vrIndex);
+      final vr = vrByIndex[vrIndex];
       rb.warn('Invalid VR($vr) for Encapsulated TS: $ts');
     }
   }
@@ -343,7 +336,7 @@ abstract class DcmReaderBase<V> {
   bool _isValidVR(int code, int vrIndex, Tag tag) {
     if (vrIndex == kUNIndex) return true;
     if (tag.hasNormalVR && vrIndex == tag.vrIndex) return true;
-    if (tag.hasSpecialVR && tag.vr.isValidVRIndex(vrIndex)) return true;
+    if (tag.hasSpecialVR && isNormalVRIndex(vrIndex)) return true;
     if (tag is PDTagUnknown) return true;
     log.error('**** vrIndex $vrIndex is not valid for $tag');
     return false;

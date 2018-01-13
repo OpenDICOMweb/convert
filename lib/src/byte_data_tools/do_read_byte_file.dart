@@ -8,7 +8,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:system/core.dart';
+import 'package:core/core.dart';
 
 import 'package:dcm_convert/bd_convert.dart';
 import 'package:dcm_convert/src/errors.dart';

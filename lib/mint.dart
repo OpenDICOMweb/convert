@@ -4,11 +4,6 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-/// ODW SDK core SOP Dataset library
-export 'package:dataset/dataset.dart';
-export 'package:element/element.dart';
-export 'package:entity/entity.dart';
-
 /// Encoder and Decoder for MINT File Format JSON.
 export 'src/mint_json/mint_json_decoder.dart';
 export 'src/mint_json/mint_json_encoder.dart';

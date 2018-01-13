@@ -6,11 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:dataset/byte_dataset.dart';
-import 'package:element/bd_element.dart';
-import 'package:system/core.dart';
-import 'package:tag/tag.dart';
-import 'package:vr/vr.dart';
+import 'package:core/core.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/dcm_reader_base.dart';
 import 'package:dcm_convert/src/binary/base/reader/evr_reader.dart';
@@ -57,7 +53,7 @@ abstract class IvrReader<V> extends DcmReaderBase<V> {
   int _vrToIndex(int code, VR vr) {
     var vrIndex = vr.index;
     if (_isSpecialVR(vrIndex)) {
-      log.info1('-- Changing Special VR ${VR.lookupByIndex(vrIndex)}) to VR.kUN');
+      log.info1('-- Changing Special VR ${vrIdFromIndex(vrIndex)}) to VR.kUN');
       vrIndex = VR.kUN.index;
     }
     return vrIndex;

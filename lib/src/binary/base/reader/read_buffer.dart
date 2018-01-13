@@ -6,8 +6,8 @@
 
 import 'dart:typed_data';
 
-import 'package:element/element.dart';
-import 'package:system/core.dart';
+
+import 'package:core/core.dart';
 
 import 'package:dcm_convert/src/binary/base/byte_list.dart';
 
@@ -159,12 +159,14 @@ class ReadBuffer extends ByteList {
     return code;
   }
 
+/* Important: Do NOT Delete
   /// Reads a group and element and combines them into a Tag.code.
   int _readCodeFast() {
     final code = _peekCode();
     _index += 4;
     return code;
   }
+*/
 
   bool getUint32AndCompare(int target) {
     final delimiter = getUint32(_index);
@@ -231,7 +233,7 @@ class ReadBuffer extends ByteList {
   EBytes makeEvrShortEBytes(int eStart, int vrIndex) {
     final eLength = _index - eStart;
     assert(eLength >= 8 && eLength.isEven, 'Element with odd eLength: $eLength');
-    print('@$_index eStart: $eStart vrIndex: ${VR.lookupByIndex(vrIndex)} eLength: '
+    print('@$_index eStart: $eStart vrIndex: ${vrIdFromIndex(vrIndex)} eLength: '
               '$eLength');
     final ebd = bd.buffer.asByteData(bd.offsetInBytes + eStart, eLength);
     return EvrShort.make(ebd);

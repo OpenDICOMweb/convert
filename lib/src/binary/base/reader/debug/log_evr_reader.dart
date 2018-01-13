@@ -6,7 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:dataset/dataset.dart';
+import 'package:core/core.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/evr_reader.dart';
 import 'package:dcm_convert/src/binary/base/reader/debug/log_read_mixin.dart';

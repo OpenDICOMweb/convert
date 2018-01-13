@@ -15,7 +15,7 @@ import 'package:dcm_convert/src/element_offsets.dart';
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [BDRootDataset].
-class EvrLoggingBDWriter extends EvrWriter with LogWriteMixin {
+class EvrLoggingTagWriter extends EvrWriter with LogWriteMixin {
   @override
   final ParseInfo pInfo;
   @override
@@ -25,9 +25,9 @@ class EvrLoggingBDWriter extends EvrWriter with LogWriteMixin {
   @override
   int elementCount;
 
-  /// Creates a new [EvrLoggingBDWriter], which is encoder for Binary DICOM
+  /// Creates a new [EvrLoggingTagWriter], which is encoder for Binary DICOM
   /// (application/dicom).
-  EvrLoggingBDWriter(RootDataset rds, EncodingParameters eParams, int minBDLength,
+  EvrLoggingTagWriter(RootDataset rds, EncodingParameters eParams, int minBDLength,
       bool reUseBD, this.inputOffsets)
       : outputOffsets = (inputOffsets != null) ? new ElementOffsets() : null,
         pInfo = new ParseInfo(rds),

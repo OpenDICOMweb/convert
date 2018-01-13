@@ -6,7 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:system/core.dart';
+import 'package:core/core.dart';
 
 import 'package:dcm_convert/src/binary/base/byte_list.dart';
 

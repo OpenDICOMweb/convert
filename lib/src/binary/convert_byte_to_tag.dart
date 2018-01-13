@@ -4,13 +4,7 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:dataset/bd_dataset.dart';
-import 'package:dataset/tag_dataset.dart';
-import 'package:element/bd_element.dart';
-import 'package:element/tag_element.dart';
-import 'package:system/core.dart';
-import 'package:tag/tag.dart';
-import 'package:vr/vr.dart';
+import 'package:core/core.dart';
 
 typedef Element<V> Maker<K, V>(K id, List<V> values,
     [int vfLength, VFFragments fragments]);
@@ -58,12 +52,12 @@ Element convertElement(Element be) {
   var vrCode = be.vrCode;
 
   final tag = be.tag;
-  if (be.vr == VR.kUN && tag.vr != VR.kUN)
-    _warn(be.code, 'e.vr of ${be.vr} was changed to ${tag.vr}');
-  if (tag.vr == VR.kUN && be.vr != VR.kUN) {
+  if (be.vrIndex == kUNIndex && tag.vr != VR.kUN)
+    _warn(be.code, 'e.vr of ${be.vrId} was changed to ${tag.vr}');
+  if (tag.vr == VR.kUN && be.vrIndex != kUNIndex) {
     //Fix: this needs to do better with tags that have multiple VRs
     vrCode = be.vrCode;
-    _warn(be.code, 'VR of $tag was changed to ${be.vr}');
+    _warn(be.code, 'VR of $tag was changed to ${be.vrId}');
   }
 
   Element te;
@@ -75,8 +69,8 @@ Element convertElement(Element be) {
   } else if (be is BDElement) {
     te = TagElement.from(be);
   } else if (be is PrivateCreator) {
-    if (be.vr != VR.kLO)
-      _warn(be.code, 'Private Creator e.vr(${be.vr}) should be VR.kLO');
+    if (be.vrIndex != kLOIndex)
+      _warn(be.code, 'Private Creator e.vr(${be.vrId}) should be VR.kLO');
     if (vrCode != VR.kLO.code) throw 'Invalid Tag VR: ${tag.vr} should be VR.kLO';
     assert(tag is PCTag && tag.name == be.asString);
     te = TagElement.from(be);
@@ -120,20 +114,21 @@ final Map<int, PCTag> pcTags = <int, PCTag>{};
 
 Tag getTag(Element be) {
   final code = be.code;
-  final vr = be.vr;
+  final vrIndex = be.vrIndex;
   Tag tag;
   if (Tag.isPublicCode(code)) {
-    tag = PTag.lookupByCode(code, vr);
+    tag = PTag.lookupByCode(code, vrIndex);
   } else if (Tag.isPrivateCreatorCode(code)) {
     final name = be.asString;
-    if (be.vr != VR.kLO) _warn(be.code, 'Creator $name with vr($vr) != VR.kLO: $be');
+    if (be.vrIndex != kLOIndex)
+      _warn(be.code, 'Creator $name with vr($vrIndex) != VR.kLO: $be');
     log.debug2('   Creator: $name');
-    tag = new PCTag(code, VR.kLO, name);
+    tag = new PCTag(code, kLOIndex, name);
     pcTags[code] = tag;
   } else if (Tag.isPrivateDataCode(code)) {
     final creatorCode = pcCodeFromPDCode(code);
     final creator = pcTags[creatorCode];
-    tag = new PDTag(code, vr, creator);
+    tag = new PDTag(code, vrIndex, creator);
   } else {
     throw 'couldn\'t get tag: ${be.info}';
   }

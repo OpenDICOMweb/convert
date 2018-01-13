@@ -8,8 +8,8 @@ import 'dart:io';
 
 import 'package:benchmark_harness/benchmark_harness.dart';
 import 'package:dcm_convert/bd_convert.dart';
-import 'package:system/server.dart';
-import 'package:timer/timer.dart';
+import 'package:core/server.dart';
+
 
 import 'test_files.dart';
 // Import BenchmarkBase class.

@@ -4,11 +4,12 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-import 'package:entity/entity.dart';
-import 'package:system/server.dart';
+
+import 'package:core/server.dart';
 import 'package:test/test.dart';
 
-import 'package:dcm_convert/src/binary/tag/tag_reader.dart';
+import 'package:dcm_convert/src/binary/tag/reader/tag_reader.dart';
+
 void main() {
   Server.initialize(name: 'dcm_reader_test', level: Level.info0);
   final path0 =

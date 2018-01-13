@@ -7,7 +7,7 @@
 import 'dart:collection';
 import 'dart:typed_data';
 
-import 'package:system/core.dart';
+import 'package:core/core.dart';
 
 abstract class ByteList extends ListBase<int> implements TypedData {
   ByteData _bd;

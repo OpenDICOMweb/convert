@@ -6,11 +6,11 @@
 
 import 'dart:typed_data';
 
-import 'package:dataset/dataset.dart';
-import 'package:element/element.dart';
-import 'package:element/bd_element.dart';
-import 'package:system/core.dart';
-import 'package:vr/vr.dart';
+
+
+
+import 'package:core/core.dart';
+
 
 /// TODO DOC
 bool bytesEqual1(Uint8List b0, Uint8List b1) {

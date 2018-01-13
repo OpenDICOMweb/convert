@@ -4,11 +4,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:dataset/dataset.dart';
-import 'package:element/element.dart';
-import 'package:system/core.dart';
-import 'package:tag/tag.dart';
-import 'package:vr/vr.dart';
+import 'package:core/core.dart';
 
 import 'package:dcm_convert/src/binary/base/reader/log_read_mixin_base.dart';
 import 'package:dcm_convert/src/binary/base/reader/read_buffer.dart';
@@ -76,7 +72,7 @@ abstract class LogReadMixin implements LogReadMixinBase {
       (vlf == null) ? '' : (vlf == kUndefinedLength) ? '0xFFFFFFFF' : '$vlf';
 
   String _startReadElement(int code, int vrIndex, int eStart, int vlf, String name) {
-    final vr = VR.lookupByIndex(vrIndex);
+    final vr = vrIdFromIndex(vrIndex);
     final tag = Tag.lookup(code);
     final s = vlfToString(vlf);
     final sb = new StringBuffer('> R@$eStart ${dcm(code)} $vr length($s) $name');

@@ -6,7 +6,8 @@
 
 import 'dart:io';
 
-import 'package:system/core.dart';
+import 'package:core/core.dart';
+
 import 'package:dcm_convert/data/test_files.dart';
 import 'package:dcm_convert/bd_convert.dart';
 import 'package:dcm_convert/src/utilities/file_list_reader.dart';
@@ -28,7 +29,7 @@ void readFile(String path) {
   // if (log.level == Level.debug) formatDataset(rds);
 }
 
-void formatDataset(RootDatasetByte rds, {bool includePrivate = true}) {
+void formatDataset(BDRootDataset rds, {bool includePrivate = true}) {
   final z = new Formatter(maxDepth: 146);
   log.debug(rds.format(z));
   for (var pg in rds.privateGroups) log.debug(pg.info);

@@ -11,39 +11,17 @@ environment:
 
 dependencies:
   args: any
-  dataset:
-    path: C:/odw/sdk/dataset
-    version: ^0.6.5
-  element:
-    path: C:/odw/sdk/element
-    version: ^0.6.5
-  entity:
-    path: C:/odw/sdk/entity
-    version: ^0.6.5
-  logger:
-    path: C:/odw/sdk/logger
-    version: ^0.6.5
-  system:
-    path: C:/odw/sdk/system
-    version: ^0.6.5
-  tag:
-    path: C:/odw/sdk/tag
-    version: ^0.6.5
-  uid:
-    path: C:/odw/sdk/uid
-    version: ^0.6.5
-  vr:
-    path: C:/odw/sdk/vr
-    version: ^0.6.5
-
+  core:
+    path: C:/acr/odw/sdk/core
+    version: ^0.7.0
 
 dev_dependencies:
   benchmark_harness: ^1.0.4
   grinder: ^0.8.0+2
   test:  ^0.12.24
   test_tools:
-    path: C:/odw/sdk/test_tools
-    version: ^0.6.5
+    path: C:/acr/odw/test_tools
+    version: ^0.7.0
 
 
 

@@ -14,13 +14,13 @@ import 'package:dcm_convert/src/encoding_parameters.dart';
 // ignore_for_file: avoid_positional_boolean_parameters
 
 /// An encoder for Binary DICOM (application/dicom).
-class IvrBDWriter extends IvrWriter with LogWriteMixinBase {
+class IvrTagWriter extends IvrWriter with LogWriteMixinBase {
 
-  /// Creates a new [IvrBDWriter], which is decoder for Binary DICOM
+  /// Creates a new [IvrTagWriter], which is decoder for Binary DICOM
   /// (application/dicom).
-  IvrBDWriter(
+  IvrTagWriter(
       RootDataset rds, EncodingParameters eParams, int minBDLength, bool reUseBD)
       : super(rds, eParams, minBDLength, reUseBD);
 
-  IvrBDWriter.from(EvrBDWriter writer) : super.from(writer);
+  IvrTagWriter.from(EvrBDWriter writer) : super.from(writer);
 }
