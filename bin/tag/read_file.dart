@@ -6,7 +6,7 @@
 
 import 'package:core/core.dart';
 import 'package:convert/data/test_files.dart';
-import 'package:convert/bd_convert.dart';
+import 'package:convert/convert.dart';
 
 final Logger log = new Logger('io/bin/read_files_old.dart', Level.info);
 

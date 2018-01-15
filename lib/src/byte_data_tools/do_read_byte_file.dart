@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/bd_convert.dart';
+import 'package:convert/convert.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/file_utils.dart';
 import 'package:convert/src/io_utils.dart';

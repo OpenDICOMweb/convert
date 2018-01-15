@@ -8,7 +8,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
-import 'package:convert/bd_convert.dart';
+import 'package:convert/convert.dart';
 
 
 String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
@@ -31,8 +31,8 @@ String outPath = 'C:/odw/sdk/io/example/output/out.dcm';
 void main(List<String> args) {
   final file = new File(path0);
   final bytes = file.readAsBytesSync();
-  Instance instance = BDReader.readBytes(bytes, path: file.path);
-  log..debug('Instance: $instance')
-  ..debug('Dataset length: ${instance.dataset.length} elements')
-  ..debug(instance.format(new Formatter(maxDepth: 146)));
+  BDRootDataset rds = BDReader.readBytes(bytes, path: file.path);
+  log..debug('Instance: $rds')
+  ..debug('Dataset length: ${rds.length} elements')
+  ..debug(rds.format(new Formatter(maxDepth: 146)));
 }

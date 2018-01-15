@@ -8,7 +8,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:convert/bd_convert.dart';
+import 'package:convert/convert.dart';
 //import 'package:convert/data/test_files.dart';
 import 'package:convert/src/file_utils.dart';
 import 'package:path/path.dart' as path;

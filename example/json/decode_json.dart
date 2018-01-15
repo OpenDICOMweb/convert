@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:core/core.dart';
-
+import 'package:convert/convert.dart';
 
 void main(List<String> args) {
   // ArgParser parser = getArgParser();
@@ -25,7 +25,7 @@ void main(List<String> args) {
   // Map dsx0 = toDataset(ds0);
 //  Map dsx1 = toDataset(ds1);
 
-  JsonEncoder encoder = new JsonEncoder.withIndent("  ");
+  JsonEncoder encoder = new JsonEncoder.withIndent('  ');
   String pretty = encoder.convert(code);
   // print(pretty);
 
@@ -34,20 +34,20 @@ void main(List<String> args) {
 }
 
 /// Convert a JSON [Map] to a [Dataset] [Map]
-Map<int, TElement> toDataset(Map jsMap) {
-  Map<int, TElement> eMap = {};
+Map<int, TagElement> toDataset(Map jsMap) {
+  final eMap = <int, TagElement>{};
   jsMap.forEach((String s, Map map) {
     int code = int.parse(s, radix: 16);
     VR vr = VR.kUN;
-    var values = const <TElement>[];
+    var values = const <TagElement>[];
     if (map.length != 0) {
-      vr = VR.vrMap[map["vr"]];
+      vr = VR.vrMap[map['vr']];
 
-      values = map["Value"];
+      values = map['Value'];
       if (values == null) {
-        values = map["InlineBinary"];
+        values = map['InlineBinary'];
         if (values == null) {
-          values = map["BulkDataUri"];
+          values = map['BulkDataUri'];
         }
       }
     }

@@ -8,7 +8,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:convert/bd_convert.dart';
+import 'package:convert/convert.dart';
 
 import 'package:convert/src/binary/byte_data/reader/evr_logging_bd_reader.dart';
 import 'package:convert/src/file_utils.dart';

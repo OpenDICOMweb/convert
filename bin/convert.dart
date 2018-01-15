@@ -9,7 +9,7 @@ import 'dart:io';
 import 'package:core/server.dart';
 
 import 'package:convert/data/test_files.dart';
-import 'package:convert/bd_convert.dart';
+import 'package:convert/convert.dart';
 import 'package:convert/byte_data_tools.dart';
 
 /// A Program that reads a [File], decodes it into a [RootDataset],

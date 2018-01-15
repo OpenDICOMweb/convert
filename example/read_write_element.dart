@@ -7,41 +7,38 @@
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
-
-
-import 'package:convert/convert.dart';
 import 'package:convert/convert.dart';
 
 /// Logger
-Logger log = new Logger("read_write_element");
+Logger log = new Logger('read_write_element');
 
 /// Simple [Element] test
 void main(List<String> args) {
-  SH sh = new SH(PTag.kReceivingApplicationEntityTitle, ["foo bar"]);
-  elementTest(sh, ["abc", "def"]);
+  final sh = new SHtag(PTag.kReceivingApplicationEntityTitle, ['foo bar']);
+  elementTest(sh, <String>['abc', 'def']);
 }
 
 /// Test
 bool elementTest(Element e0, List values) {
 
-  Element e1 = e0.copy;
+  final e1 = e0.copy;
   log.debug('e0: ${e0.info}, e1: ${e1.info}');
-  Element e2 = e0.update(values);
+  final e2 = e0.update(values);
   log.debug('e1: ${e0.info}, e2: ${e1.info}');
   if (e0 != e1) return false;
   if (e1 != e2) return false;
 
   // Write the element
-  var bd = new ByteData(4096);
-  TestDcmBDWriter writer = new TestDcmBDWriter(new RootByteDataset(bd));
+  final bd = new ByteData(4096);
+  final writer = new BDWriter(new BDRootDataset(bd));
   writer.xWritePublicElement(e1);
-  int wIndex = writer.wIndex;
+  final wIndex = writer.wIndex;
 
   // Read the element
-  TagRootDataset rds1 = new TagRootDataset.empty();
-  TestDcmByteReader reader = new TestDcmByteReader.fromList(writer.bytes, rds1);
-  Element e3 = reader.xReadPublicElement();
-  int rIndex = reader.rIndex;
+  final rds1 = new TagRootDataset();
+  final reader = new BDReader.fromList(writer.bytes, rds1);
+  final e3 = reader.xReadPublicElement();
+  final rIndex = reader.rIndex;
   log.debug('wIndex: $wIndex, rIndex: $rIndex');
   if (wIndex != rIndex) return false;
 

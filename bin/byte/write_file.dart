@@ -7,7 +7,7 @@
 import 'dart:async' hide Timer;
 import 'dart:typed_data';
 
-import 'package:convert/bd_convert.dart';
+import 'package:convert/convert.dart';
 import 'package:core/core.dart';
 
 Future<Uint8List> writeFile(BDRootDataset rds, String path,

@@ -6,7 +6,7 @@
 
 import 'dart:io';
 
-import 'package:convert/bd_convert.dart';
+import 'package:convert/convert.dart';
 import 'package:convert/data/test_files.dart';
 import 'package:core/core.dart';
 
