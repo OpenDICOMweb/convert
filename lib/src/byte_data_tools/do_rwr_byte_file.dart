@@ -11,8 +11,8 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/byte_data/reader/bd_reader.dart';
-import 'package:convert/src/binary/byte_data/writer/bd_writer.dart';
+import 'package:convert/src/dicom/byte_data/reader/bd_reader.dart';
+import 'package:convert/src/dicom/byte_data/writer/bd_writer.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/byte_data_tools/job_utils.dart';
 

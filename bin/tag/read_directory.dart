@@ -8,16 +8,16 @@ import 'dart:io';
 
 import 'package:core/core.dart';
 import 'package:path/path.dart' as p;
-import 'package:convert/convert.dart';
+import 'package:convert/dicom.dart';
 
-String inRoot0 = 'C:/odw/test_data/sfd/CR';
-String inRoot1 = 'C:/odw/test_data/sfd/CR_and_RF';
-String inRoot2 = 'C:/odw/test_data/sfd/CT';
-String inRoot3 = 'C:/odw/test_data/sfd/MG';
-String inRoot4 = 'C:/odw/test_data/sfd';
-String inRoot5 = 'C:/odw/test_data';
-String mWeb = 'C:/odw/test_data/mweb';
-String testData = 'C:/odw/test_data';
+String inRoot0 = 'C:/acr/odw/test_data/sfd/CR';
+String inRoot1 = 'C:/acr/odw/test_data/sfd/CR_and_RF';
+String inRoot2 = 'C:/acr/odw/test_data/sfd/CT';
+String inRoot3 = 'C:/acr/odw/test_data/sfd/MG';
+String inRoot4 = 'C:/acr/odw/test_data/sfd';
+String inRoot5 = 'C:/acr/odw/test_data';
+String mWeb = 'C:/acr/odw/test_data/mweb';
+String testData = 'C:/acr/odw/test_data';
 
 String outRoot0 = 'test/output/root0';
 String outRoot1 = 'test/output/root1';
@@ -25,12 +25,12 @@ String outRoot2 = 'test/output/root2';
 String outRoot3 = 'test/output/root3';
 String outRoot4 = 'test/output/root4';
 
-String mweb0 = 'C:/odw/test_data/mweb/10 Patient IDs';
-String mweb1 = 'C:/odw/test_data/mweb/100 MB Studies';
-String hologic = 'C:/odw/test_data/mweb/Hologic';
+String mweb0 = 'C:/acr/odw/test_data/mweb/10 Patient IDs';
+String mweb1 = 'C:/acr/odw/test_data/mweb/100 MB Studies';
+String hologic = 'C:/acr/odw/test_data/mweb/Hologic';
 
-String badDir0 = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy';
-String badDir1 = 'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop';
+String badDir0 = 'C:/acr/odw/test_data/mweb/100 MB Studies/MRStudy';
+String badDir1 = 'C:/acr/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop';
 
 Logger log = new Logger(' read_a_directory', Level.info);
 

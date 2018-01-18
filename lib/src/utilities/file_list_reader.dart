@@ -6,7 +6,7 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/convert.dart';
+import 'package:convert/dicom.dart';
 
 
 class FileListReader {

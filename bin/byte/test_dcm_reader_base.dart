@@ -11,7 +11,7 @@ import 'dart:typed_data';
 import 'package:convert/convert.dart';
 
 import 'package:convert/src/binary/byte_data/reader/evr_logging_bd_reader.dart';
-import 'package:convert/src/file_utils.dart';
+import 'package:convert/src/utilities/file_utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
 

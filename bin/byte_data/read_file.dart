@@ -8,9 +8,9 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:convert/convert.dart';
-//import 'package:convert/data/test_files.dart';
-import 'package:convert/src/file_utils.dart';
+import 'package:convert/dicom.dart';
+//import 'package:dcm_convert/data/test_files.dart';
+import 'package:convert/src/utilities/file_utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
 

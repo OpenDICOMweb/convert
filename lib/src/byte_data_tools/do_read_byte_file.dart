@@ -10,10 +10,10 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/convert.dart';
+import 'package:convert/dicom.dart';
 import 'package:convert/src/errors.dart';
-import 'package:convert/src/file_utils.dart';
-import 'package:convert/src/io_utils.dart';
+import 'package:convert/src/utilities/file_utils.dart';
+import 'package:convert/src/utilities/io_utils.dart';
 
 Future<Uint8List> readFileFast(File f, {bool fast = true}) async =>
     (fast) ? await f.readAsBytes() : f.readAsBytesSync();

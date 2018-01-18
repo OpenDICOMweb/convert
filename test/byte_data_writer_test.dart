@@ -7,7 +7,7 @@
 import 'package:core/server.dart';
 import 'package:test/test.dart';
 
-import 'package:convert/src/binary/base/writer/write_buffer.dart';
+import 'package:convert/src/byte_list/write_buffer.dart';
 
 void main() {
   Server.initialize(name: 'byte_date_writer.dart', level: Level.debug);
@@ -17,17 +17,19 @@ void main() {
       final startSize = 1;
       final iterations = 1024 * 1;
       final wb = new WriteBuffer(startSize);
-      log
-        ..debug('iterations: $iterations')
-        ..debug('maxLength: ${wb.maxLength}')
-        ..debug('length: ${wb.lengthInBytes}');
-      expect(wb.lengthInBytes == startSize, true);
+      log.debug('''
+iterations: $iterations')
+ index: ${wb.wIndex}
+ maxLength: ${wb.maxLength}
+''');
+
+      expect(wb.wIndex == startSize, true);
       for (var i = 0; i < iterations - 1; i++) {
         final v = i % 127;
         wb.int8(v);
       }
-      log..debug('wb: $wb}\n  length: ${wb.lengthInBytes}');
-      expect(wb.lengthInBytes == iterations, true);
+      log..debug('wb: $wb}\n  length: ${wb.wIndex}');
+      expect(wb.wIndex == iterations, true);
     });
   });
 }

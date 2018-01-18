@@ -4,11 +4,8 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the   AUTHORS file for other contributors.
 
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:core/core.dart';
-import 'package:convert/convert.dart';
+import 'package:convert/dicom.dart';
 
 
 String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';
@@ -27,12 +24,11 @@ String path5 =
 String outPath = 'C:/odw/sdk/io/example/output/out.dcm';
 
 
-
 void main(List<String> args) {
-  final file = new File(path0);
-  final bytes = file.readAsBytesSync();
-  BDRootDataset rds = BDReader.readBytes(bytes, path: file.path);
-  log..debug('Instance: $rds')
-  ..debug('Dataset length: ${rds.length} elements')
-  ..debug(rds.format(new Formatter(maxDepth: 146)));
+  final rds = BDReader.readPath(path0);
+  log..debug('''
+Instance: $rds
+  Dataset length: ${rds.length} elements')
+  ${rds.format(new Formatter(maxDepth: 146))}
+''');
 }

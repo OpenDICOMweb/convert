@@ -7,7 +7,7 @@
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
-import 'package:convert/convert.dart';
+import 'package:convert/dicom.dart';
 
 /// Logger
 Logger log = new Logger('read_write_element');

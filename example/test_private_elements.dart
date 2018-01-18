@@ -4,9 +4,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:typed_data';
-
-import 'package:convert/convert.dart';
+import 'package:convert/dicom.dart';
 import 'package:core/core.dart';
 
 /// Simple [Element] test
@@ -89,11 +87,9 @@ bool writeReadElementTest<E>(TagElement<E> e0, [PrivateCreator pc]) {
   return true;
 }
 
-TagElement<E> writeReadDataset(TagRootDataset ds0, TagElement e0) {
-  final ds0 = new TagRootDataset()
-  ..add(e0);
-  final wBuf0 = new TagWriter( 128)
-  ..writeRootDataset(ds0);
+TagElement writeReadDataset<E>(TagRootDataset ds0, Element e0) {
+  final ds0 = new TagRootDataset()..add(e0);
+  final wBuf0 = new TagWriter(ds0)..writeRootDataset();
   TagElement<E> e;
   //TODO: create Dataset DS2 and write E1
 
@@ -128,23 +124,23 @@ void testPrivateGroupLengthElement() {
 
 bool testPrivateGroupLength() {
   // Create Element
-  Tag tag = new PrivateGroupLengthTag(0x00090000, kCSIndex);
+  final tag = new PrivateGroupLengthTag(0x00090000, kCSIndex);
   final e0 = new ULtag(tag, [1024]);
   //TODO: create Dataset DS0 and write E0
   //      create writer
   final rds0 = new TagRootDataset()
   ..add(e0);
-  TagWriter wBuf0 = new TagWriter( 128);
-  wBuf0.xWritePublicElement(e0);
+  final writer0 = new TagWriter( rds0);
+  writer0.xWritePublicElement(e0);
   // wBuf0.writeDataset(rds0);
-  final wIndex0 = wBuf0.wIndex;
+  final wIndex0 = writer0.wIndex;
 
   // Read the Dataset from the bytes.
   //TODO: create Dataset DS1
-  final rBuf = new TagReader.fromBytes(wBuf0.bytes);
-  TagElement e1 = rBuf.xReadPublicElement();
- // Dataset rds1 = rBuf.readRootDataset()
-  final rIndex = rBuf.rIndex;
+  final reader0 = TagReader.fromBytes(writer0.bytes);
+  final e1 = reader0.xReadPublicElement();
+  final rds1 = reader0.readRootDataset()
+  final rIndex = reader0.rIndex;
   if (wIndex0 != rIndex || e0 != e1) {
     log.warn('Unequal: wIndex: $wIndex0, rIndex: $rIndex');
     return false;
@@ -153,7 +149,7 @@ bool testPrivateGroupLength() {
     log.warn('Unequal: $e0, $e1');
   }
   //TODO: create Dataset DS2 and write E1
-  final wBuf1 = new TagWriter(lengthInBytes: 128);
+  final wBuf1 = new TagWriter(rds0);
 
   wBuf1.xWritePublicElement(e0);
   final wIndex1 = wBuf1.wIndex;

@@ -1,0 +1,205 @@
+// Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
+// Use of this source code is governed by the open source license
+// that can be found in the LICENSE file.
+// Original author: Jim Philbin <jfphilbin@gmail.edu> -
+// See the AUTHORS file for other contributors.
+
+import 'dart:collection';
+import 'dart:typed_data';
+
+import 'package:core/core.dart';
+
+//Urgent: Unit Test
+//Urgent: move grow to write_buffer
+
+typedef TypedData _TDMaker(TypedData td, int offset, int length);
+// *** Start Internals
+// These should only be used in functions between Start/End Internals
+TypedData __td;
+
+ByteData _newBD(int length) => __td = new ByteData(length);
+ByteData _getByteData() => __td.buffer.asByteData();
+Uint8List _getBytes() => __td.buffer.asUint8List();
+
+TypedData _checkView(TypedData td, int offset, int length, _TDMaker maker) {
+  final o = td.offsetInBytes + offset;
+  final l = length ?? td.lengthInBytes;
+  RangeError.checkValidRange(o, l, td.lengthInBytes);
+  return __td = maker(td, o, l);
+}
+
+ByteData _asByteData(TypedData td, int offset, int length) =>
+    _checkView(td, offset, length, _bdMaker);
+
+
+ByteData _bdMaker(TypedData td, int offset, int length) =>
+    td.buffer.asByteData(offset, length);
+
+Uint8List _asUint8List(TypedData td, int offset, int length) =>
+    _checkView(td, offset, length, _bdMaker);
+
+Uint8List _bytesMaker(TypedData td, int offset, int length) =>
+    td.buffer.asUint8List(offset, length);
+
+// *** End
+
+abstract class ByteList extends ListBase<int> implements ByteData, Uint8List {
+  final ByteData _bd;
+  final Uint8List _bytes;
+
+  static const Endianness endian = Endianness.LITTLE_ENDIAN;
+
+  ByteList(int lengthInBytes)
+      : _bd = _newBD(lengthInBytes),
+        _bytes = _getBytes();
+
+  ByteList.from(ByteList byteList, [int offset = 0, int length])
+      : _bd = _asByteData(byteList._bd, offset, length),
+        _bytes = _getBytes();
+
+  ByteList.fromByteData(ByteData bd, [int offset = 0, int length])
+      : _bd = _asByteData(bd, offset, length),
+        _bytes = _getBytes();
+
+  ByteList.fromUint8List(Uint8List bytes, [int offset = 0, int length])
+      : _bytes = _asUint8List(bytes, offset, length),
+        _bd = _getByteData();
+
+  ByteData get bd => _bd;
+  Uint8List get bytes => _bytes;
+
+  // **** List<int> Interface
+  @override
+  int operator [](int index) => _bd.getUint8(index);
+  @override
+  void operator []=(int index, int value) => _bd.setUint8(index, value);
+
+  @override
+  bool operator ==(Object other) {
+    block:
+    {
+      if (other is ByteList) {
+        if (length != other.length) break block;
+        for (var i = 0; i < length; i++)
+          if (_bd.getUint8(i) != other._bd.getUint8(i)) break block;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode => _bd.hashCode;
+
+  @override
+  int get length => _bd.lengthInBytes;
+
+  @override
+  set length(int v) => unsupportedError();
+
+  // **** TypedData interface.
+  @override
+  int get elementSizeInBytes => _bd.elementSizeInBytes;
+  @override
+  int get offsetInBytes => _bd.offsetInBytes;
+  @override
+  int get lengthInBytes => _bd.lengthInBytes;
+
+  /// Returns the underlying [ByteBuffer].
+  ///
+  /// The returned buffer may be replaced by operations that change the [length]
+  /// of this list.
+  ///
+  /// The buffer may be larger than [lengthInBytes] bytes, but never smaller.
+  @override
+  ByteBuffer get buffer => _bd.buffer;
+
+  // The Readers
+  @override
+  int getInt8(int index) => _bd.getInt8(index);
+  @override
+  int getUint8(int index) => _bd.getUint8(index);
+  @override
+  int getUint16(int index, [Endianness endian = Endian.little]) =>
+      _bd.getUint16(index, endian);
+  @override
+  int getInt16(int index, [Endianness endian = Endian.little]) =>
+      _bd.getInt16(index, endian);
+  @override
+  int getUint32(int index, [Endianness endian = Endian.little]) =>
+      _bd.getUint32(index, endian);
+  @override
+  int getInt32(int index, [Endianness endian = Endian.little]) =>
+      _bd.getInt32(index, endian);
+  @override
+  int getUint64(int index, [Endianness endian = Endian.little]) =>
+      _bd.getUint64(index, endian);
+  @override
+  int getInt64(int index, [Endianness endian = Endian.little]) =>
+      _bd.getInt64(index, endian);
+  @override
+  double getFloat32(int index, [Endianness endian = Endian.little]) =>
+      _bd.getFloat32(index, endian);
+  @override
+  double getFloat64(int index, [Endianness endian = Endian.little]) =>
+      _bd.getFloat64(index, endian);
+
+  // The Writers
+  @override
+  void setInt8(int index, int value, [Endianness endian = Endian.little]) =>
+      _bd.setInt8(index, value);
+  @override
+  void setUint8(int index, int value, [Endianness endian = Endian.little]) =>
+      _bd.setUint8(index, value);
+  @override
+  void setUint16(int index, int value, [Endianness endian = Endian.little]) =>
+      _bd.setUint16(index, value, endian);
+  @override
+  void setInt16(int index, int value, [Endianness endian = Endian.little]) =>
+      _bd.setInt16(index, value, endian);
+  @override
+  void setUint32(int index, int value, [Endianness endian = Endian.little]) =>
+      _bd.setUint32(index, value, endian);
+  @override
+  void setInt32(int index, int value, [Endianness endian = Endian.little]) =>
+      _bd.setInt32(index, value, endian);
+  @override
+  void setUint64(int index, int value, [Endianness endian = Endian.little]) =>
+      _bd.setUint64(index, value, endian);
+  @override
+  void setInt64(int index, int value, [Endianness endian = Endian.little]) =>
+      _bd.setInt64(index, value, endian);
+  @override
+  void setFloat32(int index, double value, [Endianness endian = Endian.little]) =>
+      _bd.setFloat32(index, value, endian);
+  @override
+  void setFloat64(int index, double value, [Endianness endian = Endian.little]) =>
+      _bd.setFloat64(index, value, endian);
+
+
+
+  void writeCode(int index, int code) {
+    setUint16(index, code >> 16);
+    setUint16(index + 2, code & 0xFFFF);
+  }
+
+
+  static const int kMaxByteListLength = k1GB;
+  static const int kDefaultLength = 1024;
+  static const int kMinByteListLength = 768;
+
+  static const Endianness kDefaultEndian = Endianness.LITTLE_ENDIAN;
+
+  static bool isMaxCapacityExceeded(int length, [int maxLength]) {
+    maxLength ??= kMaxByteListLength;
+    log.debug('isValidlength: $length');
+    return (length >= maxLength);
+  }
+
+  static bool isValidBufferLength(int length, [int maxLength]) {
+    maxLength ??= kMaxByteListLength;
+    log.debug('isValidlength: $length');
+    if (length < 1 || length > maxLength) return false;
+    return true;
+  }
+}

@@ -9,7 +9,7 @@ import 'dart:io';
 import 'package:core/core.dart';
 
 import 'package:convert/data/test_files.dart';
-import 'package:convert/convert.dart';
+import 'package:convert/dicom.dart';
 import 'package:convert/src/utilities/file_list_reader.dart';
 
 void main() {

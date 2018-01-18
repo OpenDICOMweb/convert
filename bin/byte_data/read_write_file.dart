@@ -4,11 +4,13 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the   AUTHORS file for other contributors.
 
-//import 'package:convert/data/test_files.dart';
-import 'package:convert/convert.dart';
 import 'package:core/server.dart';
+import 'package:convert/dicom.dart';
+
+import 'package:convert/data/test_files.dart';
 
 const String pathX = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
+final String path = testEvrPaths[0];
 // Problem Files
 //   1. fileList2
 void main() {
