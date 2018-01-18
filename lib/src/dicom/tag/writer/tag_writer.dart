@@ -20,9 +20,7 @@ import 'package:convert/src/dicom/base/writer/dcm_writer_base.dart';
 import 'package:convert/src/dicom/base/writer/evr_writer.dart';
 import 'package:convert/src/dicom/base/writer/ivr_writer.dart';
 import 'package:convert/src/dicom/tag/writer/evr_tag_writer.dart';
-import 'package:convert/src/dicom/tag/writer/evr_logging_tag_writer.dart';
-import 'package:convert/src/dicom/byte_data/writer/ivr_bd_writer.dart';
-import 'package:convert/src/dicom/byte_data/writer/ivr_logging_bd_writer.dart';
+import 'package:convert/src/dicom/tag/writer/ivr_tag_writer.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
 import 'package:convert/src/utilities/io_utils.dart';
@@ -36,7 +34,7 @@ class TagWriter {
   final bool overwrite;
   final EncodingParameters eParams;
   final TransferSyntax outputTS;
-  final int minBDLength;
+  final int minLength;
   final ElementOffsets inputOffsets;
   final bool reUseBD;
   final bool doLogging;
@@ -51,18 +49,19 @@ class TagWriter {
       this.eParams = EncodingParameters.kNoChange,
       this.outputTS,
       this.overwrite = false,
-      this.minBDLength = DcmWriterBase.defaultBufferLength,
+      this.minLength = kDefaultWriteBufferLength,
       this.inputOffsets,
       this.reUseBD = true,
       this.doLogging = true,
       this.showStats = false})
       : _evrWriter = (doLogging)
-            ? new EvrLoggingTagWriter(rds, eParams, minBDLength, reUseBD, inputOffsets)
-            : new EvrTagWriter(rds, eParams, minBDLength, reUseBD);
+            ? new EvrLoggingTagWriter(rds, eParams, minLength, inputOffsets, reUseBD:
+  reUseBD)
+            : new EvrTagWriter(rds, eParams, minLength, reUseBD: reUseBD);
 
-  /// Writes the [BDRootDataset] to a [Uint8List], and then writes the
+  /// Writes the [TagRootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
-  factory TagWriter.toFile(BDRootDataset ds, File file,
+  factory TagWriter.toFile(TagRootDataset ds, File file,
       {EncodingParameters eParams,
       TransferSyntax outputTS,
       bool overwrite = false,
@@ -77,17 +76,17 @@ class TagWriter {
         eParams: eParams,
         outputTS: outputTS,
         overwrite: overwrite,
-        minBDLength: minBDLength,
+        minLength: minBDLength,
         inputOffsets: inputOffsets,
         reUseBD: reUseBD,
         doLogging: doLogging,
         showStats: showStats);
   }
 
-  /// Creates a new empty [File] from [path], writes the [BDRootDataset]
+  /// Creates a new empty [File] from [path], writes the [TagRootDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  factory TagWriter.toPath(BDRootDataset ds, String path,
+  factory TagWriter.toPath(TagRootDataset ds, String path,
       {EncodingParameters eParams,
       TransferSyntax outputTS,
       bool overwrite = false,
@@ -102,7 +101,7 @@ class TagWriter {
         eParams: eParams,
         outputTS: outputTS,
         overwrite: overwrite,
-        minBDLength: minBDLength,
+        minLength: minBDLength,
         inputOffsets: inputOffsets,
         reUseBD: reUseBD,
         doLogging: doLogging,
@@ -118,8 +117,8 @@ class TagWriter {
       return _evrWriter.writeRootDataset(rds);
     } else {
       _ivrWriter = (doLogging)
-          ? new IvrLoggingBDWriter.from(_evrWriter)
-          : new IvrBDWriter.from(_evrWriter);
+          ? new IvrLoggingTagWriter.from(_evrWriter)
+          : new IvrTagWriter.from(_evrWriter);
       return _ivrWriter.writeRootDataset(rds);
     }
   }
@@ -140,7 +139,7 @@ class TagWriter {
         eParams: eParams,
         outputTS: outputTS,
         overwrite: overwrite,
-        minBDLength: minBDLength,
+        minLength: minBDLength,
         inputOffsets: inputOffsets,
         reUseBD: reUseBD,
         doLogging: doLogging,

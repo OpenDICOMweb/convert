@@ -4,33 +4,19 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-
-
 import 'package:core/core.dart';
 
-
 import 'package:convert/src/dicom/base/writer/dcm_writer_base.dart';
-import 'package:convert/src/dicom/base/writer/evr_writer.dart';
-import 'package:convert/src/utilities/encoding_parameters.dart';
 
-// ignore_for_file: avoid_positional_boolean_parameters
-
-class IvrWriter extends DcmWriterBase {
+abstract class IvrWriter<V> extends DcmWriterBase<V> {
   @override
   final bool isEvr = false;
-
-  IvrWriter(RootDataset rds, EncodingParameters eParams, int minBDLength, bool reUseBD)
-      : super(rds, eParams, minBDLength, reUseBD);
-
-  IvrWriter.from(EvrWriter evrWriter)
-      : super(evrWriter.rds, evrWriter.eParams, evrWriter.minBDLength, evrWriter.reUseBD);
 
   @override
   void writeElement(Element e) {
     var vrIndex = e.vrIndex;
-
+    // This should not happen
     if (_isSpecialVR(vrIndex)) {
-      // This should not happen
       vrIndex = VR.kUN.index;
       log.warn('** vrIndex changed to VR.kUN.index');
     }
@@ -41,20 +27,9 @@ class IvrWriter extends DcmWriterBase {
       _writeIvrSQ(e, vrIndex);
     } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
       _writeIvrMaybeUndefinedLength(e, vrIndex);
-//    } else if (_isSpecialVR(vrIndex)) {
-//      _writeIvrMaybeUndefined(e);
     } else {
       throw new ArgumentError('Invalid VR: $e');
     }
-
-/* Flush when fully working
-    if (e.eStart != eStart) {
-      log.error('** e.eStart(${e.eStart} != eStart($eStart)');
-    }
-    if (e.eEnd != wb.wIndex) {
-      log.error('** e.eEnd(${e.eStart} != eEnd(${wb.wIndex})');
-    }
-*/
   }
 
   void writeIvrDefinedLength(Element e, int vrIndex) =>
@@ -102,8 +77,7 @@ class IvrWriter extends DcmWriterBase {
           ? _writeIvrSQUndefinedLength(e, vrIndex)
           : _writeIvrSQDefinedLength(e, vrIndex);
 
-  void writeIvrSQDefinedLength(SQ e, int vrIndex) =>
-      _writeIvrSQDefinedLength(e, vrIndex);
+  void writeIvrSQDefinedLength(SQ e, int vrIndex) => _writeIvrSQDefinedLength(e, vrIndex);
 
   void _writeIvrSQDefinedLength(SQ e, int vrIndex) {
     logStartSQWrite(e, 'writeIvrSQDefinedLength');

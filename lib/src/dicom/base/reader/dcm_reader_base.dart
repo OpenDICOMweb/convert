@@ -11,6 +11,7 @@ import 'package:core/core.dart';
 
 import 'package:convert/src/byte_list/read_buffer.dart';
 import 'package:convert/src/errors.dart';
+import 'package:convert/src/utilities/element_offsets.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 
@@ -85,6 +86,8 @@ abstract class DcmReaderBase<V> {
   Uint8List get rootBytes => rb.buffer.asUint8List(rb.offsetInBytes, rb.lengthInBytes);
 
   String get info => '$runtimeType: rds: ${rds.info}, cds: ${cds.info}';
+
+  ElementOffsets get offsets => null;
 
   bool hasRemaining(int n) => rb.hasRemaining(n);
 

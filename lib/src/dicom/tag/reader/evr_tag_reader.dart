@@ -8,48 +8,72 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
+import 'package:convert/src/byte_list/read_buffer.dart';
 import 'package:convert/src/dicom/base/reader/evr_reader.dart';
-import 'package:convert/src/dicom/base/reader/log_read_mixin_base.dart';
-import 'package:convert/src/dicom/tag/reader/tag_reader_mixin.dart';
+import 'package:convert/src/dicom/base/reader/debug/log_read_mixin.dart';
+import 'package:convert/src/dicom/tag/reader/ivr_tag_reader.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
+import 'package:convert/src/utilities/element_offsets.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 
 /// A decoder for Binary DICOM (application/dicom).
-/// The resulting [Dataset] is a [BDRootDataset].
-class EvrTagReader extends EvrReader with TagReaderMixin,
-    LogReadMixinBase {
-  /// Creates a new [EvrTagReader].
-  EvrTagReader(ByteData bd, TagRootDataset rds,
-      {String path = '',
-      DecodingParameters dParams = DecodingParameters.kNoChange,
-      bool reUseBD = true})
-      : super(bd, rds, path, dParams, reUseBD);
+/// The resulting [Dataset] is a [TagRootDataset].
+class EvrTagReader extends EvrReader<int> {
+  final bool isEvr = true;
+  @override
+  final ReadBuffer rb;
+  @override
+  final TagRootDataset rds;
+  @override
+  final DecodingParameters dParams;
+  final bool reUseBD;
+
+  @override
+  Dataset cds;
 
   /// Creates a new [EvrTagReader].
-  EvrTagReader.internal(ByteData bd, TagRootDataset rds, String path,
-      DecodingParameters dParams, bool reUseBD)
-      : super(bd, rds, path, dParams, reUseBD);
+  EvrTagReader(ByteData bd, this.rds,
+      {this.dParams = DecodingParameters.kNoChange, this.reUseBD = true})
+      : rb = new ReadBuffer(bd),
+        cds = rds {
+    print('rds: $rds');
+  }
+
+  /// Creates a new [EvrTagReader].
+  EvrTagReader.from(IvrTagReader reader)
+      : rb = reader.rb,
+        rds = reader.rds,
+        dParams = reader.dParams,
+        reUseBD = reader.reUseBD,
+        cds = reader.cds {
+    print('rds: $rds');
+  }
+
+  /// Creates a new [EvrTagReader].
+  EvrTagReader._(ByteData bd, this.rds, this.dParams, this.reUseBD)
+      : rb = new ReadBuffer(bd),
+        cds = rds {
+    print('rds: $rds');
+  }
 
   @override
   Item makeItem(Dataset parent, {ByteData bd, ElementList elements, SQ sequence}) =>
       new BDItem(parent, bd);
-/*
-  @override
-  Element makeBDElement(int code, int vrIndex, ByteData bd) =>
-      TagElement.fromBD(Evr.make(code, vrIndex, bd));
+}
 
+/// A decoder for Binary DICOM (application/dicom).
+/// The resulting [Dataset] is a [TagRootDataset].
+class EvrLoggingTagReader extends EvrTagReader with LogReadMixin {
   @override
-  Element makeTagPixelData(int code, int vrIndex, BDElement bd,
-          [TransferSyntax ts, VFFragments fragments]) =>
-      TagElement.makePixelData(code, vrIndex, bd, ts, fragments);
-
-  /// Returns a new Sequence ([SQ]).
+  final ParseInfo pInfo;
   @override
-  SQtag makeSequence(int code, ByteData bd, Dataset parent, Iterable<Item> items) {
-    final bde = Evr.makeSequence(code, bd, parent, items);
-    return new SQtag(bde.tag, parent, items, bde.vfLengthField);
-  }
-*/
+  final ElementOffsets offsets;
 
+  /// Creates a new [EvrLoggingTagReader].
+  EvrLoggingTagReader(ByteData bd, TagRootDataset rds,
+      {DecodingParameters dParams = DecodingParameters.kNoChange, bool reUseBD = true})
+      : pInfo = new ParseInfo(rds),
+        offsets = new ElementOffsets(),
+        super._(bd, rds, dParams, reUseBD);
 }

@@ -9,27 +9,18 @@ import 'package:core/core.dart';
 import 'package:convert/src/dicom/base/writer/ivr_writer.dart';
 import 'package:convert/src/dicom/base/writer/debug/log_write_mixin.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
-import 'package:convert/src/utilities/encoding_parameters.dart';
-
-// ignore_for_file: avoid_positional_boolean_parameters
 
 //Urgent: remove all log.debug
-class LogIvrWriter extends IvrWriter with LogWriteMixin {
+abstract class LogIvrWriter extends IvrWriter<int> with LogWriteMixin {
   @override
-  final ParseInfo pInfo;
+   ParseInfo get pInfo;
   @override
-  final ElementOffsets inputOffsets;
+   ElementOffsets  get inputOffsets;
   @override
-  final ElementOffsets outputOffsets;
+   ElementOffsets get outputOffsets;
   @override
-  int elementCount;
-
-  LogIvrWriter(RootDataset rds, EncodingParameters eParams, int minBDLength,
-      bool reUseBD, this.inputOffsets)
-      : pInfo = new ParseInfo(rds),
-        outputOffsets = (inputOffsets != null) ? new ElementOffsets() : null,
-        elementCount = -1,
-        super(rds, eParams, minBDLength, reUseBD);
+  int get elementCount;
+  set elementCount(int n);
 
   @override
   void writeElement(Element e) {

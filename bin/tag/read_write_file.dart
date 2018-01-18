@@ -9,7 +9,6 @@ import 'package:core/server.dart';
 import 'package:convert/data/test_files.dart';
 import 'package:convert/dicom.dart';
 
-
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
 void main() {
@@ -19,7 +18,12 @@ void main() {
   final path = path0;
 
   log.info0('Reading: $path');
-  final reader0 = new TagReader.fromPath(path);
+  final reader0 = new TagReader.fromPath(path,
+      async: true,
+      dParams: DecodingParameters.kNoChange,
+      reUseBD: true,
+      doLogging: true,
+      showStats: true);
   final tagDS0 = reader0.readRootDataset();
   final bytes0 = reader0.bd.buffer.asUint8List();
   log

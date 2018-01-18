@@ -54,11 +54,6 @@ bool _isMaxCapacityExceeded(int length, [int maxLength]) {
   return length >= maxLength;
 }
 
-bool _isValidBufferLength(int length, [int maxLength]) {
-  maxLength ??= kMaxByteListLength;
-  if (length < kMinByteListLength || length > maxLength) return false;
-  return true;
-}
 
 /// [ByteList] is a class that provides a read-only byte array that supports both
 /// [Uint8List] and [ByteData] interfaces.

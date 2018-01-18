@@ -8,9 +8,12 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
+import 'package:convert/src/dicom/base/reader/debug/log_read_mixin.dart';
 import 'package:convert/src/byte_list/read_buffer.dart';
 import 'package:convert/src/dicom/base/reader/evr_reader.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
+import 'package:convert/src/utilities/element_offsets.dart';
+
 
 // ignore_for_file: avoid_positional_boolean_parameters
 
@@ -39,40 +42,31 @@ class EvrBDReader extends EvrReader<int> {
   }
 
   /// Creates a new [EvrBDReader].
-  EvrBDReader.internal(ByteData bd, this.rds, this.dParams, this.reUseBD)
+  EvrBDReader._(ByteData bd, this.rds, this.dParams, this.reUseBD)
       : rb = new ReadBuffer(bd),
         cds = rds {
     print('rds: $rds');
   }
 
   @override
-  ElementList get elements => cds.elements;
-/*
-  @override
-  BDElement makeElementFromBD(int code, int vrIndex, ByteData bd) =>
-      Evr.make(code, vrIndex, bd);
-
-  @override
-  Element makeElementFromList(int code, int vrIndex, Iterable values) {
-    final tag = Tag.lookupByCode(code);
-    return TagElement.make(tag, vrIndex, values);
-  }
-
-  @override
-  BDElement makePixelData(int code, int vrIndex, ByteData bd,
-          [TransferSyntax ts, VFFragments fragments]) =>
-      Evr.makePixelData(code, vrIndex, bd, ts, fragments);
-
-  /// Returns a new Sequence ([SQ]).
-  @override
-  SQ makeSequence(int code, ByteData bd, Dataset parent, Iterable<Item> items) =>
-      Evr.makeSequence(code, bd, parent, items);
-
-  @override
-  RootDataset makeRootDataset({ByteData bd, ElementList elements, String path}) =>
-      new BDRootDataset(bd, elements: elements, path: path);
-*/
-  @override
   Item makeItem(Dataset parent, {ByteData bd, ElementList elements, SQ sequence}) =>
       new BDItem(parent, bd);
+}
+
+
+/// A decoder for Binary DICOM (application/dicom).
+/// The resulting [Dataset] is a [BDRootDataset].
+class EvrLoggingBDReader extends EvrBDReader with LogReadMixin {
+  @override
+  final ParseInfo pInfo;
+  @override
+  final ElementOffsets offsets;
+
+  /// Creates a new [EvrLoggingBDReader].
+  EvrLoggingBDReader(ByteData bd, BDRootDataset rds,
+                     {DecodingParameters dParams = DecodingParameters.kNoChange,
+                       bool reUseBD = true})
+      : pInfo = new ParseInfo(rds),
+        offsets = new ElementOffsets(),
+        super._(bd, rds, dParams, reUseBD);
 }

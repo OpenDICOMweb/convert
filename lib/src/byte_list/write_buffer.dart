@@ -9,7 +9,7 @@ import 'dart:typed_data';
 import 'package:convert/src/byte_list/byte_list.dart';
 import 'package:convert/src/byte_list/write_buffer_mixin.dart';
 
-class WriteBuffer extends ByteListWritable with WriteBufferMixin{
+class WriteBuffer extends ByteListWritable with WriteBufferMixin {
   int _wIndex;
 
   WriteBuffer([int length = kDefaultLength])
@@ -28,7 +28,6 @@ class WriteBuffer extends ByteListWritable with WriteBufferMixin{
 
   @override
   ByteData get bd => (_isClosed) ? null : super.bd;
-
 
   void int8(int value) {
     assert(value >= -128 && value <= 127, 'Value out of range: $value');
@@ -165,5 +164,4 @@ class WriteBuffer extends ByteListWritable with WriteBufferMixin{
 
   static WriteBuffer from(WriteBuffer wb, [int offset = 0, int length]) =>
       new WriteBuffer.fromByteData(wb.bd.buffer.asByteData(offset, length));
-
 }

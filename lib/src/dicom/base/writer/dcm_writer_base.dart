@@ -12,15 +12,10 @@
 
 import 'dart:typed_data';
 
-
-
 import 'package:core/core.dart';
-
 
 import 'package:convert/src/byte_list/write_buffer.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
-
-// ignore_for_file: avoid_positional_boolean_parameters
 
 /// A library for encoding [Dataset]s in the DICOM File Format.
 ///
@@ -33,31 +28,16 @@ import 'package:convert/src/utilities/encoding_parameters.dart';
 ///   2. All String manipulation should be handled in the attribute itself.
 // Note: There are four [Element]s that might have an Undefined Length value
 // (0xFFFFFFFF), [SQ], [OB], [OW], [UN].
-abstract class DcmWriterBase {
-  final WriteBuffer wb;
-  final RootDataset rds;
-  final int minBDLength;
-  ByteData fmiBD;
-  final EncodingParameters eParams;
-  final bool reUseBD;
+abstract class DcmWriterBase<V> {
+  WriteBuffer get wb;
+  RootDataset get rds;
+  int get minLength;
+//  ByteData get fmiBD;
+  EncodingParameters get eParams;
+  bool get reUseBD;
 
-  Dataset cds;
-
-  /// Creates a new [DcmWriterBase], where [wIndex] = 0.
-  DcmWriterBase(this.rds, this.eParams, this.minBDLength, this.reUseBD)
-      : cds = rds,
-        wb = (reUseBD)
-            ? _reuseByteListWriter(minBDLength)
-            : new WriteBuffer((minBDLength == null) ? defaultBufferLength : minBDLength);
-
-  DcmWriterBase.from(DcmWriterBase writer)
-      : cds = writer.rds,
-        wb = writer.wb,
-        rds = writer.rds,
-        minBDLength = writer.minBDLength,
-        fmiBD = writer.fmiBD,
-        eParams = writer.eParams,
-        reUseBD = writer.reUseBD;
+  Dataset get cds;
+  set cds(Dataset ds);
 
   bool get isEvr => rds.isEvr;
 
@@ -122,8 +102,8 @@ abstract class DcmWriterBase {
 
   /// Write one [Item].
   void writeItem(Item item) => ((item.hasULength && !eParams.doConvertUndefinedLengths))
-                               ? _writeUndefinedLengthItem(item)
-                               : _writeDefinedLengthItem(item);
+      ? _writeUndefinedLengthItem(item)
+      : _writeDefinedLengthItem(item);
 
   void writeDefinedLengthItem(Item item) => _writeDefinedLengthItem(item);
   void writeUndefinedLengthItem(Item item) => _writeUndefinedLengthItem(item);
@@ -154,7 +134,7 @@ abstract class DcmWriterBase {
         wb.uint8(0);
       }
     }
-  //  wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
+    //  wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
     print('End of pixelData: ${wb.wIndex}');
   }
 
@@ -167,25 +147,6 @@ abstract class DcmWriterBase {
 
   void logEndSQWrite(int eStart, Element e, String name, {bool ok}) {}
 
-/// The default [ByteData] buffer length, if none is provided.
-  static const int defaultBufferLength = k1MB; //200 * k1MB;
-
-  /// If [_reuse] is true the [ByteData] buffer is stored here.
-  static WriteBuffer _reuse;
-
-  static WriteBuffer _reuseByteListWriter([int size]) {
-    size ??= defaultBufferLength;
-    if (_reuse == null) return _reuse = new WriteBuffer(size);
-
-    if (size > _reuse.lengthInBytes) {
-      _reuse = new WriteBuffer(size + 1024);
-      log.warn('**** DcmWriterBase creating new Reuse BD of Size: ${_reuse
-				  .lengthInBytes}');
-    }
-    _reuse.reset;
-    return _reuse;
-  }
-
   /// Returns the [outputTS] for the encoded output.
   static TransferSyntax getOutputTS(RootDataset rds, TransferSyntax outputTS) {
     if (outputTS == null) {
@@ -196,6 +157,25 @@ abstract class DcmWriterBase {
       return outputTS;
     }
   }
+}
+
+/// The default [ByteData] buffer length, if none is provided.
+const int kDefaultWriteBufferLength = k1MB; //200 * k1MB;
+
+/// A reusable  [WriteBuffer] is stored here.
+WriteBuffer _reUseBuffer;
+
+WriteBuffer getWriteBuffer({int length, bool reUseBD = false}) {
+  length ??= kDefaultWriteBufferLength;
+  if (_reUseBuffer == null) return _reUseBuffer = new WriteBuffer(length);
+
+  if (length > _reUseBuffer.lengthInBytes) {
+    _reUseBuffer = new WriteBuffer(length + 1024);
+    log.warn('**** DcmWriterBase creating new Reuse BD of Size: ${_reUseBuffer
+    .lengthInBytes}');
+  }
+  _reUseBuffer.reset;
+  return _reUseBuffer;
 }
 
 /*

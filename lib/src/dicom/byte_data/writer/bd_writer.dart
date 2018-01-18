@@ -20,9 +20,7 @@ import 'package:convert/src/dicom/base/writer/dcm_writer_base.dart';
 import 'package:convert/src/dicom/base/writer/evr_writer.dart';
 import 'package:convert/src/dicom/base/writer/ivr_writer.dart';
 import 'package:convert/src/dicom/byte_data/writer/evr_bd_writer.dart';
-import 'package:convert/src/dicom/byte_data/writer/evr_logging_bd_writer.dart';
 import 'package:convert/src/dicom/byte_data/writer/ivr_bd_writer.dart';
-import 'package:convert/src/dicom/byte_data/writer/ivr_logging_bd_writer.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
 import 'package:convert/src/utilities/io_utils.dart';
@@ -51,14 +49,15 @@ class BDWriter {
       this.eParams = EncodingParameters.kNoChange,
       this.outputTS,
       this.overwrite = false,
-      this.minBDLength = DcmWriterBase.defaultBufferLength,
+      this.minBDLength = kDefaultWriteBufferLength,
       this.inputOffsets,
       this.reUseBD = true,
       this.doLogging = true,
       this.showStats = false})
       : _evrWriter = (doLogging)
-            ? new EvrLoggingBDWriter(rds, eParams, minBDLength, reUseBD, inputOffsets)
-            : new EvrBDWriter(rds, eParams, minBDLength, reUseBD);
+            ? new EvrLoggingBDWriter(rds, eParams, minBDLength, inputOffsets,
+                reUseBD: reUseBD)
+            : new EvrBDWriter(rds, eParams, minBDLength, reUseBD: reUseBD);
 
   /// Writes the [BDRootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].

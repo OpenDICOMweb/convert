@@ -26,12 +26,13 @@ abstract class BDReaderMixin implements DcmReaderBase<int> {
     return TagElement.make(tag, vrIndex, values);
   }
 
+  @override
   BDElement makePixelData(int code, int vrIndex, ByteData bd,
           [TransferSyntax ts, VFFragments fragments]) =>
       Evr.makePixelData(code, vrIndex, bd, ts, fragments);
 
   /// Returns a new Sequence ([SQ]).
-
+  @override
   SQ makeSequence(int code, ByteData bd, Dataset parent, Iterable<Item> items) =>
       Evr.makeSequence(code, bd, parent, items);
 

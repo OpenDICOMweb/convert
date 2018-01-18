@@ -7,13 +7,14 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-
 import 'package:core/core.dart';
 
+import 'package:convert/src/byte_list/read_buffer.dart';
 import 'package:convert/src/dicom/tag/reader/evr_tag_reader.dart';
 import 'package:convert/src/dicom/tag/reader/ivr_tag_reader.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
+import 'package:convert/src/utilities/io_utils.dart';
 
 /// Creates a new [TagReader], which is decoder for Binary DICOM
 /// (application/dicom).
@@ -22,108 +23,147 @@ class TagReader {
   final String path;
   final bool reUseBD;
   final DecodingParameters dParams;
-  final ElementOffsets offsets;
+  final bool doLogging;
+  final bool showStats;
+  final TagRootDataset rds;
   final EvrTagReader _evrReader;
-
-  IvrTagReader _ivrReader;
 
   /// Creates a new [TagReader].
   TagReader(this.bd,
-      {this.path = '',
+      {TagRootDataset rds,
+      this.path = '',
       this.dParams = DecodingParameters.kNoChange,
       this.reUseBD = true,
-      this.offsets})
-      : _evrReader = new EvrTagReader(bd, new TagRootDataset(bd: bd, path: path),
-                                          path:
-  path, dParams:
-  dParams, reUseBD: reUseBD);
+      this.doLogging = true,
+      this.showStats})
+      : rds = (rds == null) ? new TagRootDataset(bd: bd, path: path) : rds,
+        _evrReader = (doLogging)
+            ? new EvrLoggingTagReader(bd, rds, dParams: dParams, reUseBD: reUseBD)
+            : new EvrTagReader(bd, new TagRootDataset(bd: bd, path: path),
+                dParams: dParams, reUseBD: reUseBD);
+
+  /// Creates a [TagReader] from the contents of the [bytes].
+  factory TagReader.fromBytes(Uint8List bytes,
+      {String path = '',
+      bool async = true,
+      DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool reUseBD = true,
+      bool doLogging = true,
+      bool showStats = false}) {
+    final bd = bytes.buffer.asByteData();
+    return new TagReader(bd, path: '', reUseBD: reUseBD, dParams: dParams);
+  }
+
+  /// Creates a [TagReader] from the contents of the [input].
+  factory TagReader.fromList(List<int> input,
+      {String path = '',
+      bool async = true,
+      DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool reUseBD = true,
+      bool doLogging = true,
+      bool showStats = false}) {
+    final bytes = (input is Uint8List) ? input : new Uint8List.fromList(input);
+    return new TagReader.fromBytes(bytes, reUseBD: reUseBD, dParams: dParams);
+  }
 
   /// Creates a [TagReader] from the contents of the [file].
   factory TagReader.fromFile(File file,
-      {DecodingParameters dParams = DecodingParameters.kNoChange, bool reUseBD = true}) {
-    final Uint8List bytes = file.readAsBytesSync();
+      {bool async = true,
+      DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool reUseBD: true,
+      bool doLogging = true,
+      bool showStats = false}) {
+    final Uint8List bytes = (async) ? file.readAsBytes() : file.readAsBytesSync();
     final bd = bytes.buffer.asByteData();
     return new TagReader(bd, path: file.path, reUseBD: reUseBD, dParams: dParams);
   }
 
   /// Creates a [TagReader] from the contents of the [File] at [path].
   factory TagReader.fromPath(String path,
-          {DecodingParameters dParams = DecodingParameters.kNoChange,
-          bool reUseBD = true}) =>
-      new TagReader.fromFile(new File(path), dParams: dParams, reUseBD: reUseBD);
+          {bool async = true,
+          DecodingParameters dParams = DecodingParameters.kNoChange,
+          bool reUseBD: true,
+          bool doLogging = true,
+          bool showStats = false}) =>
+      new TagReader.fromFile(new File(path),
+          async: async,
+          dParams: dParams,
+          reUseBD: reUseBD,
+          doLogging: doLogging,
+          showStats: showStats);
+
+  ReadBuffer get rb => _evrReader.rb;
+  Uint8List get bytes => rb.bytes;
+  ElementOffsets get offsets => _evrReader.offsets;
 
   bool isFmiRead = false;
+  int readFmi() => _evrReader.readFmi();
 
-  int readFmi() {
-    final fmiEnd = _evrReader.readFmi();
-    isFmiRead = true;
-    return fmiEnd;
-  }
+  IvrTagReader __ivrReader;
+  IvrTagReader get _ivrReader => __ivrReader ??= (doLogging)
+      ? new IvrLoggingTagReader.from(_evrReader)
+      : new IvrTagReader.from(_evrReader);
 
-  RootDataset readRootDataset() {
+  TagRootDataset readRootDataset() {
     var fmiEnd = -1;
     if (!isFmiRead) fmiEnd = readFmi();
-    if (_evrReader.rds.transferSyntax.isEvr) {
-      return _evrReader.readRootDataset(fmiEnd);
-    } else {
-      _ivrReader = new IvrTagReader.from(_evrReader);
-      return _ivrReader.readRootDataset(fmiEnd);
-    }
+
+    final ds = (_evrReader.rds.transferSyntax.isEvr)
+        ? _evrReader.readRootDataset(fmiEnd)
+        : _ivrReader.readRootDataset(fmiEnd);
+
+    if (showStats) _evrReader.rds.summary;
+    return ds;
   }
 
-  // TODO: add Async argument and make it the default
-  /// Reads only the File Meta Information (FMI), if present.
-  static TagRootDataset readBytes(Uint8List bytes,
+  /// Reads the [TagRootDataset] from a [Uint8List].
+  static RootDataset readBytes(Uint8List bytes,
       {String path = '',
       bool async = true,
-      bool fast = true,
-      bool fmiOnly = false,
+      DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD = true,
-      DecodingParameters dParams = DecodingParameters.kNoChange}) {
-    final bd = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
-    final reader = new TagReader(bd, path: path, reUseBD: reUseBD, dParams: dParams);
-    final rds = reader.readRootDataset();
-    log.debug(rds);
-    return rds;
+      bool doLogging = true,
+      bool showStats = false}) {
+    final reader = new TagReader.fromBytes(bytes,
+        path: path,
+        dParams: dParams,
+        reUseBD: reUseBD,
+        doLogging: doLogging,
+        showStats: showStats);
+    return reader.readRootDataset();
   }
 
+  /// Reads the [TagRootDataset] from a [File].
   static TagRootDataset readFile(File file,
-      {bool async: true,
-      bool fast = true,
-      bool fmiOnly = false,
-      bool reUseDB = true,
-      DecodingParameters dParams = DecodingParameters.kNoChange}) {
-    final Uint8List bytes = file.readAsBytesSync();
-    return readBytes(bytes,
-        path: file.path, async: async, fast: fast, fmiOnly: fmiOnly, dParams: dParams);
+      {bool async = true,
+      DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool reUseBD: true,
+      bool doLogging = true,
+      bool showStats = false}) {
+    checkFile(file);
+    final reader = new TagReader.fromFile(file,
+        async: async,
+        dParams: dParams,
+        reUseBD: reUseBD,
+        doLogging: doLogging,
+        showStats: showStats);
+    return reader.readRootDataset();
   }
 
+  /// Reads the [TagRootDataset] from a [path] ([File] or URL).
   static TagRootDataset readPath(String path,
-          {bool async: true,
-          bool fast = true,
-          bool fmiOnly = false,
-          bool reUseBD = true,
-          DecodingParameters dParams = DecodingParameters.kNoChange}) =>
-      readFile(new File(path),
-          async: async, fast: fast, fmiOnly: fmiOnly, reUseDB: true, dParams: dParams);
-
-  /// Reads only the File Meta Information (FMI), if present.
-  static RootDataset readFileFmiOnly(File file,
-          {bool async: true,
-          bool fast = true,
-          bool fmiOnly = false,
-          bool reUseBD = true,
-          DecodingParameters dParams = DecodingParameters.kNoChange}) =>
-      readFile(file,
-          async: async, fast: fast, fmiOnly: true, reUseDB: reUseBD, dParams: dParams);
-
-  /// Reads only the File Meta Information (FMI), if present.
-  static RootDataset readPathFmiOnly(String path,
-          {bool async: true,
-          bool fast = true,
-          bool fmiOnly = false,
-          bool reUseBD = true,
-          DecodingParameters dParams = DecodingParameters.kNoChange}) =>
-      readPath(path,
-          async: async, fast: fast, fmiOnly: true, reUseBD: reUseBD, dParams: dParams);
+      {bool async = true,
+      DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool reUseBD = true,
+      bool doLogging = true,
+      bool showStats = false}) {
+    checkPath(path);
+    final reader = new TagReader.fromFile(new File(path),
+        async: async,
+        dParams: dParams,
+        reUseBD: reUseBD,
+        doLogging: doLogging,
+        showStats: showStats);
+    return reader.readRootDataset();
+  }
 }

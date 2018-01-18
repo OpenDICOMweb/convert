@@ -6,21 +6,72 @@
 
 import 'package:core/core.dart';
 
+import 'package:convert/src/byte_list/write_buffer.dart';
+import 'package:convert/src/dicom/base/writer/dcm_writer_base.dart';
 import 'package:convert/src/dicom/base/writer/ivr_writer.dart';
-import 'package:convert/src/dicom/base/writer/log_write_mixin_base.dart';
+import 'package:convert/src/dicom/base/writer/debug/log_write_mixin.dart';
 import 'package:convert/src/dicom/byte_data/writer/evr_bd_writer.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
-
-// ignore_for_file: avoid_positional_boolean_parameters
+import 'package:convert/src/utilities/element_offsets.dart';
 
 /// An encoder for Binary DICOM (application/dicom).
-class IvrBDWriter extends IvrWriter with LogWriteMixinBase {
+class IvrBDWriter extends IvrWriter<int> {
+  @override
+  WriteBuffer wb;
+  @override
+  final BDRootDataset rds;
+  @override
+  final EncodingParameters eParams;
+  @override
+  final int minLength;
+  @override
+  final bool reUseBD;
+  @override
+  Dataset cds;
 
   /// Creates a new [IvrBDWriter], which is decoder for Binary DICOM
   /// (application/dicom).
-  IvrBDWriter(
-      RootDataset rds, EncodingParameters eParams, int minBDLength, bool reUseBD)
-      : super(rds, eParams, minBDLength, reUseBD);
+  IvrBDWriter(this.rds, this.eParams, this.minLength, {this.reUseBD = false})
+      : wb = getWriteBuffer(length: minLength, reUseBD: reUseBD),
+        cds = rds;
 
-  IvrBDWriter.from(EvrBDWriter writer) : super.from(writer);
+  /// Creates a new [IvrBDWriter], which is decoder for Binary DICOM
+  /// (application/dicom).
+  IvrBDWriter._(this.rds, this.eParams, this.minLength, this.reUseBD);
+
+  IvrBDWriter.from(EvrBDWriter writer)
+      : wb = writer.wb,
+        rds = writer.rds,
+        eParams = writer.eParams,
+        minLength = writer.minLength,
+        reUseBD = writer.reUseBD,
+        cds = writer.cds;
+}
+
+/// A decoder for Binary DICOM (application/dicom).
+/// The resulting [Dataset] is a [BDRootDataset].
+class IvrLoggingBDWriter extends IvrBDWriter with LogWriteMixin {
+  @override
+  final ParseInfo pInfo;
+  @override
+  final ElementOffsets inputOffsets;
+  @override
+  final ElementOffsets outputOffsets;
+  @override
+  int elementCount;
+
+  /// Creates a new [IvrLoggingBDWriter], which is decoder for Binary DICOM
+  /// (application/dicom).
+  IvrLoggingBDWriter(
+      RootDataset rds, EncodingParameters eParams, int minBDLength, this.inputOffsets,
+      {bool reUseBD = false})
+      : outputOffsets = (inputOffsets != null) ? new ElementOffsets() : null,
+        pInfo = new ParseInfo(rds),
+        super._(rds, eParams, minBDLength, reUseBD);
+
+  IvrLoggingBDWriter.from(EvrLoggingBDWriter writer)
+      : inputOffsets = writer.inputOffsets,
+        outputOffsets = (writer.inputOffsets != null) ? new ElementOffsets() : null,
+        pInfo = new ParseInfo(writer.rds),
+        super.from(writer);
 }

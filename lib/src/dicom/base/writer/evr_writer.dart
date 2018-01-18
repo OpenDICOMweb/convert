@@ -6,25 +6,16 @@
 
 import 'dart:typed_data';
 
-
-
 import 'package:core/core.dart';
-
 
 import 'package:convert/src/dicom/base/writer/dcm_writer_base.dart';
 import 'package:convert/src/dicom/base/padding_chars.dart';
-import 'package:convert/src/utilities/encoding_parameters.dart';
-
-// ignore_for_file: avoid_positional_boolean_parameters
 
 //Urgent Jim: add to EvrULength at appropriate places
 
-class EvrWriter extends DcmWriterBase {
+abstract class EvrWriter<V> extends DcmWriterBase<V> {
   @override
   final bool isEvr = true;
-
-  EvrWriter(RootDataset rds, EncodingParameters eParams, int minBDLength, bool reUseBD)
-      : super(rds, eParams, minBDLength, reUseBD);
 
   @override
   void writeElement(Element e) {
@@ -47,15 +38,6 @@ class EvrWriter extends DcmWriterBase {
     } else {
       throw new ArgumentError('Invalid VR: $e');
     }
-
-/* Flush when fully working
-    if (e.eStart != eStart) {
-      log.error('** e.eStart(${e.eStart} != eStart($eStart)');
-    }
-    if (e.eEnd != wb.wIndex) {
-      log.error('** e.eEnd(${e.eStart} != eEnd(${wb.wIndex})');
-    }
-*/
   }
 
   /// Write an EVR Element with a short Value Length field.

@@ -15,9 +15,6 @@ import 'dart:typed_data';
 import 'package:core/core.dart';
 
 import 'package:convert/src/dicom/base/writer/dcm_writer_base.dart';
-import 'package:convert/src/utilities/encoding_parameters.dart';
-
-// ignore_for_file: avoid_positional_boolean_parameters
 
 /// A library for encoding [Dataset]s in the DICOM File Format.
 ///
@@ -30,11 +27,7 @@ import 'package:convert/src/utilities/encoding_parameters.dart';
 ///   2. All String manipulation should be handled in the attribute itself.
 // Note: There are four [Element]s that might have an Undefined Length value
 // (0xFFFFFFFF), [SQ], [OB], [OW], [UN].
-abstract class WriterBase extends DcmWriterBase {
-  /// Creates a new [WriterBase], where [wIndex] = 0.
-  WriterBase(
-      RootDataset rds, EncodingParameters eParams, int minBDLength, bool reUseBD)
-      : super(rds, eParams, minBDLength, reUseBD);
+abstract class WriterBase<K> extends DcmWriterBase<K> {
 
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].

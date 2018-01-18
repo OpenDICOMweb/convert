@@ -7,7 +7,7 @@
 import 'package:core/core.dart';
 
 import 'package:convert/src/byte_list/write_buffer.dart';
-import 'package:convert/src/dicom/base/writer/log_write_mixin_base.dart';
+import 'package:convert/src/dicom/base/writer/log_write_mixin_base.dart.old';
 import 'package:convert/src/utilities/element_offsets.dart';
 
 abstract class LogWriteMixin implements LogWriteMixinBase {
