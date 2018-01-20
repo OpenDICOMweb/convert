@@ -6,7 +6,7 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/byte_list/write_buffer.dart';
+import 'package:convert/src/buffer/write_buffer.dart';
 import 'package:convert/src/dicom/base/writer/dcm_writer_base.dart';
 import 'package:convert/src/dicom/base/writer/evr_writer.dart';
 import 'package:convert/src/dicom/base/writer/debug/log_write_mixin.dart';
@@ -56,9 +56,9 @@ class EvrLoggingTagWriter extends EvrTagWriter with LogWriteMixin {
   /// Creates a new [EvrLoggingTagWriter], which is encoder for Binary DICOM
   /// (application/dicom).
   EvrLoggingTagWriter(
-      RootDataset rds, EncodingParameters eParams, int minBDLength, this.inputOffsets,
+      RootDataset rds, EncodingParameters eParams, int minLength, this.inputOffsets,
       {bool reUseBD = false})
       : outputOffsets = (inputOffsets != null) ? new ElementOffsets() : null,
         pInfo = new ParseInfo(rds),
-        super._(rds, eParams, minBDLength, reUseBD);
+        super._(rds, eParams, minLength, reUseBD);
 }

@@ -7,7 +7,7 @@
 import 'dart:collection';
 import 'dart:typed_data';
 
-import 'byte_data_mixins.dart';
+import 'package:convert/src/byte_list/byte_list_mixins.dart';
 
 //Urgent: Unit Test
 //Urgent: move grow to write_buffer
@@ -44,29 +44,29 @@ Uint8List _bytesMaker(TypedData td, int offset, int length) =>
 
 const int k1GB = 1024 * 1024 * 1024;
 const int kMinByteListLength = 16;
-const int kMaxByteListLength = k1GB;
+const int kDefaultLimit = k1GB;
 const int kDefaultLength = 1024;
 
 const Endianness kDefaultEndian = Endian.little;
 
 bool _isMaxCapacityExceeded(int length, [int maxLength]) {
-  maxLength ??= kMaxByteListLength;
+  maxLength ??= kDefaultLimit;
   return length >= maxLength;
 }
-
 
 /// [ByteList] is a class that provides a read-only byte array that supports both
 /// [Uint8List] and [ByteData] interfaces.
 abstract class ByteListBase extends ListBase<int> implements Uint8List {
   ByteData get bd;
   Uint8List get bytes;
+  Endian get endian;
 
   // *** List<int> interface
   @override
   int operator [](int i) => bytes[i];
 
   @override
-  void operator []=(int i, int v) => throw new UnsupportedError('Read-Only list');
+  void operator []=(int i, int v) => bytes[i] = v;
 
   @override
   bool operator ==(Object other) {
@@ -89,7 +89,9 @@ abstract class ByteListBase extends ListBase<int> implements Uint8List {
   int get length => bd.lengthInBytes;
 
   @override
-  set length(int newLength) => throw new UnsupportedError('Immutable List');
+  set length(int newLength) => throw new UnsupportedError('Fixed Length ByteList');
+
+  static const int kDefaultLength = 1024;
 
   // **** TypedData interface.
   @override
@@ -104,93 +106,149 @@ abstract class ByteListBase extends ListBase<int> implements Uint8List {
 
 /// [ByteList] is a class that provides a read-only byte array that supports both
 /// [Uint8List] and [ByteData] interfaces.
-class ByteList extends ByteListBase with ByteDataGetMixin implements Uint8List {
+class ByteList extends ByteListBase
+    with ByteListGetMixin, ByteListSetMixin
+    implements Uint8List {
   @override
   final ByteData bd;
   @override
   final Uint8List bytes;
+  @override
+  final Endian endian;
 
-  ByteList(int lengthInBytes)
+  factory ByteList({int length, Endian endian = Endian.little}) => (length == null)
+      ? new GrowableByteList(length, kDefaultLimit, endian)
+      : new ByteList._(length, endian);
+
+  ByteList._(int lengthInBytes, this.endian)
       : bd = _newBD(lengthInBytes),
         bytes = _getBytes();
 
-  ByteList.fromByteData(ByteData bd)
+  factory ByteList.fromByteData(ByteData bd, [Endian endian = Endian.little]) =>
+      new ByteList._fromByteData(bd, endian);
+
+  ByteList._fromByteData(ByteData bd, this.endian)
       : bd = _asByteData(bd, 0, bd.lengthInBytes),
         bytes = _getBytes();
 
-  ByteList.fromUint8List(Uint8List bytes)
+  ByteList.fromUint8List(Uint8List bytes, this.endian)
       : bytes = _asUint8List(bytes, 0, bytes.length),
         bd = _getByteData();
-
-  @override
-  set length(int newLength) => throw new UnsupportedError('Immutable List');
-
-/*  static const int k1GB = 1024 * 1024 * 1024;
-  static const int kMinByteListLength = 16;
-  static const int kMaxByteListLength = k1GB;
-  static const int kDefaultLength = 1024;
-
-  static const Endianness kDefaultEndian = Endianness.LITTLE_ENDIAN;
-
-  static bool isMaxCapacityExceeded(int length, [int maxLength]) {
-    maxLength ??= kMaxByteListLength;
-    return length >= maxLength;
-  }
-
-  static bool isValidBufferLength(int length, [int maxLength]) {
-    maxLength ??= kMaxByteListLength;
-    if (length < kMinByteListLength || length > maxLength) return false;
-    return true;
-  }*/
-
-  static ByteList from(ByteList byteList, [int offset = 0, int length]) =>
-      new ByteList.fromByteData(_asByteData(byteList.bd, offset, length));
 }
 
-class ByteListWritable extends ByteListBase
-    with ByteDataGetMixin, ByteDataSetMixin
-    implements ByteData, Uint8List {
-  final int maxLength;
+abstract class ImmutableMixin {
+  int get length;
+
+  void operator []=(int i, int v) =>
+      throw new UnsupportedError('Cannot change the length of a fixed-length ByteList');
+
+  set length(int newLength) =>
+      throw new UnsupportedError('Cannot change the length of a fixed-length ByteList');
+}
+
+/// [ByteList] is a class that provides a read-only byte array that supports both
+/// [Uint8List] and [ByteData] interfaces.
+class ImmutableByteList extends ByteListBase
+    with ImmutableMixin, ByteListGetMixin
+    implements Uint8List {
+  @override
+  final ByteData bd;
+  @override
+  final Uint8List bytes;
+  @override
+  final Endian endian;
+
+  factory ImmutableByteList({int length, Endian endian = Endian.little}) =>
+      (length == null)
+          ? new GrowableByteList(length, kDefaultLimit, endian)
+          : new ByteList._(length, endian);
+
+  ImmutableByteList._(int lengthInBytes, this.endian)
+      : bd = _newBD(lengthInBytes),
+        bytes = _getBytes();
+
+  factory ImmutableByteList.fromByteData(ByteData bd, [Endian endian = Endian.little]) =>
+      new ImmutableByteList.internal(bd, endian);
+
+  ImmutableByteList.internal(ByteData bd, this.endian)
+      : bd = _asByteData(bd, 0, bd.lengthInBytes),
+        bytes = _getBytes();
+
+  ImmutableByteList.fromUint8List(Uint8List bytes, this.endian)
+      : bytes = _asUint8List(bytes, 0, bytes.length),
+        bd = _getByteData();
+}
+
+ByteData _fromTypedData(TypedData td) {
+  final oBytes = td.buffer.asUint8List();
+  final nBytes = new Uint8List.fromList(oBytes);
+  return new ByteData.view(nBytes.buffer);
+}
+
+class GrowableByteList extends ByteListBase
+    with ByteListGetMixin, ByteListSetMixin
+    implements Uint8List {
+  static int kMaximumLength = kDefaultLimit;
+
+  /// The upper bound on the length of this [ByteList]. If [limit]
+  /// is _null_ then its length cannot be changed.
+  final int limit;
+  @override
+  final Endian endian;
   ByteData _bd;
   Uint8List _bytes;
 
-  factory ByteListWritable([int length = kDefaultLength]) =>
-  new ByteListWritable.internal(length, k1GB);
-
-  ByteListWritable.internal(int length, this.maxLength)
+  GrowableByteList(int length, this.limit, this.endian)
       : _bd = _newBD(length),
         _bytes = _getBytes();
 
-  ByteListWritable.fromByteData(ByteData bd)
-      : maxLength = k1GB,
-        _bd = _asByteData(bd, 0, bd.lengthInBytes),
+  GrowableByteList.from(GrowableByteList byteList)
+      : limit = byteList.limit,
+        endian = byteList.endian,
+        _bd = _fromTypedData(byteList.bd),
         _bytes = _getBytes();
 
-  ByteListWritable.fromUint8List(Uint8List bytes)
-      : maxLength = k1GB,
-        _bytes = _asUint8List(bytes, 0, bytes.length),
+  GrowableByteList.fromByteData(ByteData bd,
+      {this.limit = kDefaultLimit, this.endian = kDefaultEndian})
+      : _bd = _asByteData(bd, 0, bd.lengthInBytes),
+        _bytes = _getBytes();
+
+  GrowableByteList.fromUint8List(Uint8List bytes,
+      {this.limit = kDefaultLimit, this.endian = kDefaultEndian})
+      : _bytes = _asUint8List(bytes, 0, bytes.length),
         _bd = _getByteData();
 
+  GrowableByteList.ofSize(int length, this.limit, this.endian)
+      : _bd = _newBD(length),
+        _bytes = _getBytes();
+
+  GrowableByteList.fromBD(ByteData bd, this.limit, this.endian)
+      : _bd = _asByteData(bd, 0, bd.lengthInBytes),
+        _bytes = _getBytes();
+
   @override
-  void operator []=(int i, int v) => _bytes[i] = v;
+  int operator [](int i) {
+    if (i >= _bd.lengthInBytes) grow();
+    return _bytes[i];
+  }
+
+  @override
+  void operator []=(int i, int v) {
+    if (i >= _bytes.lengthInBytes) grow();
+    _bytes[i] = v;
+  }
 
   @override
   ByteData get bd => _bd;
 
   @override
   Uint8List get bytes => _bytes;
+
   @override
   set length(int newLength) {
     if (newLength < _bd.lengthInBytes) return;
     grow(newLength);
   }
-
-/*
-  @override
-  ByteData get bd => _bd;
-  @override
-  Uint8List get bytes => _bytes;
-*/
 
   /// Creates a new buffer at least double the size of the current buffer,
   /// and copies the contents of the current buffer into it.
@@ -199,7 +257,7 @@ class ByteListWritable extends ByteListBase
   /// current buffer. If [minCapacity] is not null, the new buffer will be at
   /// least that size. It will always have at least have double the
   /// capacity of the current buffer.
-  bool grow([int minCapacity]) {
+  bool grow([int minCapacity = kDefaultLength]) {
     final oldLength = bd.lengthInBytes;
     if (minCapacity < oldLength) return false;
 
@@ -216,12 +274,6 @@ class ByteListWritable extends ByteListBase
     for (var i = 0; i < oldLength; i++) bList[i] = this[i];
     _bytes = bList;
     _bd = bList.buffer.asByteData();
-
     return true;
-  }
-
-  static ByteListWritable from(ByteListWritable byteList, [int offset = 0, int length]) {
-    final bd = _asByteData(byteList._bd, offset, length);
-    return new ByteListWritable.fromByteData(bd);
   }
 }

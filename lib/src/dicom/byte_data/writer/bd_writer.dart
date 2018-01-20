@@ -34,7 +34,7 @@ class BDWriter {
   final bool overwrite;
   final EncodingParameters eParams;
   final TransferSyntax outputTS;
-  final int minBDLength;
+  final int minLength;
   final ElementOffsets inputOffsets;
   final bool reUseBD;
   final bool doLogging;
@@ -49,15 +49,15 @@ class BDWriter {
       this.eParams = EncodingParameters.kNoChange,
       this.outputTS,
       this.overwrite = false,
-      this.minBDLength = kDefaultWriteBufferLength,
+      this.minLength = kDefaultWriteBufferLength,
       this.inputOffsets,
       this.reUseBD = true,
       this.doLogging = true,
       this.showStats = false})
       : _evrWriter = (doLogging)
-            ? new EvrLoggingBDWriter(rds, eParams, minBDLength, inputOffsets,
+            ? new EvrLoggingBDWriter(rds, eParams, minLength, inputOffsets,
                 reUseBD: reUseBD)
-            : new EvrBDWriter(rds, eParams, minBDLength, reUseBD: reUseBD);
+            : new EvrBDWriter(rds, eParams, minLength, reUseBD: reUseBD);
 
   /// Writes the [BDRootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
@@ -65,7 +65,7 @@ class BDWriter {
       {EncodingParameters eParams,
       TransferSyntax outputTS,
       bool overwrite = false,
-      int minBDLength,
+      int minLength,
       ElementOffsets inputOffsets,
       bool reUseBD = false,
       bool doLogging = true,
@@ -76,7 +76,7 @@ class BDWriter {
         eParams: eParams,
         outputTS: outputTS,
         overwrite: overwrite,
-        minBDLength: minBDLength,
+        minLength: minLength,
         inputOffsets: inputOffsets,
         reUseBD: reUseBD,
         doLogging: doLogging,
@@ -90,7 +90,7 @@ class BDWriter {
       {EncodingParameters eParams,
       TransferSyntax outputTS,
       bool overwrite = false,
-      int minBDLength,
+      int minLength,
       ElementOffsets inputOffsets,
       bool reUseBD = false,
       bool doLogging = true,
@@ -101,7 +101,7 @@ class BDWriter {
         eParams: eParams,
         outputTS: outputTS,
         overwrite: overwrite,
-        minBDLength: minBDLength,
+        minLength: minLength,
         inputOffsets: inputOffsets,
         reUseBD: reUseBD,
         doLogging: doLogging,
@@ -129,7 +129,7 @@ class BDWriter {
       EncodingParameters eParams,
       TransferSyntax outputTS,
       bool overwrite = false,
-      int minBDLength,
+      int minLength,
       ElementOffsets inputOffsets,
       bool reUseBD = false,
       bool doLogging = true,
@@ -140,7 +140,7 @@ class BDWriter {
         eParams: eParams,
         outputTS: outputTS,
         overwrite: overwrite,
-        minBDLength: minBDLength,
+        minLength: minLength,
         inputOffsets: inputOffsets,
         reUseBD: reUseBD,
         doLogging: doLogging,
@@ -154,7 +154,7 @@ class BDWriter {
       {EncodingParameters eParams,
       TransferSyntax outputTS,
       bool overwrite = false,
-      int minBDLength,
+      int minLength,
       ElementOffsets inputOffsets,
       bool reUseBD = false,
       bool doLogging = true,
@@ -165,7 +165,7 @@ class BDWriter {
         eParams: eParams,
         outputTS: outputTS,
         overwrite: overwrite,
-        minBDLength: minBDLength,
+        minLength: minLength,
         inputOffsets: inputOffsets,
         reUseBD: reUseBD,
         doLogging: doLogging,
@@ -181,7 +181,7 @@ class BDWriter {
       {EncodingParameters eParams,
       TransferSyntax outputTS,
       bool overwrite = false,
-      int minBDLength,
+      int minLength,
       ElementOffsets inputOffsets,
       bool reUseBD = false,
       bool doLogging = true,
@@ -191,7 +191,7 @@ class BDWriter {
         eParams: eParams,
         outputTS: outputTS,
         overwrite: overwrite,
-        minBDLength: minBDLength,
+        minLength: minLength,
         inputOffsets: inputOffsets,
         reUseBD: reUseBD,
         doLogging: doLogging,

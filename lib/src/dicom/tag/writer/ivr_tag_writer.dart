@@ -6,7 +6,7 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/byte_list/write_buffer.dart';
+import 'package:convert/src/buffer/write_buffer.dart';
 import 'package:convert/src/dicom/base/writer/dcm_writer_base.dart';
 import 'package:convert/src/dicom/base/writer/debug/log_write_mixin.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
@@ -68,11 +68,11 @@ class IvrLoggingTagWriter extends IvrTagWriter with LogWriteMixin {
 
   /// Creates a new [IvrLoggingTagWriter], which is decoder for Binary DICOM
   /// (application/dicom).
-  IvrLoggingTagWriter(RootDataset rds, EncodingParameters eParams, int minBDLength,
+  IvrLoggingTagWriter(RootDataset rds, EncodingParameters eParams, int minLength,
       bool reUseBD, this.inputOffsets)
       : outputOffsets = (inputOffsets != null) ? new ElementOffsets() : null,
         pInfo = new ParseInfo(rds),
-        super._(rds, eParams, minBDLength, reUseBD);
+        super._(rds, eParams, minLength, reUseBD);
 
   IvrLoggingTagWriter.from(EvrLoggingBDWriter writer)
       : inputOffsets = writer.inputOffsets,

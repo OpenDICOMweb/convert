@@ -7,7 +7,7 @@
 import 'package:core/server.dart';
 import 'package:test/test.dart';
 
-import 'package:convert/src/byte_list/write_buffer.dart';
+import 'package:convert/src/buffer/write_buffer.dart';
 
 void main() {
   Server.initialize(name: 'byte_date_writer.dart', level: Level.debug);
@@ -20,7 +20,7 @@ void main() {
       log.debug('''
 iterations: $iterations')
  index: ${wb.wIndex}
- maxLength: ${wb.maxLength}
+ maxLength: ${wb.limit}
 ''');
 
       expect(wb.wIndex == startSize, true);

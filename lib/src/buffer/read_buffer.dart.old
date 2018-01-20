@@ -7,8 +7,10 @@
 import 'dart:typed_data';
 
 import 'package:convert/src/byte_list/byte_list.dart';
+import 'package:convert/src/buffer/mixins/log_mixins.dart';
+import 'package:convert/src/buffer/mixins/read_buffer_mixin.dart';
 
-class ReadBuffer extends ByteList {
+class ReadBuffer extends ImmutableByteList with ReadBufferMixin {
   /// The underlying data buffer.
   ///
   /// This is always both a List<E> and a TypedData, which we don't have a type
@@ -16,20 +18,21 @@ class ReadBuffer extends ByteList {
   int _rIndex;
   int _wIndex;
 
-  ReadBuffer(ByteData bd, [int offset = 0, int length])
+  ReadBuffer(ByteData bd, [int offset = 0, int length, Endian endian = Endian.little])
       : _rIndex = 0,
         _wIndex = bd.lengthInBytes,
-        super.fromByteData(bd.buffer.asByteData(offset, length));
+        super.internal(bd.buffer.asByteData(offset, length), endian);
 
-  ReadBuffer.fromByteData(ByteData bd, [int offset = 0, int length])
-      : _rIndex = 0,
-        _wIndex = bd.lengthInBytes,
-        super.fromByteData(bd.buffer.asByteData(offset, length));
-
-  ReadBuffer.fromUint8List(Uint8List bytes, [int offset = 0, int length])
+  ReadBuffer.fromUint8List(Uint8List bytes,
+      [int offset = 0, int length, Endian endian = Endian.little])
       : _rIndex = 0,
         _wIndex = bytes.lengthInBytes,
-        super.fromUint8List(bytes.buffer.asUint8List(offset, length));
+        super.fromUint8List(bytes.buffer.asUint8List(offset, length), endian);
+
+  ReadBuffer._(ByteData bd, int offset, int length, Endian endian)
+      : _rIndex = 0,
+        _wIndex = bd.lengthInBytes,
+        super.internal(bd.buffer.asByteData(offset, length), endian);
 
   // **** ReadBuffer specific Getters and Methods
 
@@ -41,20 +44,19 @@ class ReadBuffer extends ByteList {
 
   int rSkip(int n) {
     final v = _rIndex + n;
-    if (v < 0 || v >= _wIndex) throw new RangeError.range(v, 0, _wIndex);
-    return _wIndex = v;
+    if (v < 0 || v > _wIndex) throw new RangeError.range(v, 0, _wIndex);
+    return _rIndex = v;
   }
 
   Uint8List get contents => bd.buffer.asUint8List(bd.offsetInBytes, rIndex);
 
   int get rRemaining => bd.lengthInBytes - rIndex;
 
-  bool hasRemaining(int n) => (_rIndex + n) <= bd.lengthInBytes;
+  bool rHasRemaining(int n) => (_rIndex + n) <= bd.lengthInBytes;
 
   int get start => bd.offsetInBytes;
   int get end => bd.lengthInBytes;
-  bool get isReadable => _isReadable;
-  bool get _isReadable => _rIndex < bd.lengthInBytes;
+  bool get isReadable => _rIndex < _wIndex;
 
   @override
   bool get isEmpty => rRemaining <= 0;
@@ -99,9 +101,9 @@ class ReadBuffer extends ByteList {
   int get peekCode => _peekCode();
 
   int _peekCode() {
-    assert(_rIndex.isEven && hasRemaining(4), '@$_rIndex : $rRemaining');
-    final group = bd.getUint16(_rIndex);
-    final elt = bd.getUint16(_rIndex + 2);
+    assert(_rIndex.isEven && rHasRemaining(4), '@$_rIndex : $rRemaining');
+    final group = getUint16(_rIndex);
+    final elt = getUint16(_rIndex + 2);
     return (group << 16) + elt;
   }
 
@@ -177,5 +179,20 @@ class ReadBuffer extends ByteList {
   static const int kMinLength = 768;
 
   static ReadBuffer from(ReadBuffer rb, [int offset = 0, int length]) =>
-      new ReadBuffer.fromByteData(rb.bd.buffer.asByteData(offset, length));
+      new ReadBuffer(rb.bd.buffer.asByteData(offset, length));
+}
+
+class LoggingReadBuffer extends ReadBuffer with ReaderLogMixin {
+  factory LoggingReadBuffer(ByteData bd,
+          [int offset = 0, int length, Endian endian = Endian.little]) =>
+      new LoggingReadBuffer._(bd, offset, length, endian);
+
+  factory LoggingReadBuffer.fromUint8List(Uint8List bytes,
+      [int offset = 0, int length, Endian endian = Endian.little]) {
+    final bd = bytes.buffer.asByteData(offset, length);
+    return new LoggingReadBuffer._(bd, offset, length, endian);
+  }
+
+  LoggingReadBuffer._(ByteData bd, int offset, int length, Endian endian)
+      : super._(bd.buffer.asByteData(offset, length), 0, length, endian);
 }

@@ -14,7 +14,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/byte_list/write_buffer.dart';
+import 'package:convert/src/buffer/write_buffer.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
 
 /// A library for encoding [Dataset]s in the DICOM File Format.
@@ -80,7 +80,7 @@ abstract class DcmWriterBase<V> {
   /// writes it to a Uint8List, and returns the [Uint8List].
   Uint8List writeRootDataset(RootDataset rds) {
     _writeDataset(rds);
-    return wb.toUint8List(0, wb.wIndex);
+    return wb.uint8View(0, wb.wIndex);
   }
 
   void _writeDataset(Dataset ds) {
@@ -167,7 +167,8 @@ WriteBuffer _reUseBuffer;
 
 WriteBuffer getWriteBuffer({int length, bool reUseBD = false}) {
   length ??= kDefaultWriteBufferLength;
-  if (_reUseBuffer == null) return _reUseBuffer = new WriteBuffer(length);
+
+  if (!reUseBD || _reUseBuffer == null) return _reUseBuffer = new WriteBuffer(length);
 
   if (length > _reUseBuffer.lengthInBytes) {
     _reUseBuffer = new WriteBuffer(length + 1024);

@@ -4,12 +4,13 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/byte_list/read_buffer.dart';
+import 'package:convert/src/buffer/read_buffer.dart.old';
 import 'package:convert/src/dicom/base/reader/evr_reader.dart';
 import 'package:convert/src/dicom/byte_data/reader/evr_bd_reader.dart';
 import 'package:convert/src/dicom/byte_data/reader/ivr_bd_reader.dart';
@@ -34,9 +35,9 @@ class BDReader {
       {BDRootDataset rds,
       this.path = '',
       this.dParams = DecodingParameters.kNoChange,
-      this.reUseBD = true,
-      this.doLogging = true,
-      this.showStats})
+      this.reUseBD = false,
+      this.doLogging = false,
+      this.showStats = false})
       : rds = (rds == null) ? new BDRootDataset(bd, path: path) : rds,
         _evrReader = (doLogging)
             ? new EvrLoggingBDReader(bd, rds, dParams: dParams, reUseBD: reUseBD)
@@ -69,15 +70,18 @@ class BDReader {
 
   /// Creates a [BDReader] from the contents of the [file].
   factory BDReader.fromFile(File file,
-      {bool async = true,
+      {bool doAsync = false,
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD: true,
       bool doLogging = true,
-      bool showStats = false}) {
-    final Uint8List bytes = (async) ? file.readAsBytes() : file.readAsBytesSync();
+      bool showStats = false})  {
+    final Uint8List bytes = (doAsync) ? _readAsync(file) : file.readAsBytesSync();
     final bd = bytes.buffer.asByteData();
     return new BDReader(bd, path: file.path, reUseBD: reUseBD, dParams: dParams);
   }
+
+  static Future<Uint8List> _readAsync(File file) async => await file.readAsBytes();
+
 
   /// Creates a [BDReader] from the contents of the [File] at [path].
   factory BDReader.fromPath(String path,
@@ -87,7 +91,7 @@ class BDReader {
           bool doLogging = true,
           bool showStats = false}) =>
       new BDReader.fromFile(new File(path),
-          async: async,
+          doAsync: async,
           dParams: dParams,
           reUseBD: reUseBD,
           doLogging: doLogging,
@@ -143,7 +147,7 @@ class BDReader {
       bool showStats = false}) {
     checkFile(file);
     final reader = new BDReader.fromFile(file,
-        async: async,
+        doAsync: async,
         dParams: dParams,
         reUseBD: reUseBD,
         doLogging: doLogging,
@@ -160,7 +164,7 @@ class BDReader {
       bool showStats = false}) {
     checkPath(path);
     final reader = new BDReader.fromFile(new File(path),
-        async: async,
+        doAsync: async,
         dParams: dParams,
         reUseBD: reUseBD,
         doLogging: doLogging,

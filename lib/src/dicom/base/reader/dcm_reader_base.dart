@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/byte_list/read_buffer.dart';
+import 'package:convert/src/buffer/read_buffer.dart.old';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 
@@ -89,7 +89,7 @@ abstract class DcmReaderBase<V> {
 
   ElementOffsets get offsets => null;
 
-  bool hasRemaining(int n) => rb.hasRemaining(n);
+  bool hasRemaining(int n) => rb.rHasRemaining(n);
 
   // There are four [Element]s that might have an Undefined Length value
   // (0xFFFFFFFF), [SQ], [OB], [OW], [UN]. If the length is the Undefined,
@@ -116,13 +116,13 @@ abstract class DcmReaderBase<V> {
   /// Returns an [Item].
   // rIndex is @ delimiterFvr
   Item readItem() {
-    assert(rb.hasRemaining(8));
+    assert(rb.rHasRemaining(8));
     final iStart = rb.rIndex;
 
     // read 32-bit kItem code and Item length field
     final delimiter = rb.getUint32(rb.rIndex);
     if (delimiter != kItem32BitLE) throw 'Missing Item Delimiter';
-    rb.skip(4);
+    rb.rSkip(4);
     final vfLengthField = rb.uint32;
     final item = makeItem(cds);
     final parentDS = cds;
@@ -202,7 +202,7 @@ abstract class DcmReaderBase<V> {
   bool _checkForDelimiter(int target) {
     final delimiter = rb.uint32Peek;
     if (target == delimiter) {
-      rb.skip(4);
+      rb.rSkip(4);
       final length = rb.uint32;
       if (length != 0) log.warn('Encountered non-zero delimiter length($length)');
       return true;

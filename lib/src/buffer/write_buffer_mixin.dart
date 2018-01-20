@@ -7,21 +7,25 @@
 import 'dart:typed_data';
 
 abstract class WriteBufferMixin {
+  int _rIndex;
   int _wIndex;
   ByteData get bd;
 
   // **** WriteBuffer specific Getters and Methods
 
   int get wIndex => _wIndex;
-  set wIndex(int n) => _setWIndexTo(n);
+  set wIndex(int n) {
+    if (_wIndex <= _rIndex || _wIndex > bd.lengthInBytes)
+      throw new RangeError.range(wIndex, 0, bd.lengthInBytes);
+     _wIndex = n;
+  }
 
   /// Moves the [wIndex] forward/backward. Returns the new [wIndex].
-  int wSkip(int n) => _setWIndexTo(_wIndex + n);
-
-  int _setWIndexTo(int wIndex) {
-    if (wIndex < 0 || wIndex > bd.lengthInBytes)
-      throw new RangeError.range(wIndex, 0, bd.lengthInBytes);
-    return _wIndex = wIndex;
+  int wSkip(int n) {
+    final v = _wIndex + n;
+    if (v <= _rIndex || v >= bd.lengthInBytes)
+      throw new RangeError.range(v, 0, bd.lengthInBytes);
+    return _wIndex = v;
   }
 
   /// Returns the number of bytes left in the current buffer ([bd]).
@@ -39,14 +43,7 @@ abstract class WriteBufferMixin {
 
   bool get isNotEmpty => !isEmpty;
 
-  int move(int n) {
-    final v = _wIndex + n;
-    if (v < 0 || v >= bd.lengthInBytes)
-      throw new RangeError.range(v, 0, bd.lengthInBytes);
-    return _wIndex = v;
-  }
-
-  bool _checkAllZeros(int start, int end) {
+  bool checkAllZeros(int start, int end) {
     for (var i = start; i < end; i++) if (bd.getUint8(i) != 0) return false;
     return true;
   }
@@ -60,7 +57,7 @@ abstract class WriteBufferMixin {
   // **** Aids to pretty printing - these may go away.
 
   /// The current readIndex as a string.
-  String get _www => 'W@${_wIndex.toString().padLeft(5, '0')}';
+  String get _www => 'W@${wIndex.toString().padLeft(5, '0')}';
   String get www => _www;
 
   /// The beginning of reading something.
@@ -74,8 +71,8 @@ abstract class WriteBufferMixin {
 
   String get pad => ''.padRight('$_www'.length);
 
-  void error(Object msg) {
-    final s = '**** $msg $_www';
-    throw new Exception(s);
-  }
+  void warn(Object msg) => print('** Warning: $msg $_www');
+
+  void error(Object msg) => throw new Exception('**** Error: $msg $_www');
+
 }

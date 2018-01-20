@@ -243,14 +243,14 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
     }
     assert(rds.hasFmi);
     writeExistingFmi(rds, cleanPreamble: eParams.doCleanPreamble);
-    return wb.toUint8List(0, wb.wIndex);
+    return wb.uint8View(0, wb.wIndex);
   }
 
   Uint8List writeOdwFmi(RootDataset rootDS) {
     if (rootDS is! RootDataset) log.error('Not rds');
     writeCleanPrefix();
     //Urgent finish
-    return wb.toUint8List(0, wb.wIndex);
+    return wb.uint8View(0, wb.wIndex);
   }
 
   void writeExistingFmi(RootDataset rootDS, {bool cleanPreamble = true}) {
@@ -267,7 +267,7 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
     if (rds is! RootDataset) log.error('Not rds');
     return (rds.prefix == kEmptyByteData || eParams.doCleanPreamble)
         ? writeCleanPrefix()
-        : writeExistingPrefix();
+        : writeExistingPreambleAndPrefix();
   }
 
   /// Writes a new Open DICOMweb FMI.
@@ -283,10 +283,11 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
 */
 
   /// Writes a new Open DICOMweb FMI.
-  bool writeExistingPrefix() {
+  bool writeExistingPreambleAndPrefix() {
     assert(rds.prefix != kEmptyByteData && !eParams.doCleanPreamble);
     final preamble = rds.preamble;
-    for (var i = 0; i < 128; i++) wb.uint8(preamble.getUint8(i));
+    for (var i = 0; i < 128; i++)
+      wb.uint8(preamble.getUint8(i));
    // final prefix = rds.prefix;
   //  for (var i = 0; i < 4; i++) wb.uint8(prefix.getUint8(i));
     wb.uint32(kDcmPrefix);

@@ -8,7 +8,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/byte_list/read_buffer.dart';
+import 'package:convert/src/buffer/read_buffer.dart.old';
 import 'package:convert/src/dicom/base/reader/dcm_reader_base.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
@@ -62,7 +62,7 @@ abstract class IvrReader<V> extends DcmReaderBase<V> {
 
   Element _makeIvr(int code, int vrIndex, int eStart, int vlf) {
     assert(vlf != kUndefinedLength);
-    rb.skip(vlf);
+    rb.rSkip(vlf);
     final e = (code == kPixelData)
         ? makePixelData(code, vrIndex, rb.bdView(eStart))
         : makeFromByteData(code, vrIndex, rb.bdView(eStart));

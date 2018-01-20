@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/byte_list/read_buffer.dart';
+import 'package:convert/src/buffer/read_buffer.dart.old';
 import 'package:convert/src/dicom/tag/reader/evr_tag_reader.dart';
 import 'package:convert/src/dicom/tag/reader/ivr_tag_reader.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';

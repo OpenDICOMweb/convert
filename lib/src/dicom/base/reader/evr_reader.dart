@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/byte_list/read_buffer.dart';
+import 'package:convert/src/buffer/read_buffer.dart.old';
 import 'package:convert/src/dicom/base/reader/dcm_reader_base.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 import 'package:convert/src/errors.dart';
@@ -256,7 +256,7 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
       rds.fmi.add(e);
     }
 
-    if (!rb.hasRemaining(dParams.shortFileThreshold - rb.rIndex)) {
+    if (!rb.rHasRemaining(dParams.shortFileThreshold - rb.rIndex)) {
       throw new EndOfDataError(
           '_readFmi', 'index: ${rb.rIndex} bdLength: ${rb.lengthInBytes}');
     }

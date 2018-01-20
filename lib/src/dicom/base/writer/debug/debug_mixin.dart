@@ -6,7 +6,7 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/byte_list/write_buffer.dart';
+import 'package:convert/src/buffer/write_buffer.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 
 
