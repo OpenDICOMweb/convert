@@ -4,11 +4,12 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-import 'package:convert/dicom.dart';
 
 void main() {
 
-  final list0 = new List<int>();
+  final list0 = <int>[];
+  print(list0);
   final list1 = new List<int>(3);
+  print(list0);
   list1.length = 4;
 }

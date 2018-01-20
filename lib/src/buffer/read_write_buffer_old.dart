@@ -9,11 +9,13 @@ import 'dart:typed_data';
 import 'package:convert/src/byte_list/byte_list.dart';
 import 'package:convert/src/buffer/mixins/log_mixins.dart';
 
-class WriteBuffer extends GrowableByteList {
+//Urgent needs unit testing
+
+class ReadWriteBuffer extends GrowableByteList {
   int _rIndex;
   int _wIndex;
 
-  WriteBuffer(
+  ReadWriteBuffer(
       [int length = kDefaultLength,
       int limit = kDefaultLimit,
       Endian endian = Endian.little])
@@ -21,30 +23,48 @@ class WriteBuffer extends GrowableByteList {
         _wIndex = 0,
         super(length ?? kDefaultLength, limit, endian);
 
-  WriteBuffer.fromByteData(ByteData bd)
+  ReadWriteBuffer.fromByteData(ByteData bd,
+      {int limit = kDefaultLimit, Endian endian = kDefaultEndian})
       : _rIndex = 0,
         _wIndex = 0,
-        super.fromByteData(bd);
+        super.fromBD(bd, limit, endian);
 
-  WriteBuffer.fromUint8List(Uint8List bytes)
+  ReadWriteBuffer.fromBD(ByteData bd, int limit, Endian endian)
       : _rIndex = 0,
         _wIndex = 0,
-        super.fromUint8List(bytes);
+        super.fromBD(bd, limit, endian);
 
-  WriteBuffer._(int length, int limit)
+  ReadWriteBuffer.fromUint8List(Uint8List bytes,
+      {int limit = kDefaultLimit, Endian endian = kDefaultEndian})
       : _rIndex = 0,
         _wIndex = 0,
-        super.fromByteData(new ByteData(length ?? limit));
+        super.fromBD(bytes.buffer.asByteData(), limit, endian);
 
-  // **** WriteBuffer specific Getters and Methods
+  ReadWriteBuffer._(int length, int limit, Endian endian)
+      : _rIndex = 0,
+        _wIndex = 0,
+        super.fromBD(new ByteData(length), limit, endian);
+
+  // **** ReadWriteBuffer specific Getters and Methods
 
   @override
   ByteData get bd => (_isClosed) ? null : super.bd;
 
-  // **** WriteBuffer specific Getters and Methods
+  // **** ReadWriteBuffer specific Getters and Methods
+
+  int get rIndex => _rIndex;
+  set rIndex(int n) {
+    if (rIndex < 0 || rIndex > _wIndex) throw new RangeError.range(rIndex, 0, _wIndex);
+    _rIndex = rIndex;
+  }
+
+  int rSkip(int n) {
+    final v = _rIndex + n;
+    if (v < 0 || v > _wIndex) throw new RangeError.range(v, 0, _wIndex);
+    return _rIndex = v;
+  }
 
   int get wIndex => _wIndex;
-
   set wIndex(int n) {
     if (_wIndex <= _rIndex || _wIndex > bd.lengthInBytes)
       throw new RangeError.range(_wIndex, _rIndex, bd.lengthInBytes);
@@ -59,19 +79,26 @@ class WriteBuffer extends GrowableByteList {
     return _wIndex = v;
   }
 
-  /// Returns the number of bytes left in the current buffer ([bd]).
-  int get remaining => bd.lengthInBytes - _wIndex;
+  //TODO:
+  Uint8List get contents => bd.buffer.asUint8List(_rIndex, _wIndex);
 
-  bool hasRemaining(int n) => (_wIndex + n) <= bd.lengthInBytes;
+  /// Returns the number of readable bytes left in the current buffer ([bd]).
+  int get rRemaining => bd.lengthInBytes - rIndex;
+
+  /// Returns the number of writable bytes left in the current buffer ([bd]).
+  int get wRemaining => bd.lengthInBytes - _wIndex;
+
+  bool readRemaining(int n) => (_rIndex + n) <= bd.lengthInBytes;
+
+  bool writeRemaining(int n) => (_wIndex + n) <= bd.lengthInBytes;
 
   int get start => bd.offsetInBytes;
-
   int get end => bd.lengthInBytes;
-
+  bool get isReadable => _rIndex < _wIndex;
   bool get isWritable => _wIndex < bd.lengthInBytes;
 
   @override
-  bool get isEmpty => _wIndex == start;
+  bool get isEmpty => _rIndex == _wIndex;
 
   @override
   bool get isNotEmpty => !isEmpty;
@@ -82,7 +109,7 @@ class WriteBuffer extends GrowableByteList {
 
   Uint8List close() {
     if (hadTrailingBytes) hadTrailingZeros = checkAllZeros(_wIndex, bd.lengthInBytes);
-    final bytes = uint8View(0, _wIndex);
+    final bytes = uint8View(_rIndex, _wIndex);
     _isClosed = true;
     return bytes;
   }
@@ -98,31 +125,16 @@ class WriteBuffer extends GrowableByteList {
     hadTrailingZeros = false;
   }
 
-  // **** Aids to pretty printing - these may go away.
-
-  /// The current readIndex as a string.
-  String get _www => 'W@${_wIndex.toString().padLeft(5, '0')}';
-  String get www => _www;
-
-  /// The beginning of reading something.
-  String get wbb => '> $_www';
-
-  /// In the middle of reading something.
-  String get wmm => '| $_www';
-
-  /// The end of reading something.
-  String get wee => '< $_www';
-
-  String get pad => ''.padRight('$_www'.length);
-
   /// Ensures that [bd] is at least [wIndex] + [remaining] long,
   /// and grows the buffer if necessary, preserving existing data.
-  bool ensureRemaining(int remaining) => ensureCapacity(_wIndex + remaining);
+  bool ensureWriteRemaining(int remaining) => ensureWriteCapacity(_wIndex + remaining);
 
   /// Ensures that [bd] is at least [capacity] long, and grows
   /// the buffer if necessary, preserving existing data.
-  bool ensureCapacity(int capacity) => (capacity > bd.lengthInBytes) ? grow() : false;
+  bool ensureWriteCapacity(int capacity) => (capacity > bd.lengthInBytes) ? grow() : false;
 
+
+  // **** Writers
   void int8(int value) {
     assert(value >= -128 && value <= 127, 'Value out of range: $value');
     _maybeGrow(1);
@@ -131,7 +143,7 @@ class WriteBuffer extends GrowableByteList {
   }
 
   /// Writes a byte (Uint8) value to _this_.
-  void uint8(int value) {
+  void wUint8(int value) {
     assert(value >= 0 && value <= 255, 'Value out of range: $value');
     _maybeGrow(1);
     setUint8(_wIndex, value);
@@ -139,7 +151,7 @@ class WriteBuffer extends GrowableByteList {
   }
 
   /// Writes a 16-bit unsigned integer (Uint16) value to _this_.
-  void uint16(int value) {
+  void wUint16(int value) {
     assert(value >= 0 && value <= 0xFFFF, 'Value out of range: $value');
     _maybeGrow(2);
     setUint16(_wIndex, value);
@@ -147,7 +159,7 @@ class WriteBuffer extends GrowableByteList {
   }
 
   /// Writes a 32-bit unsigned integer (Uint32) value to _this_.
-  void uint32(int value) {
+  void wUint32(int value) {
     assert(value >= 0 && value <= 0xFFFFFFFF, 'Value out if range: $value');
     _maybeGrow(4);
     setUint32(_wIndex, value);
@@ -155,7 +167,7 @@ class WriteBuffer extends GrowableByteList {
   }
 
   /// Writes a 64-bit unsigned integer (Uint32) value to _this_.
-  void uint64(int value) {
+  void wUint64(int value) {
     assert(value >= 0 && value <= 0xFFFFFFFFFFFFFFFF, 'Value out of range: $value');
     _maybeGrow(8);
     setUint64(_wIndex, value);
@@ -173,7 +185,7 @@ class WriteBuffer extends GrowableByteList {
   void write(TypedData data) {
     final bytes = data.buffer.asUint8List();
     _maybeGrow(bytes.lengthInBytes);
-    for (var i = 0, j = _wIndex; i < bytes.length; i++, j++) setUint8(j, bytes[i]);
+    for (var i = 0, j = _wIndex; i < length; i++, j++) setUint8(j, bytes[i]);
     _wIndex += bytes.lengthInBytes;
   }
 
@@ -194,7 +206,7 @@ class WriteBuffer extends GrowableByteList {
   void code(int code) {
     const kItem = 0xfffee000;
     assert(code >= 0 && code < kItem, 'Value out of range: $code');
-    assert(_wIndex.isEven && hasRemaining(4));
+    assert(_wIndex.isEven && writeRemaining(4));
     _maybeGrow(4);
     setUint16(wIndex, code >> 16);
     setUint16(wIndex + 2, code & 0xFFFF);
@@ -227,9 +239,11 @@ class WriteBuffer extends GrowableByteList {
     return offset;
   }
 
+/*
   void warn(Object msg) => print('** Warning: $msg $_www');
 
   void error(Object msg) => throw new Exception('**** Error: $msg $_www');
+*/
 
   @override
   String toString() => '$runtimeType($length)[$_wIndex] maxLength: $limit';
@@ -242,15 +256,20 @@ class WriteBuffer extends GrowableByteList {
 
   static const int kDefaultLength = 4096;
 
-  static WriteBuffer from(WriteBuffer wb, [int offset = 0, int length]) =>
-      new WriteBuffer.fromByteData(wb.bd.buffer.asByteData(offset, length));
+  static ReadWriteBuffer from(ReadWriteBuffer wb, [int offset = 0, int length]) =>
+      new ReadWriteBuffer.fromByteData(wb.bd.buffer.asByteData(offset, length));
 }
 
-class LoggingWriteBuffer extends WriteBuffer with WriterLogMixin {
-  LoggingWriteBuffer([int length = kDefaultLength, int limit = k1GB])
-      : super._(length, limit);
+class LoggingReadWriteBuffer extends ReadWriteBuffer with WriterLogMixin {
+  LoggingReadWriteBuffer(
+      [int length = kDefaultLength, int limit = k1GB, Endian endian = Endian.little])
+      : super._(length, limit, endian);
 
-  LoggingWriteBuffer.fromByteData(ByteData bd) : super.fromByteData(bd);
+  LoggingReadWriteBuffer.fromByteData(ByteData bd,
+      [int limit = k1GB, Endian endian = Endian.little])
+      : super.fromBD(bd, limit, endian);
 
-  LoggingWriteBuffer.fromUint8List(Uint8List bytes) : super.fromUint8List(bytes);
+  LoggingReadWriteBuffer.fromUint8List(Uint8List bytes,
+      [int limit = k1GB, Endian endian = Endian.little])
+      : super.fromBD(bytes.buffer.asByteData(), limit, endian);
 }

@@ -8,8 +8,9 @@ import 'dart:typed_data';
 
 import 'package:convert/src/byte_list/byte_list.dart';
 import 'package:convert/src/buffer/mixins/log_mixins.dart';
-import 'package:convert/src/buffer/mixins/buffer_mixin.dart';
 import 'package:convert/src/buffer/mixins/read_buffer_mixin.dart';
+
+// ignore_for_file: non_constant_identifier_names
 
 class ReadBuffer extends ImmutableByteList with ReadBufferMixin {
   /// The underlying data buffer.
@@ -22,15 +23,15 @@ class ReadBuffer extends ImmutableByteList with ReadBufferMixin {
   int wIndex_;
 
   ReadBuffer(ByteData bd, [int offset = 0, int length, Endian endian = Endian.little])
-      : rIndex_ = 0,
-        wIndex_ = bd.lengthInBytes,
-        super.internal(bd.buffer.asByteData(offset, length), endian);
+      : rIndex_ = offset,
+        wIndex_ = length,
+        super.internal(bd, offset, length, endian);
 
   ReadBuffer.fromUint8List(Uint8List bytes,
       [int offset = 0, int length, Endian endian = Endian.little])
-      : rIndex_ = 0,
-        wIndex_ = bytes.lengthInBytes,
-        super.fromUint8List(bytes.buffer.asUint8List(offset, length), endian);
+      : rIndex_ = offset,
+        wIndex_ = length ?? bytes.lengthInBytes,
+        super.internal(bytes, offset, length, endian);
 
   ReadBuffer._(ByteData bd, int offset, int length, Endian endian)
       : rIndex_ = 0,

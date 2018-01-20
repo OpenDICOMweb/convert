@@ -89,7 +89,8 @@ abstract class ByteListBase extends ListBase<int> implements Uint8List {
   int get length => bd.lengthInBytes;
 
   @override
-  set length(int newLength) => throw new UnsupportedError('Fixed Length ByteList');
+  set length(int newLength) =>
+      throw new UnsupportedError('Fixed Length ByteList');
 
   static const int kDefaultLength = 1024;
 
@@ -116,19 +117,21 @@ class ByteList extends ByteListBase
   @override
   final Endian endian;
 
-  factory ByteList({int length, Endian endian = Endian.little}) => (length == null)
-      ? new GrowableByteList(length, kDefaultLimit, endian)
-      : new ByteList._(length, endian);
+  factory ByteList({int length, Endian endian = Endian.little}) =>
+      (length == null)
+          ? new GrowableByteList(length, limit: kDefaultLimit, endian: endian)
+          : new ByteList._(length, endian);
 
   ByteList._(int lengthInBytes, this.endian)
       : bd = _newBD(lengthInBytes),
         bytes = _getBytes();
 
-  factory ByteList.fromByteData(ByteData bd, [Endian endian = Endian.little]) =>
-      new ByteList._fromByteData(bd, endian);
+  factory ByteList.fromByteData(ByteData bd,
+          [int offset = 0, int length, Endian endian = Endian.little]) =>
+      new ByteList._fromByteData(bd, offset, length, endian);
 
-  ByteList._fromByteData(ByteData bd, this.endian)
-      : bd = _asByteData(bd, 0, bd.lengthInBytes),
+  ByteList._fromByteData(ByteData bd, [int offset = 0, int length, this.endian])
+      : bd = _asByteData(bd, offset, length),
         bytes = _getBytes();
 
   ByteList.fromUint8List(Uint8List bytes, this.endian)
@@ -139,11 +142,11 @@ class ByteList extends ByteListBase
 abstract class ImmutableMixin {
   int get length;
 
-  void operator []=(int i, int v) =>
-      throw new UnsupportedError('Cannot change the length of a fixed-length ByteList');
+  void operator []=(int i, int v) => throw new UnsupportedError(
+      'Cannot change the length of a fixed-length ByteList');
 
-  set length(int newLength) =>
-      throw new UnsupportedError('Cannot change the length of a fixed-length ByteList');
+  set length(int newLength) => throw new UnsupportedError(
+      'Cannot change the length of a fixed-length ByteList');
 }
 
 /// [ByteList] is a class that provides a read-only byte array that supports both
@@ -158,31 +161,19 @@ class ImmutableByteList extends ByteListBase
   @override
   final Endian endian;
 
-  factory ImmutableByteList({int length, Endian endian = Endian.little}) =>
-      (length == null)
-          ? new GrowableByteList(length, kDefaultLimit, endian)
-          : new ByteList._(length, endian);
+  ImmutableByteList(ByteData bd,
+      [int offset = 0, int length, this.endian = Endian.little])
+      : bd = bd.buffer.asByteData(offset, length),
+        bytes = bd.buffer.asUint8List(offset, length);
 
-  ImmutableByteList._(int lengthInBytes, this.endian)
-      : bd = _newBD(lengthInBytes),
-        bytes = _getBytes();
+  ImmutableByteList.fromUint8List(ByteData bd,
+      [int offset = 0, int length, this.endian = Endian.little])
+      : bd = bd.buffer.asByteData(offset, length),
+        bytes = bd.buffer.asUint8List(offset, length);
 
-  factory ImmutableByteList.fromByteData(ByteData bd, [Endian endian = Endian.little]) =>
-      new ImmutableByteList.internal(bd, endian);
-
-  ImmutableByteList.internal(ByteData bd, this.endian)
-      : bd = _asByteData(bd, 0, bd.lengthInBytes),
-        bytes = _getBytes();
-
-  ImmutableByteList.fromUint8List(Uint8List bytes, this.endian)
-      : bytes = _asUint8List(bytes, 0, bytes.length),
-        bd = _getByteData();
-}
-
-ByteData _fromTypedData(TypedData td) {
-  final oBytes = td.buffer.asUint8List();
-  final nBytes = new Uint8List.fromList(oBytes);
-  return new ByteData.view(nBytes.buffer);
+  ImmutableByteList.internal(ByteData bd, int offset, int length, this.endian)
+      : bd = bd.buffer.asByteData(offset, length),
+        bytes = bd.buffer.asUint8List(offset, length);
 }
 
 class GrowableByteList extends ByteListBase
@@ -193,28 +184,29 @@ class GrowableByteList extends ByteListBase
   /// The upper bound on the length of this [ByteList]. If [limit]
   /// is _null_ then its length cannot be changed.
   final int limit;
-  @override
   final Endian endian;
   ByteData _bd;
   Uint8List _bytes;
 
-  GrowableByteList(int length, this.limit, this.endian)
+  GrowableByteList(int length,
+      {this.limit = kDefaultLimit, this.endian = Endian.little})
       : _bd = _newBD(length),
         _bytes = _getBytes();
 
-  GrowableByteList.from(GrowableByteList byteList)
-      : limit = byteList.limit,
-        endian = byteList.endian,
+  GrowableByteList.from(GrowableByteList byteList,
+      {int limit = k1GB, Endian endian = Endian.little})
+      : limit = (limit == null) ? byteList.limit : limit,
+        endian = (endian == null) ? byteList.endian : endian,
         _bd = _fromTypedData(byteList.bd),
         _bytes = _getBytes();
 
   GrowableByteList.fromByteData(ByteData bd,
-      {this.limit = kDefaultLimit, this.endian = kDefaultEndian})
+      {this.limit = k1GB, this.endian = Endian.little})
       : _bd = _asByteData(bd, 0, bd.lengthInBytes),
         _bytes = _getBytes();
 
   GrowableByteList.fromUint8List(Uint8List bytes,
-      {this.limit = kDefaultLimit, this.endian = kDefaultEndian})
+      {this.limit = k1GB, this.endian = Endian.little})
       : _bytes = _asUint8List(bytes, 0, bytes.length),
         _bd = _getByteData();
 
@@ -276,4 +268,10 @@ class GrowableByteList extends ByteListBase
     _bd = bList.buffer.asByteData();
     return true;
   }
+}
+
+ByteData _fromTypedData(TypedData td) {
+  final oBytes = td.buffer.asUint8List();
+  final nBytes = new Uint8List.fromList(oBytes);
+  return new ByteData.view(nBytes.buffer);
 }

@@ -80,9 +80,6 @@ class BDReader {
     return new BDReader(bd, path: file.path, reUseBD: reUseBD, dParams: dParams);
   }
 
-  static Future<Uint8List> _readAsync(File file) async => await file.readAsBytes();
-
-
   /// Creates a [BDReader] from the contents of the [File] at [path].
   factory BDReader.fromPath(String path,
           {bool async = true,
@@ -171,4 +168,6 @@ class BDReader {
         showStats: showStats);
     return reader.readRootDataset();
   }
+
+  static Future<Uint8List> _readAsync(File file) async => await file.readAsBytes();
 }
