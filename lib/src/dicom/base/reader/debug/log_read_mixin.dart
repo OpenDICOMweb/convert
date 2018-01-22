@@ -16,7 +16,7 @@ abstract class LogReadMixin implements LogReadMixinBase {
   ParseInfo get pInfo;
   ElementOffsets get offsets;
   int get rRemaining;
-  int get getUint16(int index);
+  int getUint16(int index);
 /*
   void _sMsg(String name, int code, int start, int vrIndex,
           [int hdrLength, int vfLengthField = -1, int inc = 1]) =>

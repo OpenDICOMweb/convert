@@ -9,6 +9,7 @@ import 'dart:typed_data';
 import 'package:core/core.dart';
 
 import 'package:convert/src/byte_list/byte_list.dart';
+import 'package:convert/src/byte_list/byte_list_utils.dart';
 import 'package:convert/src/buffer/mixins/buffer_mixin.dart';
 import 'package:convert/src/buffer/mixins/read_buffer_mixin.dart';
 import 'package:convert/src/buffer/mixins/write_buffer_mixin.dart';
@@ -42,9 +43,9 @@ class ReadWriteBuffer extends GrowableByteListBase
       [int length = kDefaultInitialLength,
         this.endian = kDefaultEndian,
         this.limit = kDefaultLimit])
-      : bd_ = _newBD(length ?? kDefaultInitialLength),
-        bytes_ = _getBytes(),
-        _length = _getLength();
+      : bd_ = newBD(length ?? kDefaultInitialLength),
+        bytes_ = getBytes(),
+        _length = getLength();
 
   ReadWriteBuffer.from(ReadWriteBuffer byteList,
       [int offset = 0,
