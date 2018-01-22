@@ -10,7 +10,7 @@ import 'package:core/core.dart';
 
 import 'package:convert/src/dicom/base/reader/dcm_reader_base.dart';
 
-abstract class TagReaderMixin implements DcmReaderBase<int> {
+abstract class TagReaderMixin implements DicomReadBuffer<int> {
   @override
   RootDataset get rds;
   @override

@@ -9,11 +9,11 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/buffer/read_buffer.dart.old';
+import 'package:convert/src/buffer/read_buffer.dart';
 import 'package:convert/src/errors.dart';
-import 'package:convert/src/utilities/element_offsets.dart';
 
-// ignore_for_file: avoid_positional_boolean_parameters
+// ignore_for_file: avoid_positional_boolean_parameters, non_constant_identifier_names
+
 
 // Reader axioms
 // 1. The read index (rIndex) should always be at the last place read,
@@ -22,6 +22,12 @@ import 'package:convert/src/utilities/element_offsets.dart';
 //
 // 2. For non-sequence Elements with undefined length (kUndefinedLength)
 //    the read index rIndex is left at the end of the Element Delimiter.
+
+// There are four [Element]s that might have an Undefined Length value
+// (0xFFFFFFFF), [SQ], [OB], [OW], [UN]. If the length is the Undefined,
+// then it searches for the matching [kSequenceDelimitationItem32Bit] to
+// determine the length. Returns a [kUndefinedLength], which is used for
+// reading the value field of these [Element]s. Returns an [SQ] [Element].
 
 /// A [Converter] for [Uint8List]s containing a [Dataset] encoded in the
 /// application/dicom media type.
@@ -35,11 +41,21 @@ import 'package:convert/src/utilities/element_offsets.dart';
 ///  [Element] itself.
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
-abstract class DcmReaderBase<V> {
+abstract class DicomReadBuffer extends DicomReadBuffer {
+  static const kDefaultEndian = Endian.little;
 
-  // **** Interface ****
-  /// The [ReadBuffer] being read.
-  ReadBuffer get rb;
+  factory DicomReadBuffer(ByteData bd,
+       [int offset = 0, int length, Endian endian = kDefaultEndian]) =>
+      new DicomReadBuffer.fromTypedData(bd, offset, length, endian);
+
+  factory DicomReadBuffer.fromUint8List(Uint8List bytes,
+    [int offset = 0, int length, Endian endian = kDefaultEndian]) {
+    final bd = bytes.buffer.asByteData(offset, length);
+    return new DicomReadBuffer.fromTypedData(bd, offset, length, endian);
+  }
+
+  DicomReadBuffer.fromTypedData(TypedData bd, int offset, int length, Endian endian)
+      : super.fromTypedData(bd.buffer.asByteData(offset, length), 0, length, endian);
 
   /// The [RootDataset].
   RootDataset get rds;
@@ -64,6 +80,33 @@ abstract class DcmReaderBase<V> {
   /// Returns a new [RootDataset].
 //  RootDataset makeRootDataset({ByteData bd, ElementList elements, String path});
 
+  int uint32Peek() => bd.getUint32(rIndex_);
+
+  int peekCode() {
+    assert(rIndex_.isEven && rHasRemaining(4), '@$rIndex_ : $rRemaining');
+    final group = bd.getUint16(rIndex_);
+    final elt = bd.getUint16(rIndex_ + 2);
+    return (group << 16) + elt;
+  }
+
+  /// Returns a DICOM Tag Code (group, element).
+  int getCode(int start) => _peekCode();
+
+  /// Reads and returns a DICOM Tag Code (group, element).
+  int readCode() {
+    final code = getCode(rIndex_);
+    rIndex_ += 4;
+    return code;
+  }
+
+  /// Reads the 32-bit Uint at [rIndex] and compares it to [target]. Returns
+  /// _true_ if both numbers are equal.
+  bool getUint32AndCompare(int target) {
+    final delimiter = bd.getUint32(rIndex_);
+    final v = target == delimiter;
+    return v;
+  }
+
   /// Returns a new [Item].
   Item makeItem(Dataset parent, {ByteData bd, ElementList elements, SQ sequence});
 
@@ -81,34 +124,24 @@ abstract class DcmReaderBase<V> {
   /// The current duplicate [List<Element>].
   List<Element> get duplicates => cds.elements.duplicates;
 
-  bool get isReadable => rb.isReadable;
-
-  Uint8List get rootBytes => rb.buffer.asUint8List(rb.offsetInBytes, rb.lengthInBytes);
+  Uint8List get rootBytes => bytes;
 
   String get info => '$runtimeType: rds: ${rds.info}, cds: ${cds.info}';
 
   ElementOffsets get offsets => null;
 
-  bool hasRemaining(int n) => rb.rHasRemaining(n);
-
-  // There are four [Element]s that might have an Undefined Length value
-  // (0xFFFFFFFF), [SQ], [OB], [OW], [UN]. If the length is the Undefined,
-  // then it searches for the matching [kSequenceDelimitationItem32Bit] to
-  // determine the length. Returns a [kUndefinedLength], which is used for
-  // reading the value field of these [Element]s. Returns an [SQ] [Element].
-
   final String kItemAsString = hex32(kItem32BitLE);
 
   /// Reads a [RootDataset] from _this_. The FMI, if any, MUST already be read.
   RootDataset readRootDataset([int fmiEnd]) {
-    fmiEnd ??= rb.rIndex;
+    fmiEnd ??= rIndex_;
     cds = rds;
-    final rdsStart = rb.rIndex;
-    print('** readRootDataset: ${rb.rIndex} : ${rb.rRemaining}');
-    readDatasetDefinedLength(rds, rdsStart, rb.rRemaining);
-    final rdsLength = rb.rIndex - rdsStart;
+    final rdsStart = rIndex_;
+    print('** readRootDataset: $rIndex_ : $rRemaining');
+    readDatasetDefinedLength(rds, rdsStart, rRemaining);
+    final rdsLength = rIndex_ - rdsStart;
     print('** readRootDataset: rdsLength = $rdsLength');
-    final rbd = rb.bd.buffer.asByteData(rdsStart, rdsLength);
+    final rbd = bd.buffer.asByteData(rdsStart, rdsLength);
     rds.dsBytes = new RDSBytes(rbd, fmiEnd);
     return rds;
   }
@@ -116,24 +149,24 @@ abstract class DcmReaderBase<V> {
   /// Returns an [Item].
   // rIndex is @ delimiterFvr
   Item readItem() {
-    assert(rb.rHasRemaining(8));
-    final iStart = rb.rIndex;
+    assert(rHasRemaining(8));
+    final iStart = rIndex_;
 
     // read 32-bit kItem code and Item length field
-    final delimiter = rb.getUint32(rb.rIndex);
+    final delimiter = getUint32(rIndex_);
     if (delimiter != kItem32BitLE) throw 'Missing Item Delimiter';
-    rb.rSkip(4);
-    final vfLengthField = rb.uint32;
+    rSkip(4);
+    final vfLengthField = getUint32();
     final item = makeItem(cds);
     final parentDS = cds;
     cds = item;
 
     (vfLengthField == kUndefinedLength)
         ? readDatasetUndefinedLength(item)
-        : readDatasetDefinedLength(item, rb.rIndex, vfLengthField);
+        : readDatasetDefinedLength(item, rIndex_, vfLengthField);
 
     cds = parentDS;
-    final bd = rb.buffer.asByteData(iStart, rb.rIndex - iStart);
+    final bd = bd.buffer.asByteData(iStart, rIndex_ - iStart);
     item.dsBytes = new IDSBytes(bd);
     return item;
   }
@@ -144,9 +177,9 @@ abstract class DcmReaderBase<V> {
   // **** This is one of the only two places Elements are added to the dataset.
   void readDatasetDefinedLength(Dataset ds, int dsStart, int vfLength) {
     assert(vfLength != kUndefinedLength);
-    assert(dsStart == rb.rIndex);
+    assert(dsStart == rIndex_);
     final dsEnd = dsStart + vfLength;
-    while (rb.rIndex < dsEnd) {
+    while (rIndex_ < dsEnd) {
       // Elements are always read into the current dataset.
       final e = readElement();
       final ok = ds.tryAdd(e);
@@ -181,14 +214,14 @@ abstract class DcmReaderBase<V> {
   /// Reads until a [kSequenceDelimitationItem32BitLE] is found, and
   /// returns the [rb].rIndex at the end of the Value Field.
   int _findEndOfULengthVF() {
-    while (rb.isReadable) {
+    while (isReadable) {
       if (uint16 != kDelimiterFirst16Bits) continue;
       if (uint16 != kSequenceDelimiterLast16Bits) continue;
       break;
     }
-    final length = rb.uint32;
+    final length = getUint32();
     if (length != 0) log.warn('Encountered non-zero delimiter length($length)');
-    final endOfVF = rb.rIndex - 8;
+    final endOfVF = rIndex_ - 8;
     return endOfVF;
   }
 
@@ -200,10 +233,10 @@ abstract class DcmReaderBase<V> {
   /// delimiter is found the _read index_ is advanced to the end of the delimiter
   /// field (8 bytes); otherwise, readIndex does not change.
   bool _checkForDelimiter(int target) {
-    final delimiter = rb.uint32Peek;
+    final delimiter = getUint32Peek();
     if (target == delimiter) {
-      rb.rSkip(4);
-      final length = rb.uint32;
+      rSkip(4);
+      final length = getUint32();
       if (length != 0) log.warn('Encountered non-zero delimiter length($length)');
       return true;
     }
@@ -211,7 +244,7 @@ abstract class DcmReaderBase<V> {
   }
 
   void _readAndCheckDelimiterLength() {
-    final length = rb.uint32;
+    final length = getUint32();
     if (length != 0) log.warn('Encountered non-zero delimiter length($length)');
   }
 
@@ -234,7 +267,7 @@ abstract class DcmReaderBase<V> {
     assert(vlf == kUndefinedLength);
     assert(_isMaybeUndefinedLengthVR(vrIndex));
 
-    final delimiter = rb.getUint32(rb.rIndex);
+    final delimiter = getUint32(rIndex_);
     if (delimiter == kItem32BitLE) {
       return _readPixelDataFragments(code, eStart, vrIndex, vlf);
     } else if (delimiter == kSequenceDelimitationItem32BitLE) {
@@ -265,17 +298,17 @@ abstract class DcmReaderBase<V> {
   /// length field, which may not have a value of kUndefinedValue.
   VFFragments _readFragments() {
     final fragments = <Uint8List>[];
-    var delimiter = rb.uint32;
+    var delimiter = getUint32();
     do {
       assert(delimiter == kItem32BitLE, 'Invalid Item code: ${dcm(delimiter)}');
-      final vlf = rb.uint32;
+      final vlf = getUint32();
       print('fragment vlf: $vlf');
       assert(vlf != kUndefinedLength, 'Invalid length: ${dcm(vlf)}');
 
-      final startOfVF = rb.rIndex;
-      final endOfVF = rb.rSkip(vlf);
-      fragments.add(rb.buffer.asUint8List(startOfVF, endOfVF - startOfVF));
-      delimiter = rb.uint32;
+      final startOfVF = rIndex_;
+      final endOfVF = rSkip(vlf);
+      fragments.add(bd.buffer.asUint8List(startOfVF, endOfVF - startOfVF));
+      delimiter = getUint32();
     } while (delimiter != kSequenceDelimitationItem32BitLE);
 
     _checkDelimiterLength(delimiter);
@@ -284,7 +317,7 @@ abstract class DcmReaderBase<V> {
   }
 
   void _checkDelimiterLength(int delimiter) {
-    final vfLengthField = rb.uint32;
+    final vfLengthField = getUint32();
     if (vfLengthField != 0)
       log.warn('Delimiter has non-zero '
           'value: $delimiter/0x${hex32(delimiter)}');
@@ -295,7 +328,7 @@ abstract class DcmReaderBase<V> {
     if (tag == null) {
       log.warn('Tag is Null: ${dcm(code)} start: $eStart');
 // TODO: move to log/debug version
-//      showNext(rb.rIndex - 4);
+//      showNext(rIndex_ - 4);
     }
     return tag;
   }
@@ -326,21 +359,21 @@ abstract class DcmReaderBase<V> {
 
   String failedTSErrorMsg(String path, Error x) => '''
 Invalid Transfer Syntax: "$path"\nException: $x\n 
-    File length: ${rb.lengthInBytes}\nreadFMI catch: $x
+    File length: $lengthInBytes\nreadFMI catch: $x
 ''';
 
   String failedFMIErrorMsg(String path, Object x) => '''
 Failed to read FMI: "$path"\nException: $x\n'
-	  File length: ${rb.lengthInBytes}\nreadFMI catch: $x');
+	  File length: $lengthInBytes\nreadFMI catch: $x');
 ''';
 
   @override
   String toString() => '$runtimeType: rds: $rds, cds: $cds';
 
   Null shortFileError(String path) {
-    final s = 'Short file error: length(${rb.lengthInBytes}) $path';
+    final s = 'Short file error: length($lengthInBytes) $path';
     log.warn('$s');
-    if (throwOnError) throw new ShortFileError('Length($rb.lengthInBytes) $path');
+    if (throwOnError) throw new ShortFileError('Length($lengthInBytes) $path');
     return null;
   }
 
@@ -352,6 +385,21 @@ Failed to read FMI: "$path"\nException: $x\n'
   void logStartSQRead(int code, int vrIndex, int eStart, int vlf, String name) {}
 
   void logEndSQRead(int eStart, Element e, String name, {bool ok = true}) {}
+}
+
+class LoggingDicomReadBuffer extends ReadBuffer with DicomReadMixin {
+  factory LoggingDicomReadBuffer(ByteData bd,
+                                 [int offset = 0, int length, Endian endian = kDefaultEndian]) =>
+      new LoggingDicomReadBuffer.fromTypedData(bd, offset, length, endian);
+
+  factory LoggingDicomReadBuffer.fromUint8List(Uint8List bytes,
+                                               [int offset = 0, int length, Endian endian = kDefaultEndian]) {
+    final bd = bytes.buffer.asByteData(offset, length);
+    return new LoggingDicomReadBuffer.fromTypedData(bd, offset, length, endian);
+  }
+
+  LoggingDicomReadBuffer.fromTypedData(ByteData bd, int offset, int length, Endian endian)
+      : super.fromTypedData(bd.buffer.asByteData(offset, length), 0, length, endian);
 }
 
 bool _isMaybeUndefinedLengthVR(int vrIndex) =>

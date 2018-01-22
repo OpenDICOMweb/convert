@@ -9,39 +9,42 @@ import 'dart:typed_data';
 import 'package:core/core.dart';
 
 import 'package:convert/src/byte_list/byte_list.dart';
+import 'package:convert/src/buffer/mixins/buffer_mixin.dart';
 import 'package:convert/src/buffer/mixins/read_buffer_mixin.dart';
 import 'package:convert/src/buffer/mixins/write_buffer_mixin.dart';
 
 // ignore_for_file: non_constant_identifier_names
 
-const int k1GB = 1024 * 1024 * 1024;
-
-class ReadWriteBuffer extends GrowableByteList
-    with ReadBufferMixin, WriteBufferMixin {
+class ReadWriteBuffer extends GrowableByteListBase
+    with BufferMixin, ReadBufferMixin, WriteBufferMixin {
   @override
   int rIndex_;
   @override
   int wIndex_;
 
   ReadWriteBuffer(
-      {int length = kDefaultLength,
-      int limit = k1GB,
-      Endian endian = Endian.little})
-      : super(length, limit, endian);
+      {int length = kDefaultInitialLength, int limit = k1GB, Endian endian =
+          kDefaultEndian})
+      : super.ofSize(length, endian, limit);
 
   ReadWriteBuffer.from(ReadWriteBuffer byteList,
-  {int limit = k1GB, Endian  endian= Endian.little)
-      : super.from(byteList);
+      [int offset = 0,
+      int length,
+      Endian endian = kDefaultEndian,
+      int limit = kDefaultLimit])
+      : super.fromTypedData(byteList.bd, offset, length, endian, limit);
 
   ReadWriteBuffer.fromByteData(ByteData bd,
-      {int limit = k1GB, Endian endian = Endian.little})
-      : super.fromBD(bd, limit ,   endian);
+      [int offset = 0,
+      int length,
+      Endian endian = kDefaultEndian,
+      int limit = kDefaultLimit])
+      : super.fromTypedData(bd, offset, length, endian, limit);
 
   ReadWriteBuffer.fromUint8List(Uint8List bytes,
-      [int limit = k1GB, Endian  endian = Endian.little])
-      : super.fromBD(bytes.buffer.asByteData(), limit, endian);
-
-  void debug(String msg, {int level]) => log.debug(msg, level);
-
-  static const int kDefaultLength = 4 * k1KB;
+      [int offset = 0,
+      int length,
+      Endian endian = kDefaultEndian,
+      int limit = kDefaultLimit])
+      : super.fromTypedData(bytes, offset, length, endian, limit);
 }

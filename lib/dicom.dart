@@ -6,10 +6,10 @@
 
 export 'package:core/core.dart';
 
-export 'package:convert/src/dicom/base/reader/dcm_reader_base.dart';
+export 'package:convert/src/dicom/base/reader/dicom_read_buffer.dart';
 export 'package:convert/src/dicom/base/reader/evr_reader.dart';
 export 'package:convert/src/dicom/base/reader/ivr_reader.dart';
-export 'package:convert/src/dicom/base/writer/dcm_writer_base.dart';
+export 'package:convert/src/dicom/base/writer/dicom_write_buffer.dart';
 export 'package:convert/src/dicom/base/writer/evr_writer.dart';
 export 'package:convert/src/dicom/base/writer/ivr_writer.dart';
 

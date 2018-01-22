@@ -16,8 +16,8 @@ import 'package:convert/src/utilities/element_offsets.dart';
 
 /// An encoder for Binary DICOM (application/dicom).
 class IvrBDWriter extends IvrWriter<int> {
-  @override
-  WriteBuffer wb;
+//  @override
+//  WriteBuffer wb;
   @override
   final BDRootDataset rds;
   @override

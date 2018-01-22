@@ -10,9 +10,8 @@ import 'package:convert/src/buffer/write_buffer.dart';
 import 'package:convert/src/dicom/base/writer/log_write_mixin_base.dart.old';
 import 'package:convert/src/utilities/element_offsets.dart';
 
-abstract class LogWriteMixin implements LogWriteMixinBase {
+abstract class LoggingWriteMixin implements LoggingWriteMixinBase {
   int get elementCount;
-  WriteBuffer get wb;
   ParseInfo get pInfo;
   ElementOffsets get inputOffsets;
   ElementOffsets get outputOffsets;
@@ -25,7 +24,7 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
       ..debug('fragments: ${e.fragments.info}');
     pInfo
       ..pixelDataVRIndex = e.vrIndex
-      ..pixelDataStart = wb.wIndex
+      ..pixelDataStart = wIndex_
       ..pixelDataLength = e.vfLength
       ..pixelDataHadFragments = e.fragments != null
       ..pixelDataHadUndefinedLength = e.vfLengthField == kUndefinedLength;
@@ -77,10 +76,11 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
     }
   }
 
+/*
 // **** these next four are utilities for logger
   /// The current writeIndex as a string.
   /// The current writeIndex as a string.
-  String get _www => 'W@${wb.wIndex.toString().padLeft(5, '0')}';
+  String get _www => 'W@${wIndex_.toString().padLeft(5, '0')}';
   String get www => _www;
 
   /// The beginning of writing something.
@@ -94,7 +94,8 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
 
   String get pad => ''.padRight('$_www'.length);
 
-  int get remaining => wb.remaining;
+  int get remaining => wRemaining;
+*/
 
 /*
   void _sMsg(String name, int code, int start, int vrIndex,
@@ -121,8 +122,7 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
 
 /*
   void _eMsg(int eNumber, Object e, int eStart, int eEnd, [int inc = -1]) {
-    final s = '$wee #$eNumber $e  |${wb.remaining} - $eEnd = ${wb.remaining -
-      eEnd}';
+    final s = '$wee #$eNumber $e  |$wRemaining - $eEnd = ${wRemaining - eEnd}';
     log.debug(s, inc);
   }
 */
@@ -160,7 +160,7 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
   }
 
   String _endWriteElement(int eStart, Element e, String name, {bool ok = true}) {
-    final eEnd = wb.wIndex;
+    final eEnd = wIndex_;
     _doEndOfElementStats(e.code, eStart, e, ok);
     final sb = new StringBuffer('$wee $e $eStart - $eEnd = ${eEnd - eStart}:$remaining');
     return sb.toString();
@@ -183,16 +183,16 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
     if (ok) {
       pInfo
         ..lastElement = e
-        ..endOfLastElement = wb.wIndex;
+        ..endOfLastElement = wIndex_;
       if (e.isPrivate) pInfo.nPrivateElements++;
       if (e is SQ) {
         pInfo
-          ..endOfLastSequence = wb.wIndex
+          ..endOfLastSequence = wIndex_
           ..lastSequence = e;
       }
     } else {
       pInfo.nDuplicateElements++;
     }
-    if (e is! SQ) outputOffsets.add(eStart, wb.wIndex, e);
+    if (e is! SQ) outputOffsets.add(eStart, wIndex_, e);
   }
 }

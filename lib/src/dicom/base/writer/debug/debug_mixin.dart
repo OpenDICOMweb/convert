@@ -34,7 +34,7 @@ abstract class DbgMixin {
 
   String get pad => ''.padRight('$_www'.length);
 
-  int get remaining => wb.remaining;
+  int get remaining => wb.wRemaining;
 
   void sMsg(String name, int code, int start, int vrIndex,
           [int hdrLength, int vfLengthField = -1, int inc = 1]) =>
@@ -56,7 +56,7 @@ abstract class DbgMixin {
   }
 
   void eMsg(int eNumber, Object e, int eStart, int eEnd, [int inc = -1]) {
-    final s = '$wee #$eNumber $e  |${wb.remaining} - $eEnd = ${wb.remaining -
+    final s = '$wee #$eNumber $e  |${wb.wRemaining} - $eEnd = ${wb.wRemaining -
       eEnd}';
     log.debug(s, inc);
   }
@@ -83,7 +83,7 @@ abstract class DbgMixin {
     assert(eEnd == eStart - wb.wIndex);
     _doEndOfElementStats(e.code, eStart, e, ok);
     final sb = new StringBuffer(
-        '$wee $e $eStart + vfLength(${e.vfLength}) = ${wb.wIndex} :$remaining');
+        '$wee $e $eStart + vfLength(${e.vfLength}) = ${wb.wIndex} :${wb.wRemaining}');
     log.debug(sb.toString());
   }
 

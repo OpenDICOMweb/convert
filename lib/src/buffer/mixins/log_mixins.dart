@@ -4,12 +4,12 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-abstract class ReaderLogMixin {
-  int get rIndex;
+abstract class LoggingReaderMixin {
+  int get rIndex_;
   int get length;
 
   /// The current readIndex as a string.
-  String get _rrr => 'R@${rIndex.toString().padLeft(5, '0')}';
+  String get _rrr => 'R@${rIndex_.toString().padLeft(5, '0')}';
   String get rrr => _rrr;
 
   /// The beginning of reading something.
@@ -23,6 +23,8 @@ abstract class ReaderLogMixin {
 
   String get pad => ''.padRight('$_rrr'.length);
 
+//  void debug(String msg, [int level = Level.debug]) => log.debug(msg, level);
+
   void warn(Object msg) => print('** Warning: $msg $_rrr');
 
   void error(Object msg) => throw new Exception('**** Error: $msg $_rrr');
@@ -30,11 +32,11 @@ abstract class ReaderLogMixin {
 }
 
 /// Aids to pretty printing
-abstract class WriterLogMixin {
-  int get wIndex;
+abstract class LoggingWriterMixin {
+  int get wIndex_;
 
   /// The current readIndex as a string.
-  String get _www => 'W@${wIndex.toString().padLeft(5, '0')}';
+  String get _www => 'W@${wIndex_.toString().padLeft(5, '0')}';
   String get www => _www;
 
   /// The beginning of reading something.
@@ -47,6 +49,8 @@ abstract class WriterLogMixin {
   String get wee => '< $_www';
 
   String get pad => ''.padRight('$_www'.length);
+
+//  void debug(String msg, [int level = Level.debug]) => log.debug(msg, level);
 
   void warn(Object msg) => print('** Warning: $msg $_www');
 

@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/buffer/read_buffer.dart.old';
+import 'package:convert/src/buffer/read_buffer.dart';
 import 'package:convert/src/dicom/base/reader/dcm_reader_base.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 import 'package:convert/src/errors.dart';
@@ -42,9 +42,9 @@ import 'package:convert/src/errors.dart';
 ///  [Element] itself.
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
-abstract class EvrReader<V> extends DcmReaderBase<V> {
+abstract class EvrReader extends DicomReadBuffer {
   @override
-  ReadBuffer get rb;
+  LoggingDicomReadBuffer get rb;
   DecodingParameters get dParams;
 
   @override

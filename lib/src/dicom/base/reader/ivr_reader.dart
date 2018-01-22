@@ -13,18 +13,15 @@ import 'package:convert/src/dicom/base/reader/dcm_reader_base.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 
-abstract class IvrReader<V> extends DcmReaderBase<V> {
-  @override
-  ReadBuffer get rb;
-
+abstract class IvrReader extends DicomReadBuffer {
   @override
   ByteData readFmi() => unsupportedError();
 
   /// All [Element]s are read by this method.
   @override
   Element readElement() {
-    final eStart = rb.rIndex;
-    final code = rb.code;
+    final eStart = rIndex_;
+    final code = readCode();
     final tag = checkCode(code, eStart);
     final vrIndex = _lookupIvrVRIndex(code, eStart, tag);
 
@@ -54,7 +51,7 @@ abstract class IvrReader<V> extends DcmReaderBase<V> {
   /// Read an IVR Element (not SQ) with a 32-bit vfLengthField (vlf),
   /// but that cannot have kUndefinedValue.
   Element readIvrDefinedLength(int code, int eStart, int vrIndex) {
-    final vlf = rb.uint32;
+    final vlf = readUint32();
     logStartRead(code, vrIndex, eStart, vlf, 'readIvrDefinedLength');
     assert(vlf != kUndefinedLength);
     return _makeIvr(code, vrIndex, eStart, vlf);
@@ -62,10 +59,10 @@ abstract class IvrReader<V> extends DcmReaderBase<V> {
 
   Element _makeIvr(int code, int vrIndex, int eStart, int vlf) {
     assert(vlf != kUndefinedLength);
-    rb.rSkip(vlf);
+    rSkip(vlf);
     final e = (code == kPixelData)
-        ? makePixelData(code, vrIndex, rb.bdView(eStart))
-        : makeFromByteData(code, vrIndex, rb.bdView(eStart));
+        ? makePixelData(code, vrIndex, bdView(eStart))
+        : makeFromByteData(code, vrIndex, bdView(eStart));
     logEndRead(eStart, e, 'makeIvr');
     return e;
   }
@@ -82,7 +79,7 @@ abstract class IvrReader<V> extends DcmReaderBase<V> {
   /// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have
   /// kUndefinedValue.
   Element readMaybeUndefined(int code, int vrIndex, int eStart) {
-    final vlf = rb.uint32;
+    final vlf = readUint32();
     logStartRead(code, vrIndex, eStart, vlf, 'readMaybeUndefined');
     // If VR is UN then this might be a Sequence
     if (vrIndex == kUNIndex && isUNSequence(vlf))
@@ -93,8 +90,8 @@ abstract class IvrReader<V> extends DcmReaderBase<V> {
     final fragments = readUndefinedLength(code, eStart, vrIndex, vlf);
 
     final e = (code == kPixelData)
-        ? makePixelData(code, vrIndex, rb.bdView(eStart), rds.transferSyntax, fragments)
-        : makeFromByteData(code, vrIndex, rb.bdView(eStart));
+        ? makePixelData(code, vrIndex, bdView(eStart), rds.transferSyntax, fragments)
+        : makeFromByteData(code, vrIndex, bdView(eStart));
     logEndRead(eStart, e, 'readMaybeUndefined');
     return e;
   }
@@ -102,7 +99,7 @@ abstract class IvrReader<V> extends DcmReaderBase<V> {
   @override
   Element readSequence(int code, int eStart, int vrIndex) {
     assert(vrIndex == kSQIndex);
-    final vlf = rb.uint32;
+    final vlf = readUint32();
     logStartSQRead(code, vrIndex, eStart, vlf, 'readIvrSequence');
     return (vlf == kUndefinedLength)
         ? _readUSQ(code, vrIndex, eStart, vlf)
@@ -119,7 +116,7 @@ abstract class IvrReader<V> extends DcmReaderBase<V> {
       final item = readItem();
       items.add(item);
     }
-    final e = makeSequence(code, rb.bdView(eStart), cds, items);
+    final e = makeSequence(code, bdView(eStart), cds, items);
     logEndSQRead(eStart, e, 'readEvrSequenceULength');
     return e;
   }
@@ -133,15 +130,15 @@ abstract class IvrReader<V> extends DcmReaderBase<V> {
     assert(vrIndex == kSQIndex);
     assert(vfl != kUndefinedLength);
     final items = <Item>[];
-    final eEnd = rb.rIndex + vfl;
+    final eEnd = rIndex_ + vfl;
 
-    while (rb.rIndex < eEnd) {
+    while (rIndex_ < eEnd) {
       final item = readItem();
       items.add(item);
     }
-    final end = rb.rIndex;
+    final end = rIndex_;
     assert(eEnd == end, '$eEnd == $end');
-    final e = makeSequence(code, rb.bdView(eStart), cds, items);
+    final e = makeSequence(code, bdView(eStart), cds, items);
     logEndSQRead(eStart, e, 'readEvrSequenceDLength');
     return e;
   }

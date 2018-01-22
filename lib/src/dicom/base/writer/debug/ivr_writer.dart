@@ -11,7 +11,7 @@ import 'package:convert/src/dicom/base/writer/debug/log_write_mixin.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 
 //Urgent: remove all log.debug
-abstract class LogIvrWriter extends IvrWriter<int> with LogWriteMixin {
+abstract class LoggingIvrWriter extends IvrWriter<int> with LogWriteMixin {
   @override
    ParseInfo get pInfo;
   @override
@@ -26,7 +26,7 @@ abstract class LogIvrWriter extends IvrWriter<int> with LogWriteMixin {
   void writeElement(Element e) {
     logStartWrite(e, 'writeIvrElement');
     elementCount++;
-    final eStart = wb.wIndex;
+    final eStart = wIndex_;
     var vrIndex = e.vrIndex;
 
     if (_isSpecialVR(vrIndex)) {
@@ -35,7 +35,7 @@ abstract class LogIvrWriter extends IvrWriter<int> with LogWriteMixin {
       log.warn('** vrIndex changed to VR.kUN.index');
     }
 
-    log.debug('${wb.wbb} #$elementCount writeIvrElement $e :${wb.remaining}', 1);
+    log.debug('$wbb #$elementCount writeIvrElement $e :$wRemaining', 1);
     if (_isIvrDefinedLengthVR(vrIndex)) {
       _writeIvrDefinedLength(e, vrIndex);
     } else if (_isSequenceVR(vrIndex)) {
@@ -51,24 +51,24 @@ abstract class LogIvrWriter extends IvrWriter<int> with LogWriteMixin {
     if (e.eStart != eStart) {
       log.error('** e.eStart(${e.eStart} != eStart($eStart)');
     }
-    if (e.eEnd != wb.wIndex) {
-      log.error('** e.eEnd(${e.eStart} != eEnd(${wb.wIndex})');
+    if (e.eEnd != wIndex_) {
+      log.error('** e.eEnd(${e.eStart} != eEnd($wIndex_)');
     }
 
     pInfo.nElements++;
-    doEndOfElementStats(eStart, wb.wIndex, e);
-    log.debug('${wb.wee} writeIvrElement ${e.dcm} ${e.keyword}');
+    doEndOfElementStats(eStart, wIndex_, e);
+    log.debug('$wee writeIvrElement ${e.dcm} ${e.keyword}');
   }
 
   /// Write a non-Sequence Element with a defined length in the Value Field Length field.
   void _writeIvrDefinedLength(Element e, int vrIndex) {
-    log.debug('${wb.wbb} writeSimpleIvr $e :${wb.remaining}', 1);
+    log.debug('$wbb writeSimpleIvr $e :$wRemaining', 1);
     super.writeIvrDefinedLength(e, vrIndex);
     pInfo.nLongElements++;
   }
 
   void _writeIvrMaybeUndefined(Element e, int vrIndex) {
-    log.debug('${wb.wbb} writeIvrMaybeUndefined $e :${wb.remaining}', 1);
+    log.debug('$wbb writeIvrMaybeUndefined $e :$wRemaining', 1);
     pInfo.nMaybeUndefinedElements++;
     return (e.hadULength && !eParams.doConvertUndefinedLengths)
         ? _writeIvrUndefinedLength(e, vrIndex)
@@ -79,11 +79,11 @@ abstract class LogIvrWriter extends IvrWriter<int> with LogWriteMixin {
   /// kUndefinedLength.
   void _writeIvrUndefinedLength(Element e, int vrIndex) {
     assert(e.vfLengthField == kUndefinedLength);
-    log.debug('${wb.wmm} writeIvrUndefined $e :${wb.remaining}');
+    log.debug('$wmm writeIvrUndefined $e :$wRemaining');
     super.writeIvrUndefinedLength(e, vrIndex);
-    if (e.code == kPixelData) pInfo.pixelDataEnd = wb.wIndex;
+    if (e.code == kPixelData) pInfo.pixelDataEnd = wIndex_;
     pInfo.nUndefinedLengthElements++;
-    log.debug('${wb.wbb} writeIvrUndefined $e :${wb.remaining}', 1);
+    log.debug('$wbb writeIvrUndefined $e :$wRemaining', 1);
   }
 
   void _writeIvrSQ(SQ e, int vrIndex) {
@@ -95,26 +95,26 @@ abstract class LogIvrWriter extends IvrWriter<int> with LogWriteMixin {
   }
 
   void _writeIvrSQDefinedLength(SQ e, int vrIndex) {
-    log.debug('${wb.wbb} _writeIvrSQDefined $e :${wb.remaining}', 1);
+    log.debug('$wbb _writeIvrSQDefined $e :$wRemaining', 1);
     final index = outputOffsets.reserveSlot;
     pInfo.nDefinedLengthSequences++;
-    final eStart = wb.wIndex;
+    final eStart = wIndex_;
 
     super.writeIvrSQDefinedLength(e, vrIndex);
 
-    final eEnd = wb.wIndex;
+    final eEnd = wIndex_;
     assert(e.vfLength + 8 == e.eEnd - e.eStart, '${e.vfLength}, $eEnd - $eStart');
     assert(e.vfLength + 8 == (eEnd - eStart), '${e.vfLength}, $eEnd - $eStart');
     outputOffsets.insertAt(index, eStart, eEnd, e);
   }
 
   void _writeIvrSQUndefinedLength(SQ e, int vrIndex) {
-    log.debug('${wb.wbb} _writeIvrSQUndefined $e :${wb.remaining}', 1);
+    log.debug('$wbb _writeIvrSQUndefined $e :$wRemaining', 1);
     final index = outputOffsets.reserveSlot;
-    final eStart = wb.wIndex;
+    final eStart = wIndex_;
     super.writeIvrSQUndefinedLength(e, vrIndex);
     pInfo.nUndefinedLengthSequences++;
-    outputOffsets.insertAt(index, eStart, wb.wIndex, e);
+    outputOffsets.insertAt(index, eStart, wIndex_, e);
   }
 }
 

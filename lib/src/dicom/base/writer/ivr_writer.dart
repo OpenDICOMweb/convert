@@ -6,9 +6,10 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/dicom/base/writer/dcm_writer_base.dart';
+import 'package:convert/src/dicom/base/writer/dicom_write_buffer.dart';
+import 'package:convert/src/utilities/encoding_parameters.dart';
 
-abstract class IvrWriter<V> extends DcmWriterBase<V> {
+abstract class IvrWriter extends DicomWriteBuffer {
   @override
   final bool isEvr = false;
 
@@ -38,11 +39,11 @@ abstract class IvrWriter<V> extends DcmWriterBase<V> {
   /// Write a non-Sequence Element with a defined length in the Value Field Length field.
   void _writeIvrDefinedLength(Element e, int vrIndex) {
     assert(e.vfLengthField != kUndefinedLength);
-    logStartWrite(e, 'writeIvrDefinedLength');
-    final eStart = wb.wIndex;
+//    logStartWrite(e, 'writeIvrDefinedLength');
+    final eStart = wIndex_;
     _writeIvrHeader(e, e.vfLength);
     _writeValueField(e, _getPadChar(e));
-    logEndWrite(eStart, e, 'writeIvrDefinedLength');
+//    logEndWrite(eStart, e, 'writeIvrDefinedLength');
   }
 
   int _getPadChar(Element e) =>
@@ -61,14 +62,14 @@ abstract class IvrWriter<V> extends DcmWriterBase<V> {
   void _writeIvrUndefinedLength(Element e, int vrIndex) {
     assert(e.vfLengthField == kUndefinedLength);
     logStartWrite(e, 'writeIvrUndefinedLength');
-    final eStart = wb.wIndex;
+    final eStart = wIndex_;
     _writeIvrHeader(e, kUndefinedLength);
     if (e.code == kPixelData) {
       writeEncapsulatedPixelData(e);
     } else {
       _writeValueField(e, kNull);
     }
-    wb.uint32(kSequenceDelimitationItem32BitLE);
+    writeUint32(kSequenceDelimitationItem32BitLE);
     logEndWrite(eStart, e, 'writeIvrUndefinedLength');
   }
 
@@ -81,12 +82,12 @@ abstract class IvrWriter<V> extends DcmWriterBase<V> {
 
   void _writeIvrSQDefinedLength(SQ e, int vrIndex) {
     logStartSQWrite(e, 'writeIvrSQDefinedLength');
-    final eStart = wb.wIndex;
+    final eStart = wIndex_;
     _writeIvrHeader(e, e.vfLength);
-    final vlfOffset = wb.wIndex - 4;
+    final vlfOffset = wIndex_ - 4;
     writeItems(e.items);
-    final vfLength = (wb.wIndex - eStart) - 8;
-    wb.setUint32(vlfOffset, vfLength);
+    final vfLength = (wIndex_ - eStart) - 8;
+    setUint32(vlfOffset, vfLength);
     logEndSQWrite(eStart, e, 'writeIvrSQDefinedLength');
   }
 
@@ -95,23 +96,23 @@ abstract class IvrWriter<V> extends DcmWriterBase<V> {
 
   void _writeIvrSQUndefinedLength(SQ e, int vrIndex) {
     logStartSQWrite(e, 'writeIvrSQUndefinedLength');
-    final eStart = wb.wIndex;
+    final eStart = wIndex_;
     _writeIvrHeader(e, kUndefinedLength);
     writeItems(e.items);
-    wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
+    writeUint32(kSequenceDelimitationItem32BitLE)..uint32(0);
     logEndSQWrite(eStart, e, 'writeIvrSQUndefinedLength');
   }
 
   void _writeIvrHeader(Element e, int vfLengthField) {
-    wb
-      ..code(e.code)
-      ..uint32(vfLengthField);
+
+      writeCode(e.code)
+      writeUint32(vfLengthField);
   }
 
   void _writeValueField(Element e, int padChar) {
     final bytes = e.vfBytes;
     assert(bytes.lengthInBytes.isEven);
-    wb.write(bytes);
+    write(bytes);
 /* Flush when working
     if (bytes.length.isOdd) {
       log.debug('Odd length VF: ${bytes.length}');

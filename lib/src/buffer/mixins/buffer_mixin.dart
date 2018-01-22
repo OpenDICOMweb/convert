@@ -8,52 +8,65 @@ import 'dart:typed_data';
 
 // ignore_for_file: non_constant_identifier_names
 
+const int _k1GB = 1024 * 1024 * 1024;
+const int kDefaultInitialLength = 1024;
+const int kDefaultLimit = 10 * _k1GB;
+const Endian kDefaultEndian = Endian.little;
+
 abstract class BufferMixin {
-  ByteData get bd_;
-  Uint8List get bytes_;
+  ByteData get bd;
+  Uint8List get bytes;
   int get rIndex_;
    set rIndex_(int n);
   int get wIndex_;
   set wIndex_(int n);
 
-  ByteData get bd => bd_;
-  Uint8List get bytes => bytes_;
+  void get reset;
+  bool get isEmpty;
+  bool get isNotEmpty;
+  bool get isClosed;
+  ByteData close();
 
   int get rIndex => rIndex_;
-  set rIndex(int n) {
-    if (rIndex < 0 || rIndex > wIndex_) throw new RangeError.range(rIndex, 0, wIndex_);
-    rIndex_ = rIndex;
-  }
-
-  int rSkip(int n) {
-    final v = rIndex_ + n;
-    if (v < 0 || v > wIndex_) throw new RangeError.range(v, 0, wIndex_);
-    return rIndex_ = v;
-  }
-
   int get wIndex => wIndex_;
-  set wIndex(int n) {
-    if (wIndex_ <= rIndex_ || wIndex_ > bd.lengthInBytes) throw new RangeError.range(
-        wIndex_, rIndex_, bd.lengthInBytes);
-    wIndex_ = n;
-  }
-
-  /// Moves the [wIndex] forward/backward. Returns the new [wIndex].
-  int wSkip(int n) {
-    final v = wIndex_ + n;
-    if (v <= rIndex_ || v >= bd.lengthInBytes) throw new RangeError.range(
-        v, 0, bd.lengthInBytes);
-    return wIndex_ = v;
-  }
-
-  Uint8List get contents => bd.buffer.asUint8List(bd.offsetInBytes, rIndex);
-
 
   int get start => bd.offsetInBytes;
   int get end => bd.lengthInBytes;
   bool get isReadable => rIndex_ < wIndex_;
 
+  Uint8List get contents => bd.buffer.asUint8List(rIndex_, wIndex_);
 
+  ByteData bdView(int offset, int length) {
+    final offset = _getOffset(start, length);
+   return bd.buffer.asByteData(offset, length ?? bd.lengthInBytes);
+  }
+
+  Uint8List uInt8View(int offset, int length) {
+    final offset = _getOffset(start, length);
+    return bd.buffer.asUint8List(offset, length ?? bd.lengthInBytes);
+  }
+  Uint8List uint8View([int start = 0, int length]) {
+    final offset = _getOffset(start, length);
+    return bd.buffer.asUint8List(offset, length ?? bd.lengthInBytes - offset);
+  }
+
+  Uint8List readUint8View(int length) {
+    final bytes = uint8View(rIndex_, length);
+    rIndex_ += length;
+    return bytes;
+  }
+
+  bool checkAllZeros(int start, int end) {
+    for (var i = start; i < end; i++) if (bd.getUint8(i) != 0) return false;
+    return true;
+  }
+
+  int _getOffset(int start, int length) {
+    final offset = bd.offsetInBytes + start;
+    assert(offset >= 0 && offset <= bd.lengthInBytes);
+    assert(offset + length >= offset && (offset + length) <= bd.lengthInBytes);
+    return offset;
+  }
 
 }
 

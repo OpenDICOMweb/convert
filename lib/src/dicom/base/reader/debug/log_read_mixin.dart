@@ -7,35 +7,16 @@
 import 'package:core/core.dart';
 
 import 'package:convert/src/dicom/base/reader/log_read_mixin_base.dart.old';
-import 'package:convert/src/buffer/read_buffer.dart.old';
+import 'package:convert/src/buffer/read_buffer.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 
 abstract class LogReadMixin implements LogReadMixinBase {
-
+  int get rIndex_;
   bool get isEvr;
-  ReadBuffer get rb;
   ParseInfo get pInfo;
   ElementOffsets get offsets;
-
-// **** these next four are utilities for logger
-  /// The current readIndex as a string.
-  String get _rrr => 'R@${rb.rIndex.toString().padLeft(5, '0')}';
-
-  String get rrr => '$_rrr';
-
-  /// The beginning of reading something.
-  String get rbb => '> $_rrr';
-
-  /// In the middle of reading something.
-  String get rmm => '| $_rrr  ';
-
-  /// The end of reading something.
-  String get ree => '< $_rrr ';
-
-//  String get pad => ''.padRight('$_rrr'.length);
-
-  int get remaining => rb.rRemaining;
-
+  int get rRemaining;
+  int get getUint16(int index);
 /*
   void _sMsg(String name, int code, int start, int vrIndex,
           [int hdrLength, int vfLengthField = -1, int inc = 1]) =>
@@ -87,9 +68,9 @@ abstract class LogReadMixin implements LogReadMixinBase {
   }
 
   String _endReadElement(int eStart, Element e, String name, {bool ok = true}) {
-    final eEnd = rb.rIndex;
+    final eEnd = rIndex_;
     _doEndOfElementStats(e.code, eStart, e, ok);
-    final sb = new StringBuffer('< R@$eEnd $e $name :$remaining');
+    final sb = new StringBuffer('< R@$eEnd $e $name :$rRemaining');
     return sb.toString();
   }
 
@@ -116,17 +97,17 @@ abstract class LogReadMixin implements LogReadMixinBase {
     if (ok) {
       pInfo
         ..lastElement = e
-        ..endOfLastElement = rb.rIndex;
+        ..endOfLastElement = rIndex_;
       if (e.isPrivate) pInfo.nPrivateElements++;
       if (e is SQ) {
         pInfo
-          ..endOfLastSequence = rb.rIndex
+          ..endOfLastSequence = rIndex_
           ..lastSequence = e;
       }
     } else {
       pInfo.nDuplicateElements++;
     }
-    if (offsets != null && e is! SQ) offsets.add(eStart, rb.rIndex, e);
+    if (offsets != null && e is! SQ) offsets.add(eStart, rIndex_, e);
   }
 
 
@@ -183,20 +164,20 @@ abstract class LogReadMixin implements LogReadMixinBase {
       'HadULength(${(vfl == kUndefinedLength) ? 'true': 'false'})';
 
   void showReadIndex([int index, int before = 20, int after = 28]) {
-    index ??= rb.rIndex;
+    index ??= rIndex_;
     if (index.isOdd) {
       log.warn('**** Index($index) is not at even offset ADDING 1');
       index++;
     }
 
     for (var i = index - before; i < index; i += 2) {
-      log.debug('$i:   ${hex16(rb.getUint16 (i))} - ${rb.getUint16 (i)}');
+      log.debug('$i:   ${hex16(getUint16 (i))} - ${getUint16 (i)}');
     }
 
-    log.debug('** ${hex16(rb.getUint16 (index))} - ${rb.getUint16 (index)}');
+    log.debug('** ${hex16(getUint16 (index))} - ${getUint16 (index)}');
 
     for (var i = index + 2; i < index + after; i += 2) {
-      log.debug('$i: ${hex16(rb.getUint16 (i))} - ${rb.getUint16 (i)}');
+      log.debug('$i: ${hex16(getUint16 (i))} - ${getUint16 (i)}');
     }
   }
 }
