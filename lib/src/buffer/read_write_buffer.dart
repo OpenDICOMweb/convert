@@ -17,15 +17,34 @@ import 'package:convert/src/buffer/mixins/write_buffer_mixin.dart';
 
 class ReadWriteBuffer extends GrowableByteListBase
     with BufferMixin, ReadBufferMixin, WriteBufferMixin {
+  static int kMaximumLength = kDefaultLimit;
+
   @override
   int rIndex_;
   @override
   int wIndex_;
 
+  /// The upper bound on the length of this [ByteList]. If [limit]
+  /// is _null_ then its length cannot be changed.
+  @override
+  final int limit;
+  @override
+  final Endian endian;
+  @override
+  ByteData bd_;
+  @override
+  Uint8List bytes_;
+  @override
+  int _length;
+
+
   ReadWriteBuffer(
-      {int length = kDefaultInitialLength, int limit = k1GB, Endian endian =
-          kDefaultEndian})
-      : super.ofSize(length, endian, limit);
+      [int length = kDefaultInitialLength,
+        this.endian = kDefaultEndian,
+        this.limit = kDefaultLimit])
+      : bd_ = _newBD(length ?? kDefaultInitialLength),
+        bytes_ = _getBytes(),
+        _length = _getLength();
 
   ReadWriteBuffer.from(ReadWriteBuffer byteList,
       [int offset = 0,

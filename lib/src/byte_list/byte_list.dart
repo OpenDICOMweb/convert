@@ -9,6 +9,8 @@ import 'dart:typed_data';
 
 import 'package:convert/src/byte_list/byte_list_mixins.dart';
 
+// ignore_for_file: non_constant_identifier_names
+
 //Urgent: Unit Test
 
 /// [ByteListBase] is the base class of [ByteList]. It provides
@@ -175,56 +177,10 @@ abstract class GrowableByteListBase extends ByteListBase
   Endian get endian;
   ByteData get bd_;
    set bd_(ByteData bd);
-  Uint8List get _bytes;
+  Uint8List get bytes_;
   set bytes_(Uint8List bd);
   int get _length;
   set _length(int length);
-
-  GrowableByteList(
-      [int length = kDefaultInitialLength,
-      this.endian = kDefaultEndian,
-      this.limit = kDefaultLimit])
-      : bd_ = _newBD(length ?? kDefaultInitialLength),
-        bytes_ = _getBytes(),
-        _length = _getLength();
-
-  GrowableByteList.from(GrowableByteList byteList,
-      [int offset = 0,
-      int length,
-      this.endian = kDefaultEndian,
-      this.limit = kDefaultLimit])
-      : bd_ = _copyTypedData(byteList.bd, offset, length ?? kDefaultInitialLength),
-        bytes_ = _getBytes(),
-        _length = _getLength();
-
-  GrowableByteList.fromByteData(ByteData bd,
-      [int offset = 0,
-      int length,
-      this.endian = kDefaultEndian,
-      this.limit = kDefaultLimit])
-      : bd_ = _asByteData(bd, offset, length ?? kDefaultInitialLength),
-        bytes_ = _getBytes(),
-        _length = _getLength();
-
-  GrowableByteList.fromUint8List(Uint8List bytes,
-      [int offset = 0,
-      int length,
-      this.endian = kDefaultEndian,
-      this.limit = kDefaultLimit])
-      : bytes_ = _asUint8List(bytes, offset, length ?? bytes.lengthInBytes),
-        bd_ = _getByteData(),
-        _length = _getLength();
-
-  GrowableByteList.ofSize(int length, this.endian, this.limit)
-      : bd_ = _newBD(length),
-        bytes_ = _getBytes(),
-        _length = _getLength();
-
-  GrowableByteList.fromTypedData(
-      TypedData bd, int offset, int length, this.endian, this.limit)
-      : bd_ = _asByteData(bd, 0, bd.lengthInBytes),
-        bytes_ = _getBytes(),
-        _length = _getLength();
 
   /// Returns _this_ as [ByteData].
   @override
@@ -321,18 +277,22 @@ abstract class GrowableByteListBase extends ByteListBase
 /// is different from [ByteData] in that it is closed over
 /// the [Endian]ness provided in the constructors. The Setters
 /// and Getters do not take an [Endian]ness argument.
-class GrowableByteList extends GrowableListBase {
+class GrowableByteList extends GrowableByteListBase
     with ByteListGetMixin, ByteListSetMixin
     implements Uint8List {
   static int kMaximumLength = kDefaultLimit;
 
   /// The upper bound on the length of this [ByteList]. If [limit]
   /// is _null_ then its length cannot be changed.
+ @override
   final int limit;
   @override
   final Endian endian;
+  @override
   ByteData bd_;
+  @override
   Uint8List bytes_;
+  @override
   int _length;
 
   GrowableByteList(

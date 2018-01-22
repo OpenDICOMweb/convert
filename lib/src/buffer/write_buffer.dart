@@ -15,17 +15,30 @@ import 'package:convert/src/byte_list/byte_list.dart';
 
 class WriteBuffer extends GrowableByteListBase with BufferMixin, WriteBufferMixin {
   @override
+  final int limit;
+  @override
+  final Endian endian;
+  @override
+  ByteData bd_;
+  @override
+  Uint8List bytes_;
+  @override
+  int length_;
+  @override
   int rIndex_;
   @override
   int wIndex_;
 
+
   WriteBuffer(
       [int length = kDefaultInitialLength,
-      Endian endian = kDefaultEndian,
-      int limit = kDefaultLimit])
-      : rIndex_ = 0,
-        wIndex_ = 0,
-        super.ofSize(length, endian, limit);
+        this.endian = kDefaultEndian,
+        this.limit = kDefaultLimit])
+      : bd_ = _newBD(length ?? kDefaultInitialLength),
+        bytes_ = _getBytes(),
+        length_ = _getLength(),
+  rIndex_ = 0,
+  wIndex_ = 0;
 
   WriteBuffer.fromByteData(ByteData bd,
       [int offset = 0,
