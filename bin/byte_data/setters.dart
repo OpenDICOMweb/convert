@@ -6,7 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:convert/bytes/bytes.dart';
+import 'package:convert/src/bytes/bytes.dart';
 
 void main(List<String> args) {
 
@@ -25,11 +25,11 @@ void main(List<String> args) {
     assert(fl32List0[i] == fl32List1[i]);
 
   // Unaligned
-  final fl32b = new Bytes(20);
-  fl32b.setFloat32(2, floats[0]);
-  fl32b.setFloat32(6, floats[1]);
-  fl32b.setFloat32(10, floats[2]);
-  fl32b.setFloat32(14, floats[3]);
+  final fl32b = new Bytes(20)
+  ..setFloat32(2, floats[0])
+  ..setFloat32(6, floats[1])
+  ..setFloat32(10, floats[2])
+  ..setFloat32(14, floats[3]);
   assert(fl32b.getFloat32(2) == fl32List0[0]);
   assert(fl32b.getFloat32(6) == fl32List0[1]);
   assert(fl32b.getFloat32(10) == fl32List0[2]);

@@ -32,7 +32,7 @@ bool byteReadWriteFileChecked(String path,
   try {
     final reader0 = new BDReader.fromFile(f);
     final rds0 = reader0.readRootDataset();
-    final bytes0 = reader0.rb.bytes;
+    final bytes0 = reader0.rb.asUint8List();
     log.info('$n:   length: ${bytes0.length}');
     final e = rds0[kPixelData];
     if (e == null) log.warn('$pad ** Pixel Data Element not present');

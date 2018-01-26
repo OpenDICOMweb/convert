@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/buffer/read_buffer.dart';
+import 'package:convert/src/bytes/read_buffer/read_buffer.dart';
 import 'package:convert/src/dicom/base/reader/evr_reader.dart';
 import 'package:convert/src/dicom/byte_data/reader/evr_bd_reader.dart';
 import 'package:convert/src/dicom/byte_data/reader/ivr_bd_reader.dart';
@@ -21,7 +21,7 @@ import 'package:convert/src/utilities/io_utils.dart';
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [BDRootDataset].
 class BDReader {
-  final ByteData bd;
+  final ReadBuffer rb;
   final String path;
   final bool reUseBD;
   final DecodingParameters dParams;
@@ -39,7 +39,7 @@ class BDReader {
       bool doLogging = false,
       bool showStats = false}) {
     rds ??= new BDRootDataset(bd, path: path);
-    return new BDReader._(bd,
+    return new BDReader._(new ReadBuffer(bd),
         rds: rds,
         path: path,
         dParams: dParams,
@@ -49,7 +49,7 @@ class BDReader {
   }
 
   /// Creates a new [BDReader], which is decoder for Binary DICOM (application/dicom).
-  BDReader._(this.bd,
+  BDReader._(this.rb,
       {this.rds,
       this.path = '',
       this.dParams = DecodingParameters.kNoChange,
@@ -58,9 +58,9 @@ class BDReader {
       this.showStats = false})
       // Why is this failing
       : _evrReader = (doLogging)
-            ? new EvrLoggingBDReader(bd, new BDRootDataset(bd, path: path),
+            ? new EvrLoggingBDReader(rb.bd, new BDRootDataset(rb.bd, path: path),
                 dParams: dParams, reUseBD: reUseBD)
-            : new EvrBDReader(bd, new BDRootDataset(bd, path: path),
+            : new EvrBDReader(rb.bd, new BDRootDataset(rb.bd, path: path),
                 dParams: dParams, reUseBD: reUseBD);
 
   /// Creates a [BDReader] from the contents of the [bytes].
@@ -128,8 +128,7 @@ class BDReader {
           doLogging: doLogging,
           showStats: showStats);
 
-  ReadBuffer get rb => _evrReader.rb;
-  Uint8List get bytes => rb.bytes;
+  Uint8List get uint8List => rb.asUint8List();
   ElementOffsets get offsets => _evrReader.offsets;
 
   bool isFmiRead = false;

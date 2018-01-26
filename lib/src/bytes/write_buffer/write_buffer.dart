@@ -9,7 +9,7 @@ import 'dart:typed_data';
 import 'package:convert/src/bytes/bytes.dart';
 import 'package:convert/src/bytes/buffer/buffer_base.dart';
 import 'package:convert/src/bytes/buffer/log_mixins.dart';
-import 'package:convert/src/bytes/buffer/write_buffer/write_buffer.dart';
+import 'package:convert/src/bytes/write_buffer/write_buffer_mixin.dart';
 
 
 // ignore_for_file: non_constant_identifier_names
@@ -121,6 +121,7 @@ class WriteBuffer extends BufferBase with WriteBufferMixin {
 
   bool _hadTrailingZeros;
 
+  @override
   bool get hadTrailingZeros => _hadTrailingZeros ?? false;
   ByteData rClose() {
     final view = bdView(0, rIndex_);

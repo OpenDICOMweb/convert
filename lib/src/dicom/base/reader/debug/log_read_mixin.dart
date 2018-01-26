@@ -7,18 +7,19 @@
 import 'package:core/core.dart';
 
 import 'package:convert/src/dicom/base/reader/log_read_mixin_base.dart.old';
-import 'package:convert/src/buffer/read_buffer.dart';
+import 'package:convert/src/bytes/read_buffer/read_buffer.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 
 abstract class LogReadMixin implements LogReadMixinBase {
 
   bool get isEvr;
-  ReadBuffer get rb;
+  LoggingReadBuffer get rb;
   ParseInfo get pInfo;
   ElementOffsets get offsets;
 
 // **** these next four are utilities for logger
   /// The current readIndex as a string.
+/*
   String get _rrr => 'R@${rb.rIndex.toString().padLeft(5, '0')}';
 
   String get rrr => '$_rrr';
@@ -31,6 +32,7 @@ abstract class LogReadMixin implements LogReadMixinBase {
 
   /// The end of reading something.
   String get ree => '< $_rrr ';
+*/
 
 //  String get pad => ''.padRight('$_rrr'.length);
 

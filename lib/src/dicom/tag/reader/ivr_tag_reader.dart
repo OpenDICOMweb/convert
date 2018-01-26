@@ -8,7 +8,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/buffer/read_buffer.dart';
+import 'package:convert/src/bytes/read_buffer/read_buffer.dart';
 import 'package:convert/src/dicom/base/reader/ivr_reader.dart';
 import 'package:convert/src/dicom/base/reader/debug/log_read_mixin.dart';
 import 'package:convert/src/dicom/tag/reader/evr_tag_reader.dart';

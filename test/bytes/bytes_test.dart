@@ -8,7 +8,7 @@ import 'dart:typed_data';
 
 import 'package:test/test.dart';
 
-import 'package:convert/bytes/bytes.dart';
+import 'package:convert/src/bytes/bytes.dart';
 
 void main() {
   group('Bytes Tests', () {
@@ -77,22 +77,20 @@ void main() {
     //TODO: finish tests
     test('Test List Int16', () {
       final loopCount = 100;
-      final length = 0xFF;
 
       for (var i = 0; i < loopCount; i++) {
-        final a = new Bytes(0xFF * Bytes.kInt16Size);
-        assert(a.length == 0xFF * Bytes.kInt16Size, true);
+        final a = new Bytes(0xFFFF * Bytes.kInt16Size);
+        assert(a.length == 0xFFFF * Bytes.kInt16Size, true);
 
-        for (var i = 0, j = Bytes.kInt8MinValue;
-            i <= 0xFF;
-            i++, j++) {
-          print('i: $i, j: $j');
-          a.setInt16(i, j);
-          expect(a.getInt16(i) == j, true);
+        for (var i = 0, j = -10; i <= 10; i++, j += 2) {
+          a.setInt16(i * 2, j);
+          print('i: $i, j: $j, v: ${a.getInt16(i)}');
+          expect(a.getInt16(i * 2) == j, true);
         }
-        for (var i = 0, j = Bytes.kInt8MinValue;
-            j < Bytes.kInt16MaxValue; i++, j++)
-          expect(a.getInt16(i) == j, true);
+        for (var i = 0, j = -10; i <= 10; i++, j += 2) {
+          print('i: $i, j: $j, v: ${a.getInt16(i)}');
+          expect(a.getInt16(i * 2) == j, true);
+        }
       }
     });
   });

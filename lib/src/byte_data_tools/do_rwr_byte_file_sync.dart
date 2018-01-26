@@ -33,7 +33,7 @@ bool doRWRByteFileSync(File f, {bool fast = true, bool noisy = false}) {
       return false;
     }
     if (rds0.pInfo == null) throw 'Bad File - No ParseInfo: $f';
-    final bytes0 = reader0.bd.buffer.asUint8List();
+    final bytes0 = reader0.rb.asUint8List();
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');
@@ -88,7 +88,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     }
     final rds1 = reader1.readRootDataset();
     log
-      ..debug('$pad Read ${reader1.bd.lengthInBytes} bytes')
+      ..debug('$pad Read ${reader1.rb.lengthInBytes} bytes')
       ..debug1('$pad DS1: $rds1');
 
     if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');

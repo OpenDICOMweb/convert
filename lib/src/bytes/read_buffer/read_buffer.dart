@@ -34,6 +34,13 @@ class ReadBuffer extends BufferBase with ReadBufferMixin {
         wIndex_ = offset + (length ?? bd.lengthInBytes),
         bytes = new Bytes.fromByteData(bd, offset, length, endian);
 
+  ReadBuffer.from(ReadBuffer rb,
+                           [int offset = 0, int length, Endian endian = Endian.little])
+      : rIndex_ = offset,
+        wIndex_ = offset + (length ?? rb.lengthInBytes),
+        bytes =
+        new Bytes.from(rb.bytes, offset, length, endian);
+
   ReadBuffer.fromUint8List(Uint8List bytes,
       [int offset = 0, int length, Endian endian = Endian.little])
       : rIndex_ = offset,

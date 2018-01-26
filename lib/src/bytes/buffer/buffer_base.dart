@@ -18,8 +18,6 @@ abstract class BufferBase extends Object with BufferMixin {
 
   @override
   ByteData get bd => (isClosed) ? null : bytes.bd;
-  @override
-//  Uint8List get bytes => (isClosed) ? null : bytes.bytes;
 
   bool _isClosed;
   bool get isClosed => (_isClosed == null) ? false : true;

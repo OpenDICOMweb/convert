@@ -4,16 +4,14 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:typed_data';
-
-
 abstract class Base {
   int _foo;
 
+  @override
   String toString() => '$runtimeType: $_foo';
 }
 
-class SuperClass extends Base {
+class SuperClass {
 
   int _foo;
   SuperClass(int bar) : _foo = bar;

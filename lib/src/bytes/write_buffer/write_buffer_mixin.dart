@@ -14,8 +14,6 @@ import 'package:convert/src/bytes/bytes.dart';
 abstract class WriteBufferMixin {
   GrowableBytes get bytes;
 
-  ByteData get bd;
-
   int get rIndex_;
   set rIndex_(int n);
   int get wIndex_;
@@ -125,10 +123,10 @@ abstract class WriteBufferMixin {
   void write(TypedData td) {
     final offset = td.offsetInBytes;
     final length = td.lengthInBytes;
-    final bytes = (td is Uint8List) ? td : td.buffer.asUint8List(offset, length);
+    final uint8List = (td is Uint8List) ? td : td.buffer.asUint8List(offset, length);
     _maybeGrow(length);
     for (var i = 0, j = wIndex_; i < length; i++, j++)
-      bytes[j] = bytes[i];
+      bytes[j] = uint8List[i];
     wIndex_ += length;
   }
 
@@ -146,7 +144,7 @@ abstract class WriteBufferMixin {
     assert(code >= 0 && code < kItem, 'Value out of range: $code');
     assert(wIndex_.isEven && wHasRemaining(4));
     _maybeGrow(4);
-    bd
+    bytes
       ..setUint16(wIndex_, code >> 16)
       ..setUint16(wIndex_ + 2, code & 0xFFFF);
     wIndex_ += 4;

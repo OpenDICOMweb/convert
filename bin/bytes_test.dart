@@ -4,11 +4,10 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See the AUTHORS file for other contributors.
 
-import 'dart:typed_data';
 
 import 'package:test/test.dart';
 
-import 'package:convert/bytes/bytes.dart';
+import 'package:convert/src/bytes/bytes.dart';
 
 void main(List<String> args) {
 

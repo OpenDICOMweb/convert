@@ -59,7 +59,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
   // If duplicates are present the [ElementOffsets]s will not be equal.
   if (!rds0.hasDuplicates) {
     //  Compare the data byte for byte
-    same = bytesEqual(reader0.bd.buffer.asUint8List(), reader1.bd.buffer.asUint8List());
+    same = bytesEqual(reader0.rb.asUint8List(), reader1.rb.asUint8List());
     msg = (same != true) ? '**** Files were different!!!' : 'Files were identical.';
   } else {
     msg = '''
@@ -69,7 +69,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
 
   log.info('''\n
 $f  
-  Read ${reader0.bd.lengthInBytes} bytes
+  Read ${reader0.rb.lengthInBytes} bytes
     DS0: ${rds0.info}'
     ${rds0.transferSyntax}
     $reader0
@@ -87,7 +87,7 @@ void showRDS(BDRootDataset rds,  BDReader reader) {
 	? ' ** Pixel Data Element not present'
 			: e.info;
 
-	final bytes0 = reader.bd.buffer.asUint8List();
+	final bytes0 = reader.rb.asUint8List();
 
   log.debug('''\n
 Read ${bytes0.lengthInBytes} bytes

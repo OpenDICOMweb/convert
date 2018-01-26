@@ -41,7 +41,7 @@ Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) asy
     }
     if (rds0.pInfo == null) throw 'Bad File - No ParseInfo: $f';
     //TODO: update reader and write to have method called bytes.
-    final bytes0 = reader0.bd.buffer.asUint8List();
+    final bytes0 = reader0.rb.asUint8List();
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');
