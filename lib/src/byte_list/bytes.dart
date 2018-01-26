@@ -6,14 +6,12 @@
 
 import 'dart:typed_data';
 
-import 'package:convert/src/byte_list/byte_list_mixins.dart';
-
 //Urgent: Unit Test
 
 const int k1GB = 1024 * 1024 * 1024;
-const int kMinByteListLength = 16;
-const int kDefaultLimit = k1GB;
+const int kMinLength = 16;
 const int kDefaultLength = 1024;
+const int kDefaultLimit = k1GB;
 
 const Endianness kDefaultEndian = Endian.little;
 
@@ -22,77 +20,349 @@ bool _isMaxCapacityExceeded(int length, [int maxLength]) {
   return length >= maxLength;
 }
 
-abstract class BytesBase {
-  ByteData get _bd;
-  Endian get endian;
-}
-
 /// [Bytes] is a class that provides a read-only byte array that supports both
 /// [Uint8List] and [ByteData] interfaces.
-class Bytes extends Object with ByteListGetMixin, ByteListSetMixin {
-  @override
-  final ByteData bd;
-  @override
+class Bytes extends Object {
+  final ByteData _bd;
   final Endian endian;
 
-  Bytes([int length = kDefaultLength, this.endian]) : bd = new ByteData(length);
+  Bytes([int length = kDefaultLength, this.endian = Endian.little])
+      : _bd = new ByteData(length);
 
   Bytes.from(Bytes bytes,
       [int offset = 0, int length, this.endian = Endian.little])
-      : bd = _copy(bytes.bd, offset, length ?? bytes.lengthInBytes);
+      : _bd = _copy(bytes._bd, offset, length ?? bytes.lengthInBytes);
 
-  Bytes.viewOf(Bytes bytes, [int offset = 0, int length])
-      : endian = bytes.endian,
-        bd = _asByteData(bytes.bd, offset, length ?? bytes.lengthInBytes);
+  Bytes.fromTypedData(TypedData td,
+      [int offset = 0, int length, this.endian = Endian.little])
+      : _bd = _copy(td, offset, length ?? td.lengthInBytes);
 
   Bytes.fromUint8List(Uint8List bytes,
       [int offset = 0, int length, this.endian = Endian.little])
-      : bd = _copy(bytes, offset, length ?? bytes.lengthInBytes);
+      : _bd = _copy(bytes, offset, length ?? bytes.lengthInBytes);
 
   Bytes.fromByteData(ByteData bd,
       [int offset = 0, int length, this.endian = Endian.little])
-      : bd = _copy(bd, offset, length ?? bd.lengthInBytes);
+      : _bd = _copy(bd, offset, length ?? bd.lengthInBytes);
 
-  // *** List<int> interface
-  int operator [](int i) => bd.getUint8(i);
+  // Core accessor NOT to be exported?
+  ByteData get bd => _bd;
 
-  void operator []=(int i, int v) => bd.setUint8(i, v);
+  // **** Object overrides
 
   @override
   bool operator ==(Object other) {
     if (other is Bytes) {
-      if (bd.lengthInBytes != other.bd.lengthInBytes) return false;
+      if (_bd.lengthInBytes != other._bd.lengthInBytes) return false;
       for (var i = 0; i < length; i++)
-        if (bd.getUint8(i) != other.bd.getUint8(i)) return false;
+        if (_bd.getUint8(i) != other._bd.getUint8(i)) return false;
       return true;
     }
     return false;
   }
 
   @override
-  int get hashCode => bd.hashCode;
-
-  int get length => bd.lengthInBytes;
-
-  Bytes get copy => new Bytes.fromByteData(bd);
-
-  Bytes view([int offset = 0, int length]) => new Bytes.fromByteData(
-      bd.buffer.asByteData(offset, length ?? lengthInBytes));
+  int get hashCode {
+    var hashCode = 0;
+    for (var i = 0; i < lengthInBytes; i++) hashCode += _bd.getUint8(i) + i;
+    return hashCode;
+  }
 
   // **** TypedData interface.
   int get elementSizeInBytes => 1;
-  int get offsetInBytes => bd.offsetInBytes;
-  int get lengthInBytes => bd.lengthInBytes;
-  ByteBuffer get byteBuffer => bd.buffer;
+  int get offsetInBytes => _bd.offsetInBytes;
+  int get lengthInBytes => _bd.lengthInBytes;
+  ByteBuffer get buffer => _bd.buffer;
 
-  Uint8List get uint8List => bd.buffer.asUint8List();
+  // *** List interface
+
+  int get length => _bd.lengthInBytes;
+
+  int operator [](int i) => _bd.getUint8(i);
+
+  void operator []=(int i, int v) => _bd.setUint8(i, v);
+
+  // **** Extensions
+
+  Bytes get copy => new Bytes.fromByteData(_bd);
+
+  // **** ByteData Getters
+
+  int getInt8(int rIndex) => _bd.getInt8(rIndex);
+
+  int getUint8(int rIndex) => _bd.getUint8(rIndex);
+
+  int getUint16(int rIndex) => _bd.getUint16(rIndex, endian);
+
+  int getInt16(int rIndex) => _bd.getInt16(rIndex, endian);
+
+  int getUint32(int rIndex) => _bd.getUint32(rIndex, endian);
+
+  int getInt32(int rIndex) => _bd.getInt32(rIndex, endian);
+
+  int getUint64(int rIndex) => _bd.getUint64(rIndex, endian);
+
+  int getInt64(int rIndex) => _bd.getInt64(rIndex, endian);
+
+  double getFloat32(int rIndex) => _bd.getFloat32(rIndex, endian);
+
+  double getFloat64(int rIndex) => _bd.getFloat64(rIndex, endian);
+
+  // **** ByteData Setters
+
+  void setInt8(int wIndex, int value) => _bd.setInt8(wIndex, value);
+
+  void setUint8(int wIndex, int value) => _bd.setUint8(wIndex, value);
+
+  void setUint16(int wIndex, int value) => _bd.setUint16(wIndex, value, endian);
+
+  void setInt16(int wIndex, int value) => _bd.setInt16(wIndex, value, endian);
+
+  void setUint32(int wIndex, int value) => _bd.setUint32(wIndex, value, endian);
+
+  void setInt32(int wIndex, int value) => _bd.setInt32(wIndex, value, endian);
+
+  void setUint64(int wIndex, int value) => _bd.setUint64(wIndex, value, endian);
+
+  void setInt64(int wIndex, int value) => _bd.setInt64(wIndex, value, endian);
+
+  void setFloat32(int wIndex, double value) =>
+      _bd.setFloat32(wIndex, value, endian);
+
+  void setFloat64(int wIndex, double value) =>
+      _bd.setFloat64(wIndex, value, endian);
+
+  // **** Views
+
+  // Urgent Jim: finish
+
+  // Returns a view of _this_.
+  Bytes view([int offset = 0, int length]) => new Bytes.fromByteData(
+      _bd.buffer.asByteData(offset, length ?? lengthInBytes));
+
+  ByteData asByteData([int offset = 0, int length]) =>
+      _bd.buffer.asByteData(offset, length ?? _bd.lengthInBytes);
+
+  Int8List asInt8List([int offset = 0, int length]) =>
+      _bd.buffer.asInt8List(offset, length ?? _bd.lengthInBytes);
+
+  Int16List asInt16List([int offset = 0, int length]) =>
+      (_isAligned16(offset))
+          ? _bd.buffer.asInt16List(offset, length ?? (_bd.lengthInBytes ~/ 2))
+          : getInt16List(offset, length);
+
+  Int32List asInt32List([int offset = 0, int length]) =>
+      (_isAligned32(offset))
+          ? _bd.buffer.asInt32List(offset, length ?? (_bd.lengthInBytes ~/ 4))
+          : getInt32List(offset, length);
+
+  Int64List asInt64List([int offset = 0, int length]) =>
+      (_isAligned64(offset))
+          ? _bd.buffer.asInt64List(offset, length ?? (_bd.lengthInBytes ~/ 8))
+          : getInt64List(offset, length);
+
+  Uint8List asUint8List([int offset = 0, int length]) =>
+      _bd.buffer.asUint8List(offset, length ?? _bd.lengthInBytes);
+
+  Uint16List asUint16List([int offset = 0, int length]) =>
+      (_isAligned16(offset))
+          ? _bd.buffer.asUint16List(offset, length ?? (_bd.lengthInBytes ~/ 2))
+          : getUint16List(offset, length);
+
+  Uint32List asUint32List([int offset = 0, int length]) =>
+      (_isAligned32(offset))
+          ? _bd.buffer.asUint32List(offset, length ?? (_bd.lengthInBytes ~/ 4))
+          : getUint32List(offset, length);
+
+  Uint64List asUint64List([int offset = 0, int length]) =>
+      (_isAligned64(offset))
+          ? _bd.buffer.asUint64List(offset, length ?? (_bd.lengthInBytes ~/ 8))
+          : getUint64List(offset, length);
+
+  Float32List asFloat32List([int offset = 0, int length]) =>
+      (_isAligned32(offset))
+          ? _bd.buffer.asFloat32List(offset, length ?? (_bd.lengthInBytes ~/ 4))
+          : getFloat32List(offset, length);
+
+  Float64List asFloat64List([int offset = 0, int length]) =>
+      (_isAligned64(offset))
+          ? _bd.buffer.asFloat64List(offset, length ?? (_bd.lengthInBytes ~/ 8))
+          : getFloat64List(offset, length);
+
+  // **** TypedData List Getters
+  // ****   // **** Signed Integer List
+
+  Int8List getInt8List([int offset = 0, int length]) =>
+      new Int8List.fromList(_bd.buffer.asInt8List(offset, length ?? length));
+
+  //TODO: does this align optimization improve performance
+  Int16List getInt16List([int offset = 0, int length]) {
+    length ??= _bd.lengthInBytes;
+    if (_isAligned16(offset))
+      return new Int16List.fromList(asInt16List(offset, length));
+    final list = new Int16List(length);
+    for (var i = 0, j = offset; i < length; i++, j += 2) list[i] = getInt16(j);
+    return list;
+  }
+
+  //TODO: does this align optimization improve performance
+  Int32List getInt32List([int offset = 0, int length]) {
+    length ??= _bd.lengthInBytes;
+    if (_isAligned32(offset))
+      return new Int32List.fromList(asInt32List(offset, length));
+    final list = new Int32List(length);
+    for (var i = 0, j = offset; i < length; i++, j += 4) list[i] = getInt32(j);
+    return list;
+  }
+
+  //TODO: does this align optimization improve performance
+  Int64List getInt64List([int offset = 0, int length]) {
+    length ??= _bd.lengthInBytes;
+    if (_isAligned64(offset))
+      return new Int64List.fromList(asInt64List(offset, length));
+    final list = new Int64List(length);
+    for (var i = 0, j = offset; i < length; i++, j += 8) list[i] = getInt64(j);
+    return list;
+  }
+
+  // **** Unsigned Integer List
+  Uint8List getUint8List([int offset = 0, int length]) =>
+      new Uint8List.fromList(_bd.buffer.asUint8List(offset, length ?? length));
+
+  //TODO: does this align optimization improve performance
+  Uint16List getUint16List([int offset = 0, int length]) {
+    length ??= _bd.lengthInBytes;
+    if (_isAligned16(offset))
+      return new Uint16List.fromList(asUint16List(offset, length));
+    final list = new Uint16List(length);
+    for (var i = 0, j = offset; i < length; i++, j += 2) list[i] = getUint16(j);
+    return list;
+  }
+
+   //TODO: does this align optimization improve performance
+  Uint32List getUint32List([int offset = 0, int length]) {
+    length ??= _bd.lengthInBytes;
+    if (_isAligned32(offset))
+      return new Uint32List.fromList(asUint32List(offset, length));
+    final list = new Uint32List(length);
+    for (var i = 0, j = offset; i < length; i++, j += 4) list[i] = getUint32(j);
+    return list;
+  }
+
+  //TODO: does this align optimization improve performance
+  Uint64List getUint64List([int offset = 0, int length]) {
+    length ??= _bd.lengthInBytes;
+    if (_isAligned64(offset))
+      return new Uint64List.fromList(asUint64List(offset, length));
+    final list = new Uint64List(length);
+    for (var i = 0, j = offset; i < length; i++, j += 8) list[i] = getUint64(j);
+    return list;
+  }
+
+  // **** Float Lists
+
+  //TODO: does this align optimization improve performance
+  Float32List getFloat32List([int offset = 0, int length]) {
+    length ??= _bd.lengthInBytes;
+    if (_isAligned32(offset))
+      return new Float32List.fromList(asFloat32List(offset, length));
+    final list = new Float32List(length);
+    for (var i = 0, j = offset; i < length; i++, j += 4) {
+      final v = getFloat32(j);
+      print('j: $j fl: $v');
+      list[i] = getFloat32(j);
+    }
+    return list;
+  }
+
+  //TODO: does this align optimization improve performance
+  Float64List getFloat64List([int offset = 0, int length]) {
+    length ??= _bd.lengthInBytes;
+    if (_isAligned64(offset))
+      return new Float64List.fromList(asFloat64List(offset, length));
+    final list = new Float64List(length);
+    for (var i = 0, j = offset; i < length; i++, j += 8) list[i] = getFloat64(j);
+    return list;
+  }
+
+  bool _isAligned(int offset, int size) =>
+      ((_bd.offsetInBytes + offset) % size) == 0;
+
+  bool _isAligned16(int offset) => _isAligned(offset, 2);
+  bool _isAligned32(int offset) => _isAligned(offset, 4);
+  bool _isAligned64(int offset) => _isAligned(offset, 8);
+
+  // **** TypedData List Setters
+
+  // Urgent Jim: finish
+  void setUint8List(Uint8List list, [int offset = 0, int length]) {
+    length ??= list.length;
+    for (var i = offset; i < length ?? list.length; i++)
+      _bd.setInt8(i, list[i]);
+  }
+
+  void setUint16List(Uint16List list, [int offset = 0, int length]) {
+    length ??= list.length;
+    _checkLength(offset, length, 2);
+    for (var i = offset; i < length ?? list.length; i++)
+      _bd.setInt16(i, list[i]);
+  }
+
+  void _checkLength(int offset, int length, int size) {
+    final lLength = length * size;
+    final bLength = _bd.lengthInBytes - (_bd.offsetInBytes + offset);
+    if (length > bLength)
+      throw new RangeError('List ($lLength bytes) is to large for '
+          'Bytes($bLength bytes');
+  }
+
+  static const int kInt8Size = 1;
+  static const int kInt16Size = 2;
+  static const int kInt32Size = 4;
+  static const int kInt64Size = 8;
+
+  static const int kUint8Size = 1;
+  static const int kUint16Size = 2;
+  static const int kUint32Size = 4;
+  static const int kUint64Size = 8;
+
+  static const int kFloat32Size = 4;
+  static const int kFloat64Size = 8;
+
+  static const int kInt8MinValue = -0x7F - 1;
+  static const int kInt16MinValue = -0x7FFF - 1;
+  static const int kInt32MinValue = -0x7FFFFFFF - 1;
+  static const int kInt64MinValue = -0x7FFFFFFFFFFFFFFF - 1;
+
+  static const int kUint8MinValue = 0;
+  static const int kUint16MinValue = 0;
+  static const int kUint32MinValue = 0;
+  static const int kUint64MinValue = 0;
+
+  static const int kInt8MaxValue = 0x7F;
+  static const int kInt16MaxValue = 0x7FFF;
+  static const int kInt32MaxValue = 0x7FFFFFFF;
+  static const int kInt64MaxValue = 0x7FFFFFFFFFFFFFFF;
+
+  static const int kUint8MaxValue = 0xFF;
+  static const int kUint16MaxValue = 0xFFFF;
+  static const int kUint32MaxValue = 0xFFFFFFFF;
+  static const int kUint64MaxValue = 0xFFFFFFFFFFFFFFFF;
 
   static const int kDefaultLength = 1024;
+
+  bool isInt8(int i) => i > kInt8MinValue && i <= kInt8MaxValue;
+  bool isInt16(int i) => i > kInt16MinValue && i <= kInt16MaxValue;
+  bool isInt32(int i) => i > kInt32MinValue && i <= kInt32MaxValue;
+  bool isInt64(int i) => i > kInt64MinValue && i <= kInt64MaxValue;
+
+  bool isUint8(int i) => i > kUint8MinValue && i <= kUint8MaxValue;
+  bool isUint16(int i) => i > kUint16MinValue && i <= kUint16MaxValue;
+  bool isUint32(int i) => i > kUint32MinValue && i <= kUint32MaxValue;
+  bool isUint64(int i) => i > kUint64MinValue && i <= kUint64MaxValue;
 }
 
 class GrowableBytes extends Bytes {
-  ByteData _bd;
-
   /// The upper bound on the length of this [Bytes]. If [limit]
   /// is _null_ then its length cannot be changed.
   final int limit;
@@ -126,12 +396,7 @@ class GrowableBytes extends Bytes {
       this.limit = k1GB])
       : super.fromUint8List(bytes, offset, length, endian);
 
-  /// Returns a new [Bytes] of [length].
-  // This is only here for super classes to call
-  GrowableBytes.ofSize(int length, [Endian endian, this.limit = kDefaultLimit])
-      : super(length, endian);
-
-  set bd(ByteData bd) => _bd = bd;
+  set _bd(ByteData bd) => _bd = bd;
 
   set length(int newLength) {
     if (newLength < _bd.lengthInBytes) return;
@@ -150,7 +415,7 @@ class GrowableBytes extends Bytes {
   /// least that size. It will always have at least have double the
   /// capacity of the current buffer.
   bool grow([int minLength]) {
-    minLength ??= kMinByteListLength;
+    minLength ??= kMinLength;
     if (minLength <= _bd.lengthInBytes) return false;
 
     var newLength = _bd.lengthInBytes;
@@ -174,18 +439,6 @@ class GrowableBytes extends Bytes {
 }
 
 // *** Start Internals
-// These should only be used in functions between Start/End Internals
-TypedData __td;
-
-ByteData _newBD(int length) => __td = new ByteData(length);
-ByteData _getByteData() => __td.buffer.asByteData();
-Uint8List _getBytes() => __td.buffer.asUint8List();
-
-ByteData _asByteData(TypedData td, int offset, int length) =>
-    __td = td.buffer.asByteData(td.offsetInBytes + offset, length);
-
-Uint8List _asUint8List(TypedData td, int offset, int length) =>
-    __td = td.buffer.asUint8List(td.offsetInBytes + offset, length);
 
 ByteData _copy(TypedData td, [int offset = 0, int length]) {
   final oList = td.buffer.asUint8List(offset, length ?? td.lengthInBytes);
