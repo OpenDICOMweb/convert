@@ -6,7 +6,7 @@
 
 import 'dart:typed_data';
 
-import 'package:convert/src/byte_list/bytes.dart';
+import 'package:convert/bytes/bytes.dart';
 
 void main(List<String> args) {
 
