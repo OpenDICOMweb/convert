@@ -10,37 +10,6 @@ import 'dart:typed_data';
 import 'package:convert/src/byte_list/byte_list_mixins.dart';
 
 //Urgent: Unit Test
-//Urgent: move grow to write_buffer
-
-typedef TypedData _TDMaker(TypedData td, int offset, int length);
-// *** Start Internals
-// These should only be used in functions between Start/End Internals
-TypedData __td;
-
-ByteData _newBD(int length) => __td = new ByteData(length);
-ByteData _getByteData() => __td.buffer.asByteData();
-Uint8List _getBytes() => __td.buffer.asUint8List();
-
-TypedData _checkView(TypedData td, int offset, int length, _TDMaker maker) {
-  final o = td.offsetInBytes + offset;
-  final l = length ?? td.lengthInBytes;
-  RangeError.checkValidRange(o, l, td.lengthInBytes);
-  return __td = maker(td, o, l);
-}
-
-ByteData _asByteData(TypedData td, int offset, int length) =>
-    _checkView(td, offset, length, _bdMaker);
-
-ByteData _bdMaker(TypedData td, int offset, int length) =>
-    td.buffer.asByteData(offset, length);
-
-Uint8List _asUint8List(TypedData td, int offset, int length) =>
-    _checkView(td, offset, length, _bytesMaker);
-
-Uint8List _bytesMaker(TypedData td, int offset, int length) =>
-    td.buffer.asUint8List(offset, length);
-
-// *** End
 
 const int k1GB = 1024 * 1024 * 1024;
 const int kMinByteListLength = 16;
@@ -119,7 +88,7 @@ class ByteList extends ByteListBase
 
   factory ByteList({int length, Endian endian = Endian.little}) =>
       (length == null)
-          ? new GrowableByteList(length, limit: kDefaultLimit, endian: endian)
+          ? new GrowableByteList(length, endian, kDefaultLimit)
           : new ByteList._(length, endian);
 
   ByteList._(int lengthInBytes, this.endian)
@@ -171,9 +140,10 @@ class ImmutableByteList extends ByteListBase
       : bd = bd.buffer.asByteData(offset, length),
         bytes = bd.buffer.asUint8List(offset, length);
 
-  ImmutableByteList.internal(ByteData bd, int offset, int length, this.endian)
-      : bd = bd.buffer.asByteData(offset, length),
-        bytes = bd.buffer.asUint8List(offset, length);
+  ImmutableByteList.fromTypedData(
+      TypedData td, int offset, int length, this.endian)
+      : bd = td.buffer.asByteData(offset, length),
+        bytes = td.buffer.asUint8List(offset, length);
 }
 
 class GrowableByteList extends ByteListBase
@@ -181,41 +151,61 @@ class GrowableByteList extends ByteListBase
     implements Uint8List {
   static int kMaximumLength = kDefaultLimit;
 
+  /// The [Endian]ness of this [ByteList].
+  @override
+  final Endian endian;
+
   /// The upper bound on the length of this [ByteList]. If [limit]
   /// is _null_ then its length cannot be changed.
   final int limit;
-  final Endian endian;
+
   ByteData _bd;
   Uint8List _bytes;
 
+  /// Returns a new [ByteList] of [length].
   GrowableByteList(int length,
-      {this.limit = kDefaultLimit, this.endian = Endian.little})
+      [this.endian = Endian.little, this.limit = kDefaultLimit])
       : _bd = _newBD(length),
         _bytes = _getBytes();
 
+  /// Returns a new [ByteList] starting at [offset] of [length].
   GrowableByteList.from(GrowableByteList byteList,
-      {int limit = k1GB, Endian endian = Endian.little})
+      [int offset = 0,
+      int length,
+      Endian endian = Endian.little,
+      int limit = k1GB])
       : limit = (limit == null) ? byteList.limit : limit,
         endian = (endian == null) ? byteList.endian : endian,
-        _bd = _fromTypedData(byteList.bd),
+        _bd = _asByteData(byteList.bd, offset, length),
         _bytes = _getBytes();
 
+  /// Returns a new [ByteList] starting at [offset] of [length].
   GrowableByteList.fromByteData(ByteData bd,
-      {this.limit = k1GB, this.endian = Endian.little})
-      : _bd = _asByteData(bd, 0, bd.lengthInBytes),
+      [int offset = 0,
+      int length,
+      this.endian = Endian.little,
+      this.limit = k1GB])
+      : _bd = _asByteData(bd, offset, length),
         _bytes = _getBytes();
 
+  /// Returns a new [ByteList] starting at [offset] of [length].
   GrowableByteList.fromUint8List(Uint8List bytes,
-      {this.limit = k1GB, this.endian = Endian.little})
-      : _bytes = _asUint8List(bytes, 0, bytes.length),
+      [int offset = 0,
+      int length,
+      this.endian = Endian.little,
+      this.limit = k1GB])
+      : _bytes = _asUint8List(bytes, offset, length),
         _bd = _getByteData();
 
-  GrowableByteList.ofSize(int length, this.limit, this.endian)
+  /// Returns a new [ByteList] of [length].
+  // This is only here for super classes to call
+  GrowableByteList.ofSize(int length, this.endian, this.limit)
       : _bd = _newBD(length),
         _bytes = _getBytes();
 
-  GrowableByteList.fromBD(ByteData bd, this.limit, this.endian)
-      : _bd = _asByteData(bd, 0, bd.lengthInBytes),
+  GrowableByteList.fromTypedData(
+      TypedData td, int offset, int length, this.endian, this.limit)
+      : _bd = _asByteData(td, offset, length),
         _bytes = _getBytes();
 
   @override
@@ -270,8 +260,16 @@ class GrowableByteList extends ByteListBase
   }
 }
 
-ByteData _fromTypedData(TypedData td) {
-  final oBytes = td.buffer.asUint8List();
-  final nBytes = new Uint8List.fromList(oBytes);
-  return new ByteData.view(nBytes.buffer);
-}
+// *** Start Internals
+// These should only be used in functions between Start/End Internals
+TypedData __td;
+
+ByteData _newBD(int length) => __td = new ByteData(length);
+ByteData _getByteData() => __td.buffer.asByteData();
+Uint8List _getBytes() => __td.buffer.asUint8List();
+
+ByteData _asByteData(TypedData td, int offset, int length) =>
+    __td = td.buffer.asByteData(td.offsetInBytes + offset, length);
+
+Uint8List _asUint8List(TypedData td, int offset, int length) =>
+    __td = td.buffer.asUint8List(td.offsetInBytes + offset, length);

@@ -9,7 +9,7 @@ import 'dart:typed_data';
 import 'package:core/core.dart';
 
 import 'package:convert/src/dicom/base/reader/debug/log_read_mixin.dart';
-import 'package:convert/src/buffer/read_buffer.dart.old';
+import 'package:convert/src/buffer/read_buffer.dart';
 import 'package:convert/src/dicom/base/reader/evr_reader.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 import 'package:convert/src/utilities/element_offsets.dart';

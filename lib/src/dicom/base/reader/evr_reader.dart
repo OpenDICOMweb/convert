@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/buffer/read_buffer.dart.old';
+import 'package:convert/src/buffer/read_buffer.dart';
 import 'package:convert/src/dicom/base/reader/dcm_reader_base.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 import 'package:convert/src/errors.dart';
@@ -58,9 +58,9 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
   @override
   Element readElement() {
     final eStart = rb.rIndex;
-    final code = rb.code;
+    final code = rb.readCode();
     final tag = checkCode(code, eStart);
-    final vrCode = rb.uint16;
+    final vrCode = rb.readUint16();
     log.debug2('@$eStart ${dcm(code)} ${hex16(vrCode)} $tag');
     var vrIndex = _lookupEvrVRIndex(code, eStart, vrCode);
 
@@ -109,7 +109,7 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
   /// Read a Short EVR Element, i.e. one with a 16-bit Value Field Length field.
   /// These Elements can not have an kUndefinedLength value.
   Element readShort(int code, int vrIndex, int eStart) {
-    final vlf = rb.uint16;
+    final vlf = rb.readUint16();
     if (vlf.isOdd) log.error('Odd vlf: $vlf');
     logStartRead(code, vrIndex, eStart, vlf, 'readEvrShort');
 
@@ -125,7 +125,7 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
   /// Reads one of OD, OF, OL, UC, UR, or UT.
   Element readLongDefinedLength(int code, int vrIndex, int eStart) {
     rb.rSkip(2);
-    final vlf = rb.uint32;
+    final vlf = rb.readUint32();
     logStartRead(code, vrIndex, eStart, vlf, 'readEvrLong');
     return _makeLong(code, vrIndex, eStart, vlf);
   }
@@ -155,7 +155,7 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
   //  Sequence it will start with a kSequenceDelimiter.
   Element readMaybeUndefined(int code, int vrIndex, int eStart) {
     rb.rSkip(2);
-    final vlf = rb.uint32;
+    final vlf = rb.readUint32();
     logStartRead(code, vrIndex, eStart, vlf, 'readEvrMaybeUndefined');
     if (vlf != kUndefinedLength) return _makeLong(code, vrIndex, eStart, vlf);
 
@@ -176,7 +176,7 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
   SQ readSequence(int code, int vrIndex, int eStart) {
     assert(vrIndex == kSQIndex);
     rb.rSkip(2);
-    final vlf = rb.uint32;
+    final vlf = rb.readUint32();
     logStartSQRead(code, vrIndex, eStart, vlf, 'readEvrSequence');
     return (vlf == kUndefinedLength)
         ? _readUSQ(code, vrIndex, eStart, vlf)
@@ -250,7 +250,7 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
     assert(rb.rIndex == 132, 'Non-Prefix start index: ${rb.rIndex}');
     print('r@${rb.rIndex}');
     while (rb.isReadable) {
-      final code = rb.peekCode;
+      final code = rb.peekCode();
       if (code >= 0x00030000) break;
       final e = readElement();
       rds.fmi.add(e);
@@ -275,7 +275,7 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
   /// Reads the Preamble (128 bytes) and Prefix ('DICM') of a PS3.10 DICOM File Format.
   /// Returns true if a valid Preamble and Prefix where read.
   bool _readPrefix(ReadBuffer rb) {
-    if (rb.rIndex != 0) return false;
+    if (rb.rIndex_ != 0) return false;
     return _isDcmPrefixPresent(rb);
   }
 
@@ -283,7 +283,7 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
   bool _isDcmPrefixPresent(ReadBuffer rb) {
     rb.rSkip(128);
     print('r@${rb.rIndex}');
-    final prefix = rb.uint32;
+    final prefix = rb.readUint32();
     print('r@${rb.rIndex}');
     if (prefix == kDcmPrefix) {
       print('prefix: ${hex32(prefix)}');

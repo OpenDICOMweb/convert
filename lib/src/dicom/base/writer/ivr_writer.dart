@@ -68,7 +68,7 @@ abstract class IvrWriter<V> extends DcmWriterBase<V> {
     } else {
       _writeValueField(e, kNull);
     }
-    wb.uint32(kSequenceDelimitationItem32BitLE);
+    wb.writeUint32(kSequenceDelimitationItem32BitLE);
     logEndWrite(eStart, e, 'writeIvrUndefinedLength');
   }
 
@@ -86,7 +86,7 @@ abstract class IvrWriter<V> extends DcmWriterBase<V> {
     final vlfOffset = wb.wIndex - 4;
     writeItems(e.items);
     final vfLength = (wb.wIndex - eStart) - 8;
-    wb.setUint32(vlfOffset, vfLength);
+    wb.bd.setUint32(vlfOffset, vfLength);
     logEndSQWrite(eStart, e, 'writeIvrSQDefinedLength');
   }
 
@@ -98,14 +98,14 @@ abstract class IvrWriter<V> extends DcmWriterBase<V> {
     final eStart = wb.wIndex;
     _writeIvrHeader(e, kUndefinedLength);
     writeItems(e.items);
-    wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
+    wb..writeUint32(kSequenceDelimitationItem32BitLE)..writeUint32(0);
     logEndSQWrite(eStart, e, 'writeIvrSQUndefinedLength');
   }
 
   void _writeIvrHeader(Element e, int vfLengthField) {
     wb
-      ..code(e.code)
-      ..uint32(vfLengthField);
+      ..writeCode(e.code)
+      ..writeUint32(vfLengthField);
   }
 
   void _writeValueField(Element e, int padChar) {

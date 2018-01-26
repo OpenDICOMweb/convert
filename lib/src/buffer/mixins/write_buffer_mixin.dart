@@ -6,62 +6,182 @@
 
 import 'dart:typed_data';
 
+import 'package:convert/src/byte_list/byte_list.dart';
+
 // ignore_for_file: non_constant_identifier_names
+// ignore_for_file: prefer_initializing_formals
 
 abstract class WriteBufferMixin {
-  ByteData get bd;
+  GrowableByteList get bList;
   Uint8List get bytes;
+  ByteData get bd;
+
   int get rIndex_;
   set rIndex_(int n);
   int get wIndex_;
   set wIndex_(int n);
-  int get limit;
-  bool grow([int capacity]);
-  
-  // **** WriteBuffer specific Getters and Methods
-  //Urgent: move to 
-//  ByteData get bd => (_isClosed) ? null : bd;
+  int get lengthInBytes;
+  bool get isNotEmpty;
 
   // **** WriteBuffer specific Getters and Methods
 
-  int get wIndex => wIndex_;
+  int get limit => bList.limit;
+  Endian get endian => bList.endian;
 
-  set wIndex(int n) {
-    if (wIndex_ <= rIndex_ || wIndex_ > bd.lengthInBytes)
-      throw new RangeError.range(wIndex_, rIndex_, bd.lengthInBytes);
-    wIndex_ = n;
+//  int get rIndex => rIndex_;
+
+  bool wHasRemaining(int n) => (wIndex_ + n) <= bList.lengthInBytes;
+
+  void setInt8(int n) => bList.setInt8(rIndex_, n);
+
+  void writeInt8(int n) {
+    assert(n >= -128 && n <= 127, 'Value out of range: $n');
+    _maybeGrow(1);
+    bList.setInt8(wIndex_, n);
+    wIndex_++;
   }
 
-  /// Moves the [wIndex] forward/backward. Returns the new [wIndex].
-  int wSkip(int n) {
-    final v = wIndex_ + n;
-    if (v <= rIndex_ || v >= bd.lengthInBytes)
-      throw new RangeError.range(v, 0, bd.lengthInBytes);
-    return wIndex_ = v;
+  void setInt16(int n) => bList.setInt16(rIndex_, n);
+
+  /// Writes a 16-bit unsigned integer (Uint16) value to _this_.
+  void writeInt16(int value) {
+    assert(
+        value >= -0x7FFF && value <= 0x7FFF - 1, 'Value out of range: $value');
+    _maybeGrow(2);
+    bList.setInt16(wIndex_, value);
+    wIndex_ += 2;
   }
 
-  /// Returns the number of writeable bytes left in _this_.
-  int get wRemaining => bd.lengthInBytes - wIndex_;
+  void setInt32(int n) => bList.setInt32(rIndex_, n);
 
-  bool hasRemaining(int n) => (wIndex_ + n) <= bd.lengthInBytes;
+  /// Writes a 32-bit unsigned integer (Uint32) value to _this_.
+  void writeInt32(int value) {
+    assert(value >= -0x7FFFFFFF && value <= 0x7FFFFFFF - 1,
+        'Value out if range: $value');
+    _maybeGrow(4);
+    bList.setInt32(wIndex_, value);
+    wIndex_ += 4;
+  }
 
-  int get start => bd.offsetInBytes;
+  void setInt64(int n) => bList.setInt64(rIndex_, n);
 
-  int get end => bd.lengthInBytes;
+  /// Writes a 64-bit unsigned integer (Uint32) value to _this_.
+  void writeInt64(int value) {
+    assert(value >= -0x7FFFFFFFFFFFFFFF && value <= 0x7FFFFFFFFFFFFFFF - 1,
+        'Value out of range: $value');
+    _maybeGrow(8);
+    bList.setInt64(wIndex_, value);
+    wIndex_ += 8;
+  }
 
-  bool get isWritable => wIndex_ < bd.lengthInBytes;
+  void setUint8(int n) => bList.setUint8(rIndex_, n);
 
-  bool get isEmpty => wIndex_ == start;
+  /// Writes a byte (Uint8) value to _this_.
+  void writeUint8(int value) {
+    assert(value >= 0 && value <= 255, 'Value out of range: $value');
+    _maybeGrow(1);
+    bList.setUint8(wIndex_, value);
+    wIndex_++;
+  }
 
-  bool get isNotEmpty => !isEmpty;
+  void setUint16(int n) => bList.setUint16(rIndex_, n);
+
+  /// Writes a 16-bit unsigned integer (Uint16) value to _this_.
+  void writeUint16(int value) {
+    assert(value >= 0 && value <= 0xFFFF, 'Value out of range: $value');
+    _maybeGrow(2);
+    bList.setUint16(wIndex_, value);
+    wIndex_ += 2;
+  }
+
+  void setUint32(int n) => bList.setUint32(rIndex_, n);
+
+  /// Writes a 32-bit unsigned integer (Uint32) value to _this_.
+  void writeUint32(int value) {
+    assert(value >= 0 && value <= 0xFFFFFFFF, 'Value out if range: $value');
+    _maybeGrow(4);
+    bList.setUint32(wIndex_, value);
+    wIndex_ += 4;
+  }
+
+  void setUint64(int n) => bList.setUint64(rIndex_, n);
+
+  /// Writes a 64-bit unsigned integer (Uint32) value to _this_.
+  void writeUint64(int value) {
+    assert(value >= 0 && value <= 0xFFFFFFFFFFFFFFFF,
+        'Value out of range: $value');
+    _maybeGrow(8);
+    bList.setUint64(wIndex_, value);
+    wIndex_ += 8;
+  }
+
+  /// Writes [bd] to _this_.
+  void writeByteData(ByteData bd) => write(bd);
+
+  /// Writes [bytes] to _this_.
+  void writeBytes(Uint8List bytes) => write(bytes);
+
+  /// Writes [td] to _this_.
+  void write(TypedData td) {
+    final offset = td.offsetInBytes;
+    final length = td.lengthInBytes;
+    final bytes = (td is Uint8List) ? td : td.buffer.asUint8List(offset, length);
+    _maybeGrow(length);
+    for (var i = 0, j = wIndex_; i < length; i++, j++)
+      bytes[j] = bList[i];
+    wIndex_ += length;
+  }
+
+  /// Writes [length] zeros to _this_.
+  bool writeZeros(int length) {
+    _maybeGrow(length);
+    for (var i = 0, j = wIndex_; i < length; i++, j++) bList.bytes[j] = 0;
+    wIndex_ += length;
+    return true;
+  }
+
+  /// Write a DICOM Tag Code to _this_.
+  void writeCode(int code) {
+    const kItem = 0xfffee000;
+    assert(code >= 0 && code < kItem, 'Value out of range: $code');
+    assert(wIndex_.isEven && wHasRemaining(4));
+    _maybeGrow(4);
+    bd
+      ..setUint16(wIndex_, code >> 16)
+      ..setUint16(wIndex_ + 2, code & 0xFFFF);
+    wIndex_ += 4;
+  }
+
+  bool checkAllZeros(int start, int end) {
+    for (var i = start; i < end; i++) if (bList.getUint8(i) != 0) return false;
+    return true;
+  }
+
+  /// Ensures that [bList] has at least [remaining] writable bytes.
+  /// The [bList] is grows if necessary, and copies existing bytes into
+  /// the new [bList].
+  bool ensureRemaining(int remaining) => ensureCapacity(wIndex_ + remaining);
+
+  //Urgent: move to write and read)_write_buf
+  /// Ensures that [bList] is at least [capacity] long, and grows
+  /// the buf if necessary, preserving existing data.
+  bool ensureCapacity(int capacity) =>
+      (capacity > lengthInBytes) ? grow() : false;
+
+  bool grow([int capacity]) => bList.grow(capacity);
+
+  /// Grow the buf if the _wIndex_ is at, or beyond, the end of the current buf.
+  bool _maybeGrow([int size = 1]) =>
+      (wIndex_ + size < lengthInBytes) ? false : grow(wIndex_ + size);
 
   /// Returns _true_ if _this_ is no longer writable.
   bool get isClosed => _isClosed;
   bool _isClosed = false;
 
   ByteData close() {
-    if (hadTrailingBytes) hadTrailingZeros = checkAllZeros(wIndex_, bd.lengthInBytes);
-    final bytes = bd.buffer.asByteData(0, wIndex_);
+    if (hadTrailingBytes)
+      hadTrailingZeros = checkAllZeros(wIndex_, bList.lengthInBytes);
+    final bytes = bList.buffer.asByteData(0, wIndex_);
     _isClosed = true;
     return bytes;
   }
@@ -76,117 +196,6 @@ abstract class WriteBufferMixin {
     _isClosed = false;
     hadTrailingZeros = false;
   }
-
-  // **** Aids to pretty printing - these may go away.
-
-  /// The current readIndex as a string.
-  String get _www => 'W@${wIndex_.toString().padLeft(5, '0')}';
-  String get www => _www;
-
-  /// The beginning of reading something.
-  String get wbb => '> $_www';
-
-  /// In the middle of reading something.
-  String get wmm => '| $_www';
-
-  /// The end of reading something.
-  String get wee => '< $_www';
-
-  String get pad => ''.padRight('$_www'.length);
-
-  /// Ensures that [bd] is at least [wIndex] + [remaining] long,
-  /// and grows the buffer if necessary, preserving existing data.
-  bool ensureRemaining(int remaining) => ensureCapacity(wIndex_ + remaining);
-
-  //Urgent: move to write and read)_write_buffer
-  /// Ensures that [bd] is at least [capacity] long, and grows
-  /// the buffer if necessary, preserving existing data.
-  bool ensureCapacity(int capacity) => (capacity > bd.lengthInBytes) ? grow() : false;
-
-  void int8(int value) {
-    assert(value >= -128 && value <= 127, 'Value out of range: $value');
-    _maybeGrow(1);
-    bd.setInt8(wIndex_, value);
-    wIndex_++;
-  }
-
-  /// Writes a byte (Uint8) value to _this_.
-  void uint8(int value) {
-    assert(value >= 0 && value <= 255, 'Value out of range: $value');
-    _maybeGrow(1);
-    bd.setUint8(wIndex_, value);
-    wIndex_++;
-  }
-
-  /// Writes a 16-bit unsigned integer (Uint16) value to _this_.
-  void uint16(int value) {
-    assert(value >= 0 && value <= 0xFFFF, 'Value out of range: $value');
-    _maybeGrow(2);
-    bd.setUint16(wIndex_, value);
-    wIndex_ += 2;
-  }
-
-  /// Writes a 32-bit unsigned integer (Uint32) value to _this_.
-  void uint32(int value) {
-    assert(value >= 0 && value <= 0xFFFFFFFF, 'Value out if range: $value');
-    _maybeGrow(4);
-    bd.setUint32(wIndex_, value);
-    wIndex_ += 4;
-  }
-
-  /// Writes a 64-bit unsigned integer (Uint32) value to _this_.
-  void uint64(int value) {
-    assert(value >= 0 && value <= 0xFFFFFFFFFFFFFFFF, 'Value out of range: $value');
-    _maybeGrow(8);
-    bd.setUint64(wIndex_, value);
-    wIndex_ += 8;
-  }
-
-  /// Writes [bytes] to _this_.
-  void writeBD(Uint8List bytes) {
-    _maybeGrow(bytes.lengthInBytes);
-    for (var i = 0, j = wIndex_; i < bd.lengthInBytes; i++, j++) bd.setUint8(j, bytes[i]);
-    wIndex_ += bytes.lengthInBytes;
-  }
-
-  /// Writes [data] to _this_.
-  void write(TypedData data) {
-    final bytes = data.buffer.asUint8List();
-    _maybeGrow(bytes.lengthInBytes);
-    for (var i = 0, j = wIndex_; i < bd.lengthInBytes; i++, j++) bd.setUint8(j, bytes[i]);
-    wIndex_ += bytes.lengthInBytes;
-  }
-
-  bool checkAllZeros(int start, int end) {
-    for (var i = start; i < end; i++) if (bd.getUint8(i) != 0) return false;
-    return true;
-  }
-
-  /// Writes [count] zeros into _this_.
-  bool writeZeros(int count) {
-    _maybeGrow(count);
-    for (var i = 0, j = wIndex_; i < count; i++, j++) bd.setUint8(j, 0);
-    wIndex_ += count;
-    return true;
-  }
-  
-  /// Write a DICOM Tag Code to _this_.
-  void writeCode(int code) {
-    const kItem = 0xfffee000;
-    assert(code >= 0 && code < kItem, 'Value out of range: $code');
-    assert(wIndex_.isEven && hasRemaining(4));
-    _maybeGrow(4);
-    bd..setUint16(wIndex_, code >> 16)..setUint16(wIndex_ + 2, code & 0xFFFF);
-    wIndex_ += 4;
-  }
-
-  @override
-  String toString() => '$runtimeType(${bd.lengthInBytes})[$wIndex_] '
-      'maxLength: $limit';
-
-  /// Grow the buffer if the [wIndex] is at, or beyond, the end of the current buffer.
-  bool _maybeGrow([int size = 1]) =>
-      ((wIndex_ + size) < bd.lengthInBytes) ? false : grow(wIndex_ + size);
 
   static const int kDefaultLength = 4096;
 }

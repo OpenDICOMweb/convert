@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/buffer/read_buffer.dart.old';
+import 'package:convert/src/buffer/read_buffer.dart';
 import 'package:convert/src/dicom/base/reader/evr_reader.dart';
 import 'package:convert/src/dicom/byte_data/reader/evr_bd_reader.dart';
 import 'package:convert/src/dicom/byte_data/reader/ivr_bd_reader.dart';
@@ -31,16 +31,35 @@ class BDReader {
   final EvrReader _evrReader;
 
   /// Creates a new [BDReader], which is decoder for Binary DICOM (application/dicom).
-  BDReader(this.bd,
+  factory BDReader(ByteData bd,
       {BDRootDataset rds,
+      String path = '',
+      DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool reUseBD = false,
+      bool doLogging = false,
+      bool showStats = false}) {
+    rds ??= new BDRootDataset(bd, path: path);
+    return new BDReader._(bd,
+        rds: rds,
+        path: path,
+        dParams: dParams,
+        reUseBD: reUseBD,
+        doLogging: doLogging,
+        showStats: showStats);
+  }
+
+  /// Creates a new [BDReader], which is decoder for Binary DICOM (application/dicom).
+  BDReader._(this.bd,
+      {this.rds,
       this.path = '',
       this.dParams = DecodingParameters.kNoChange,
       this.reUseBD = false,
       this.doLogging = false,
       this.showStats = false})
-      : rds = (rds == null) ? new BDRootDataset(bd, path: path) : rds,
-        _evrReader = (doLogging)
-            ? new EvrLoggingBDReader(bd, rds, dParams: dParams, reUseBD: reUseBD)
+      // Why is this failing
+      : _evrReader = (doLogging)
+            ? new EvrLoggingBDReader(bd, new BDRootDataset(bd, path: path),
+                dParams: dParams, reUseBD: reUseBD)
             : new EvrBDReader(bd, new BDRootDataset(bd, path: path),
                 dParams: dParams, reUseBD: reUseBD);
 
@@ -53,7 +72,12 @@ class BDReader {
       bool doLogging = true,
       bool showStats = false}) {
     final bd = bytes.buffer.asByteData();
-    return new BDReader(bd, path: '', reUseBD: reUseBD, dParams: dParams);
+    return new BDReader(bd,
+        path: '',
+        dParams: dParams,
+        reUseBD: reUseBD,
+        doLogging: doLogging,
+        showStats: showStats);
   }
 
   /// Creates a [BDReader] from the contents of the [input].
@@ -65,7 +89,11 @@ class BDReader {
       bool doLogging = true,
       bool showStats = false}) {
     final bytes = (input is Uint8List) ? input : new Uint8List.fromList(input);
-    return new BDReader.fromBytes(bytes, reUseBD: reUseBD, dParams: dParams);
+    return new BDReader.fromBytes(bytes,
+        dParams: dParams,
+        reUseBD: reUseBD,
+        doLogging: doLogging,
+        showStats: showStats);
   }
 
   /// Creates a [BDReader] from the contents of the [file].
@@ -74,10 +102,16 @@ class BDReader {
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD: true,
       bool doLogging = true,
-      bool showStats = false})  {
-    final Uint8List bytes = (doAsync) ? _readAsync(file) : file.readAsBytesSync();
+      bool showStats = false}) {
+    final Uint8List bytes =
+        (doAsync) ? _readAsync(file) : file.readAsBytesSync();
     final bd = bytes.buffer.asByteData();
-    return new BDReader(bd, path: file.path, reUseBD: reUseBD, dParams: dParams);
+    return new BDReader(bd,
+        path: file.path,
+        dParams: dParams,
+        reUseBD: reUseBD,
+        doLogging: doLogging,
+        showStats: showStats);
   }
 
   /// Creates a [BDReader] from the contents of the [File] at [path].
@@ -169,5 +203,6 @@ class BDReader {
     return reader.readRootDataset();
   }
 
-  static Future<Uint8List> _readAsync(File file) async => await file.readAsBytes();
+  static Future<Uint8List> _readAsync(File file) async =>
+      await file.readAsBytes();
 }

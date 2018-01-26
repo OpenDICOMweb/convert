@@ -27,23 +27,23 @@ class ReadWriteBuffer extends GrowableByteList {
       {int limit = kDefaultLimit, Endian endian = kDefaultEndian})
       : _rIndex = 0,
         _wIndex = 0,
-        super.fromBD(bd, limit, endian);
+        super.fromTypedData(bd, limit, endian);
 
   ReadWriteBuffer.fromBD(ByteData bd, int limit, Endian endian)
       : _rIndex = 0,
         _wIndex = 0,
-        super.fromBD(bd, limit, endian);
+        super.fromTypedData(bd, limit, endian);
 
   ReadWriteBuffer.fromUint8List(Uint8List bytes,
       {int limit = kDefaultLimit, Endian endian = kDefaultEndian})
       : _rIndex = 0,
         _wIndex = 0,
-        super.fromBD(bytes.buffer.asByteData(), limit, endian);
+        super.fromTypedData(bytes.buffer.asByteData(), limit, endian);
 
   ReadWriteBuffer._(int length, int limit, Endian endian)
       : _rIndex = 0,
         _wIndex = 0,
-        super.fromBD(new ByteData(length), limit, endian);
+        super.fromTypedData(new ByteData(length), limit, endian);
 
   // **** ReadWriteBuffer specific Getters and Methods
 

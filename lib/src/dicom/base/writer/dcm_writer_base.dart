@@ -101,23 +101,24 @@ abstract class DcmWriterBase<V> {
   }
 
   /// Write one [Item].
-  void writeItem(Item item) => ((item.hasULength && !eParams.doConvertUndefinedLengths))
-      ? _writeUndefinedLengthItem(item)
-      : _writeDefinedLengthItem(item);
+  void writeItem(Item item) =>
+      ((item.hasULength && !eParams.doConvertUndefinedLengths))
+          ? _writeUndefinedLengthItem(item)
+          : _writeDefinedLengthItem(item);
 
   void writeDefinedLengthItem(Item item) => _writeDefinedLengthItem(item);
   void writeUndefinedLengthItem(Item item) => _writeUndefinedLengthItem(item);
 
   /// Writes a [Dataset] to the buffer.
   void _writeDefinedLengthItem(Item item) {
-    wb..uint32(kItem32BitLE)..uint32(item.vfLength);
+    wb..writeUint32(kItem32BitLE)..writeUint32(item.vfLength);
     _writeDataset(item);
   }
 
   void _writeUndefinedLengthItem(Item item) {
-    wb..uint32(kItem32BitLE)..uint32(kUndefinedLength);
+    wb..writeUint32(kItem32BitLE)..writeUint32(kUndefinedLength);
     _writeDataset(item);
-    wb..uint32(kItemDelimitationItem32BitLE)..uint32(0);
+    wb..writeUint32(kItemDelimitationItem32BitLE)..writeUint32(0);
   }
 
   void writeEncapsulatedPixelData(Element e) {
@@ -125,16 +126,16 @@ abstract class DcmWriterBase<V> {
     for (final fragment in e.fragments.fragments) {
       print('fragment(${fragment.lengthInBytes})');
       wb
-        ..uint32(kItem32BitLE)
-        ..uint32(fragment.lengthInBytes)
+        ..writeUint32(kItem32BitLE)
+        ..writeUint32(fragment.lengthInBytes)
         ..write(fragment);
       // If odd length write padding byte
       if (fragment.length.isOdd) {
         log.warn('Odd length(${fragment.lengthInBytes}) fragment');
-        wb.uint8(0);
+        wb.writeUint8(0);
       }
     }
-    //  wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
+    //  wb..writeUint32(kSequenceDelimitationItem32BitLE)..writeUint32(0);
     print('End of pixelData: ${wb.wIndex}');
   }
 
@@ -168,7 +169,8 @@ WriteBuffer _reUseBuffer;
 WriteBuffer getWriteBuffer({int length, bool reUseBD = false}) {
   length ??= kDefaultWriteBufferLength;
 
-  if (!reUseBD || _reUseBuffer == null) return _reUseBuffer = new WriteBuffer(length);
+  if (!reUseBD || _reUseBuffer == null)
+    return _reUseBuffer = new WriteBuffer(length);
 
   if (length > _reUseBuffer.lengthInBytes) {
     _reUseBuffer = new WriteBuffer(length + 1024);

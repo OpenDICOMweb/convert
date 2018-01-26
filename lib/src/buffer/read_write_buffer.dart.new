@@ -35,11 +35,11 @@ class ReadWriteBuffer extends GrowableByteList
 
   ReadWriteBuffer.fromByteData(ByteData bd,
       {int limit = k1GB, Endian endian = Endian.little})
-      : super.fromBD(bd, limit ,   endian);
+      : super.fromTypedData(bd, limit ,   endian);
 
   ReadWriteBuffer.fromUint8List(Uint8List bytes,
       [int limit = k1GB, Endian  endian = Endian.little])
-      : super.fromBD(bytes.buffer.asByteData(), limit, endian);
+      : super.fromTypedData(bytes.buffer.asByteData(), limit, endian);
 
   void debug(String msg, {int level]) => log.debug(msg, level);
 

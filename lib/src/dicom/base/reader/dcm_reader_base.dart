@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/buffer/read_buffer.dart.old';
+import 'package:convert/src/buffer/read_buffer.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 
@@ -83,7 +83,7 @@ abstract class DcmReaderBase<V> {
 
   bool get isReadable => rb.isReadable;
 
-  Uint8List get rootBytes => rb.buffer.asUint8List(rb.offsetInBytes, rb.lengthInBytes);
+  Uint8List get rootBytes => rb.asUint8List(rb.offsetInBytes, rb.lengthInBytes);
 
   String get info => '$runtimeType: rds: ${rds.info}, cds: ${cds.info}';
 
@@ -120,10 +120,10 @@ abstract class DcmReaderBase<V> {
     final iStart = rb.rIndex;
 
     // read 32-bit kItem code and Item length field
-    final delimiter = rb.getUint32(rb.rIndex);
+    final delimiter = rb.getUint32();
     if (delimiter != kItem32BitLE) throw 'Missing Item Delimiter';
     rb.rSkip(4);
-    final vfLengthField = rb.uint32;
+    final vfLengthField = rb.readUint32();
     final item = makeItem(cds);
     final parentDS = cds;
     cds = item;
@@ -133,7 +133,7 @@ abstract class DcmReaderBase<V> {
         : readDatasetDefinedLength(item, rb.rIndex, vfLengthField);
 
     cds = parentDS;
-    final bd = rb.buffer.asByteData(iStart, rb.rIndex - iStart);
+    final bd = rb.asByteData(iStart, rb.rIndex - iStart);
     item.dsBytes = new IDSBytes(bd);
     return item;
   }
@@ -186,7 +186,7 @@ abstract class DcmReaderBase<V> {
       if (uint16 != kSequenceDelimiterLast16Bits) continue;
       break;
     }
-    final length = rb.uint32;
+    final length = rb.readUint32();
     if (length != 0) log.warn('Encountered non-zero delimiter length($length)');
     final endOfVF = rb.rIndex - 8;
     return endOfVF;
@@ -200,10 +200,10 @@ abstract class DcmReaderBase<V> {
   /// delimiter is found the _read index_ is advanced to the end of the delimiter
   /// field (8 bytes); otherwise, readIndex does not change.
   bool _checkForDelimiter(int target) {
-    final delimiter = rb.uint32Peek;
+    final delimiter = rb.getUint32();
     if (target == delimiter) {
       rb.rSkip(4);
-      final length = rb.uint32;
+      final length = rb.readUint32();
       if (length != 0) log.warn('Encountered non-zero delimiter length($length)');
       return true;
     }
@@ -211,7 +211,7 @@ abstract class DcmReaderBase<V> {
   }
 
   void _readAndCheckDelimiterLength() {
-    final length = rb.uint32;
+    final length = rb.readUint32();
     if (length != 0) log.warn('Encountered non-zero delimiter length($length)');
   }
 
@@ -234,7 +234,7 @@ abstract class DcmReaderBase<V> {
     assert(vlf == kUndefinedLength);
     assert(_isMaybeUndefinedLengthVR(vrIndex));
 
-    final delimiter = rb.getUint32(rb.rIndex);
+    final delimiter = rb.getUint32();
     if (delimiter == kItem32BitLE) {
       return _readPixelDataFragments(code, eStart, vrIndex, vlf);
     } else if (delimiter == kSequenceDelimitationItem32BitLE) {
@@ -265,17 +265,17 @@ abstract class DcmReaderBase<V> {
   /// length field, which may not have a value of kUndefinedValue.
   VFFragments _readFragments() {
     final fragments = <Uint8List>[];
-    var delimiter = rb.uint32;
+    var delimiter = rb.readUint32();
     do {
       assert(delimiter == kItem32BitLE, 'Invalid Item code: ${dcm(delimiter)}');
-      final vlf = rb.uint32;
+      final vlf = rb.readUint32();
       print('fragment vlf: $vlf');
       assert(vlf != kUndefinedLength, 'Invalid length: ${dcm(vlf)}');
 
       final startOfVF = rb.rIndex;
       final endOfVF = rb.rSkip(vlf);
-      fragments.add(rb.buffer.asUint8List(startOfVF, endOfVF - startOfVF));
-      delimiter = rb.uint32;
+      fragments.add(rb.asUint8List(startOfVF, endOfVF - startOfVF));
+      delimiter = rb.readUint32();
     } while (delimiter != kSequenceDelimitationItem32BitLE);
 
     _checkDelimiterLength(delimiter);
@@ -284,7 +284,7 @@ abstract class DcmReaderBase<V> {
   }
 
   void _checkDelimiterLength(int delimiter) {
-    final vfLengthField = rb.uint32;
+    final vfLengthField = rb.readUint32();
     if (vfLengthField != 0)
       log.warn('Delimiter has non-zero '
           'value: $delimiter/0x${hex32(delimiter)}');

@@ -26,7 +26,7 @@ iterations: $iterations')
       expect(wb.wIndex == startSize, true);
       for (var i = 0; i < iterations - 1; i++) {
         final v = i % 127;
-        wb.int8(v);
+        wb.writeInt8(v);
       }
       log..debug('wb: $wb}\n  length: ${wb.wIndex}');
       expect(wb.wIndex == iterations, true);

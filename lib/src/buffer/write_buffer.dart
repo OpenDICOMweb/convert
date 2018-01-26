@@ -6,207 +6,94 @@
 
 import 'dart:typed_data';
 
-import 'package:convert/src/byte_list/byte_list.dart';
+import 'package:convert/src/buffer/buffer_base.dart';
 import 'package:convert/src/buffer/mixins/log_mixins.dart';
+import 'package:convert/src/buffer/mixins/write_buffer_mixin.dart';
+import 'package:convert/src/byte_list/byte_list.dart';
 
-class WriteBuffer extends GrowableByteList {
-  int _rIndex;
-  int _wIndex;
+// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: prefer_initializing_formals
+
+class WriteBuffer extends BufferBase with WriteBufferMixin {
+  @override
+  final GrowableByteList bList;
+  @override
+  int rIndex_;
+  @override
+  int wIndex_;
 
   WriteBuffer(
       [int length = kDefaultLength,
-      int limit = kDefaultLimit,
-      Endian endian = Endian.little])
-      : _rIndex = 0,
-        _wIndex = 0,
-        super(length ?? kDefaultLength, limit, endian);
+      Endian endian = Endian.little,
+      int limit = kDefaultLimit])
+      : rIndex_ = 0,
+        wIndex_ = 0,
+        bList = new GrowableByteList(length, endian, limit);
 
-  WriteBuffer.fromByteData(ByteData bd)
-      : _rIndex = 0,
-        _wIndex = 0,
-        super.fromByteData(bd);
+  WriteBuffer.from(WriteBuffer wb,
+      [int offset = 0,
+      int length,
+      Endian endian = Endian.little,
+      int limit = kDefaultLimit])
+      : rIndex_ = offset,
+        wIndex_ = offset,
+        bList = new GrowableByteList.fromTypedData(
+            wb.bd, offset, length, endian, limit);
 
-  WriteBuffer.fromUint8List(Uint8List bytes)
-      : _rIndex = 0,
-        _wIndex = 0,
-        super.fromUint8List(bytes);
+  WriteBuffer.fromByteData(ByteData bd,
+      [int offset = 0,
+      int length,
+      Endian endian = Endian.little,
+      int limit = kDefaultLimit])
+      : rIndex_ = offset,
+        wIndex_ = offset,
+        bList = new GrowableByteList.fromTypedData(
+            bd, offset, length, endian, limit);
 
-  WriteBuffer._(int length, int limit)
-      : _rIndex = 0,
-        _wIndex = 0,
-        super.fromByteData(new ByteData(length ?? limit));
+  WriteBuffer.fromUint8List(Uint8List bytes,
+      [int offset = 0,
+      int length,
+      Endian endian = Endian.little,
+      int limit = kDefaultLimit])
+      : rIndex_ = offset,
+        wIndex_ = offset,
+        bList = new GrowableByteList.fromTypedData(
+            bytes, offset, length, endian, limit);
+
+  WriteBuffer._(int length, Endian endian, int limit)
+      : rIndex_ = 0,
+        wIndex_ = 0,
+        bList = new GrowableByteList(length, endian, limit);
+
+  WriteBuffer._fromTD(TypedData td,
+      int offset,
+        int length,
+        Endian endian,
+        int limit)
+      : rIndex_ = offset,
+        wIndex_ = length ?? td.lengthInBytes,
+        bList = new GrowableByteList.fromTypedData(
+            td, offset, length, endian, limit);
 
   // **** WriteBuffer specific Getters and Methods
 
   @override
-  ByteData get bd => (_isClosed) ? null : super.bd;
+  int get limit => bList.limit;
 
-  // **** WriteBuffer specific Getters and Methods
-
-  int get wIndex => _wIndex;
-
-  set wIndex(int n) {
-    if (_wIndex <= _rIndex || _wIndex > bd.lengthInBytes)
-      throw new RangeError.range(_wIndex, _rIndex, bd.lengthInBytes);
-    _wIndex = n;
-  }
-
-  /// Moves the [wIndex] forward/backward. Returns the new [wIndex].
-  int wSkip(int n) {
-    final v = _wIndex + n;
-    if (v <= _rIndex || v >= bd.lengthInBytes)
-      throw new RangeError.range(v, 0, bd.lengthInBytes);
-    return _wIndex = v;
-  }
-
-  /// Returns the number of bytes left in the current buffer ([bd]).
-  int get remaining => bd.lengthInBytes - _wIndex;
-
-  bool hasRemaining(int n) => (_wIndex + n) <= bd.lengthInBytes;
-
-  int get start => bd.offsetInBytes;
-
-  int get end => bd.lengthInBytes;
-
-  bool get isWritable => _wIndex < bd.lengthInBytes;
+  /// Returns the number of bytes left in the current _this_.
+  int get remaining => wRemaining;
 
   @override
-  bool get isEmpty => _wIndex == start;
+  bool get isEmpty => isNotWritable;
 
-  @override
-  bool get isNotEmpty => !isEmpty;
-
-  /// Returns _true_ if _this_ is no longer writable.
-  bool get isClosed => _isClosed;
-  bool _isClosed = false;
-
-  Uint8List close() {
-    if (hadTrailingBytes) hadTrailingZeros = checkAllZeros(_wIndex, bd.lengthInBytes);
-    final bytes = uint8View(0, _wIndex);
-    _isClosed = true;
-    return bytes;
-  }
-
-  /// Returns _true_ if this reader [isClosed] and it [isNotEmpty].
-  bool get hadTrailingBytes => (_isClosed) ? isNotEmpty : false;
-  bool hadTrailingZeros = false;
-
-  void get reset {
-    _rIndex = 0;
-    _wIndex = 0;
-    _isClosed = false;
-    hadTrailingZeros = false;
-  }
-
-  // **** Aids to pretty printing - these may go away.
-
-  /// The current readIndex as a string.
-  String get _www => 'W@${_wIndex.toString().padLeft(5, '0')}';
-  String get www => _www;
-
-  /// The beginning of reading something.
-  String get wbb => '> $_www';
-
-  /// In the middle of reading something.
-  String get wmm => '| $_www';
-
-  /// The end of reading something.
-  String get wee => '< $_www';
-
-  String get pad => ''.padRight('$_www'.length);
-
-  /// Ensures that [bd] is at least [wIndex] + [remaining] long,
-  /// and grows the buffer if necessary, preserving existing data.
-  bool ensureRemaining(int remaining) => ensureCapacity(_wIndex + remaining);
-
-  /// Ensures that [bd] is at least [capacity] long, and grows
-  /// the buffer if necessary, preserving existing data.
-  bool ensureCapacity(int capacity) => (capacity > bd.lengthInBytes) ? grow() : false;
-
-  void int8(int value) {
-    assert(value >= -128 && value <= 127, 'Value out of range: $value');
-    _maybeGrow(1);
-    setInt8(_wIndex, value);
-    _wIndex++;
-  }
-
-  /// Writes a byte (Uint8) value to _this_.
-  void uint8(int value) {
-    assert(value >= 0 && value <= 255, 'Value out of range: $value');
-    _maybeGrow(1);
-    setUint8(_wIndex, value);
-    _wIndex++;
-  }
-
-  /// Writes a 16-bit unsigned integer (Uint16) value to _this_.
-  void uint16(int value) {
-    assert(value >= 0 && value <= 0xFFFF, 'Value out of range: $value');
-    _maybeGrow(2);
-    setUint16(_wIndex, value);
-    _wIndex += 2;
-  }
-
-  /// Writes a 32-bit unsigned integer (Uint32) value to _this_.
-  void uint32(int value) {
-    assert(value >= 0 && value <= 0xFFFFFFFF, 'Value out if range: $value');
-    _maybeGrow(4);
-    setUint32(_wIndex, value);
-    _wIndex += 4;
-  }
-
-  /// Writes a 64-bit unsigned integer (Uint32) value to _this_.
-  void uint64(int value) {
-    assert(value >= 0 && value <= 0xFFFFFFFFFFFFFFFF, 'Value out of range: $value');
-    _maybeGrow(8);
-    setUint64(_wIndex, value);
-    _wIndex += 8;
-  }
-
-  /// Writes [bytes] to _this_.
-  void writeBD(Uint8List bytes) {
-    _maybeGrow(bytes.lengthInBytes);
-    for (var i = 0, j = _wIndex; i < length; i++, j++) setUint8(j, bytes[i]);
-    _wIndex += bytes.lengthInBytes;
-  }
-
-  /// Writes [data] to _this_.
-  void write(TypedData data) {
-    final bytes = data.buffer.asUint8List();
-    _maybeGrow(bytes.lengthInBytes);
-    for (var i = 0, j = _wIndex; i < bytes.length; i++, j++) setUint8(j, bytes[i]);
-    _wIndex += bytes.lengthInBytes;
-  }
-
-  bool checkAllZeros(int start, int end) {
-    for (var i = start; i < end; i++) if (getUint8(i) != 0) return false;
-    return true;
-  }
-
-  /// Writes [bytes] to _this_.
-  bool writeZeros(int length) {
-    _maybeGrow(length);
-    for (var i = 0, j = _wIndex; i < length; i++, j++) setUint8(j, 0);
-    _wIndex += length;
-    return true;
-  }
-
-  /// Write a DICOM Tag Code to _this_.
-  void code(int code) {
-    const kItem = 0xfffee000;
-    assert(code >= 0 && code < kItem, 'Value out of range: $code');
-    assert(_wIndex.isEven && hasRemaining(4));
-    _maybeGrow(4);
-    setUint16(wIndex, code >> 16);
-    setUint16(wIndex + 2, code & 0xFFFF);
-    _wIndex += 4;
-  }
+  bool hasRemaining(int n) => wHasRemaining(n);
 
 /* Flush
   ByteData toByteData(int offset, int lengthInBytes) =>
-      bd.buffer.asByteData(bd.offsetInBytes + offset, lengthInBytes);
+      bd.buf.asByteData(bd.offsetInBytes + offset, lengthInBytes);
 
   Uint8List toUint8List(int offset, int lengthInBytes) =>
-      bd.buffer.asUint8List(bd.offsetInBytes + offset, lengthInBytes);
+      bd.buf.asUint8List(bd.offsetInBytes + offset, lengthInBytes);
 */
 
   ByteData bdView([int start = 0, int end]) {
@@ -227,30 +114,56 @@ class WriteBuffer extends GrowableByteList {
     return offset;
   }
 
-  void warn(Object msg) => print('** Warning: $msg $_www');
+  bool _isClosed;
+  @override
+  bool get isClosed => (_isClosed == null) ? false : true;
 
-  void error(Object msg) => throw new Exception('**** Error: $msg $_www');
+  bool _hadTrailingZeros;
+  @override
+  bool get hadTrailingZeros => _hadTrailingZeros ?? false;
+  ByteData rClose() {
+    final view = bdView(0, rIndex_);
+    if (isNotEmpty) {
+      //  warn('End of Data with rIndex_($rIndex) != length(${view.lengthInBytes})');
+      _hadTrailingZeros = checkAllZeros(rIndex_, wIndex_);
+    }
+    _isClosed = true;
+    return view;
+  }
 
   @override
-  String toString() => '$runtimeType($length)[$_wIndex] maxLength: $limit';
+  String toString() => '$runtimeType($length)[$wIndex_] maxLength: $limit';
 
   // Internal methods
 
-  /// Grow the buffer if the [wIndex] is at, or beyond, the end of the current buffer.
-  bool _maybeGrow([int size = 1]) =>
-      ((_wIndex + size) < bd.lengthInBytes) ? false : grow(_wIndex + size);
 
   static const int kDefaultLength = 4096;
-
-  static WriteBuffer from(WriteBuffer wb, [int offset = 0, int length]) =>
-      new WriteBuffer.fromByteData(wb.bd.buffer.asByteData(offset, length));
 }
 
 class LoggingWriteBuffer extends WriteBuffer with WriterLogMixin {
-  LoggingWriteBuffer([int length = kDefaultLength, int limit = k1GB])
-      : super._(length, limit);
+  LoggingWriteBuffer([int length = kDefaultLength,
+    Endian endian = Endian.little, int limit = k1GB])
+      : super._(length, endian, limit);
 
-  LoggingWriteBuffer.fromByteData(ByteData bd) : super.fromByteData(bd);
+  factory LoggingWriteBuffer.fromByteData(
+    ByteData bd, [
+    int offset = 0,
+    int length,
+    Endian endian = Endian.little,
+    int limit = kDefaultLimit,
+  ]) =>
+      new LoggingWriteBuffer.fromTypedData(bd, offset, length, endian, limit);
 
-  LoggingWriteBuffer.fromUint8List(Uint8List bytes) : super.fromUint8List(bytes);
+  factory LoggingWriteBuffer.fromBytes(
+    Uint8List td, [
+    int offset = 0,
+    int length,
+    Endian endian = Endian.little,
+    int limit = kDefaultLimit,
+  ]) =>
+      new LoggingWriteBuffer.fromTypedData(td, offset, length, endian, limit);
+
+  LoggingWriteBuffer.fromTypedData(
+      TypedData td, int offset, int length, Endian endian, int limit)
+      : super._fromTD(td, offset, length, endian, limit);
 }

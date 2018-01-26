@@ -8,7 +8,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/buffer/read_buffer.dart.old';
+import 'package:convert/src/buffer/read_buffer.dart';
 import 'package:convert/src/dicom/base/reader/dcm_reader_base.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
@@ -24,7 +24,7 @@ abstract class IvrReader<V> extends DcmReaderBase<V> {
   @override
   Element readElement() {
     final eStart = rb.rIndex;
-    final code = rb.code;
+    final code = rb.readCode();
     final tag = checkCode(code, eStart);
     final vrIndex = _lookupIvrVRIndex(code, eStart, tag);
 
@@ -54,7 +54,7 @@ abstract class IvrReader<V> extends DcmReaderBase<V> {
   /// Read an IVR Element (not SQ) with a 32-bit vfLengthField (vlf),
   /// but that cannot have kUndefinedValue.
   Element readIvrDefinedLength(int code, int eStart, int vrIndex) {
-    final vlf = rb.uint32;
+    final vlf = rb.readUint32();
     logStartRead(code, vrIndex, eStart, vlf, 'readIvrDefinedLength');
     assert(vlf != kUndefinedLength);
     return _makeIvr(code, vrIndex, eStart, vlf);
@@ -82,7 +82,7 @@ abstract class IvrReader<V> extends DcmReaderBase<V> {
   /// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have
   /// kUndefinedValue.
   Element readMaybeUndefined(int code, int vrIndex, int eStart) {
-    final vlf = rb.uint32;
+    final vlf = rb.readUint32();
     logStartRead(code, vrIndex, eStart, vlf, 'readMaybeUndefined');
     // If VR is UN then this might be a Sequence
     if (vrIndex == kUNIndex && isUNSequence(vlf))
@@ -102,7 +102,7 @@ abstract class IvrReader<V> extends DcmReaderBase<V> {
   @override
   Element readSequence(int code, int eStart, int vrIndex) {
     assert(vrIndex == kSQIndex);
-    final vlf = rb.uint32;
+    final vlf = rb.readUint32();
     logStartSQRead(code, vrIndex, eStart, vlf, 'readIvrSequence');
     return (vlf == kUndefinedLength)
         ? _readUSQ(code, vrIndex, eStart, vlf)

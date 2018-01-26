@@ -12,7 +12,7 @@ import 'package:convert/src/utilities/element_offsets.dart';
 
 abstract class LogWriteMixin implements LogWriteMixinBase {
   int get elementCount;
-  WriteBuffer get wb;
+  LoggingWriteBuffer get wb;
   ParseInfo get pInfo;
   ElementOffsets get inputOffsets;
   ElementOffsets get outputOffsets;

@@ -7,7 +7,7 @@
 import 'package:core/core.dart';
 
 import 'package:convert/src/dicom/base/reader/log_read_mixin_base.dart.old';
-import 'package:convert/src/buffer/read_buffer.dart.old';
+import 'package:convert/src/buffer/read_buffer.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 
 abstract class LogReadMixin implements LogReadMixinBase {
@@ -190,13 +190,13 @@ abstract class LogReadMixin implements LogReadMixinBase {
     }
 
     for (var i = index - before; i < index; i += 2) {
-      log.debug('$i:   ${hex16(rb.getUint16 (i))} - ${rb.getUint16 (i)}');
+      log.debug('$i:   ${hex16(rb.bd.getUint16 (i))} - ${rb.bd.getUint16 (i)}');
     }
 
-    log.debug('** ${hex16(rb.getUint16 (index))} - ${rb.getUint16 (index)}');
+    log.debug('** ${hex16(rb.getUint16 ())} - ${rb.getUint16 ()}');
 
     for (var i = index + 2; i < index + after; i += 2) {
-      log.debug('$i: ${hex16(rb.getUint16 (i))} - ${rb.getUint16 (i)}');
+      log.debug('$i: ${hex16(rb.bd.getUint16 (i))} - ${rb.bd.getUint16 (i)}');
     }
   }
 }

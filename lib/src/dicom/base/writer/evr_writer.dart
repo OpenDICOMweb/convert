@@ -53,9 +53,9 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
     assert(length.isEven);
     assert(length >= 0 && length <= kMaxLongVF, 'length: $length');
     wb
-      ..code(e.code)
-      ..uint16(e.vrCode)
-      ..uint16(length);
+      ..writeCode(e.code)
+      ..writeUint16(e.vrCode)
+      ..writeUint16(length);
     assert(wb.wIndex.isEven);
     _writeValueField(e, isOddLength);
     logEndWrite(eStart, e, 'writeEvrShort');
@@ -98,7 +98,7 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
     } else {
       _writeValueField(e, e.vfLength.isOdd);
     }
-    wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
+    wb..writeUint32(kSequenceDelimitationItem32BitLE)..writeUint32(0);
     assert(wb.wIndex.isEven);
     logEndWrite(eStart, e, 'writeEvrUndefinedLength');
   }
@@ -122,7 +122,7 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
     writeItems(e.items);
     final vfLength = (wb.wIndex - eStart) - 12;
     assert(vfLength.isEven && wb.wIndex.isEven);
-    wb.setUint32(vlfOffset, vfLength);
+    wb.bd.setUint32(vlfOffset, vfLength);
 
     logEndSQWrite(eStart, e, 'writeEvrDefinedLengthSequence');
   }
@@ -137,7 +137,7 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
     assert(eStart.isEven);
     _writeEvrUndefinedLengthHeader(e);
     writeItems(e.items);
-    wb..uint32(kSequenceDelimitationItem32BitLE)..uint32(0);
+    wb..writeUint32(kSequenceDelimitationItem32BitLE)..writeUint32(0);
     assert(wb.wIndex.isEven);
     logEndSQWrite(eStart, e, 'writeEvrUndefinedLengthSequence');
   }
@@ -168,17 +168,18 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
     assert(e != null && vfLength != null && wb.wIndex.isEven);
     assert(_isNotShortVR(e.vrIndex), 'vrIndex: ${e.vrIndex}');
     wb
-      ..code(e.code)
-      ..uint16(e.vrCode)
-      ..uint16(0)
-      ..uint32(vfLength);
+      ..writeCode(e.code)
+      ..writeUint16(e.vrCode)
+      ..writeUint16(0)
+      ..writeUint32(vfLength);
     assert(wb.wIndex.isEven);
   }
 
   void _writeValueField(Element e, bool lengthIsOdd) {
     assert(wb.wIndex.isEven);
     wb.write(e.vfBytes);
-    if (lengthIsOdd) _writePaddingChar(e);
+    if (lengthIsOdd)
+      _writePaddingChar(e);
     assert(wb.wIndex.isEven);
   }
 
@@ -187,12 +188,12 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
     log.debug('Writing pad char for: $e');
     final padChar = paddingChar(e.vrIndex);
     if (padChar.isNegative) {
-      wb.error('Padding a non-padded Element: $e');
+      log.error('Padding a non-padded Element: $e');
       return invalidVFLength(e.vfBytes.length, -1);
     }
-    wb.uint8(padChar);
+    wb.writeUint8(padChar);
     assert(wb.wIndex.isEven);
-    log.debug('${wb.wmm} End Writing pad char ($padChar) for: @${wb.wIndex}');
+//    log.debug('${wb.wmm} End Writing pad char ($padChar) for: @${wb.wIndex}');
   }
 
   // **** External interface for debugging and monitoring
@@ -276,8 +277,8 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
 /* Flush when working
   /// Writes a new Open DICOMweb FMI.
   bool writeCleanPrefix() {
-    for (var i = 0; i < 128; i++) wb.uint8(0);
-    wb.uint32(kDcmPrefix);
+    for (var i = 0; i < 128; i++) wb.writeUint8(0);
+    wb.writeUint32(kDcmPrefix);
     return true;
   }
 */
@@ -287,10 +288,10 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
     assert(rds.prefix != kEmptyByteData && !eParams.doCleanPreamble);
     final preamble = rds.preamble;
     for (var i = 0; i < 128; i++)
-      wb.uint8(preamble.getUint8(i));
+      wb.writeUint8(preamble.getUint8(i));
    // final prefix = rds.prefix;
-  //  for (var i = 0; i < 4; i++) wb.uint8(prefix.getUint8(i));
-    wb.uint32(kDcmPrefix);
+  //  for (var i = 0; i < 4; i++) wb.writeUint8(prefix.getUint8(i));
+    wb.writeUint32(kDcmPrefix);
     return true;
   }
 
