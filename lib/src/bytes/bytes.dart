@@ -23,7 +23,7 @@ bool _isMaxCapacityExceeded(int length, [int maxLength]) {
 /// [Bytes] is a class that provides a read-only byte array that supports both
 /// [Uint8List] and [ByteData] interfaces.
 class Bytes extends Object {
-  final ByteData _bd;
+  ByteData _bd;
   final Endian endian;
 
   Bytes([int length = kDefaultLength, this.endian = Endian.little])
@@ -372,8 +372,6 @@ class GrowableBytes extends Bytes {
   GrowableBytes.fromUint8List(Uint8List bytes,
       [int offset = 0, int length, Endian endian = Endian.little, this.limit = k1GB])
       : super.fromUint8List(bytes, offset, length, endian);
-
-  set _bd(ByteData bd) => _bd = bd;
 
   set length(int newLength) {
     if (newLength < _bd.lengthInBytes) return;

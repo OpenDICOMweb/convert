@@ -116,9 +116,13 @@ abstract class DcmWriterBase<V> {
   }
 
   void _writeUndefinedLengthItem(Item item) {
-    wb..writeUint32(kItem32BitLE)..writeUint32(kUndefinedLength);
+    wb
+      ..writeUint32(kItem32BitLE)
+      ..writeUint32(kUndefinedLength);
     _writeDataset(item);
-    wb..writeUint32(kItemDelimitationItem32BitLE)..writeUint32(0);
+    wb
+      ..writeUint32(kItemDelimitationItem32BitLE)
+      ..writeUint32(0);
   }
 
   void writeEncapsulatedPixelData(Element e) {

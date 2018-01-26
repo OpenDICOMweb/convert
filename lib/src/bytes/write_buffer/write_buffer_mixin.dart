@@ -30,7 +30,7 @@ abstract class WriteBufferMixin {
 
   bool wHasRemaining(int n) => (wIndex_ + n) <= bytes.lengthInBytes;
 
-  void setInt8(int n) => bytes.setInt8(rIndex_, n);
+  void setInt8(int n) => bytes.setInt8(wIndex_, n);
 
   void writeInt8(int n) {
     assert(n >= -128 && n <= 127, 'Value out of range: $n');
@@ -39,7 +39,7 @@ abstract class WriteBufferMixin {
     wIndex_++;
   }
 
-  void setInt16(int n) => bytes.setInt16(rIndex_, n);
+  void setInt16(int n) => bytes.setInt16(wIndex_, n);
 
   /// Writes a 16-bit unsigned integer (Uint16) value to _this_.
   void writeInt16(int value) {
@@ -50,7 +50,7 @@ abstract class WriteBufferMixin {
     wIndex_ += 2;
   }
 
-  void setInt32(int n) => bytes.setInt32(rIndex_, n);
+  void setInt32(int n) => bytes.setInt32(wIndex_, n);
 
   /// Writes a 32-bit unsigned integer (Uint32) value to _this_.
   void writeInt32(int value) {
@@ -61,7 +61,7 @@ abstract class WriteBufferMixin {
     wIndex_ += 4;
   }
 
-  void setInt64(int n) => bytes.setInt64(rIndex_, n);
+  void setInt64(int n) => bytes.setInt64(wIndex_, n);
 
   /// Writes a 64-bit unsigned integer (Uint32) value to _this_.
   void writeInt64(int value) {
@@ -72,7 +72,7 @@ abstract class WriteBufferMixin {
     wIndex_ += 8;
   }
 
-  void setUint8(int n) => bytes.setUint8(rIndex_, n);
+  void setUint8(int n) => bytes.setUint8(wIndex_, n);
 
   /// Writes a byte (Uint8) value to _this_.
   void writeUint8(int value) {
@@ -82,7 +82,7 @@ abstract class WriteBufferMixin {
     wIndex_++;
   }
 
-  void setUint16(int n) => bytes.setUint16(rIndex_, n);
+  void setUint16(int n) => bytes.setUint16(wIndex_, n);
 
   /// Writes a 16-bit unsigned integer (Uint16) value to _this_.
   void writeUint16(int value) {
@@ -92,7 +92,7 @@ abstract class WriteBufferMixin {
     wIndex_ += 2;
   }
 
-  void setUint32(int n) => bytes.setUint32(rIndex_, n);
+  void setUint32(int n) => bytes.setUint32(wIndex_, n);
 
   /// Writes a 32-bit unsigned integer (Uint32) value to _this_.
   void writeUint32(int value) {
@@ -102,7 +102,7 @@ abstract class WriteBufferMixin {
     wIndex_ += 4;
   }
 
-  void setUint64(int n) => bytes.setUint64(rIndex_, n);
+  void setUint64(int n) => bytes.setUint64(wIndex_, n);
 
   /// Writes a 64-bit unsigned integer (Uint32) value to _this_.
   void writeUint64(int value) {
@@ -196,4 +196,30 @@ abstract class WriteBufferMixin {
   }
 
   static const int kDefaultLength = 4096;
+}
+
+
+/// Aids to pretty printing
+abstract class WriterLogMixin {
+  int get wIndex;
+
+  /// The current readIndex as a string.
+  String get _www => 'W@${wIndex.toString().padLeft(5, '0')}';
+  String get www => _www;
+
+  /// The beginning of reading something.
+  String get wbb => '> $_www';
+
+  /// In the middle of reading something.
+  String get wmm => '| $_www';
+
+  /// The end of reading something.
+  String get wee => '< $_www';
+
+  String get pad => ''.padRight('$_www'.length);
+
+  void warn(Object msg) => print('** Warning: $msg $_www');
+
+  void error(Object msg) => throw new Exception('**** Error: $msg $_www');
+
 }

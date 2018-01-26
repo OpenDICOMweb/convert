@@ -8,7 +8,6 @@ import 'dart:typed_data';
 
 import 'package:convert/src/bytes/bytes.dart';
 import 'package:convert/src/bytes/buffer/buffer_base.dart';
-import 'package:convert/src/bytes/buffer/log_mixins.dart';
 import 'package:convert/src/bytes/write_buffer/write_buffer_mixin.dart';
 
 

@@ -144,3 +144,28 @@ abstract class ReadBufferMixin {
     if (v < 0 || v >= max) throw new RangeError.range(v, 0, max);
   }
 }
+
+abstract class ReaderLogMixin {
+  int get rIndex;
+  int get length;
+
+  /// The current readIndex as a string.
+  String get _rrr => 'R@${rIndex.toString().padLeft(5, '0')}';
+  String get rrr => _rrr;
+
+  /// The beginning of reading something.
+  String get wbb => '> $_rrr';
+
+  /// In the middle of reading something.
+  String get wmm => '| $_rrr';
+
+  /// The end of reading something.
+  String get wee => '< $_rrr';
+
+  String get pad => ''.padRight('$_rrr'.length);
+
+  void warn(Object msg) => print('** Warning: $msg $_rrr');
+
+  void error(Object msg) => throw new Exception('**** Error: $msg $_rrr');
+
+}
