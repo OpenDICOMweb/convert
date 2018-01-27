@@ -180,15 +180,22 @@ class ReadBuffer extends BufferBase {
     if (v < 0 || v >= max) throw new RangeError.range(v, 0, max);
   }
 
+  bool _isClosed = false;
+  bool get isClosed => _isClosed;
+
+  @override
+  ByteData get bd => (isClosed) ? null : bytes.bd;
+
   /// Returns _true_ if this reader [isClosed] and it [isNotEmpty].
   bool get hadTrailingBytes => (isClosed) ? isNotEmpty : false;
   bool _hadTrailingZeros;
   bool get hadTrailingZeros => _hadTrailingZeros ?? false;
 
-  @override
   void get reset {
-    super.reset;
-    _hadTrailingZeros = null;
+    rIndex_ = 0;
+    wIndex_ = 0;
+    _isClosed = false;
+    _hadTrailingZeros = false;
   }
 }
 
@@ -211,13 +218,13 @@ class LoggingReadBuffer extends ReadBuffer {
   String get rrr => _rrr;
 
   /// The beginning of reading something.
-  String get wbb => '> $_rrr';
+  String get rbb => '> $_rrr';
 
   /// In the middle of reading something.
-  String get wmm => '| $_rrr';
+  String get rmm => '| $_rrr';
 
   /// The end of reading something.
-  String get wee => '< $_rrr';
+  String get ree => '< $_rrr';
 
   String get pad => ''.padRight('$_rrr'.length);
 

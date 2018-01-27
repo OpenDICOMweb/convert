@@ -40,7 +40,7 @@ class Bytes extends Object {
       : _bd = list.buffer.asByteData();
 
   Bytes.fromByteData(ByteData bd, [this.endian = Endian.little])
-      : _bd = bd.buffer.asByteData();
+      : _bd = bd;
 
   Bytes.fromTypedData(TypedData td, [this.endian = Endian.little])
       : _bd = td.buffer.asByteData();
@@ -141,8 +141,11 @@ class Bytes extends Object {
   int _bdOffset(int offset) => _bd.offsetInBytes + offset;
 
   // Returns a view of _this_.
-  Bytes asBytes([int offset = 0, int length]) => new Bytes.fromByteData(
-      _bd.buffer.asByteData(_bdOffset(offset), length ?? lengthInBytes));
+  Bytes asBytes([int offset = 0, int length]) {
+    final off = _bdOffset(offset);
+    final len = length ?? lengthInBytes;
+    return new Bytes.fromByteData(_bd.buffer.asByteData(off, len));
+  }
 
   ByteData asByteData([int offset = 0, int length]) =>
       _bd.buffer.asByteData(_bdOffset(offset), length ?? _bd.lengthInBytes);

@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/bytes/read_buffer/read_buffer.dart';
+import 'package:convert/src/bytes/buffer/read_buffer.dart';
 import 'package:convert/src/dicom/base/reader/evr_reader.dart';
 import 'package:convert/src/dicom/byte_data/reader/evr_bd_reader.dart';
 import 'package:convert/src/dicom/byte_data/reader/ivr_bd_reader.dart';
@@ -35,9 +35,9 @@ class BDReader {
       {BDRootDataset rds,
       String path = '',
       DecodingParameters dParams = DecodingParameters.kNoChange,
-      bool reUseBD = false,
-      bool doLogging = false,
-      bool showStats = false}) {
+      bool reUseBD = true,
+      bool doLogging = true,
+      bool showStats = true}) {
     rds ??= new BDRootDataset(bd, path: path);
     return new BDReader._(new ReadBuffer(bd),
         rds: rds,
@@ -53,9 +53,9 @@ class BDReader {
       {this.rds,
       this.path = '',
       this.dParams = DecodingParameters.kNoChange,
-      this.reUseBD = false,
-      this.doLogging = false,
-      this.showStats = false})
+      this.reUseBD = true,
+      this.doLogging = true,
+      this.showStats = true})
       // Why is this failing
       : _evrReader = (doLogging)
             ? new EvrLoggingBDReader(
@@ -71,7 +71,7 @@ class BDReader {
           DecodingParameters dParams = DecodingParameters.kNoChange,
           bool reUseBD = true,
           bool doLogging = true,
-          bool showStats = false}) =>
+          bool showStats = true}) =>
       new BDReader._(new ReadBuffer.fromUint8List(uint8List),
           path: '',
           dParams: dParams,
@@ -86,7 +86,7 @@ class BDReader {
           DecodingParameters dParams = DecodingParameters.kNoChange,
           bool reUseBD = true,
           bool doLogging = true,
-          bool showStats = false}) =>
+          bool showStats = true}) =>
       new BDReader._(new ReadBuffer.fromList(input),
           dParams: dParams,
           reUseBD: reUseBD,
@@ -99,9 +99,9 @@ class BDReader {
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD: true,
       bool doLogging = true,
-      bool showStats = false}) {
+      bool showStats = true}) {
     final Uint8List bytes =
-        (doAsync) ? _readAsync(file) : file.readAsBytesSync();
+        (doAsync) ?  _readAsync(file) : file.readAsBytesSync();
     final bd = bytes.buffer.asByteData();
     return new BDReader(bd,
         path: file.path,
@@ -113,11 +113,11 @@ class BDReader {
 
   /// Creates a [BDReader] from the contents of the [File] at [path].
   factory BDReader.fromPath(String path,
-          {bool async = true,
+          {bool async = false,
           DecodingParameters dParams = DecodingParameters.kNoChange,
           bool reUseBD: true,
           bool doLogging = true,
-          bool showStats = false}) =>
+          bool showStats = true}) =>
       new BDReader.fromFile(new File(path),
           doAsync: async,
           dParams: dParams,
@@ -155,7 +155,7 @@ class BDReader {
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD = true,
       bool doLogging = true,
-      bool showStats = false}) {
+      bool showStats = true}) {
     final reader = new BDReader.fromUint8List(bytes,
         path: path,
         dParams: dParams,
@@ -171,7 +171,7 @@ class BDReader {
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD: true,
       bool doLogging = true,
-      bool showStats = false}) {
+      bool showStats = true}) {
     checkFile(file);
     final reader = new BDReader.fromFile(file,
         doAsync: async,
@@ -188,7 +188,7 @@ class BDReader {
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD = true,
       bool doLogging = true,
-      bool showStats = false}) {
+      bool showStats = true}) {
     checkPath(path);
     final reader = new BDReader.fromFile(new File(path),
         doAsync: async,

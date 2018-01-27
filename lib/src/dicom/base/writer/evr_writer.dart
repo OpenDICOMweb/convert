@@ -26,7 +26,6 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
       vrIndex = VR.kUN.index;
       log.warn('** vrIndex changed to VR.kUN.index');
     }
-    print('** @${wb.wIndex} $e');
     if (_isShortVR(vrIndex)) {
       writeShort(e, vrIndex);
     } else if (_isLongVR(vrIndex)) {
@@ -122,7 +121,7 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
     writeItems(e.items);
     final vfLength = (wb.wIndex - eStart) - 12;
     assert(vfLength.isEven && wb.wIndex.isEven);
-    wb.bd.setUint32(vlfOffset, vfLength);
+    wb.bytes.setUint32(vlfOffset, vfLength);
 
     logEndSQWrite(eStart, e, 'writeEvrDefinedLengthSequence');
   }

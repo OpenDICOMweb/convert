@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/bytes/read_buffer/read_buffer.dart';
+import 'package:convert/src/bytes/buffer/read_buffer.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 
@@ -108,7 +108,7 @@ abstract class DcmReaderBase<V> {
     readDatasetDefinedLength(rds, rdsStart, rb.rRemaining);
     final rdsLength = rb.rIndex - rdsStart;
     print('** readRootDataset: rdsLength = $rdsLength');
-    final rbd = rb.bd.buffer.asByteData(rdsStart, rdsLength);
+    final rbd = rb.asByteData(rdsStart, rdsLength);
     rds.dsBytes = new RDSBytes(rbd, fmiEnd);
     return rds;
   }

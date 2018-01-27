@@ -8,7 +8,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/bytes/read_buffer/read_buffer.dart';
+import 'package:convert/src/bytes/buffer/read_buffer.dart';
 import 'package:convert/src/dicom/base/reader/dcm_reader_base.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters

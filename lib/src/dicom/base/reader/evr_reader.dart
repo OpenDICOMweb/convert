@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/bytes/read_buffer/read_buffer.dart';
+import 'package:convert/src/bytes/buffer/read_buffer.dart';
 import 'package:convert/src/dicom/base/reader/dcm_reader_base.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 import 'package:convert/src/errors.dart';
@@ -61,7 +61,7 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
     final code = rb.readCode();
     final tag = checkCode(code, eStart);
     final vrCode = rb.readUint16();
-    log.debug2('@$eStart ${dcm(code)} ${hex16(vrCode)} $tag');
+ //   log.debug2('@$eStart ${dcm(code)} ${hex16(vrCode)} $tag');
     var vrIndex = _lookupEvrVRIndex(code, eStart, vrCode);
 
     // Note: this is only relevant for EVR

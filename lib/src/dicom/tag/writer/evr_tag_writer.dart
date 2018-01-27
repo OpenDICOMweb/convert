@@ -6,7 +6,7 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/bytes/write_buffer/write_buffer.dart';
+import 'package:convert/src/bytes/buffer/write_buffer.dart';
 import 'package:convert/src/dicom/base/writer/dcm_writer_base.dart';
 import 'package:convert/src/dicom/base/writer/evr_writer.dart';
 import 'package:convert/src/dicom/base/writer/debug/log_write_mixin.dart';
