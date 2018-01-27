@@ -22,7 +22,9 @@ abstract class WriteBufferMixin {
   bool get isNotEmpty;
 
   // **** WriteBuffer specific Getters and Methods
+  // **** WriteBuffer specific Getters and Methods
 
+  int get index => wIndex_;
   int get limit => bytes.limit;
   Endian get endian => bytes.endian;
 
@@ -150,10 +152,19 @@ abstract class WriteBufferMixin {
     wIndex_ += 4;
   }
 
-  bool checkAllZeros(int start, int end) {
-    for (var i = start; i < end; i++) if (bytes.getUint8(i) != 0) return false;
+  bool checkAllZeros(int offset, int length) {
+    for (var i = offset; i < length; i++) if (bytes.getUint8(i) != 0) return false;
     return true;
   }
+
+  Bytes asBytes([int offset = 0, int length]) =>
+      bytes.asBytes(offset, length);
+
+  ByteData asByteData([int offset = 0, int length]) =>
+      bytes.asByteData(offset, length);
+
+  Uint8List asUint8List([int offset = 0, int length]) =>
+      bytes.asUint8List(offset, length);
 
   /// Ensures that [bytes] has at least [remaining] writable bytes.
   /// The [bytes] is grows if necessary, and copies existing bytes into

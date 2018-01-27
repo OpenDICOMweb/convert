@@ -244,14 +244,14 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
     }
     assert(rds.hasFmi);
     writeExistingFmi(rds, cleanPreamble: eParams.doCleanPreamble);
-    return wb.uint8View(0, wb.wIndex);
+    return wb.asUint8List(0, wb.wIndex);
   }
 
   Uint8List writeOdwFmi(RootDataset rootDS) {
     if (rootDS is! RootDataset) log.error('Not rds');
     writeCleanPrefix();
     //Urgent finish
-    return wb.uint8View(0, wb.wIndex);
+    return wb.asUint8List(0, wb.wIndex);
   }
 
   void writeExistingFmi(RootDataset rootDS, {bool cleanPreamble = true}) {

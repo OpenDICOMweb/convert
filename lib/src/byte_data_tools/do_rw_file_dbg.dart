@@ -45,7 +45,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
     writer = new BDWriter.toPath(rds0, outPath);
   }
   final bytes1 = writer.writeRootDataset();
-  log.debug('$pad    Encoded ${bytes1.length} bytes');
+  log.debug('$pad    Encoded ${bytes1.lengthInBytes} bytes');
 
   final bd1 = bytes1.buffer.asByteData();
   final reader1 = new BDReader(bd1);

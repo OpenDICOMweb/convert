@@ -21,6 +21,7 @@ abstract class ReadBufferMixin {
 
   // **** End of Interface
 
+  int get index => rIndex_;
   int get lengthInBytes => bytes.lengthInBytes;
   int get length => bytes.length;
 

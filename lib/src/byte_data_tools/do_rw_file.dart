@@ -64,15 +64,15 @@ $pad    TS: ${rds0.transferSyntax}''');
       final outPath = getTempFile(f.path, 'dcmout');
       writer = new BDWriter.toPath(rds0, outPath);
     }
-    final bytes1 = writer.writeRootDataset();
-    log.debug('$pad    Encoded ${bytes1.length} bytes');
+    final bd1 = writer.writeRootDataset();
+    log.debug('$pad    Encoded ${bd.lengthInBytes} bytes');
 
     // Urgent Jim if file has dups then no test is done. Fix it.
     var same = true;
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
-      same = bytesEqual(bytes0, bytes1);
+      same = bytesEqual(bytes0, bd1.buffer.asUint8List());
       if (same != true) log.warn('$pad Files bytes are different!');
     }
     return same;

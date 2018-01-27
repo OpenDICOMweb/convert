@@ -58,43 +58,40 @@ class BDReader {
       this.showStats = false})
       // Why is this failing
       : _evrReader = (doLogging)
-            ? new EvrLoggingBDReader(rb.bd, new BDRootDataset(rb.bd, path: path),
+            ? new EvrLoggingBDReader(
+                rb.bd, new BDRootDataset(rb.bd, path: path),
                 dParams: dParams, reUseBD: reUseBD)
             : new EvrBDReader(rb.bd, new BDRootDataset(rb.bd, path: path),
                 dParams: dParams, reUseBD: reUseBD);
 
-  /// Creates a [BDReader] from the contents of the [bytes].
-  factory BDReader.fromBytes(Uint8List bytes,
-      {String path = '',
-      bool async = true,
-      DecodingParameters dParams = DecodingParameters.kNoChange,
-      bool reUseBD = true,
-      bool doLogging = true,
-      bool showStats = false}) {
-    final bd = bytes.buffer.asByteData();
-    return new BDReader(bd,
-        path: '',
-        dParams: dParams,
-        reUseBD: reUseBD,
-        doLogging: doLogging,
-        showStats: showStats);
-  }
+  /// Creates a [BDReader] from the contents of the [uint8List].
+  factory BDReader.fromUint8List(Uint8List uint8List,
+          {String path = '',
+          bool async = true,
+          DecodingParameters dParams = DecodingParameters.kNoChange,
+          bool reUseBD = true,
+          bool doLogging = true,
+          bool showStats = false}) =>
+      new BDReader._(new ReadBuffer.fromUint8List(uint8List),
+          path: '',
+          dParams: dParams,
+          reUseBD: reUseBD,
+          doLogging: doLogging,
+          showStats: showStats);
 
   /// Creates a [BDReader] from the contents of the [input].
   factory BDReader.fromList(List<int> input,
-      {String path = '',
-      bool async = true,
-      DecodingParameters dParams = DecodingParameters.kNoChange,
-      bool reUseBD = true,
-      bool doLogging = true,
-      bool showStats = false}) {
-    final bytes = (input is Uint8List) ? input : new Uint8List.fromList(input);
-    return new BDReader.fromBytes(bytes,
-        dParams: dParams,
-        reUseBD: reUseBD,
-        doLogging: doLogging,
-        showStats: showStats);
-  }
+          {String path = '',
+          bool async = true,
+          DecodingParameters dParams = DecodingParameters.kNoChange,
+          bool reUseBD = true,
+          bool doLogging = true,
+          bool showStats = false}) =>
+      new BDReader._(new ReadBuffer.fromList(input),
+          dParams: dParams,
+          reUseBD: reUseBD,
+          doLogging: doLogging,
+          showStats: showStats);
 
   /// Creates a [BDReader] from the contents of the [file].
   factory BDReader.fromFile(File file,
@@ -159,7 +156,7 @@ class BDReader {
       bool reUseBD = true,
       bool doLogging = true,
       bool showStats = false}) {
-    final reader = new BDReader.fromBytes(bytes,
+    final reader = new BDReader.fromUint8List(bytes,
         path: path,
         dParams: dParams,
         reUseBD: reUseBD,

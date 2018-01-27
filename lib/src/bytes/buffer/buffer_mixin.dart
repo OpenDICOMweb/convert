@@ -26,7 +26,7 @@ abstract class BufferMixin {
   int get start => bytes.offsetInBytes;
   int get length => bytes.length;
   int get lengthInBytes => bytes.lengthInBytes;
-  int get end => bytes.lengthInBytes;
+  int get end => start + lengthInBytes;
 
   int get rRemaining => wIndex_ - rIndex_;
 
@@ -43,15 +43,20 @@ abstract class BufferMixin {
   bool rHasRemaining(int n) => (rIndex_ + n) <= wIndex_;
   bool wHasRemaining(int n) => (wIndex_ + n) <= end;
 
+  Bytes asBytes([int offset = 0, int length]) =>
+    //final offset = _getOffset(offset, length);
+     bytes.asBytes(offset, length ?? lengthInBytes);
+
 
   ByteData asByteData([int offset = 0, int length]) =>
-      bytes.asByteData(offset, length);
+  //  final offset = _getOffset(offset, length);
+     bytes.asByteData(offset, length ?? lengthInBytes);
 
   Uint8List asUint8List([int offset = 0, int length]) =>
-      bytes.asUint8List(offset, length);
+      bytes.asUint8List(offset, length ?? lengthInBytes);
 
-  bool checkAllZeros(int start, int end) {
-    for (var i = start; i < end; i++) if (bytes.getUint8(i) != 0) return false;
+  bool checkAllZeros(int offset, int end) {
+    for (var i = offset; i < end; i++) if (bytes.getUint8(i) != 0) return false;
     return true;
   }
 
@@ -59,7 +64,8 @@ abstract class BufferMixin {
 
   int get rIndex => rIndex_;
   set rIndex(int n) {
-    if (rIndex_ < 0 || rIndex_ > wIndex_) throw new RangeError.range(rIndex, 0, wIndex_);
+    if (rIndex_ < 0 || rIndex_ > wIndex_)
+      throw new RangeError.range(rIndex, 0, wIndex_);
     rIndex_ = n;
   }
 
@@ -69,7 +75,8 @@ abstract class BufferMixin {
     return rIndex_ = v;
   }
 
-  Uint8List get contentsRead => bytes.buffer.asUint8List(bytes.offsetInBytes, rIndex_);
+  Uint8List get contentsRead =>
+      bytes.buffer.asUint8List(bytes.offsetInBytes, rIndex_);
   Uint8List get contentsUnread => bytes.buffer.asUint8List(rIndex_, wIndex_);
 
   // *** wIndex

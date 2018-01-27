@@ -14,6 +14,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
+import 'package:convert/src/bytes/bytes.dart';
 import 'package:convert/src/bytes/write_buffer/write_buffer.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
 
@@ -42,7 +43,7 @@ abstract class DcmWriterBase<V> {
   bool get isEvr => rds.isEvr;
 
   /// Returns a [Uint8List] view of the [ByteData] buffer at the current time
-  Uint8List get asUint8List => wb.uint8View(0, wb.wIndex);
+  Uint8List get asUint8List => wb.asUint8List(0, wb.wIndex);
 
   /// Return's the current position of the write index ([wIndex]).
   int get wIndex => wb.wIndex;
@@ -78,9 +79,9 @@ abstract class DcmWriterBase<V> {
 
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].
-  Uint8List writeRootDataset(RootDataset rds) {
+  Bytes writeRootDataset(RootDataset rds) {
     _writeDataset(rds);
-    return wb.uint8View(0, wb.wIndex);
+    return wb.asBytes(0, wb.wIndex);
   }
 
   void _writeDataset(Dataset ds) {

@@ -16,6 +16,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
+import 'package:convert/src/bytes/bytes.dart';
 import 'package:convert/src/dicom/base/writer/dcm_writer_base.dart';
 import 'package:convert/src/dicom/base/writer/evr_writer.dart';
 import 'package:convert/src/dicom/base/writer/ivr_writer.dart';
@@ -111,7 +112,7 @@ class BDWriter {
   Uint8List writeFmi() => _evrWriter.writeFmi();
 
   /// Writes a [BDRootDataset] to a [Uint8List], then returns it.
-  Uint8List writeRootDataset() {
+  Bytes writeRootDataset() {
     if (!_evrWriter.isFmiWritten) _evrWriter.writeFmi();
     if (_evrWriter.rds.transferSyntax.isEvr) {
       return _evrWriter.writeRootDataset(rds);
@@ -124,7 +125,7 @@ class BDWriter {
   }
 
   /// Writes the [BDRootDataset] to a [Uint8List], and returns the [Uint8List].
-  static Uint8List writeBytes(BDRootDataset rds,
+  static Bytes writeBytes(BDRootDataset rds,
       {String path = '',
       EncodingParameters eParams,
       TransferSyntax outputTS,
@@ -150,7 +151,7 @@ class BDWriter {
 
   /// Writes the [BDRootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
-  static Future<Uint8List> writeFile(BDRootDataset ds, File file,
+  static Future<Bytes> writeFile(BDRootDataset ds, File file,
       {EncodingParameters eParams,
       TransferSyntax outputTS,
       bool overwrite = false,
@@ -170,14 +171,14 @@ class BDWriter {
         reUseBD: reUseBD,
         doLogging: doLogging,
         showStats: showStats);
-    await file.writeAsBytes(bytes);
+    await file.writeAsBytes(bytes.asUint8List());
     return bytes;
   }
 
   /// Creates a new empty [File] from [path], writes the [BDRootDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  static Future<Uint8List> writePath(BDRootDataset ds, String path,
+  static Future<Bytes> writePath(BDRootDataset ds, String path,
       {EncodingParameters eParams,
       TransferSyntax outputTS,
       bool overwrite = false,

@@ -16,6 +16,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
+import 'package:convert/src/bytes/bytes.dart';
 import 'package:convert/src/dicom/base/writer/dcm_writer_base.dart';
 import 'package:convert/src/dicom/base/writer/evr_writer.dart';
 import 'package:convert/src/dicom/base/writer/ivr_writer.dart';
@@ -111,7 +112,7 @@ class TagWriter {
   Uint8List writeFmi() => _evrWriter.writeFmi();
 
   /// Writes a [TagRootDataset] to a [Uint8List], then returns it.
-  Uint8List writeRootDataset() {
+  Bytes writeRootDataset() {
     if (!_evrWriter.isFmiWritten) _evrWriter.writeFmi();
     if (_evrWriter.rds.transferSyntax.isEvr) {
       return _evrWriter.writeRootDataset(rds);
@@ -124,7 +125,7 @@ class TagWriter {
   }
 
   /// Writes the [RootDataset] to a [Uint8List], and returns the [Uint8List].
-  static Uint8List writeBytes(TagRootDataset rds,
+  static Bytes writeBytes(TagRootDataset rds,
       {String path = '',
       EncodingParameters eParams,
       TransferSyntax outputTS,
@@ -149,7 +150,7 @@ class TagWriter {
 
   /// Writes the [RootDataset] to a [Uint8List], then writes the
   /// [Uint8List] to the [File], and returns the [Uint8List].
-  static Future<Uint8List> writeFile(TagRootDataset ds, File file,
+  static Future<Bytes> writeFile(TagRootDataset ds, File file,
       {EncodingParameters eParams,
       TransferSyntax outputTS,
       bool overwrite = false,
@@ -170,14 +171,16 @@ class TagWriter {
         reUseBD: reUseBD,
         doLogging: doLogging,
         showStats: showStats);
-    (doAsync) ? await file.writeAsBytes(bytes) : file.writeAsBytesSync(bytes);
+    (doAsync) ? await file.writeAsBytes(bytes.asUint8List()) : file
+        .writeAsBytesSync
+      (bytes.asUint8List());
     return bytes;
   }
 
   /// Creates a new empty [File] from [path], writes the [TagRootDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  static Future<Uint8List> writePath(TagRootDataset ds, String path,
+  static Future<Bytes> writePath(TagRootDataset ds, String path,
       {EncodingParameters eParams,
       TransferSyntax outputTS,
       bool overwrite = false,

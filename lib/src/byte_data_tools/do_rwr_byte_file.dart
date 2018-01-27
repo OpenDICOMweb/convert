@@ -61,8 +61,8 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       writer = new BDWriter.toPath(rds0, outPath);
     }
-    final bytes1 = writer.writeRootDataset();
-    log.debug('$pad    Encoded ${bytes1.length} bytes');
+    final bd1 = writer.writeRootDataset();
+    log.debug('$pad    Encoded ${bd1.lengthInBytes} bytes');
 
     final wOffsets = writer.outputOffsets;
     for (var i = 0; i < wOffsets.length; i++) {
@@ -70,14 +70,14 @@ $pad    TS: ${rds0.transferSyntax}''');
     }
 
     if (!fast) {
-      log.debug('Re-reading: ${bytes1.length} bytes');
+      log.debug('Re-reading: ${bd1.lengthInBytes} bytes');
     } else {
-      log.debug('Re-reading: ${bytes1.length} bytes from $outPath');
+      log.debug('Re-reading: ${bd1.lengthInBytes} bytes from $outPath');
     }
     BDReader reader1;
     if (fast) {
       // Just read bytes not file
-      reader1 = new BDReader(bytes1.buffer.asByteData());
+      reader1 = new BDReader(bd1.buffer.asByteData());
     } else {
       reader1 = new BDReader.fromPath(outPath);
     }
@@ -133,7 +133,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
-      final same = bytesEqual(bytes0, bytes1);
+      final same = bytesEqual(bytes0, bd1.buffer.asUint8List());
       if (same == true) {
         log.debug('$pad Files bytes are identical.');
       } else {

@@ -6,6 +6,10 @@
 
 export 'package:core/core.dart';
 
+export 'package:convert/src/bytes/bytes.dart';
+export 'package:convert/src/bytes/read_buffer/read_buffer.dart';
+export 'package:convert/src/bytes/write_buffer/write_buffer.dart';
+
 export 'package:convert/src/dicom/base/reader/dcm_reader_base.dart';
 export 'package:convert/src/dicom/base/reader/evr_reader.dart';
 export 'package:convert/src/dicom/base/reader/ivr_reader.dart';

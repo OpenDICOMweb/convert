@@ -43,7 +43,7 @@ class TagReader {
                 dParams: dParams, reUseBD: reUseBD);
 
   /// Creates a [TagReader] from the contents of the [bytes].
-  factory TagReader.fromBytes(Uint8List bytes,
+  factory TagReader.fromUint8List(Uint8List bytes,
       {String path = '',
       bool async = true,
       DecodingParameters dParams = DecodingParameters.kNoChange,
@@ -63,7 +63,7 @@ class TagReader {
       bool doLogging = true,
       bool showStats = false}) {
     final bytes = (input is Uint8List) ? input : new Uint8List.fromList(input);
-    return new TagReader.fromBytes(bytes, reUseBD: reUseBD, dParams: dParams);
+    return new TagReader.fromUint8List(bytes, reUseBD: reUseBD, dParams: dParams);
   }
 
   /// Creates a [TagReader] from the contents of the [file].
@@ -124,7 +124,7 @@ class TagReader {
       bool reUseBD = true,
       bool doLogging = true,
       bool showStats = false}) {
-    final reader = new TagReader.fromBytes(bytes,
+    final reader = new TagReader.fromUint8List(bytes,
         path: path,
         dParams: dParams,
         reUseBD: reUseBD,

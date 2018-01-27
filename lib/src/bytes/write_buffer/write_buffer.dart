@@ -8,8 +8,7 @@ import 'dart:typed_data';
 
 import 'package:convert/src/bytes/bytes.dart';
 import 'package:convert/src/bytes/buffer/buffer_base.dart';
-import 'package:convert/src/bytes/write_buffer/write_buffer_mixin.dart';
-
+import 'package:convert/src/bytes/write_buffer/write_buffer_mixin.dart.old';
 
 // ignore_for_file: non_constant_identifier_names
 // ignore_for_file: prefer_initializing_formals
@@ -37,43 +36,29 @@ class WriteBuffer extends BufferBase with WriteBufferMixin {
       int limit = kDefaultLimit])
       : rIndex_ = offset,
         wIndex_ = offset,
-        bytes = new GrowableBytes.fromTypedData(
-            wb.bd, offset, length, endian, limit);
+        bytes = new GrowableBytes.from(wb.bytes, offset, length, endian, limit);
 
   WriteBuffer.fromByteData(ByteData bd,
-      [int offset = 0,
-      int length,
-      Endian endian = Endian.little,
-      int limit = kDefaultLimit])
-      : rIndex_ = offset,
-        wIndex_ = offset,
-        bytes = new GrowableBytes.fromTypedData(
-            bd, offset, length, endian, limit);
+      [Endian endian = Endian.little, int limit = kDefaultLimit])
+      : rIndex_ = 0,
+        wIndex_ = bd.lengthInBytes,
+        bytes = new GrowableBytes.fromTypedData(bd, endian, limit);
 
-  WriteBuffer.fromUint8List(Uint8List bytes,
-      [int offset = 0,
-      int length,
-      Endian endian = Endian.little,
-      int limit = kDefaultLimit])
-      : rIndex_ = offset,
-        wIndex_ = offset,
-        bytes = new GrowableBytes.fromTypedData(
-            bytes, offset, length, endian, limit);
+  WriteBuffer.fromUint8List(Uint8List uint8List,
+      [Endian endian = Endian.little, int limit = kDefaultLimit])
+      : rIndex_ = 0,
+        wIndex_ = uint8List.lengthInBytes,
+        bytes = new GrowableBytes.fromTypedData(uint8List, endian, limit);
 
   WriteBuffer._(int length, Endian endian, int limit)
       : rIndex_ = 0,
         wIndex_ = 0,
         bytes = new GrowableBytes(length, endian, limit);
 
-  WriteBuffer._fromTD(TypedData td,
-      int offset,
-        int length,
-        Endian endian,
-        int limit)
-      : rIndex_ = offset,
-        wIndex_ = length ?? td.lengthInBytes,
-        bytes = new GrowableBytes.fromTypedData(
-            td, offset, length, endian, limit);
+  WriteBuffer._fromTD(TypedData td, Endian endian, int limit)
+      : rIndex_ = 0,
+        wIndex_ = td.lengthInBytes,
+        bytes = new GrowableBytes.fromTypedData(td, endian, limit);
 
   // **** WriteBuffer specific Getters and Methods
 
@@ -96,24 +81,6 @@ class WriteBuffer extends BufferBase with WriteBufferMixin {
       bd.buf.asUint8List(bd.offsetInBytes + offset, lengthInBytes);
 */
 
-  ByteData bdView([int start = 0, int end]) {
-    final offset = _getOffset(start, length);
-    return bd.buffer.asByteData(start, length ?? bd.lengthInBytes - offset);
-  }
-
-  Uint8List uint8View([int start = 0, int length]) {
-    final offset = _getOffset(start, length);
-    return bd.buffer.asUint8List(offset, length ?? bd.lengthInBytes - offset);
-  }
-
-  int _getOffset(int start, int length) {
-    final offset = bd.offsetInBytes + start;
-    assert(offset >= 0 && offset <= bd.lengthInBytes);
-    assert(offset + length <= bd.lengthInBytes,
-        'offset($offset) + length($length) > bd.lengthInBytes($bd.lengthInBytes)');
-    return offset;
-  }
-
   bool _isClosed;
   @override
   bool get isClosed => (_isClosed == null) ? false : true;
@@ -123,7 +90,7 @@ class WriteBuffer extends BufferBase with WriteBufferMixin {
   @override
   bool get hadTrailingZeros => _hadTrailingZeros ?? false;
   ByteData rClose() {
-    final view = bdView(0, rIndex_);
+    final view = asByteData(0, rIndex_);
     if (isNotEmpty) {
       //  warn('End of Data with rIndex_($rIndex) != length(${view.lengthInBytes})');
       _hadTrailingZeros = checkAllZeros(rIndex_, wIndex_);
@@ -137,34 +104,26 @@ class WriteBuffer extends BufferBase with WriteBufferMixin {
 
   // Internal methods
 
-
   static const int kDefaultLength = 4096;
 }
 
+const int _k1GB = 1024 * 1024 * 1024;
+
 class LoggingWriteBuffer extends WriteBuffer with WriterLogMixin {
-  LoggingWriteBuffer([int length = kDefaultLength,
-    Endian endian = Endian.little, int limit = k1GB])
+  LoggingWriteBuffer(
+      [int length = kDefaultLength,
+      Endian endian = Endian.little,
+      int limit = _k1GB])
       : super._(length, endian, limit);
 
-  factory LoggingWriteBuffer.fromByteData(
-    ByteData bd, [
-    int offset = 0,
-    int length,
-    Endian endian = Endian.little,
-    int limit = kDefaultLimit,
-  ]) =>
-      new LoggingWriteBuffer.fromTypedData(bd, offset, length, endian, limit);
+  factory LoggingWriteBuffer.fromByteData(ByteData bd,
+          [Endian endian = Endian.little, int limit = kDefaultLimit]) =>
+      new LoggingWriteBuffer.fromTypedData(bd, endian, limit);
 
-  factory LoggingWriteBuffer.fromBytes(
-    Uint8List td, [
-    int offset = 0,
-    int length,
-    Endian endian = Endian.little,
-    int limit = kDefaultLimit,
-  ]) =>
-      new LoggingWriteBuffer.fromTypedData(td, offset, length, endian, limit);
+  factory LoggingWriteBuffer.fromBytes(Uint8List td,
+          [Endian endian = Endian.little, int limit = kDefaultLimit]) =>
+      new LoggingWriteBuffer.fromTypedData(td, endian, limit);
 
-  LoggingWriteBuffer.fromTypedData(
-      TypedData td, int offset, int length, Endian endian, int limit)
-      : super._fromTD(td, offset, length, endian, limit);
+  LoggingWriteBuffer.fromTypedData(TypedData td, Endian endian, int limit)
+      : super._fromTD(td, endian, limit);
 }
