@@ -79,7 +79,7 @@ abstract class DcmWriterBase<V> {
 
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].
-  Bytes writeRootDataset(RootDataset rds) {
+  Bytes writeRootDataset() {
     _writeDataset(rds);
     return wb.asBytes(0, wb.wIndex);
   }

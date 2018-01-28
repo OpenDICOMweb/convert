@@ -115,12 +115,12 @@ class BDWriter {
   Bytes writeRootDataset() {
     if (!_evrWriter.isFmiWritten) _evrWriter.writeFmi();
     if (_evrWriter.rds.transferSyntax.isEvr) {
-      return _evrWriter.writeRootDataset(rds);
+      return _evrWriter.writeRootDataset();
     } else {
       _ivrWriter = (doLogging)
           ? new IvrLoggingBDWriter.from(_evrWriter)
           : new IvrBDWriter.from(_evrWriter);
-      return _ivrWriter.writeRootDataset(rds);
+      return _ivrWriter.writeRootDataset();
     }
   }
 

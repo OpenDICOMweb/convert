@@ -4,6 +4,7 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:convert/src/bytes/bytes.dart';
@@ -164,11 +165,15 @@ class WriteBuffer extends BufferBase {
     wIndex_ += 8;
   }
 
+  void writeAscii(String s) => writeUint8List(ASCII.encode(s));
+
+  void writeUtf8(String s) => writeUint8List(UTF8.encode(s));
+
   /// Writes [bd] to _this_.
   void writeByteData(ByteData bd) => write(bd);
 
   /// Writes [bytes] to _this_.
-  void writeBytes(Uint8List bytes) => write(bytes);
+  void writeUint8List(Uint8List bytes) => write(bytes);
 
   /// Writes [td] to _this_.
   void write(TypedData td) {

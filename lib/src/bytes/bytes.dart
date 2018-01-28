@@ -4,6 +4,7 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 //Urgent: Unit Test
@@ -309,6 +310,14 @@ class Bytes extends Object {
       throw new RangeError('List ($lLength bytes) is to large for '
           'Bytes($bLength bytes');
   }
+
+  // **** String Setters
+
+  void setAscii(String s, int offset, int length) =>
+    setUint8List(ASCII.encode(s), offset, length);
+
+  void setUtf8(String s, int offset, int length) =>
+      setUint8List(UTF8.encode(s), offset, length);
 
   static const int kInt8Size = 1;
   static const int kInt16Size = 2;
