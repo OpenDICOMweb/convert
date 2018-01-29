@@ -17,7 +17,7 @@ abstract class TagReaderMixin implements DcmReaderBase<int> {
   Dataset get cds;
 
   Element makeTagElement(int code, int vrIndex, BDElement bd) =>
-      TagElement.make(bd.tag, vrIndex, bd.values);
+      TagElement.make(bd.tag, bd.values, vrIndex);
 
   Element makeTagPixelData(int code, int vrIndex, BDElement bd,
           [TransferSyntax ts, VFFragments fragments]) =>

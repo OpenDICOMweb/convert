@@ -56,8 +56,8 @@ class TagWriter {
       this.doLogging = true,
       this.showStats = false})
       : _evrWriter = (doLogging)
-            ? new EvrLoggingTagWriter(rds, eParams, minLength, inputOffsets, reUseBD:
-  reUseBD)
+            ? new EvrLoggingTagWriter(rds, eParams, minLength, inputOffsets,
+                reUseBD: reUseBD)
             : new EvrTagWriter(rds, eParams, minLength, reUseBD: reUseBD);
 
   /// Writes the [TagRootDataset] to a [Uint8List], and then writes the
@@ -171,9 +171,9 @@ class TagWriter {
         reUseBD: reUseBD,
         doLogging: doLogging,
         showStats: showStats);
-    (doAsync) ? await file.writeAsBytes(bytes.asUint8List()) : file
-        .writeAsBytesSync
-      (bytes.asUint8List());
+    (doAsync)
+        ? await file.writeAsBytes(bytes.asUint8List())
+        : file.writeAsBytesSync(bytes.asUint8List());
     return bytes;
   }
 
@@ -186,7 +186,7 @@ class TagWriter {
       bool overwrite = false,
       int minLength,
       ElementOffsets inputOffsets,
-        bool doAsync = true,
+      bool doAsync = true,
       bool reUseBD = false,
       bool doLogging = true,
       bool showStats = false}) {

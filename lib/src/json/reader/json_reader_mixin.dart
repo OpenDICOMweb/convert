@@ -23,7 +23,7 @@ abstract class BDReaderMixin implements DcmReaderBase<int> {
 
   Element makeElementFromList(int code, int vrIndex, Iterable values) {
     final tag = Tag.lookupByCode(code);
-    return TagElement.make(tag, vrIndex, values);
+    return TagElement.make(tag, values, vrIndex);
   }
 
   @override

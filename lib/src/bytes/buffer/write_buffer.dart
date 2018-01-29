@@ -169,11 +169,11 @@ class WriteBuffer extends BufferBase {
 
   void writeUtf8(String s) => writeUint8List(UTF8.encode(s));
 
-  /// Writes [bd] to _this_.
-  void writeByteData(ByteData bd) => write(bd);
-
   /// Writes [bytes] to _this_.
   void writeUint8List(Uint8List bytes) => write(bytes);
+
+  /// Writes [bd] to _this_.
+  void writeByteData(ByteData bd) => write(bd);
 
   /// Writes [td] to _this_.
   void write(TypedData td) {

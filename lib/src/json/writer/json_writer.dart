@@ -24,6 +24,7 @@ import 'package:convert/src/utilities/io_utils.dart';
 
 typedef void JsonEWriter(Element e);
 const int kDefaultJsonWriteBufferLength = 512 * 1024 * 1024;
+
 /// A [class] for writing a [BDRootDataset] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
 /// all LITTLE ENDIAN [TransferSyntax]es.
@@ -107,20 +108,20 @@ class JsonWriter {
 
   /// Creates a new [JsonWriter] where index = 0.
   JsonWriter._(this.rds,
-             {this.path = '',
-               this.eParams = EncodingParameters.kNoChange,
-               this.outputTS,
-               this.overwrite = false,
-               this.minLength = kDefaultJsonWriteBufferLength,
+      {this.path = '',
+      this.eParams = EncodingParameters.kNoChange,
+      this.outputTS,
+      this.overwrite = false,
+      this.minLength = kDefaultJsonWriteBufferLength,
 //               this.inputOffsets,
-               this.reUseBD = true,
-               this.doLogging = true,
-               this.showStats = false})
+      this.reUseBD = true,
+      this.doLogging = true,
+      this.showStats = false})
       : wb = new WriteBuffer(),
         cds = rds;
 
+  bool _isFmiWritten = false;
 
-  bool _isFmiWritten  = false;
   /// Writes a [RootDataset] to a [Uint8List], then returns it.
 
   Bytes writeRootDataset() {
@@ -129,55 +130,6 @@ class JsonWriter {
   }
 
   // **** External interface for debugging and monitoring
-
-
-  static String _jsonEncodeElement<V>(Element e, String vfEncoder(Element e)) =>
-      '''
-  {
-    "${e.hex}": {
-      "vr": "${e.vrId}",
-      "Value": ${vfEncoder(e)}
-    }
-  }
-''';
-
-
-  static void _writeFloat(Element e) =>
-      _jsonEncodeElement<double>(e, stringFromFloatList);
-
-  static String stringFromFloatList(Element e) {
-    assert(e is FloatBase);
-    final v = e.values;
-    final nList = new List<String>(v.length);
-    for(var i = 0; i < v.length; i++)
-      nList[i] = '"${floatToString(v.elementAt(i))}"';
-    return '[${nList.join(', ')}]';
-  }
-
-  static void _writeInt(Element e) =>
-      _jsonEncodeElement<int>(e,  stringFromIntList);
-
-  static String stringFromIntList(Element e) {
-    assert(e is IntBase);
-    return '[${e.values.join(', ')}]';
-  }
-
-  static void _writeString(Element e) =>
-    _jsonEncodeElement<String>(e, stringFromStringList);
-
-  static String stringFromStringList(Element e) {
-    assert(e is StringBase);
-    final v = e.values;
-    final nList = new List<String>(v.length);
-    for(var i = 0; i < v.length; i++)
-      nList[i] = '"${v.elementAt(i)}"';
-    return '[${nList.join(', ')}]';
-  }
-
- static void _writeText<String>(Element e) =>
-      _jsonEncodeElement<String>(e, stringFromStringList);
-
-
 
   // **** Write File Meta Information (FMI) ****
 
@@ -203,18 +155,11 @@ class JsonWriter {
     return wb.asUint8List(0, wb.wIndex);
   }
 
+  static void _writeOther(Element e) {}
 
-  static void _writeOther(Element e) {
+  static void writePixelData(Element e) {}
 
-  }
-
-  static void writePixelData(Element e) {
-
-  }
-
-  static void writeSequence(Element e) {
-
-  }
+  static void writeSequence(Element e) {}
   static void writeElement(Element e) => _jsonWriters[e.vrIndex](e);
 
   static final List<JsonEWriter> _jsonWriters = <JsonEWriter>[
@@ -259,7 +204,6 @@ class JsonWriter {
   ];
 */
 
-
   Uint8List writeOdwFmi(RootDataset rootDS) {
     if (rootDS is! RootDataset) log.error('Not rds');
     //Urgent finish
@@ -273,56 +217,54 @@ class JsonWriter {
     }
   }
 
-  static Null _sqError(Element e) => invalidElementIndex(e.vrIndex);
-
 
   /// Writes the [RootDataset] to a [Uint8List], and returns the [Uint8List].
   static Bytes writeBytes(RootDataset rds,
-                          {String path = '',
-                            EncodingParameters eParams,
-                            TransferSyntax outputTS,
-                            bool overwrite = false,
-                            int minLength,
-                            ElementOffsets inputOffsets,
-                            bool reUseBD = false,
-                            bool doLogging = true,
-                            bool showStats = false}) {
+      {String path = '',
+      EncodingParameters eParams,
+      TransferSyntax outputTS,
+      bool overwrite = false,
+      int minLength,
+      ElementOffsets inputOffsets,
+      bool reUseBD = false,
+      bool doLogging = true,
+      bool showStats = false}) {
     checkRootDataset(rds);
     final writer = new JsonWriter(rds,
-                                      path: path,
-                                      eParams: eParams,
-                                      outputTS: outputTS,
-                                      overwrite: overwrite,
-                                      minLength: minLength,
+        path: path,
+        eParams: eParams,
+        outputTS: outputTS,
+        overwrite: overwrite,
+        minLength: minLength,
 //                                      inputOffsets: inputOffsets,
-                                      reUseBD: reUseBD,
-                                      doLogging: doLogging,
-                                      showStats: showStats);
+        reUseBD: reUseBD,
+        doLogging: doLogging,
+        showStats: showStats);
     return writer.writeRootDataset();
   }
 
   /// Writes the [RootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
   static Future<Bytes> writeFile(RootDataset ds, File file,
-                                 {EncodingParameters eParams,
-                                   TransferSyntax outputTS,
-                                   bool overwrite = false,
-                                   int minLength,
+      {EncodingParameters eParams,
+      TransferSyntax outputTS,
+      bool overwrite = false,
+      int minLength,
 //                                   ElementOffsets inputOffsets,
-                                   bool reUseBD = false,
-                                   bool doLogging = true,
-                                   bool showStats = false}) async {
+      bool reUseBD = false,
+      bool doLogging = true,
+      bool showStats = false}) async {
     checkFile(file, overwrite: overwrite);
     final bytes = writeBytes(ds,
-                                 path: file.path,
-                                 eParams: eParams,
-                                 outputTS: outputTS,
-                                 overwrite: overwrite,
-                                 minLength: minLength,
+        path: file.path,
+        eParams: eParams,
+        outputTS: outputTS,
+        overwrite: overwrite,
+        minLength: minLength,
 //                                 inputOffsets: inputOffsets,
-                                 reUseBD: reUseBD,
-                                 doLogging: doLogging,
-                                 showStats: showStats);
+        reUseBD: reUseBD,
+        doLogging: doLogging,
+        showStats: showStats);
     await file.writeAsBytes(bytes.asUint8List());
     return bytes;
   }
@@ -331,24 +273,24 @@ class JsonWriter {
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
   static Future<Bytes> writePath(RootDataset ds, String path,
-                                 {EncodingParameters eParams,
-                                   TransferSyntax outputTS,
-                                   bool overwrite = false,
-                                   int minLength,
+      {EncodingParameters eParams,
+      TransferSyntax outputTS,
+      bool overwrite = false,
+      int minLength,
 //                                   ElementOffsets inputOffsets,
-                                   bool reUseBD = false,
-                                   bool doLogging = true,
-                                   bool showStats = false}) {
+      bool reUseBD = false,
+      bool doLogging = true,
+      bool showStats = false}) {
     checkPath(path);
     return writeFile(ds, new File(path),
-                         eParams: eParams,
-                         outputTS: outputTS,
-                         overwrite: overwrite,
-                         minLength: minLength,
+        eParams: eParams,
+        outputTS: outputTS,
+        overwrite: overwrite,
+        minLength: minLength,
 //                         inputOffsets: inputOffsets,
-                         reUseBD: reUseBD,
-                         doLogging: doLogging,
-                         showStats: showStats);
+        reUseBD: reUseBD,
+        doLogging: doLogging,
+        showStats: showStats);
   }
 }
 
@@ -362,14 +304,13 @@ class LoggingJsonWriter extends JsonWriter {
 
   /// Creates a new [LoggingJsonWriter], which is encoder for Binary DICOM
   /// (application/dicom).
-  LoggingJsonWriter(
-      RootDataset rds, EncodingParameters eParams, int minLength, this.inputOffsets,
+  LoggingJsonWriter(RootDataset rds, EncodingParameters eParams, int minLength,
+      this.inputOffsets,
       {bool reUseBD = false})
       : outputOffsets = (inputOffsets != null) ? new ElementOffsets() : null,
         pInfo = new ParseInfo(rds),
         super._(rds, eParams: eParams, minLength: minLength, reUseBD: reUseBD);
 }
-
 
 /*
 bool _isSequenceVR(int vrIndex) => vrIndex == 0;
@@ -388,4 +329,83 @@ bool _isShortVR(int vrIndex) =>
 
 bool _isNotShortVR(int vrIndex) => !_isShortVR(vrIndex);
 */
+
+int _indent = 0;
+String indent(int increment) => ''.padRight(_indent += increment, ' ');
+
+/*
+String encodeElement<V>(Element e, String vfEncoder(Element e),
+{int increment: 0}) {
+  final i = increment;
+  return '''
+${indent(i)}{
+  ${indent(i)}"${e.hex}": {
+    ${indent(i)}"vr": "${e.vrId}",
+    ${indent(i)}"Value": ${vfEncoder(e)}
+  ${indent(i)}}
+${indent(i)}}
+''';
+}
+*/
+
+String encodeElementLean<V>(Element e, String vfEncoder(Element e)) =>
+'{"${e.hex}": {"vr": "${e.vrId}", "Value": ${vfEncoder(e)}}}';
+
+
+void _writeFloat(Element e) =>
+    encodeElement<double>(e, stringFromFloatElement);
+
+String stringFromFloatElement(Element e) {
+  assert(e is FloatBase);
+  final v = e.values;
+  final nList = new List<String>(v.length);
+  for (var i = 0; i < v.length; i++)
+    nList[i] = '${floatToString(v.elementAt(i))}';
+  return '[${nList.join(', ')}]';
+}
+
+void _writeInt(Element e) => encodeElement<int>(e, stringFromIntElement);
+
+String stringFromIntElement(Element e) {
+  assert(e is IntBase);
+  return '[${e.values.join(', ')}]';
+}
+
+void _writeString(Element e) => encodeElement<String>(e, stringFromStringElement);
+
+String stringFromStringElement(Element e) {
+  assert(e is StringBase);
+  final v = e.values;
+  final nList = new List<String>(v.length);
+  for (var i = 0; i < v.length; i++) nList[i] = '"${v.elementAt(i)}"';
+  return '[${nList.join(', ')}]';
+}
+
+void _writeText<String>(Element e) =>
+    encodeElement<String>(e, stringFromStringElement);
+
+
+
+void encodeItems(List<Item> items) => items.forEach(encodeItem);
+
+void encodeSequence(SQ e) =>
+    '{"${e.hex}": {"vr": "${e.vrId}", "Value": ${encodeItems(e.items)}}}';
+
+void encodeElement(Element e) {
+  sb.write('{"${e.hex}": {"vr": "${e.vrId}",');
+  sb.write(encodeValueField(e));
+}
+
+void encodeFloat(FloatBase e) =>
+    sb.write('"Value": ${e.values}}}');
+
+void encodeInt(IntBase e) =>
+   sb.write('"Value": ${e.values}}}');
+
+void encodeString(StringBase e) =>
+    sb.write('"Value": ${stringFromStringElement(e)}}}');
+
+
+
+
 
