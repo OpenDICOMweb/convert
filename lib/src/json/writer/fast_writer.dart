@@ -5,13 +5,14 @@
 // See the AUTHORS file for other contributors.
 
 import 'package:core/core.dart' hide Indenter;
-import 'package:convert/src/json/writer/vf_utils.dart';
+import 'package:convert/src/json/writer/fast_writer_utils.dart';
 import 'package:convert/src/json/writer/indenter.dart';
 
 class FastJsonWriter {
   final StringBuffer sb;
   final RootDataset rds;
   final Indenter i;
+
   FastJsonWriter(this.rds, {int indent = 2})
       : i = new Indenter(indent),
         sb = new StringBuffer();
