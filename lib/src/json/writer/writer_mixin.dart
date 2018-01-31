@@ -6,64 +6,44 @@
 
 import 'package:core/core.dart';
 
-typedef void ValueFieldWriter(Element e, StringBuffer sb);
+
 
 abstract class WriterMixin {
   StringBuffer get sb;
-  void writeSequence(SQ e, StringBuffer sb);
-  static void otherVF(Element e, StringBuffer sb);
-  static void intVF(Element e, StringBuffer sb);
-  static void floatVF(Element e, StringBuffer sb);
-  static void stringVF(Element e, StringBuffer sb);
-  static void textVF(Element e, StringBuffer sb);
+  RootDataset get rds;
 
 
-  void writeRootDataset(RootDataset rds, StringBuffer sb) =>
-      writeDataset(rds, sb);
+  void writeRootDataset(RootDataset rds) =>
+      writeDataset(rds);
 
-  void writeItem(Item item, StringBuffer sb) => writeDataset(item, sb);
+  void writeItem(Item item) => writeDataset(item);
 
-  void writeDataset(Dataset ds, StringBuffer sb) {
+  void writeDataset(Dataset ds) {
     for (var e in ds) {
       if (e is SQ) {
-        writeSequence(e, sb);
+        writeSequence(e);
       } else {
-        writeElement(e, sb);
+        writeSimpleElement(e);
       }
     }
   }
 
-  void writeItems(List<Item> items, StringBuffer sb) {
-    for (var item in items) writeItem(item, sb);
+  void writeItems(List<Item> items) {
+    for (var item in items) writeItem(item);
   }
 
-  void writeElement(Element e, StringBuffer sb) {
+  void writeSimpleElement(Element e) {
     sb.write('["${e.hex}": "${e.vrId}", ');
-    writeValueField(e, sb);
+    writeValueField(e);
   }
 
-  void writeValueField(Element e, StringBuffer sb) =>
-      vfWriters[e.vrIndex](e, sb);
+  void writeSequence(SQ e) {
+    sb.write('["${e.hex}": "${e.vrId}", ');
+    indentIn;
+    writeItems(e.items);
+  }
 
-  static List<ValueFieldWriter> vfWriters = <ValueFieldWriter>[
-    _sqError,
-    // no reformat
-    // Maybe Undefined Lengths
-    otherVF, otherVF, otherVF,
-
-    // EVR Long
-    otherVF, otherVF, otherVF,
-    stringVF, textVF, textVF,
-
-    // EVR Short
-
-    stringVF, stringVF, intVF, stringVF, stringVF,
-    stringVF, stringVF, floatVF, floatVF, stringVF,
-    stringVF, textVF, stringVF, stringVF, intVF,
-    intVF, textVF, stringVF, stringVF, intVF, intVF,
-  ];
-
-  static Null _sqError(Element e, StringBuffer sb) =>
-      invalidElementIndex(e.vrIndex);
+  void writeValueField(Element e) =>
+      vfWriters[e.vrIndex](e);
 
 }

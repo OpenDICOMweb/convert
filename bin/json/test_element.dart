@@ -17,7 +17,7 @@ void main() {
   final sb = new StringBuffer();
   final pn =
       TagElement.make(PTag.kPatientName, <String>['Jim^Philbin'], kPNIndex);
-  var s = encodeElement<String>(pn, stringFromStringElement);
+  var s = writeElement<String>(pn, sb);
   sb.write(s);
   print("s: '$s'");
 
@@ -25,19 +25,19 @@ void main() {
   TagElement.make(PTag.kReferringPhysicianTelephoneNumbers,
                       <String>['406', '678', '123'],
                       kSHIndex);
-  s = encodeElement<String>(sh, stringFromStringElement);
+  s = writeElement<String>(sh, sb);
   sb.write(s);
   print("s: '$s'");
 
 
   final ss = TagElement.make(PTag.kTagAngleSecondAxis, <int>[-1], kSSIndex);
-  s = encodeElement<String>(ss, stringFromIntElement);
+  s = writeElement<String>(ss, stringFromIntElement);
   sb.write(s);
   print("s: '$s'");
 
   final fd = TagElement.make(PTag.kFrameAcquisitionDuration, <double>[-4.4],
                                  kFDIndex);
-  s = encodeElement<String>(fd, stringFromFloatElement);
+  s = writeElement<String>(fd, stringFromFloatElement);
   sb.write(s);
   print("s: '$s'");
 
@@ -48,7 +48,7 @@ void main() {
   
 ''';
   print(jsonArray);
-  final encoded = json.encode(jsonArray);
+  final encoded = json.write(jsonArray);
   final Object decoded = json.decode(encoded);
   print('json: $decoded');
 }

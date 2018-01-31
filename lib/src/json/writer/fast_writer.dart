@@ -4,49 +4,65 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:convert';
+import 'package:core/core.dart' hide Indenter;
+import 'package:convert/src/json/writer/vf_utils.dart';
+import 'package:convert/src/json/writer/indenter.dart';
 
-import 'package:core/core.dart';
-import 'package:convert/src/json/writer/writer_mixin.dart';
-
-
-
-class FastJsonWriter extends Object with FastJsonWriter {
+class FastJsonWriter {
   final StringBuffer sb;
-  FastJsonWriter() : sb = new StringBuffer();
+  final RootDataset rds;
+  final Indenter i;
+  FastJsonWriter(this.rds, {int indent = 2})
+      : i = new Indenter(indent),
+        sb = new StringBuffer();
 
-
-
-
-  static void _sqError(Element e, StringBuffer sb) =>
-      invalidElementIndex(e.vrIndex);
-
-  static void floatVF(Element e, StringBuffer sb) {
-    assert(e is FloatBase);
-    sb.write('${e.values}');
+  String writeRootDataset(RootDataset rds) {
+    sb.write('[\n');
+    i.down;
+    writeFmi(rds);
+    writeDataset(rds);
+    i.up;
+    sb.write(']\n');
+    return sb.toString();
   }
 
-  static void intVF(Element e, StringBuffer sb) {
-    assert(e is IntBase);
-    sb.write('${e.values}');
+  void writeFmi(RootDataset rds) {
+    sb.write('${i.indent}[\n');
+    i.down;
+    for(var e in rds.fmi.elements) writeSimpleElement(e);
+    i.up;
+    sb.write('${i.indent}]\n');
   }
 
-  static void otherVF(Element e, StringBuffer sb) {
-    assert(e is FloatBase);
-    sb.write(BASE64.encode(e.vfBytes));
+  void writeItems(List<Item> items) => items.forEach(writeItem);
+
+  void writeItem(Item item) => writeDataset(item);
+
+  String writeDataset(Dataset ds) {
+    sb.write('${i.indent}[\n');
+    i.down;
+    for (var e in ds.elements) {
+      if (e is SQ) {
+        writeSequence(e);
+      } else {
+        writeSimpleElement(e);
+      }
+    }
+    i.up;
+    sb.write('${i.indent}]\n');
   }
 
-  static void textVF(Element e, StringBuffer sb) {
-    assert(e is Text);
-    sb.write('["${e.values}"]');
+  void writeSimpleElement(Element e) {
+    sb.write('${i.indent}["${e.hex}": "${e.vrId}", ');
+    writeValueField(e, sb);
+//[\    print('$e');
   }
 
-  static void stringVF(Element e, StringBuffer sb) {
-    assert(e is StringBase);
-    final v = e.values;
-    final nList = new List<String>(v.length);
-    for (var i = 0; i < v.length; i++)
-      nList[i] = '"${v.elementAt(i)}"';
-    sb.write('[${nList.join(', ')}]');
+  void writeSequence(SQ e) {
+    sb.write('${i.indent}["${e.hex}": "${e.vrId}", [\n');
+    i.down;
+    writeItems(e.items);
+    i.up;
+    sb.write('${i.indent}]\n');
   }
 }
