@@ -9,16 +9,16 @@ import 'package:convert/src/json/writer/fast_writer_utils.dart';
 import 'package:convert/src/json/writer/indenter.dart';
 
 class FastJsonWriter {
-  final StringBuffer sb;
+  final Indenter sb;
   final RootDataset rds;
-  final Indenter i;
 
   FastJsonWriter(this.rds, {int indent = 2})
-      : i = new Indenter(indent),
-        sb = new StringBuffer();
+      : sb = new Indenter(indent);
 
-  String writeRootDataset(RootDataset rds) {
-    sb.write('[\n');
+
+  String write(RootDataset rds) => writeRootDataset(rds, sb);
+}
+ /*   sb.write('[\n');
     i.down;
     writeFmi(rds);
     writeDataset(rds);
@@ -32,7 +32,7 @@ class FastJsonWriter {
     i.down;
     for(var e in rds.fmi.elements) writeSimpleElement(e);
     i.up;
-    sb.write('${i.indent}]\n');
+    sb.write('${i.indent}],\n');
   }
 
   void writeItems(List<Item> items) => items.forEach(writeItem);
@@ -42,28 +42,25 @@ class FastJsonWriter {
   String writeDataset(Dataset ds) {
     sb.write('${i.indent}[\n');
     i.down;
+    final last = ds.elements.last;
     for (var e in ds.elements) {
       if (e is SQ) {
-        writeSequence(e);
+        writeSequence(e, isLast: e == last);
       } else {
-        writeSimpleElement(e);
+        writeSimpleElement(e, isLast: e == last));
       }
     }
     i.up;
-    sb.write('${i.indent}]\n');
+    (e != last) ? sb.write('${i.indent}],\n') : sb.write('${i.indent}]\n');
   }
 
-  void writeSimpleElement(Element e) {
-    sb.write('${i.indent}["${e.hex}": "${e.vrId}", ');
+*//*
+  void writeSimpleElement(Element e, {bool isLast}) {
+    sb.write('${i.indent}["${e.hex}", "${e.vrId}", ');
     writeValueField(e, sb);
-//[\    print('$e');
+    (isLast) ? sb.sb.writeln(']') :   sb.sb.writeln('],');
   }
+*//*
 
-  void writeSequence(SQ e) {
-    sb.write('${i.indent}["${e.hex}": "${e.vrId}", [\n');
-    i.down;
-    writeItems(e.items);
-    i.up;
-    sb.write('${i.indent}]\n');
-  }
 }
+*/

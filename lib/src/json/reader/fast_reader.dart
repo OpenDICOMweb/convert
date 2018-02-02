@@ -7,8 +7,7 @@
 import 'dart:convert';
 
 import 'package:core/core.dart' hide Indenter;
-import 'package:convert/src/json/reader/fast_utils.dart';
-
+import 'package:convert/src/json/reader/fast_reader_utils.dart';
 
 class FastJsonReader {
   final List<List<List>> rootList;
@@ -19,59 +18,66 @@ class FastJsonReader {
       : rootList = JSON.decode(json),
         rds = new TagRootDataset();
 
-  String readRootDataset() {
+  RootDataset readRootDataset() {
     cds = rds;
     readFmi();
-    readDataset(rds);
+    readDataset(rootList[1]);
+    return rds;
   }
 
-  void readFmi() {
+  ElementList readFmi() {
     final fmi = rootList[0];
-    for(var e in fmi) {
-      readSimpleElement(e);
+    final fmiElements = new MapAsList();
+    for (var eList in fmi) {
+      final e = readElement(eList);
+      fmiElements.add(e);
     }
+    return fmiElements;
   }
 
-  void readItems(List<Item> items) => items.forEach(readItem);
+  List<TagItem> readItems(List<List> itemLists) {
+    final items = <TagItem>[];
+    for (var itemList in itemLists) {
+      final item = readDataset(itemList);
+      items.add(item);
+    }
+    return items;
+  }
 
-  void readItem(Item item) => readDataset(item);
-  
-  String readDataset(Dataset ds) {
-    final rdsList = rootList[1];
-    final length = rdsList.length;
+  Item readItem(List itemList) => readDataset(itemList);
+
+  Dataset readDataset(List itemList) {
+    //  final length = itemList.length;
     final parentDS = cds;
-    cds = makeDataset(parentDS);
-    final eList = new MapAsList(cds);
-
-
-    for (var eList in eList) {
-      final int code = eList[0];
-      final vrIndex = vrIndexFromId(eList[1]);
-      Element e;
-      if (vrIndex == kSQIndex) {
-        e = readSequence(code, vrIndex, eList);
-      } else {
-        e = readSimpleElement(code, vrIndex, eList);
-      }
-
+    final item = new TagItem(parentDS);
+    cds = item;
+    for (var eList in itemList) {
+      cds.add(readElement(eList));
     }
-
-
+    cds = parentDS;
+    return item;
   }
 
-  Element readSimpleElement(int code, int vrIndex, List eList) {
-    final values = readValueField(code, vrIndex,  eList);
-    return makeElement(code, vrIndex, values);
+  Element readElement(List eList) {
+    final code = int.parse(eList[0]);
+    final tag = Tag.lookupByCode(code);
+    final vrIndex = vrIndexFromId(eList[1]);
+    if (vrIndex == kSQIndex) {
+      return readSequence(tag, vrIndex, eList);
+    } else {
+      return readSimpleElement(tag, vrIndex, eList);
+    }
   }
 
-  SQ readSequence(int code, int vrIndex, List eList) {
-    final int code = eList[0];
-    if (eList[1] != 'SQ') return invalidSequenceElement(eList);
-    final int vrIndex = vrIndexFromId(e[1]);
+  Element readSimpleElement(Tag tag, int vrIndex, List eList) {
+    final values = readValueField(tag.code, vrIndex, eList[2]);
+    return TagElement.make(tag, values, vrIndex);
+  }
 
+  SQ readSequence(Tag tag, int vrIndex, List eList) {
+    if (vrIndex != kSQIndex || tag.vrIndex != kSQIndex)
+      return invalidSequenceElement(eList);
     final values = readItems(eList[2]);
-    return makeSequence()
-
-
+    return SQtag.make(tag, values);
   }
 }

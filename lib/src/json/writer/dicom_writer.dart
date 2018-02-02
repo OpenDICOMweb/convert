@@ -8,25 +8,23 @@ import 'package:core/core.dart' hide Indenter;
 import 'package:convert/src/json/writer/dicom_writer_utils.dart';
 import 'package:convert/src/json/writer/indenter.dart';
 
-const String kEmptyValueField = '[]'; // or ''
+const String kEmptyValueField = '"Value": []'; // or ''
 const String kEmptyItem = '{}';
 
 class DicomJsonWriter {
   final Indenter sb;
   final RootDataset rds;
-  final Indenter i;
   DicomJsonWriter(this.rds, {int indent = 2})
-      : i = new Indenter(indent),
-        sb = new Indenter();
+      : sb = new Indenter();
 
   String writeRootDataset(RootDataset rds) {
     sb.writeln('{');
-    i.down;
+    sb.down;
     // Write FMI
     for (var e in rds.fmi.elements) writeSimpleElement(e);
     // Write other Elements
     for (var e in rds.elements) writeElement(e);
-    i.up;
+    sb.up;
     sb.writeln('}');
     return sb.toString();
   }
@@ -38,37 +36,45 @@ class DicomJsonWriter {
       sb.writeln('${kEmptyItem}');
       return;
     }
-    sb.writeln('{');
-    i.down;
-    for (var e in item.elements) writeElement(e);
-    i.up;
-    sb.writeln('}');
+    final length = item.elements.length;
+    sb.indent('{');
+    for (var i = 0; i < length - 1; i++)
+    for (var e in item.elements) writeElement(e, isLast: false);
+    writeElement(e, isLast: true);
+    sb.outdent('}');
   }
 
   void writeElement(Element e) =>
       (e is SQ) ? writeSequence(e) : writeSimpleElement(e);
 
   void writeSimpleElement(Element e) {
-    sb.write('"${e.hex}": {"vr: ${e.vrId}"');
+    sb.write('"${e.hex}": {"vr": "${e.vrId}"');
     if (e.values.isNotEmpty) {
-      sb.write(', ');
+      sb.sb.write(', ');
       writeValueField(e, sb);
     }
-    sb.writeln('}');
+    sb.sb.writeln('}');
   }
 
+
   void writeSequence(SQ e) {
-    sb.write('"${e.hex}": {"vr: ${e.vrId}"');
+    sb.write('"${e.hex}": {"vr": "${e.vrId}"');
     if (e.items.isEmpty) {
-      sb.writeln('}');
+      sb.sb.writeln('}');
       return;
     }
-    sb.writeln(', Value: [');
-    i.down;
-    i.down;
+    sb.sb.writeln(', "Value": [');
+    sb.down;
+    sb.down;
     writeItems(e.items);
-    i.up;
-    i.up;
-    sb.writeln('${i.indent}]}');
+    sb.up;
+    sb.writeln(']');
+    sb.up;
+    sb.writeln('}');
   }
+}
+
+String emptySequenceValue() {
+  sb.sb.writeln('}');
+  return;
 }
