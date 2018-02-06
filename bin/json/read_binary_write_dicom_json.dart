@@ -94,9 +94,9 @@ Future main() async {
   }
 
   final jsonWriter = new DicomJsonWriter(rds);
-  final out = jsonWriter.writeRootDataset(rds);
+  final out = jsonWriter.write(rds);
   print('output length: ${out.length ~/ 1024}');
-  final file = new File('out.json').writeAsString(out);
+  await new File('out.json').writeAsString(out);
   print('done');
 }
 

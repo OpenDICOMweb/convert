@@ -71,6 +71,14 @@ abstract class ReadBufferMixin {
     return v;
   }
 
+  Uint16List readUint16List(int length) {
+    final vList = new Uint16List(length);
+    final end = rIndex_ + (length * 2);
+    for (var i = rIndex_; i < end; i++) vList[i] = bList.getUint16(i);
+    rIndex_ = end;
+    return vList;
+  }
+
   int getUint32() => bList.getUint32(rIndex_);
 
   int readUint32() {
@@ -118,7 +126,8 @@ abstract class ReadBufferMixin {
 
   Uint8List uint8View([int start = 0, int length]) {
     final offset = _getOffset(start, length);
-    return bList.bd.buffer.asUint8List(offset, length ?? lengthInBytes - offset);
+    return bList.bd.buffer
+        .asUint8List(offset, length ?? lengthInBytes - offset);
   }
 
   Uint8List readUint8View(int length) => uint8View(rIndex_, length);

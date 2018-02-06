@@ -8,9 +8,9 @@ import 'dart:convert';
 
 import 'package:core/core.dart' hide Indenter;
 
-typedef Element ValueFieldReader(Tag tag, int vrIndex, Object vf);
+typedef Element ValueFieldReader(Tag tag, int vrIndex, List vf);
 
-Element readValueField(int code, int vrIndex, Object values) {
+Element readValueField(int code, int vrIndex, List values) {
   final tag = Tag.lookupByCode(code, vrIndex);
   return _readers[vrIndex](tag, vrIndex, values);
 }
@@ -30,134 +30,213 @@ const List<ValueFieldReader> _readers = const <ValueFieldReader>[
   _readSL, _readSS, _readST, _readTM, _readUI, _readUL, _readUS,
 ];
 
-Null _readSQ(Tag tag, int vrIndex, Object vf) => invalidElementIndex(vrIndex);
+Null _readSQ(Tag tag, int vrIndex, Iterable vf) => invalidElementIndex(vrIndex);
 
-OBtag _readOB(Tag tag, int vrIndex, Object vf) {
+OBtag _readOB(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kOBIndex);
-  return (vf is String)
-      ? OBtag.make<int>(tag, BASE64.decode(vf).buffer.asUint8List())
-      : invalidValuesError(vf);
+  final String key = vf.elementAt(0);
+  final String value = vf.elementAt(1);
+  if (key == 'InlineBinary')
+    return OBtag.make<int>(tag, BASE64.decode(value).buffer.asUint8List());
+
+  if (key == 'BulkDataURI')
+    return OBtag.make(tag, new IntBulkdata(tag.code, value));
+
+  return invalidValuesError(vf);
 }
 
-OWtag _readOW(Tag tag, int vrIndex, Object vf) {
+OWtag _readOW(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kOWIndex);
-  return (vf is String)
-      ? OWtag.make<int>(tag, BASE64.decode(vf).buffer.asUint16List())
-      : invalidValuesError(vf);
+  final String key = vf.elementAt(0);
+  final String value = vf.elementAt(1);
+  if (key == 'InlineBinary')
+    return OWtag.make<int>(tag, BASE64.decode(value).buffer.asUint8List());
+
+  if (key == 'BulkDataURI')
+    return OWtag.make(tag, new IntBulkdata(tag.code, value));
+
+  return invalidValuesError(vf);
 }
 
-UNtag _readUN(Tag tag, int vrIndex, Object vf) {
+UNtag _readUN(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kUNIndex);
-  return (vf is String)
-      ? UNtag.make<int>(tag, BASE64.decode(vf).buffer.asUint8List())
-      : invalidValuesError(vf);
+  final String key = vf.elementAt(0);
+  final String value = vf.elementAt(1);
+  if (key == 'InlineBinary')
+    return UNtag.make<int>(tag, BASE64.decode(value).buffer.asUint8List());
+
+  if (key == 'BulkDataURI')
+    return UNtag.make(tag, new IntBulkdata(tag.code, value));
+
+  return invalidValuesError(vf);
 }
 
-OLtag _readOL(Tag tag, int vrIndex, Object vf) {
+OLtag _readOL(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kOLIndex);
-  return (vf is String)
-      ? OLtag.make<int>(tag, BASE64.decode(vf).buffer.asUint32List())
-      : invalidValuesError(vf);
+  final String key = vf.elementAt(0);
+  final String value = vf.elementAt(1);
+  if (key == 'InlineBinary')
+    return OLtag.make<int>(tag, BASE64.decode(value).buffer.asUint8List());
+
+  if (key == 'BulkDataURI')
+    return OLtag.make(tag, new IntBulkdata(tag.code, value));
+
+  return invalidValuesError(vf);
 }
 
-OFtag _readOF(Tag tag, int vrIndex, Object vf) {
+OFtag _readOF(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kOFIndex);
-  return (vf is String)
-      ? OFtag.make<double>(tag, BASE64.decode(vf).buffer.asFloat32List())
-      : invalidValuesError(vf);
+  final String key = vf.elementAt(0);
+  final String value = vf.elementAt(1);
+  if (key == 'InlineBinary')
+    return OFtag.make<int>(tag, BASE64.decode(value).buffer.asUint8List());
+
+  if (key == 'BulkDataURI')
+    return OFtag.make(tag, new FloatBulkdata(tag.code, value));
+
+  return invalidValuesError(vf);
 }
 
-ODtag _readOD(Tag tag, int vrIndex, Object vf) {
+ODtag _readOD(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kODIndex);
-  return (vf is String)
-      ? ODtag.make<double>(tag, BASE64.decode(vf).buffer.asFloat64List())
-      : invalidValuesError(vf);
+  final String key = vf.elementAt(0);
+  final String value = vf.elementAt(1);
+  if (key == 'InlineBinary')
+    return ODtag.make<int>(tag, BASE64.decode(value).buffer.asUint8List());
+
+  if (key == 'BulkDataURI')
+    return ODtag.make(tag, new FloatBulkdata(tag.code, value));
+
+  return invalidValuesError(vf);
 }
 
-SStag _readSS(Tag tag, int vrIndex, Object vf) {
+IntBulkdata _getIntBulkdata(Tag tag, Iterable vf) {
+  assert(vf.isNotEmpty);
+  final Object key = vf.elementAt(0);
+  return (key is String && key == 'BulkDataURI')
+      ? new IntBulkdata(tag.code, vf.elementAt(1))
+      : null;
+}
+
+StringBulkdata _getStringBulkdata(Tag tag, Iterable vf) {
+  assert(vf.isNotEmpty);
+  final Object key = vf.elementAt(0);
+  return (key is String && key == 'BulkDataURI')
+      ? new StringBulkdata(tag.code, vf.elementAt(1))
+      : null;
+}
+
+SStag _readSS(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kSSIndex);
-  return (vf is List<int>)
-  ? SStag.make<int>(tag, vf)
-  : invalidValueField('', vf);
-}
+  if (vf is List<int>) return SStag.make<int>(tag, vf);
 
-SLtag _readSL(Tag tag, int vrIndex, Object vf) {
-  assert(vrIndex == kSLIndex);
-  return (vf is List<int>)
-  ? SLtag.make<int>(tag, vf)
-      :    invalidValueField('', vf);
-}
-
-ATtag _readAT(Tag tag, int vrIndex, Object vf) {
-  assert(vrIndex == kATIndex);
-  return (vf is List<int>)
-  ? ATtag.make<int>(tag, vf)
-  :    invalidValueField('', vf);
-}
-
-UStag _readUS(Tag tag, int vrIndex, Object vf) {
-  assert(vrIndex == kUSIndex);
-  return (vf is List<int>)
-  ? UStag.make<int>(tag, vf)
-  : invalidValueField('', vf);
-}
-
-ULtag _readUL(Tag tag, int vrIndex, List values) {
-  assert(vrIndex == kULIndex);
-  return (values is List<int>)
-      ? ULtag.make<int>(tag, values)
-      : invalidValueField('', values);
-}
-
-FLtag _readFL(Tag tag, int vrIndex, Object vf) {
-  assert(vrIndex == kFLIndex);
-  return (vf is List<double>)
-  ? FLtag.make<double>(tag, vf)
+  final bulkdata = _getIntBulkdata(tag, vf);
+  return (bulkdata != null)
+      ? SStag.make(tag, bulkdata)
       : invalidValueField('', vf);
 }
 
-FDtag _readFD(Tag tag, int vrIndex, Object vf) {
+SLtag _readSL(Tag tag, int vrIndex, Iterable vf) {
+  assert(vrIndex == kSLIndex);
+  if (vf is List<int>) return SLtag.make<int>(tag, vf);
+
+  final bulkdata = _getIntBulkdata(tag, vf);
+  return (bulkdata != null)
+      ? SLtag.make(tag, bulkdata)
+      : invalidValueField('', vf);
+}
+
+ATtag _readAT(Tag tag, int vrIndex, Iterable vf) {
+  assert(vrIndex == kATIndex);
+  return (vf is List<int>)
+      ? ATtag.make<int>(tag, vf)
+      : invalidValueField('', vf);
+}
+
+UStag _readUS(Tag tag, int vrIndex, Iterable vf) {
+  assert(vrIndex == kUSIndex);
+  if (vf is List<int>) return UStag.make<int>(tag, vf);
+
+  final bulkdata = _getIntBulkdata(tag, vf);
+  return (bulkdata != null)
+      ? UStag.make(tag, bulkdata)
+      : invalidValueField('', vf);
+}
+
+ULtag _readUL(Tag tag, int vrIndex, Iterable vf) {
+  assert(vrIndex == kULIndex);
+  if (vf is List<int>) return ULtag.make<int>(tag, vf);
+
+  final bulkdata = _getIntBulkdata(tag, vf);
+  return (bulkdata != null)
+      ? ULtag.make(tag, bulkdata)
+      : invalidValueField('', vf);
+}
+
+FloatBulkdata _getFloatBulkdata(Tag tag, Iterable vf) {
+  assert(vf.isNotEmpty);
+  final Object key = vf.elementAt(0);
+  return (key is String && key == 'BulkDataURI')
+      ? new FloatBulkdata(tag.code, vf.elementAt(1))
+      : null;
+}
+
+FLtag _readFL(Tag tag, int vrIndex, Iterable vf) {
+  assert(vrIndex == kFLIndex);
+  if (vf is List<double>) return FLtag.make<double>(tag, vf);
+
+  final bulkdata = _getFloatBulkdata(tag, vf);
+  return (bulkdata != null)
+      ? FLtag.make(tag, bulkdata)
+      : invalidValueField('', vf);
+}
+
+FDtag _readFD(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kFDIndex);
-  return (vf is List<double>) ? FDtag.make<double>(tag, vf)
-  : invalidValueField('', vf);
+  if (vf is List<double>) return FDtag.make<double>(tag, vf);
+
+  final bulkdata = _getFloatBulkdata(tag, vf);
+  return (bulkdata != null)
+      ? FDtag.make(tag, bulkdata)
+      : invalidValueField('', vf);
 }
 
-AEtag _readAE(Tag tag, int vrIndex, Object vf) {
+AEtag _readAE(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kAEIndex);
-  return (vf is List<String>) ? AEtag.make<String>(tag, vf)
-  : invalidValueField('', vf);
+  return (vf is List<String>)
+      ? AEtag.make<String>(tag, vf)
+      : invalidValueField('', vf);
 }
 
-CStag _readCS(Tag tag, int vrIndex, Object vf) {
+CStag _readCS(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kCSIndex && tag.vrIndex == kCSIndex);
-  if (vf is List<String>)
-    return CStag.make(tag, vf);
+  if (vf is List<String>) return CStag.make(tag, vf);
   assert(vf is List<String>);
   return CStag.make<String>(tag, vf);
 }
 
-SHtag _readSH(Tag tag, int vrIndex, Object vf) {
+SHtag _readSH(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kSHIndex && tag.vrIndex == kSHIndex);
   if (vf is List<String>) return SHtag.make(tag, vf);
   assert(vf is List<String>);
   return SHtag.make<String>(tag, vf);
 }
 
-LOtag _readLO(Tag tag, int vrIndex, Object vf) {
+LOtag _readLO(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kLOIndex && tag.vrIndex == kLOIndex);
   if (vf is List<String>) return LOtag.make<String>(tag, vf);
   assert(vf is List<String>);
   return LOtag.make<String>(tag, vf);
 }
 
-UCtag _readUC(Tag tag, int vrIndex, Object vf) {
+UCtag _readUC(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kUCIndex && tag.vrIndex == kUCIndex);
   if (vf is List<String>) return UCtag.make(tag, vf);
   assert(vf is List<String>);
   return UCtag.make<String>(tag, vf);
 }
 
-STtag _readST(Tag tag, int vrIndex, Object vf) {
+STtag _readST(Tag tag, int vrIndex, Iterable vf) {
   if (vf is List<String>) {
     assert(vrIndex == kSTIndex && tag.vrIndex == kSTIndex);
     if (vf.length > 1) log.error('Invalid AS Value Field: $vf');
@@ -166,17 +245,17 @@ STtag _readST(Tag tag, int vrIndex, Object vf) {
   return invalidValuesError(vf);
 }
 
-LTtag _readLT(Tag tag, int vrIndex, Object vf) {
+LTtag _readLT(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kLTIndex && tag.vrIndex == kLTIndex);
   if (vf is List<String>) {
     if (vf.length > 1) log.error('Invalid AS Value Field: $vf');
-     return LTtag.make(tag, vf);
+    return LTtag.make(tag, vf);
   }
   assert(vf is List<String>);
   return LTtag.make<String>(tag, vf);
 }
 
-UTtag _readUT(Tag tag, int vrIndex, Object vf) {
+UTtag _readUT(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kUTIndex && tag.vrIndex == kUTIndex);
   if (vf is List<String>) {
     if (vf.length > 1) log.error('Invalid AS Value Field: $vf');
@@ -186,7 +265,7 @@ UTtag _readUT(Tag tag, int vrIndex, Object vf) {
   return UTtag.make<String>(tag, vf);
 }
 
-URtag _readUR(Tag tag, int vrIndex, Object vf) {
+URtag _readUR(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kURIndex && tag.vrIndex == kURIndex);
   if (vf is List<String>) {
     if (vf.length > 1) log.error('Invalid AS Value Field: $vf');
@@ -195,7 +274,7 @@ URtag _readUR(Tag tag, int vrIndex, Object vf) {
   return URtag.make<String>(tag, vf);
 }
 
-AStag _readAS(Tag tag, int vrIndex, Object vf) {
+AStag _readAS(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kASIndex);
   if (vf is List<String>) {
     if (vf.length > 1 || vf[0].length != 4)
@@ -205,49 +284,49 @@ AStag _readAS(Tag tag, int vrIndex, Object vf) {
   return AStag.make<String>(tag, vf);
 }
 
-DAtag _readDA(Tag tag, int vrIndex, Object vf) {
+DAtag _readDA(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kDAIndex && tag.vrIndex == kDAIndex);
   if (vf is List<String>) return DAtag.make(tag, vf);
   assert(vf is List<String>);
   return DAtag.make<String>(tag, vf);
 }
 
-DTtag _readDT(Tag tag, int vrIndex, Object vf) {
+DTtag _readDT(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kDTIndex && tag.vrIndex == kDTIndex);
   if (vf is List<String>) return DTtag.make(tag, vf);
   assert(vf is List<String>);
   return DTtag.make<String>(tag, vf);
 }
 
-TMtag _readTM(Tag tag, int vrIndex, Object vf) {
+TMtag _readTM(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kTMIndex && tag.vrIndex == kTMIndex);
   if (vf is List<String>) return TMtag.make(tag, vf);
   assert(vf is List<String>);
   return TMtag.make<String>(tag, vf);
 }
 
-IStag _readIS(Tag tag, int vrIndex, Object vf) {
+IStag _readIS(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kISIndex && tag.vrIndex == kISIndex);
   if (vf is List<String>) return IStag.make(tag, vf);
   assert(vf is List<String>);
   return IStag.make<String>(tag, vf);
 }
 
-DStag _readDS(Tag tag, int vrIndex, Object vf) {
+DStag _readDS(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kDSIndex && tag.vrIndex == kDSIndex);
   if (vf is List<String>) return DStag.make(tag, vf);
   assert(vf is List<String>);
   return DStag.make<String>(tag, vf);
 }
 
-UItag _readUI(Tag tag, int vrIndex, Object vf) {
+UItag _readUI(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kUIIndex && tag.vrIndex == kUIIndex);
   if (vf is List<String>) return UItag.make(tag, vf);
   assert(vf is List<String>);
   return UItag.make<String>(tag, vf);
 }
 
-PNtag _readPN(Tag tag, int vrIndex, Object vf) {
+PNtag _readPN(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kPNIndex && tag.vrIndex == kPNIndex);
   if (vf is List<String>) return PNtag.make(tag, vf);
   assert(vf is List<String>);

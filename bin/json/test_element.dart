@@ -9,40 +9,35 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See the AUTHORS file for other contributors.
 
-import 'dart:convert';
+import 'package:core/core.dart' hide Indenter;
 
-import 'package:core/core.dart';
-
-import 'package:convert/src/buffer/write_buffer.dart';
-import 'package:convert/src/json/writer/json_writer.dart';
+import 'package:convert/src/json/writer/indenter.dart';
+import 'package:convert/src/json/writer/dicom_writer.dart';
 
 void main() {
-  final wb = new WriteBuffer();
 
-  final sb = new StringBuffer();
+  final sb = new Indenter();
   final pn =
       TagElement.make(PTag.kPatientName, <String>['Jim^Philbin'], kPNIndex);
-  var s = writeElement<String>(pn, sb);
-  sb.write(s);
+  var s = writeElement(pn, isLast: true);
   print("s: '$s'");
 
   final sh =
   TagElement.make(PTag.kReferringPhysicianTelephoneNumbers,
                       <String>['406', '678', '123'],
                       kSHIndex);
-  s = writeElement<String>(sh, sb);
-  sb.write(s);
+  s = writeElement(sh, isLast: true);
   print("s: '$s'");
 
 
   final ss = TagElement.make(PTag.kTagAngleSecondAxis, <int>[-1], kSSIndex);
-  s = writeElement<String>(ss, stringFromIntElement);
-  sb.write(s);
+  s = writeElement(ss, isLast: true);
+
   print("s: '$s'");
 
   final fd = TagElement.make(PTag.kFrameAcquisitionDuration, <double>[-4.4],
                                  kFDIndex);
-  s = writeElement<String>(fd, stringFromFloatElement);
+  s = writeElement(fd, isLast: true);
   sb.write(s);
   print("s: '$s'");
 
@@ -53,7 +48,4 @@ void main() {
   
 ''';
   print(jsonArray);
-  final encoded = json.write(jsonArray);
-  final Object decoded = json.decode(encoded);
-  print('json: $decoded');
 }

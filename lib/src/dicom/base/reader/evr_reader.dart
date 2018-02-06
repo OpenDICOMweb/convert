@@ -61,7 +61,7 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
     final code = rb.readCode();
     final tag = checkCode(code, eStart);
     final vrCode = rb.readUint16();
- //   log.debug2('@$eStart ${dcm(code)} ${hex16(vrCode)} $tag');
+    //   log.debug2('@$eStart ${dcm(code)} ${hex16(vrCode)} $tag');
     var vrIndex = _lookupEvrVRIndex(code, eStart, vrCode);
 
     // Note: this is only relevant for EVR
@@ -85,19 +85,27 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
     if (_isShortVR(vrIndex)) return readShort(code, vrIndex, eStart);
     if (_isLongVR(vrIndex)) return readLongDefinedLength(code, vrIndex, eStart);
     if (_isSequenceVR(vrIndex)) return readSequence(code, vrIndex, eStart);
-    if (_isUndefinedLengthVR(vrIndex)) return readMaybeUndefined(code, vrIndex, eStart);
+    if (_isUndefinedLengthVR(vrIndex))
+      return readMaybeUndefined(code, vrIndex, eStart);
     invalidVRIndex(vrIndex, null, null);
     return null;
   }
 
   int _lookupEvrVRIndex(int code, int eStart, int vrCode) {
-    var vrIndex = vrIndexFromCode(vrCode);
+    final vrIndex = vrIndexFromCode(vrCode);
     if (vrIndex == null) {
-      log.warn('Null VR: vrCode(${hex16(vrCode)}, $vrCode) ${dcm(code)} start: $eStart');
+      log.warn('Null VR: vrCode(${hex16(vrCode)}, $vrCode) '
+                   '${dcm(code)} start: $eStart');
     }
     if (_isSpecialVR(vrIndex)) {
-      log.info1('-- Changing Special VR ${vrIdFromIndex(vrIndex)}) to VR.kUN');
-      vrIndex = VR.kUN.index;
+      log.info('-- Changing (${hex32(code)}) with Special VR '
+                   '${vrIdFromIndex(vrIndex)}) to VR.kUN');
+      return VR.kUN.index;
+    }
+    if (Tag.isPrivateCreatorCode(code) &&
+        (vrIndex != kLOIndex || vrIndex != kUNIndex)) {
+        log.warn('** Invalid Private Creator (${hex32(code)}) '
+            '${vrIdFromIndex(vrIndex)}) should be VR.kLO');
     }
     return vrIndex;
   }
@@ -165,7 +173,8 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
 
     final fragments = readUndefinedLength(code, eStart, vrIndex, vlf);
     final e = (code == kPixelData)
-        ? makePixelData(code, vrIndex, rb.bdView(eStart), rds.transferSyntax, fragments)
+        ? makePixelData(
+            code, vrIndex, rb.bdView(eStart), rds.transferSyntax, fragments)
         : makeFromByteData(code, vrIndex, rb.bdView(eStart));
     logEndRead(eStart, e, 'readEvrMaybeUndefined');
     return e;
@@ -321,7 +330,8 @@ bool _isShortVR(int vrIndex) =>
     vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
 
 bool _isUndefinedLengthVR(int vrIndex) =>
-    vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
+    vrIndex >= kVRMaybeUndefinedIndexMin &&
+    vrIndex <= kVRMaybeUndefinedIndexMax;
 
 bool _isLongVR(int vrIndex) =>
     vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;

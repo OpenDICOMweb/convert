@@ -15,7 +15,7 @@ class Indenter {
       : _sb = new StringBuffer(),
         _level = 0,
         _nSpaces = 0,
-        _indent = "";
+        _indent = '';
 
   String get close {
     _sb = null;
@@ -26,7 +26,6 @@ class Indenter {
     _level += count;
     _nSpaces = _level * increment;
     _indent = _spaces(_nSpaces);
-    print('incr: $increment, level: $_level, _nSpaces: $_nSpaces, _indent: "$_indent" ');
   }
 
   void indent(String s, [int count = 1]) {
@@ -46,7 +45,6 @@ class Indenter {
 
   void start([String s = '', int count = 1]) {
     _setIndent(count);
-    print('nSpaces: $_nSpaces, _indent: $_indent');
     _sb.write('$_indent$s');
   }
 
@@ -55,10 +53,10 @@ class Indenter {
   void end([String s = '', int count = 1]) {
     _sb.write('$s\n');
     _setIndent(-count);
-    print('nSpaces: $_nSpaces, _indent: $_indent');
   }
 
+  @override
   String toString() => _sb.toString();
 }
 
-String _spaces(int count) => "".padRight(count, ' ');
+String _spaces(int count) => ''.padRight(count, ' ');

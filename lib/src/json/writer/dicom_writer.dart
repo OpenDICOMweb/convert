@@ -4,77 +4,151 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:convert';
+
 import 'package:core/core.dart' hide Indenter;
-import 'package:convert/src/json/writer/dicom_writer_utils.dart';
+
 import 'package:convert/src/json/writer/indenter.dart';
 
-const String kEmptyValueField = '"Value": []'; // or ''
-const String kEmptyItem = '{}';
+typedef void _ElementWriter(Element e, Indenter isb, String comma);
 
 class DicomJsonWriter {
-  final Indenter sb;
+  final Indenter isb;
   final RootDataset rds;
-  DicomJsonWriter(this.rds, {int indent = 2})
-      : sb = new Indenter();
 
-  String writeRootDataset(RootDataset rds) {
-    sb.writeln('{');
-    sb.down;
-    // Write FMI
-    for (var e in rds.fmi.elements) writeSimpleElement(e);
-    // Write other Elements
-    for (var e in rds.elements) writeElement(e);
-    sb.up;
-    sb.writeln('}');
-    return sb.toString();
-  }
+  DicomJsonWriter(this.rds, {int increment = 2})
+      : isb = new Indenter(increment);
 
-  void writeItems(List<Item> items) => items.forEach(writeItem);
-
-  void writeItem(Item item) {
-    if (item.isEmpty) {
-      sb.writeln('${kEmptyItem}');
-      return;
-    }
-    final length = item.elements.length;
-    sb.indent('{');
-    for (var i = 0; i < length - 1; i++)
-    for (var e in item.elements) writeElement(e, isLast: false);
-    writeElement(e, isLast: true);
-    sb.outdent('}');
-  }
-
-  void writeElement(Element e) =>
-      (e is SQ) ? writeSequence(e) : writeSimpleElement(e);
-
-  void writeSimpleElement(Element e) {
-    sb.write('"${e.hex}": {"vr": "${e.vrId}"');
-    if (e.values.isNotEmpty) {
-      sb.sb.write(', ');
-      writeValueField(e, sb);
-    }
-    sb.sb.writeln('}');
-  }
-
-
-  void writeSequence(SQ e) {
-    sb.write('"${e.hex}": {"vr": "${e.vrId}"');
-    if (e.items.isEmpty) {
-      sb.sb.writeln('}');
-      return;
-    }
-    sb.sb.writeln(', "Value": [');
-    sb.down;
-    sb.down;
-    writeItems(e.items);
-    sb.up;
-    sb.writeln(']');
-    sb.up;
-    sb.writeln('}');
-  }
+  String write(RootDataset rds) => _writeRootDataset(rds, isb);
 }
 
-String emptySequenceValue() {
-  sb.sb.writeln('}');
-  return;
+String _writeRootDataset(RootDataset rds, Indenter isb) {
+  isb.indent('{');
+  _writeFmi(rds, isb);
+
+  final elements = rds.elements;
+  final last = elements.length - 1;
+  for (var i = 0; i < last; i++)
+    _writeElement(elements.elementAt(i), isb, isLast: false);
+  _writeElement(elements.elementAt(last), isb, isLast: true);
+  isb.outdent('}');
+  return isb.toString();
+}
+
+void _writeFmi(RootDataset rds, Indenter isb) {
+  final fmi = rds.fmi.elements;
+  final last = fmi.length - 1;
+  for (var i = 0; i < last; i++)
+    _writeElement(fmi.elementAt(i), isb, isLast: false);
+  _writeElement(fmi.elementAt(last), isb, isLast: true);
+}
+
+void _writeItems(List<Item> items, Indenter isb, String comma) {
+  final last = items.length - 1;
+  for (var i = 0; i < last; i++) _writeItem(items.elementAt(i), isb, ',');
+  _writeItem(items.elementAt(last), isb, '');
+}
+
+void _writeItem(Item item, Indenter isb, String comma) =>
+    writeDataset(item, isb, comma);
+
+void writeDataset(Dataset ds, Indenter isb, String comma) {
+  isb.indent('{');
+  final elements = ds.elements;
+  final last = elements.length - 1;
+  for (var i = 0; i < last; i++)
+    _writeElement(elements.elementAt(i), isb, isLast: false);
+  _writeElement(elements.elementAt(last), isb, isLast: true);
+  isb.outdent('}$comma');
+}
+
+String writeElement(Element e, {bool isLast}) {
+  final isb = new Indenter();
+  _writeElement(e, isb, isLast: isLast);
+  return isb.toString();
+}
+
+void _writeElement(Element e, Indenter isb, {bool isLast}) {
+  final comma = (isLast) ? '' : ',';
+  _elementWriters[e.vrIndex](e, isb, comma);
+}
+
+List<_ElementWriter> _elementWriters = <_ElementWriter>[
+  _writeSQ, // no reformat
+  // Maybe Undefined Lengths
+  _writeOtherInt, _writeOtherInt, _writeOtherInt,
+
+  // EVR Long
+  _writeOtherFloat, _writeOtherFloat, _writeOtherInt,
+  _writeString, _writeText, _writeText,
+
+  // EVR Short
+  _writeString, _writeString, _writeInt, _writeString, _writeString,
+  _writeString, _writeString, _writeFloat, _writeFloat, _writeString,
+  _writeString, _writeText, _writeString, _writeString, _writeInt,
+  _writeInt, _writeText, _writeString, _writeString, _writeInt, _writeInt,
+];
+
+void _writeSQ(Element e, Indenter isb, String comma) {
+  if (e is SQ) {
+    final items = e.items;
+    if (items.isEmpty) {
+      isb.writeln('"${e.hex}": {"vr": "${e.vrId}", "Values": []}$comma');
+    } else {
+      isb.indent('"${e.hex}": {"vr": "${e.vrId}", "Values": [', 2);
+      _writeItems(e.items, isb, comma);
+      isb..outdent(']')..outdent('}$comma');
+    }
+  }
+  log.error('$e is not an SQ');
+  assert(e is SQ);
+}
+
+void _writeFloat(Element e, Indenter sb, String comma) {
+  assert(e is FloatBase);
+  sb.writeln('"${e.hex}": {"vr": "${e.vrId}", "Value": ${e.values}}$comma');
+}
+
+void _writeInt(Element e, Indenter sb, String comma) {
+  assert(e is IntBase);
+  sb.writeln('"${e.hex}": {"vr": "${e.vrId}", "Value": ${e.values}}$comma');
+}
+
+void _writeOtherFloat(Element e, Indenter sb, String comma) {
+  assert(e is FloatBase);
+  sb.writeln(
+      '"${e.hex}": {"vr": "${e.vrId}", '
+          '"Base64": "${BASE64.encode(e.vfBytes)}"}$comma');
+}
+
+void _writeOtherInt(Element e, Indenter sb, String comma) {
+  assert(e is IntBase);
+  sb.writeln(
+      '"${e.hex}": {"vr": "${e.vrId}", '
+          '"Base64": "${BASE64.encode(e.vfBytes)}"}$comma');
+}
+
+void _writeText(Element e, Indenter sb, String comma) {
+  assert(e is Text);
+  final length = e.values.length;
+  if (length == 0) return;
+  if (length == 1) {
+    sb.writeln('"${e.hex}": {"vr": "${e.vrId}", '
+                 '"Value": ["${e.values.elementAt(0)}"]}$comma');
+    return;
+  }
+  log.error('Text with multiple values: $e');
+}
+
+void _writeString(Element e, Indenter sb, String comma) {
+  assert(e is StringBase);
+  final v = e.values;
+  if (v.isEmpty) {
+    sb.writeln('"${e.hex}": {"vr": "${e.vrId}", ""}$comma');
+    return;
+  }
+  final nList = new List<String>(v.length);
+  for (var i = 0; i < v.length; i++) nList[i] = '"${v.elementAt(i)}"';
+  sb.writeln(
+      '"${e.hex}": {"vr": "${e.vrId}", "Value": [${nList.join(', ')}]}$comma');
 }

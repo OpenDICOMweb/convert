@@ -28,7 +28,7 @@ class ReadBuffer extends BufferBase {
   ReadBuffer(ByteData bd, [Endian endian = Endian.little])
       : rIndex_ = 0,
         wIndex_ = bd.lengthInBytes,
-        bytes = new Bytes.fromByteData(bd, endian);
+        bytes = new Bytes.fromTypedData(bd, endian);
 
   ReadBuffer.from(ReadBuffer rb,
       [int offset = 0, int length, Endian endian = Endian.little])
@@ -36,20 +36,21 @@ class ReadBuffer extends BufferBase {
         wIndex_ = offset + (length ?? rb.lengthInBytes),
         bytes = new Bytes.from(rb.bytes, offset, length, endian);
 
+/*
   ReadBuffer.fromUint8List(Uint8List uint8List, [Endian endian = Endian.little])
       : rIndex_ = 0,
         wIndex_ = uint8List.lengthInBytes,
-        bytes = new Bytes.fromUint8List(uint8List, endian);
-
+        bytes = new Bytes.fromTypedData(uint8List, endian);
+*/
   ReadBuffer.fromList(List<int> list, [Endian endian = Endian.little])
       : rIndex_ = 0,
         wIndex_ = list.length,
-        bytes = new Bytes.fromUint8List(new Uint8List.fromList(list), endian);
+        bytes = new Bytes.fromTypedData(new Uint8List.fromList(list), endian);
 
-  ReadBuffer._fromTypedData(TypedData td, Endian endian)
+  ReadBuffer.fromTypedData(TypedData td, Endian endian)
       : rIndex_ = 0,
         wIndex_ = td.lengthInBytes,
-        bytes = new Bytes.fromByteData(td, endian);
+        bytes = new Bytes.fromTypedData(td, endian);
 
   // **** ReadBuffer specific Getters and Methods
 
@@ -151,8 +152,8 @@ class ReadBuffer extends BufferBase {
   ByteData bdView([int start = 0, int end]) {
     end ??= rIndex_;
     final length = end - start;
-    final offset = _getOffset(start, length);
-    return bytes.asByteData(start, length ?? lengthInBytes - offset);
+ //   final offset = _getOffset(start, length);
+    return bytes.asByteData(start, length);
   }
 
   Uint8List uint8View([int start = 0, int length]) {
@@ -211,7 +212,7 @@ class LoggingReadBuffer extends ReadBuffer {
   }
 
   LoggingReadBuffer._(TypedData td, Endian endian)
-      : super._fromTypedData(td.buffer.asByteData(), endian);
+      : super.fromTypedData(td.buffer.asByteData(), endian);
 
   /// The current readIndex as a string.
   String get _rrr => 'R@${rIndex_.toString().padLeft(5, '0')}';

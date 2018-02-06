@@ -58,7 +58,7 @@ TagRootDataset convertFile(File file, {int reps = 1, bool fmiOnly = false}) {
     ..debug1(bRoot.pInfo.summary(bRoot));
   if (bRoot == null) return null;
 
-  final tRoot = convertByteDSToTagDS<int>(bRoot);
+  final tRoot = convertByteDSToTagDS(bRoot);
   // Test dataset equality
   log..info0('tRoot: $tRoot')..info0('Byte DS: $bRoot')..info0('Tag DS$tRoot');
   if (bRoot.length != tRoot.length) {

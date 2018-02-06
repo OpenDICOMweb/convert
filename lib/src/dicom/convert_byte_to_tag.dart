@@ -13,7 +13,7 @@ Dataset currentBDS;
 Dataset currentTDS;
 int nElements = 0;
 
-TagRootDataset convertByteDSToTagDS<V>(BDRootDataset rootBDS) {
+TagRootDataset convertByteDSToTagDS(BDRootDataset rootBDS) {
   log.level = Level.warn1;
   currentBDS = rootBDS;
   final rootTDS = new TagRootDataset.from(rootBDS);
@@ -21,12 +21,14 @@ TagRootDataset convertByteDSToTagDS<V>(BDRootDataset rootBDS) {
 
   convertDataset(rootBDS, rootTDS);
 
+  print('rootBDS Summary: ${rootBDS.summary}');
+  print('rootTDS Summary: ${rootTDS.summary}');
   // Fix: can't compare datasets because Elements values are unprocessed
   // Uint8List.
   // if (rootBDS != rootTDS) log.error('**** rootBDS != rootTDS');
   if (rootBDS.total != rootTDS.total || rootBDS.dupTotal != rootTDS.dupTotal)
     _error(0, '**** rootBDS != rootTDS');
-  log.info0(_exceptions);
+  log.info0('Exceptions: ${exceptions()}');
   return rootTDS;
 }
 
@@ -34,6 +36,7 @@ Dataset convertDataset(Dataset byteDS, Dataset tagDS) {
   currentBDS = byteDS;
   currentTDS = tagDS;
   for (var e in byteDS.elements) {
+    print('convert: $e');
     final te = convertElement(e);
     if (te == null) throw 'null TE';
   }
@@ -46,37 +49,50 @@ Dataset convertDataset(Dataset byteDS, Dataset tagDS) {
 
 Map<String, Element> pcElements = <String, Element>{};
 
-//Urgent fix
 Element convertElement(Element be) {
   log.level = Level.info;
-  var vrCode = be.vrCode;
 
+  int vrIndex;
   final tag = be.tag;
-  if (be.vrIndex == kUNIndex && tag.vr != VR.kUN)
-    _warn(be.code, 'e.vr of ${be.vrId} was changed to ${tag.vr}');
-  if (tag.vr == VR.kUN && be.vrIndex != kUNIndex) {
-    //Fix: this needs to do better with tags that have multiple VRs
-    vrCode = be.vrCode;
-    _warn(be.code, 'VR of $tag was changed to ${be.vrId}');
+  if (be.vrIndex == tag.vrIndex) {
+    vrIndex = be.vrIndex;
+  } else {
+    _warn(be.code, 'be.vr (${be.vrId}) is NOT $tag');
+    if (be.vrIndex == kUNIndex && isNormalVRIndex(tag.vrIndex)) {
+      _warn(be.code, 'e.vr of ${be.vrId} was NOT changed to ${tag.vr.id}');
+    //  vrIndex = tag.vrIndex;
+    }
+    if (isSpecialVRIndex(be.vrIndex))
+      _error(be.code, 'Non-Normal VR: ${be.vrIndex}');
+
+    if (isSpecialVRIndex(tag.vrIndex)) {
+      if (!vrByIndex[tag.vrIndex].isValidIndex(be.vrIndex))
+        _warn(be.code, 'Invalid VR Index (${be.vrIndex} for $tag');
+      vrIndex = be.vrIndex;
+    }
   }
+
+  if (vrIndex == kLOIndex) print('vrIndex = $vrIndex $be');
 
   Element te;
   if (be is SQ) {
     te = convertSQ(be);
+  } else if (tag is PCTagUnknown) {
+    te = TagElement.from(be, be.vrIndex);
+    log.info0('PCTagUnknown\n  $be\n  $te');
   } else if (be.code == kPixelData) {
-    te = TagElement.from(be);
+    te = TagElement.from(be, vrIndex);
     log.info0('PixelData\n  $be\n  $te');
-  } else if (be is BDElement) {
-    te = TagElement.from(be);
   } else if (be is PrivateCreator) {
     if (be.vrIndex != kLOIndex)
       _warn(be.code, 'Private Creator e.vr(${be.vrId}) should be VR.kLO');
-    if (vrCode != VR.kLO.code) throw 'Invalid Tag VR: ${tag.vr} should be VR.kLO';
     assert(tag is PCTag && tag.name == be.asString);
-    te = TagElement.from(be);
+    te = TagElement.from(be, vrIndex);
     pcElements[be.asString] = te;
   } else if (tag is PDTag) {
-    te = TagElement.from(be);
+    te = TagElement.from(be, vrIndex);
+  } else if (be is BDElement) {
+    te = TagElement.from(be, vrIndex);
   } else {
     throw 'Invalid Tag: $tag';
   }
@@ -123,7 +139,7 @@ Tag getTag(Element be) {
     if (be.vrIndex != kLOIndex)
       _warn(be.code, 'Creator $name with vr($vrIndex) != VR.kLO: $be');
     log.debug2('   Creator: $name');
-    tag = new PCTag(code, kLOIndex, name);
+    tag = new PCTag(code, vrIndex, name);
     pcTags[code] = tag;
   } else if (Tag.isPrivateDataCode(code)) {
     final creatorCode = pcCodeFromPDCode(code);
@@ -147,6 +163,7 @@ int pcCodeFromPDCode(int pdCode) {
 
 List<String> _exceptions = <String>[];
 
+String exceptions() => _exceptions.join('\n');
 void _warn(int code, String msg) {
   final s = '**   Warning ${dcm(code)}  $msg';
   _exceptions.add(s);
@@ -154,7 +171,7 @@ void _warn(int code, String msg) {
 }
 
 void _error(int code, String msg) {
-  final s = '**** Error: ${dcm(code)} $msg';
+  final s = '\n**** Error: ${dcm(code)} $msg';
   _exceptions.add(s);
   log.error(s);
 }

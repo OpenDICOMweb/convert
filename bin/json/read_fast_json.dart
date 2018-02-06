@@ -35,7 +35,7 @@ Future main() async {
   }
 
   final reader = new FastJsonReader(json);
-  final rds = reader.readRootDataset();
+  final rds = reader.read();
   if (rds == null) {
     log.warn('Invalid DICOM file: $fPath');
   } else {

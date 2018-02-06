@@ -66,13 +66,14 @@ class BDReader {
 
   /// Creates a [BDReader] from the contents of the [uint8List].
   factory BDReader.fromUint8List(Uint8List uint8List,
-          {String path = '',
+          {Endian endian = Endian.little,
+          String path = '',
           bool async = true,
           DecodingParameters dParams = DecodingParameters.kNoChange,
           bool reUseBD = true,
           bool doLogging = true,
           bool showStats = true}) =>
-      new BDReader._(new ReadBuffer.fromUint8List(uint8List),
+      new BDReader._(new ReadBuffer.fromTypedData(uint8List, endian),
           path: '',
           dParams: dParams,
           reUseBD: reUseBD,
@@ -101,7 +102,7 @@ class BDReader {
       bool doLogging = true,
       bool showStats = true}) {
     final Uint8List bytes =
-        (doAsync) ?  _readAsync(file) : file.readAsBytesSync();
+        (doAsync) ? _readAsync(file) : file.readAsBytesSync();
     final bd = bytes.buffer.asByteData();
     return new BDReader(bd,
         path: file.path,
