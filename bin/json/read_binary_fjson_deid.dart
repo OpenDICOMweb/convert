@@ -75,7 +75,7 @@ Future main() async {
   print('output length: ${out.length ~/ 1024}K');
   await new File(outPath).writeAsString(out);
 
-  final tagRds = convertByteDSToTagDS(rds);
+  final tagRds = convertBDDSToTagDS(rds);
   print(tagRds);
   final enrollment = new Date(1980, 1, 1);
   final old = normalizeDates(tagRds, enrollment);
@@ -86,7 +86,7 @@ Future main() async {
   final deid = writer1.write();
   print('output length: ${deid.length}');
   print('output length: ${deid.length ~/ 1024}K');
-  await new File(outPath).writeAsString(deid);
+  await new File(deIdPath).writeAsString(deid);
   print('done');
 }
 

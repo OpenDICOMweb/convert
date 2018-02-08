@@ -103,9 +103,9 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
       return VR.kUN.index;
     }
     if (Tag.isPrivateCreatorCode(code) &&
-        (vrIndex != kLOIndex || vrIndex != kUNIndex)) {
+        (vrIndex != kLOIndex && vrIndex != kUNIndex)) {
         log.warn('** Invalid Private Creator (${hex32(code)}) '
-            '${vrIdFromIndex(vrIndex)}) should be VR.kLO');
+            '${vrIdFromIndex(vrIndex)}($vrIndex) should be VR.kLO');
     }
     return vrIndex;
   }

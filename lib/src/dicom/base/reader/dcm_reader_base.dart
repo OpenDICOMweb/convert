@@ -300,7 +300,9 @@ abstract class DcmReaderBase<V> {
     return tag;
   }
 
-  bool isValidVR(int code, int vrIndex, Tag tag) => _isValidVR(code, vrIndex, tag);
+  bool isValidVR(int code, int vrIndex, Tag tag) =>
+      _isValidVR(code, vrIndex, tag);
+
   bool _isValidVR(int code, int vrIndex, Tag tag) {
     if (vrIndex == kUNIndex) return true;
     if (tag.hasNormalVR && vrIndex == tag.vrIndex) return true;

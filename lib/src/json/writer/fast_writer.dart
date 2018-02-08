@@ -77,13 +77,37 @@ class FastJsonWriter {
     sb.outdent('],');
   }
 
-  void _writeItems(List<Item> items, String comma) {
-    final last = items.length - 1;
-    for (var i = 0; i < last; i++) _writeItem(items.elementAt(i), ',');
-    _writeItem(items.elementAt(last), '');
+  void _writeElement(Element e, {bool isLast}) {
+    final comma = (isLast) ? '' : ',';
+    if (e is SQ) {
+      print('e: $e');
+      _writeSQ(e, comma);
+    } else {
+      print('e: $e');
+//      print('e.vr: ${e.vrIndex} tag.vr: ${e.tag.vrIndex}');
+      _elementWriters[e.vrIndex](e, sb, comma);
+    }
   }
 
-  void _writeItem(Item item, String comma) => _writeDataset(item, comma);
+  void _writeSQ(SQ e, String comma) {
+    final items = e.items;
+    if (items.isEmpty) {
+      sb.writeln('["${e.hex}", "${e.vrId}", []]$comma');
+    } else {
+      print('WriteSQ: $e');
+      sb.indent('["${e.hex}", "${e.vrId}", [', 2);
+      _writeItems(e.items, comma);
+      sb..outdent(']')..outdent(']$comma');
+    }
+  }
+
+  void _writeItems(List<Item> items, String comma) {
+    final last = items.length - 1;
+    for (var i = 0; i < last; i++) _writeDataset(items.elementAt(i), ',');
+    _writeDataset(items.elementAt(last), '');
+  }
+
+//  void _writeItem(Item item, String comma) => _writeDataset(item, comma);
 
   void _writeDataset(Dataset ds, String comma) {
     sb.indent('[');
@@ -95,25 +119,6 @@ class FastJsonWriter {
     sb.outdent(']$comma');
   }
 
-  void _writeElement(Element e, {bool isLast}) {
-    final comma = (isLast) ? '' : ',';
-    if (e is SQ) {
-      _writeSQ(e, comma);
-    } else {
-      _elementWriters[e.vrIndex](e, sb, comma);
-    }
-  }
-
-  void _writeSQ(SQ e, String comma) {
-    final items = e.items;
-    if (items.isEmpty) {
-      sb.writeln('["${e.hex}", "${e.vrId}", []]$comma');
-    } else {
-      sb.indent('["${e.hex}", "${e.vrId}", [', 2);
-      _writeItems(e.items, comma);
-      sb..outdent(']')..outdent(']$comma');
-    }
-  }
 
 }
 
@@ -198,7 +203,7 @@ void _writeText(Element e, Indenter sb, String comma) {
 }
 
 void _writeString(Element e, Indenter sb, String comma) {
-  assert(e is StringBase);
+  assert(e is StringBase, '$e is not StringBase');
   final List<String> v = e.values;
   if (v.isEmpty) {
     sb.writeln('["${e.hex}", "${e.vrId}", []]$comma');
