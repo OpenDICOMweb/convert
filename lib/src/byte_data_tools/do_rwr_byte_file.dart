@@ -115,8 +115,8 @@ $pad    TS: ${rds0.transferSyntax}''');
       log.warn('$pad Datasets are different!');
     }
 
-    final aList = rds0.elements.elements;
-    final bList = rds1.elements.elements;
+    final aList = rds0.elements.values;
+    final bList = rds1.elements.values;
     final length = (aList.length > bList.length) ? aList.length : bList.length;
     for (var i = 0; i < length; i++) {
       final x = aList.elementAt(i);

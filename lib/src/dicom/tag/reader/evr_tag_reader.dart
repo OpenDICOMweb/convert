@@ -58,8 +58,9 @@ class EvrTagReader extends EvrReader<int> {
   }
 
   @override
-  Item makeItem(Dataset parent, {ByteData bd, ElementList elements, SQ sequence}) =>
-      new BDItem(parent, bd);
+  Item makeItem(Dataset parent, Map<int, Element> eMap,
+          [SQ sequence, ByteData bd]) =>
+      new BDItem.fromBD(parent, eMap, sequence, bd);
 }
 
 /// A decoder for Binary DICOM (application/dicom).
@@ -72,7 +73,8 @@ class EvrLoggingTagReader extends EvrTagReader with LogReadMixin {
 
   /// Creates a new [EvrLoggingTagReader].
   EvrLoggingTagReader(ByteData bd, TagRootDataset rds,
-      {DecodingParameters dParams = DecodingParameters.kNoChange, bool reUseBD = true})
+      {DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool reUseBD = true})
       : pInfo = new ParseInfo(rds),
         offsets = new ElementOffsets(),
         super._(bd, rds, dParams, reUseBD);

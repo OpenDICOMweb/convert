@@ -30,6 +30,8 @@ import 'package:convert/src/errors.dart';
 // 3. [_finishReadElement] is only called from [readEvrElement] and
 //    [readIvrElement].
 
+bool doConvertUNSequences = false;
+
 /// A [Converter] for [Uint8List]s containing a [Dataset] encoded in the
 /// application/dicom media type.
 ///
@@ -59,60 +61,119 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
   Element readElement() {
     final eStart = rb.rIndex;
     final code = rb.readCode();
-    final tag = checkCode(code, eStart);
+    final group = code >> 16;
     final vrCode = rb.readUint16();
     //   log.debug2('@$eStart ${dcm(code)} ${hex16(vrCode)} $tag');
     var vrIndex = _lookupEvrVRIndex(code, eStart, vrCode);
 
-    // Note: this is only relevant for EVR
-    if (tag != null) {
-      if (dParams.doCheckVR && isNotValidVR(code, vrIndex, tag)) {
-        final vrIndex = vrIndexFromCode(vrCode);
-        log.error('VR $vrIndex is not valid for $tag');
-      }
+    Element e;
+    if (_isShortVR(vrIndex)) {
+      e = readShort(code, vrIndex, eStart);
+    } else if (_isLongVR(vrIndex)) {
+      e = readLongDefinedLength(code, vrIndex, eStart);
+    } else if (_isSequenceVR(vrIndex)) {
+        e = readSequence(code, vrIndex, eStart);
+    } else if (_isUndefinedLengthVR(vrIndex)) {
+        e = readMaybeUndefined(code, vrIndex, eStart);
+    }
+    if (e == null) return invalidVRIndex(vrIndex, null, null);
 
-      if (dParams.doCorrectVR) {
-        //Urgent: implement replacing the VR, but must be after parsing
-        final newVRIndex = correctVR(code, vrIndex, tag);
-        if (newVRIndex != vrIndex) {
-          final newVR = tag.vr;
-          log.info1('** Changing VR from $vrIndex to $newVR');
-          vrIndex = newVR.index;
+      Tag tag;
+      if (group.isEven) {
+        _group = -1;
+        tag = PTag.lookupByCode(code, vrIndex);
+      } else {
+        tag = _getPrivateTag(code, vrIndex, group, e);
+      }
+//    print(tag);
+
+      // Note: this is only relevant for EVR
+      if (tag != null) {
+        if (dParams.doCheckVR && isNotValidVR(code, vrIndex, tag)) {
+          final vrIndex = vrIndexFromCode(vrCode);
+          log.error('VR $vrIndex is not valid for $tag');
+        }
+
+        if (dParams.doCorrectVR) {
+          //Urgent: implement replacing the VR, but must be after parsing
+          final newVRIndex = correctVR(code, vrIndex, tag);
+          if (newVRIndex != vrIndex) {
+            final newVR = tag.vr;
+            log.info1('** Changing VR from $vrIndex to $newVR');
+            vrIndex = newVR.index;
+          }
         }
       }
+      return e;
     }
 
-    if (_isShortVR(vrIndex)) return readShort(code, vrIndex, eStart);
-    if (_isLongVR(vrIndex)) return readLongDefinedLength(code, vrIndex, eStart);
-    if (_isSequenceVR(vrIndex)) return readSequence(code, vrIndex, eStart);
-    if (_isUndefinedLengthVR(vrIndex))
-      return readMaybeUndefined(code, vrIndex, eStart);
-    invalidVRIndex(vrIndex, null, null);
-    return null;
+  int _group;
+  int _subgroup;
+  Map<int, PCTag> _creators;
+  PCTag _creator;
+
+  Tag _getPrivateTag(int code, int vrIndex, int group, Element v) {
+    assert(group.isOdd);
+//    print('code ${hex32(code)}');
+    if (_group == -1) {
+      _group = group;
+      _subgroup = 0;
+      _creators = <int, PCTag>{};
+    }
+
+    final elt = code & 0xFFFF;
+
+    if (elt == 0) return new GroupLengthPrivateTag(code, vrIndex);
+    if (elt < 0x10) return new IllegalPrivateTag(code, vrIndex);
+    if ((elt >= 0x10) && (elt <= 0xFF)) {
+      // Private Creator - might not be LO
+      final subgroup = elt & 0xFF;
+      final String token = (vrIndex == kLOIndex)
+          ? v.value
+          : ASCII.decode(v.vfBytes, allowInvalid: true).trimRight();
+ //     print('  token: "$token"');
+      final tag = PCTag.make(code, vrIndex, token);
+      _creators[subgroup] = tag;
+      return tag;
+    }
+    if ((elt > 0x00FF) && (elt <= 0xFFFF)) {
+      // Private Data
+      final subgroup = (elt & 0xFF00) >> 8;
+//      print('  _subgroup: ${hex16(_subgroup)} subgroup: ${hex16(_subgroup)}');
+      if (subgroup != _subgroup) {
+        _creator = _creators[subgroup];
+        _subgroup = subgroup;
+      }
+//      print('  Creator: $_creator');
+      return PDTag.make(code, vrIndex, _creator);
+    }
+    // This should never happen
+    return invalidTagCode(code);
   }
 
+  //TODO: speed this up
   int _lookupEvrVRIndex(int code, int eStart, int vrCode) {
     final vrIndex = vrIndexFromCode(vrCode);
     if (vrIndex == null) {
       log.warn('Null VR: vrCode(${hex16(vrCode)}, $vrCode) '
-                   '${dcm(code)} start: $eStart');
+          '${dcm(code)} start: $eStart');
     }
     if (_isSpecialVR(vrIndex)) {
       log.info('-- Changing (${hex32(code)}) with Special VR '
-                   '${vrIdFromIndex(vrIndex)}) to VR.kUN');
+          '${vrIdFromIndex(vrIndex)}) to VR.kUN');
       return VR.kUN.index;
     }
-    if (Tag.isPrivateCreatorCode(code) &&
+    if (Tag.isPCCode(code) &&
         (vrIndex != kLOIndex && vrIndex != kUNIndex)) {
-        log.warn('** Invalid Private Creator (${hex32(code)}) '
-            '${vrIdFromIndex(vrIndex)}($vrIndex) should be VR.kLO');
+      log.warn('** Invalid Private Creator (${hex32(code)}) '
+          '${vrIdFromIndex(vrIndex)}($vrIndex) should be VR.kLO');
     }
     return vrIndex;
   }
 
   @override
   Element makeFromByteData(int code, int vrIndex, ByteData bd) =>
-      Evr.make(code, vrIndex, bd);
+      EvrElement.make(code, vrIndex, bd);
 
   /// Read a Short EVR Element, i.e. one with a 16-bit Value Field Length field.
   /// These Elements can not have an kUndefinedLength value.
@@ -150,8 +211,13 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
 
   @override
   Element makePixelData(int code, int vrIndex, ByteData bd,
-          [TransferSyntax ts, VFFragments fragments]) =>
-      Evr.makePixelData(code, vrIndex, bd, ts, fragments);
+      [TransferSyntax ts, VFFragments fragments]) {
+    ts ??= defaultTS;
+    return EvrElement.makePixelData(code, vrIndex, bd, ts, fragments);
+  }
+
+  TransferSyntax get defaultTS => _defaultTS ??= rds.transferSyntax;
+  TransferSyntax _defaultTS;
 
   /// Read a long EVR Element (not SQ) with a 32-bit vfLengthField,
   /// that might have a value of kUndefinedValue.
@@ -165,16 +231,20 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
     rb.rSkip(2);
     final vlf = rb.readUint32();
     logStartRead(code, vrIndex, eStart, vlf, 'readEvrMaybeUndefined');
-    if (vlf != kUndefinedLength) return _makeLong(code, vrIndex, eStart, vlf);
 
     // If VR is UN then this might be a Sequence
-    if (vrIndex == kUNIndex && isUNSequence(vlf))
-      return _readUSQ(code, vrIndex, eStart, vlf);
+    if ((vrIndex == kUNIndex) && doConvertUNSequences && isUNSequence(vlf)) {
+      print('Converting UN to SQ');
+      final sq = _readUSQ(code, vrIndex, eStart, vlf);
+      logEndRead(eStart, sq, 'readEvrMaybeUndefined');
+      return sq;
+    }
+
+    if (vlf != kUndefinedLength) return _makeLong(code, vrIndex, eStart, vlf);
 
     final fragments = readUndefinedLength(code, eStart, vrIndex, vlf);
     final e = (code == kPixelData)
-        ? makePixelData(
-            code, vrIndex, rb.bdView(eStart), rds.transferSyntax, fragments)
+        ? makePixelData(code, vrIndex, rb.bdView(eStart), defaultTS, fragments)
         : makeFromByteData(code, vrIndex, rb.bdView(eStart));
     logEndRead(eStart, e, 'readEvrMaybeUndefined');
     return e;
@@ -194,7 +264,7 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
 
   @override
   SQ makeSequence(int code, ByteData bd, Dataset cds, List<Item> items) =>
-      Evr.makeSequence(code, bd, cds, items);
+      EvrElement.makeSequence(code, bd, cds, items);
 
   /// Reads a [kUndefinedLength] Sequence.
   SQ _readUSQ(int code, int vrIndex, int eStart, int vlf) {
@@ -257,12 +327,12 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
       return -1;
     }
     assert(rb.rIndex == 132, 'Non-Prefix start index: ${rb.rIndex}');
-    print('r@${rb.rIndex}');
+//    print('r@${rb.rIndex}');
     while (rb.isReadable) {
       final code = rb.peekCode();
       if (code >= 0x00030000) break;
       final e = readElement();
-      rds.fmi.add(e);
+      rds.fmi[e.code] = e;
     }
 
     if (!rb.rHasRemaining(dParams.shortFileThreshold - rb.rIndex)) {
@@ -291,11 +361,11 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
   /// Read as 32-bit integer. This is faster
   bool _isDcmPrefixPresent(ReadBuffer rb) {
     rb.rSkip(128);
-    print('r@${rb.rIndex}');
+//    print('r@${rb.rIndex}');
     final prefix = rb.readUint32();
-    print('r@${rb.rIndex}');
+//    print('r@${rb.rIndex}');
     if (prefix == kDcmPrefix) {
-      print('prefix: ${hex32(prefix)}');
+//      print('prefix: ${hex32(prefix)}');
       return true;
     } else {
       log.warn('No DICOM Prefix present');

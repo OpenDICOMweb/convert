@@ -12,6 +12,7 @@ import 'package:core/core.dart';
 
 import 'package:convert/dicom.dart';
 import 'package:convert/src/utilities/dicom_file_utils.dart';
+import 'package:convert/src/utilities/find_private_groups.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
 
@@ -25,16 +26,16 @@ const String k6684x0 =
 const String k6684x1 =
     'c:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
 
-Formatter z = new Formatter(maxDepth: -1);
+Formatter z = new Formatter.basic();
 
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
 
   final fPath = k6684x0;
-  final z = new Formatter.basic();
 
-  print('path: $fPath');
-  print(' out: ${getTempFile(fPath, 'dcmout')}');
+  ///  final z = new Formatter.basic();
+
+  log..debug('path: $fPath')..debug(' out: ${getTempFile(fPath, 'dcmout')}');
   final url = new Uri.file(fPath);
   stdout.writeln('Reading(byte): $url');
 
@@ -65,71 +66,78 @@ Future main() async {
       new File(fmtPath)..writeAsStringSync(sb.toString());
       log.debug(fmtOut);
     } else {
-      print('${bdRDS.summary}');
-      //  print('bdRDS: ${bdRDS.format(z)}');
+      log.debug('bdRDS: ${bdRDS.summary}');
+      //   log.debug('bdRDS: ${bdRDS.format(z)}');
     }
   }
 
   final outPath = 'out.json';
+  log.debug('Writing "$outPath"...');
   final writer0 = new FastJsonWriter(bdRDS, outPath, separateBulkdata: true);
   final out = writer0.write();
-
-  print('output length: ${out.length}');
-  print('output length: ${out.length ~/ 1024}K');
   await new File(outPath).writeAsString(out);
+  log
+    ..debug('Wrote JSON: $outPath')
+    ..debug('  Output length: ${out.length}')
+    ..debug('  Output length: ${out.length ~/ 1024}K\n');
 
-  final tagRds = convertBDDSToTagDS(bdRDS);
-  print('tagRDS Summary: ${tagRds.summary}');
-//  print('tagRDS: ${tagRds.format(z)}');
+  final finder = new PrivateFinder(bdRDS);
+  final privateRds = finder.find();
+  log.debug('privateRds: ${privateRds.format(z)}');
+//  log.debug('privateRds Summary: ${privateRds.summary}');
 
-  final enrollment = new Date(1980, 2, 1);
-  normalizeDates(tagRds, enrollment);
+  final tagRds0 = convertBDDSToTagDS(bdRDS);
+  log.debug('Convert tagRds0 Summary: ${tagRds0.summary}');
 
-  final uids0 = tagRds.findUids();
-  print(z.fmt('Uids: ${uids0.length}', uids0));
-
-  final removed = <Element>[];
-  for (var code in deIdRemoveCodes) {
-    final eList = tagRds.deleteAll(code, recursive: true);
-    if (eList.isNotEmpty) {
-//      print(z.fmt('Removed: ${eList.length}', eList));
-      removed.addAll(eList);
-    }
-  }
-  print(z.fmt('Total Removed: ${removed.length}', removed));
-  print('tagRDS Summary: ${tagRds.summary}');
-
-  final uids1 = tagRds.findUids();
-  print(z.fmt('Uids Removed: ${uids1.length}', uids1));
-
-
-  final private = <Element>[];
-  final pList = tagRds.findAllPrivate();
-  print(z.fmt('Private: ${pList.length}', pList));
-  final dList = tagRds.deleteAllPrivate(recursive: true);
-  if (dList.isNotEmpty) private.addAll(dList);
-  if (dList.isNotEmpty) print('removed: (${dList.length}) $dList');
-  print(z('Total Private Removed: ${dList.length}', private));
-  print('tagRDS Summary: ${tagRds.summary}');
-//  print('tagRDS: ${tagRds.format(z)}');
-
-  tagRds.where((e) {
+  var count = 0;
+  // Urgent: where not working
+  tagRds0.where((e) {
     if (e.isPrivate) {
-      print('** P: $e');
+      count++;
+      log.debug('** P: $e');
       return true;
     } else {
       return false;
     }
-
   });
+  log.debug('Private count: $count');
+
+  final pList = tagRds0.findAllPrivate();
+  log
+    ..debug('Private Top Level: ${pList.length}')
+    ..debug(z.fmt('Private: ${pList.length}', pList));
+
+  final dList = tagRds0.deleteAllPrivate(recursive: true);
+  log.debug('Private removed: ${dList.length}');
+//  log.debug(z.fmt('Private removed: ${dList.length}', dList));
+
+  if (pList.length != dList.length)
+    log.debug('**** Private ${pList.length} '
+        'and Removed ${dList.length} not equal.');
+
+//  log.debug(z('Total Private Removed: ${dList.length}', private));
+//  log.debug('tagRDS Summary: ${tagRds.summary}');
+
+  count = 0;
+  tagRds0.where((e) {
+    if (e.isPrivate) {
+      log.debug('** P: $e');
+      return true;
+    } else {
+      return false;
+    }
+  });
+  log.debug('Private count: $count');
 
   final deIdPath = 'deid.json';
-  final writer1 = new FastJsonWriter(tagRds, deIdPath, separateBulkdata: true);
+  final writer1 = new FastJsonWriter(tagRds0, deIdPath, separateBulkdata: true);
   final deid = writer1.write();
-  print('output length: ${deid.length}');
-  print('output length: ${deid.length ~/ 1024}K');
   await new File(deIdPath).writeAsString(deid);
-  print('done');
+  log
+    ..debug('Wrote DeIdJSON: $deIdPath')
+    ..debug('output length: ${deid.length}')
+    ..debug('output length: ${deid.length ~/ 1024}K')
+    ..debug('done');
 }
 
 Future<Uint8List> readFileAsync(File file) async => await file.readAsBytes();

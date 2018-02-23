@@ -57,11 +57,12 @@ class IvrBDReader extends IvrReader<int> {
 //  static final BDElementMaker make = Ivr.make;
 
   @override
-  ElementList get elements => cds.elements;
+  List<Element> get elements => cds.elements;
 
   @override
-  Item makeItem(Dataset parent, {ByteData bd, ElementList elements, SQ sequence}) =>
-      new BDItem(parent, bd);
+  Item makeItem(Dataset parent,
+                Map<int, Element> eMap, [SQ sequence, ByteData bd]) =>
+      new BDItem.fromBD(parent, eMap, sequence, bd);
 }
 
 /// A decoder for Binary DICOM (application/dicom).

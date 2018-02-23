@@ -73,11 +73,11 @@ abstract class IvrReader<V> extends DcmReaderBase<V> {
   @override
   Element makePixelData(int code, int vrIndex, ByteData bd,
           [TransferSyntax ts, VFFragments fragments]) =>
-      Ivr.makePixelData(code, vrIndex, bd, ts, fragments);
+      IvrElement.makePixelData(code, vrIndex, bd, ts, fragments);
 
   @override
   Element makeFromByteData(int code, int vrIndex, ByteData bd) =>
-      Ivr.make(code, vrIndex, bd);
+      IvrElement.make(code, vrIndex, bd);
 
   /// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have
   /// kUndefinedValue.
@@ -126,7 +126,7 @@ abstract class IvrReader<V> extends DcmReaderBase<V> {
 
   @override
   SQ makeSequence(int code, ByteData bd, Dataset cds, List<Item> items) =>
-      Ivr.makeSequence(code, bd, cds, items);
+      IvrElement.makeSequence(code, bd, cds, items);
 
   /// Reads a defined [vfl].
   SQ _readDSQ(int code, int vrIndex, int eStart, int vfl) {

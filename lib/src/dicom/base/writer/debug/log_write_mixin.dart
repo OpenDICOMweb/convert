@@ -17,7 +17,7 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
   ElementOffsets get inputOffsets;
   ElementOffsets get outputOffsets;
 
-  void updatePInfoPixelData(Element e) {
+  void updatePInfoPixelData(IntBase e) {
     log
       ..debug('Pixel Data: ${e.info}')
       ..debug('vfLength: ${e.vfLength}')

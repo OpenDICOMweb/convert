@@ -36,11 +36,11 @@ class TagReader {
       this.reUseBD = true,
       this.doLogging = true,
       this.showStats})
-      : rds = (rds == null) ? new TagRootDataset(bd: bd, path: path) : rds,
+      : rds = (rds == null) ? new TagRootDataset.empty(path) : rds,
         _evrReader = (doLogging)
-            ? new EvrLoggingTagReader(bd, rds, dParams: dParams, reUseBD: reUseBD)
-            : new EvrTagReader(bd, new TagRootDataset(bd: bd, path: path),
-                dParams: dParams, reUseBD: reUseBD);
+            ? new EvrLoggingTagReader(bd, rds,
+                dParams: dParams, reUseBD: reUseBD)
+            : new EvrTagReader(bd, rds, dParams: dParams, reUseBD: reUseBD);
 
   /// Creates a [TagReader] from the contents of the [bytes].
   factory TagReader.fromUint8List(Uint8List bytes,
@@ -63,7 +63,8 @@ class TagReader {
       bool doLogging = true,
       bool showStats = false}) {
     final bytes = (input is Uint8List) ? input : new Uint8List.fromList(input);
-    return new TagReader.fromUint8List(bytes, reUseBD: reUseBD, dParams: dParams);
+    return new TagReader.fromUint8List(bytes,
+        reUseBD: reUseBD, dParams: dParams);
   }
 
   /// Creates a [TagReader] from the contents of the [file].
@@ -73,9 +74,11 @@ class TagReader {
       bool reUseBD: true,
       bool doLogging = true,
       bool showStats = false}) {
-    final Uint8List bytes = (async) ? file.readAsBytes() : file.readAsBytesSync();
+    final Uint8List bytes =
+        (async) ? file.readAsBytes() : file.readAsBytesSync();
     final bd = bytes.buffer.asByteData();
-    return new TagReader(bd, path: file.path, reUseBD: reUseBD, dParams: dParams);
+    return new TagReader(bd,
+        path: file.path, reUseBD: reUseBD, dParams: dParams);
   }
 
   /// Creates a [TagReader] from the contents of the [File] at [path].

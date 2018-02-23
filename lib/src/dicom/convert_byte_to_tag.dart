@@ -9,47 +9,58 @@ import 'package:core/core.dart';
 typedef Element<V> Maker<K, V>(K id, List<V> values,
     [int vfLength, VFFragments fragments]);
 
-Dataset currentBDS;
-Dataset currentTDS;
+RootDataset rootBds;
+RootDataset rootTds;
+Dataset currentBds;
+Dataset currentTds;
 int nElements = 0;
+List<String> _exceptions = <String>[];
 
-TagRootDataset convertBDDSToTagDS(BDRootDataset rootBDS) {
+TagRootDataset convertBDDSToTagDS(RootDataset root) {
   log.level = Level.warn1;
-  currentBDS = rootBDS;
-  final rootTDS = new TagRootDataset();
-  currentTDS = rootTDS;
+  rootBds = root;
+  currentBds = rootBds;
+  rootTds = new TagRootDataset.empty();
+  currentTds = rootTds;
 
-//  log.debug('tRoot.isRoot: ${rootTDS.isRoot}');
-//  print('rootBDS Summary: ${rootBDS.summary}');
-  print('duplicates: ${rootBDS.dupTotal}');
-  convertRootDataset(rootBDS, rootTDS);
-  print('rootTDS Summary: ${rootTDS.summary}');
+  log
+    ..debug('rootBDS: ${rootBds.total} elements')
+    ..debug('rootBDS: ${rootBds.summary}')
+    ..debug('Convert FMI');
+  nElements = 0;
+  _convertFmi(rootBds, rootTds);
 
-  // Fix: can't compare datasets because Elements values are unprocessed
-  // Uint8List.
-  // if (rootBDS != rootTDS) log.error('**** rootBDS != rootTDS');
-  if (rootBDS.total != rootTDS.total || rootBDS.dupTotal != rootTDS.dupTotal)
-    _error(0, '**** rootBDS != rootTDS');
-  log.info0('Exceptions: ${exceptions()}');
-  return rootTDS;
+  log.debug('Convert Root Dataset');
+  nElements = 0;
+  _convertRootDataset(rootBds, rootTds);
+
+  log
+    ..debug('   Summary: ${rootTds.summary}')
+    ..debug('     Count: $nElements')
+    ..debug('Exceptions: ${_exceptions.join('\n')}');
+  return rootTds;
 }
 
-Dataset convertRootDataset(RootDataset bdDS, RootDataset tagDS) {
-  currentBDS = bdDS;
-  currentTDS = tagDS;
-
-  convertElements(bdDS.fmi, tagDS.fmi);
-  convertElements(bdDS.elements, tagDS.elements);
-  return tagDS;
-}
-
-void convertElements(ElementList bdElements, ElementList tagElements) {
-  print('tagElements: $tagElements');
-  if (tagElements.isNotEmpty) throw 'bad tagElements: $tagElements';
-  for (var e in bdElements) {
-//    print('convert: $e');
+void _convertFmi(RootDataset rootBds, RootDataset rootTagDS) {
+  log
+    ..debug('  count: $nElements')
+    ..debug('  rootBDS FMI: ${rootBds.fmi.length}')
+    ..debug('  rootTDS FMI: ${rootTagDS.fmi.length}');
+  if (rootTds.fmi.isNotEmpty) throw 'bad rootTagDS: $rootTagDS';
+  for (var e in rootBds.fmi) {
     final te = convertElement(e);
-    tagElements.add(te);
+    rootTagDS.fmi[te.code] = te;
+    if (te == null) throw 'null TE';
+  }
+  log.debug('  count: $nElements');
+}
+
+void _convertRootDataset(RootDataset rootBds, RootDataset rootTds) {
+  log.debug('  count: $nElements');
+  if (rootTds.isNotEmpty) throw 'bad rootTds: $rootTds';
+  for (var e in rootBds) {
+    final te = convertElement(e);
+    rootTds.add(te);
     if (te == null) throw 'null TE';
   }
 }
@@ -57,30 +68,46 @@ void convertElements(ElementList bdElements, ElementList tagElements) {
 Map<String, Element> pcElements = <String, Element>{};
 
 Element convertElement(Element be) {
-//  print('be: $be');
+//  log.debug('be: $be');
   _warnVRIndex(be);
 
-  final te = (be is SQ) ? convertSQ(be) : TagElement.fromBD(be, be.vrIndex);
-//  print('te: $te');
+  final te = (be is SQ) ? convertSQ(be) : _convertSimpleElement(be);
+//  log.debug('te: $te');
 
   if (be.code != te.code)
     _error(be.code, 'Elements codes not equal: ${be.code}, ${te.code}');
 
-  print('$te v:${valuesPrefix(te, 5)}');
+//  log.debug('$te v:${valuesPrefix(te, 5)}');
   nElements++;
   return te;
 }
 
+Element _convertSimpleElement(Element e) {
+//  log.debug('be.vrIndex: ${e.vrIndex}');
+  if (e.vrIndex > 30) throw 'bad be.vr: ${e.vrIndex}';
+  return (e.tag == PTag.kPixelData)
+      ? TagElement.pixelDataFromBDE(e, rootBds.transferSyntax, e.vrIndex)
+      : TagElement.fromBDE(e, e.vrIndex);
+}
+
+Element _convertMaybeUndefinedElement(Element e) {
+//  log.debug('be.vrIndex: ${e.vrIndex}');
+//  if (e.vrIndex)
+  if (e.vrIndex > 30) throw 'bad be.vr: ${e.vrIndex}';
+  return (e.tag == PTag.kPixelData)
+      ? TagElement.pixelDataFromBDE(e, rootBds.transferSyntax, e.vrIndex)
+      : TagElement.fromBDE(e, e.vrIndex);
+}
+
 const int kDefaultCount = 5;
-//
+
 String valuesPrefix(Element te, [int count = kDefaultCount]) {
   final length = te.values.length;
   if (length <= 0) return '[]';
   final sb = new StringBuffer('[');
   final limit = (length > count) ? count : length;
   final last = limit - 1;
-  for (var i = 0; i < last; i++)
-    sb.write('${te.values.elementAt(i)}, ');
+  for (var i = 0; i < last; i++) sb.write('${te.values.elementAt(i)}, ');
   final end = (limit < length) ? '...]' : ']';
   sb.write('${te.values.elementAt(last)}$end');
   return sb.toString();
@@ -88,30 +115,29 @@ String valuesPrefix(Element te, [int count = kDefaultCount]) {
 
 SQ convertSQ(SQ sq) {
   final tItems = new List<TagItem>(sq.items.length);
-  final parentBDS = currentBDS;
-  final parentTDS = currentTDS;
+  final parentBDS = currentBds;
+  final parentTDS = currentTds;
   for (var i = 0; i < sq.items.length; i++) {
-    currentBDS = sq.items.elementAt(i);
-    currentTDS = new TagItem(parentTDS, currentBDS.dsBytes.bd);
-    convertItem(currentBDS, currentTDS);
-    tItems[i] = currentTDS;
+    currentBds = sq.items.elementAt(i);
+    currentTds = new TagItem.empty(parentTDS, sq,
+                                       currentBds.dsBytes.bd);
+    convertItem(currentBds, currentTds);
+    tItems[i] = currentTds;
   }
-  currentBDS = parentBDS;
-  currentTDS = parentTDS;
+  currentBds = parentBDS;
+  currentTds = parentTDS;
   final tagSQ = new SQtag(sq.tag, parentTDS, tItems, sq.length);
 
-  for (var item in tItems) item.add(tagSQ);
+  for (var item in tItems) item.sequence = tagSQ;
   return tagSQ;
 }
 
-void convertItem(Dataset beDS, Dataset tagDS) {
-  final bdElements = beDS.elements;
-  final tagElements = tagDS.elements;
-  for (var e in bdElements) {
-    print('convert: $e');
+void convertItem(Item bdItem, Item tagItem) {
+  for (var e in bdItem) {
+//    log.debug('convert: $e');
     final te = convertElement(e);
     if (te == null) throw 'null TE';
-    tagElements.add(e);
+    tagItem.add(e);
   }
 }
 
@@ -119,21 +145,18 @@ final Map<int, PCTag> pcTags = <int, PCTag>{};
 
 // TODO: integrate this into /dictionary/tag
 int _pcCodeFromPDCode(int pdCode) {
-  final group = Group.fromTag(pdCode);
-  final elt = Elt.fromTag(pdCode);
+  final group = Tag.toGroup(pdCode);
+  final elt = Tag.toElt(pdCode);
   final cElt = elt >> 8;
   final pcCode = (group << 16) + cElt;
   return pcCode;
 }
 
-List<String> _exceptions = <String>[];
-String exceptions() => _exceptions.join('\n');
-
 void _warnVRIndex(Element be) {
   final vrIndex = be.vrIndex;
   final tag = be.tag;
   if (vrIndex == be.tag.vrIndex) return;
-  print('* vrIndex: $vrIndex tag.vrIndex: ${tag.vrIndex} $tag');
+//  log.debug('* vrIndex: $vrIndex tag.vrIndex: ${tag.vrIndex} $tag');
 
   _warn(be.code, 'be.vr(${be.vrId}) is NOT ${tag.vrIndex}');
   if (vrIndex == kUNIndex && isNormalVRIndex(tag.vrIndex)) {
@@ -159,4 +182,3 @@ void _error(int code, String msg) {
   _exceptions.add(s);
   log.error(s);
 }
-

@@ -23,15 +23,18 @@ abstract class TagReaderMixin implements DcmReaderBase<int> {
           [TransferSyntax ts, VFFragments fragments]) =>
       null;
 
-  SQ makeTagSequence(int code, BDElement bd, Dataset parent, List<Item> items) => null;
+  SQ makeTagSequence(
+          int code, BDElement bd, Dataset parent, List<Item> items) =>
+      null;
 
-  RootDataset makeTagRootDataset(ByteData bd, int fmiEnd, String path) =>
-      new TagRootDataset(bd: bd, fmiEnd: fmiEnd, path: path);
+  RootDataset makeTagRootDataset(String path, ByteData bd, int fmiEnd) =>
+      new TagRootDataset.empty(path, bd, fmiEnd);
 
   RootDataset makeTagRootDatasetFromBD(ByteData bd, int fmiEnd, String path) =>
-      new TagRootDataset(bd: bd, fmiEnd: fmiEnd, path: path);
+      new TagRootDataset.empty(path, bd, fmiEnd);
 
   /// Returns a new [Item].
-  TagItem makeTagItem(Dataset parent, {ByteData bd, ElementList elements, SQ sequence}) =>
-      new TagItem(parent, bd);
+  TagItem makeTagItem(Dataset parent,
+          {ByteData bd, Map<int, Element> elements, SQ sequence}) =>
+      new TagItem.empty(parent, sequence, bd);
 }

@@ -38,7 +38,7 @@ class BDReader {
       bool reUseBD = true,
       bool doLogging = true,
       bool showStats = true}) {
-    rds ??= new BDRootDataset(bd, path: path);
+    rds ??= new BDRootDataset.empty(path, bd);
     return new BDReader._(new ReadBuffer(bd),
         rds: rds,
         path: path,
@@ -59,9 +59,9 @@ class BDReader {
       // Why is this failing
       : _evrReader = (doLogging)
             ? new EvrLoggingBDReader(
-                rb.bd, new BDRootDataset(rb.bd, path: path),
+                rb.bd, new BDRootDataset.empty(path, rb.bd),
                 dParams: dParams, reUseBD: reUseBD)
-            : new EvrBDReader(rb.bd, new BDRootDataset(rb.bd, path: path),
+            : new EvrBDReader(rb.bd, new BDRootDataset.empty(path, rb.bd),
                 dParams: dParams, reUseBD: reUseBD);
 
   /// Creates a [BDReader] from the contents of the [uint8List].

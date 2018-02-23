@@ -6,11 +6,11 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
-import 'package:core/core.dart' hide Indenter;
+import 'package:core/core.dart';
 
 import 'package:convert/src/bulkdata/bulkdata_list.dart';
-import 'package:convert/src/json/writer/indenter.dart';
 
 class FastJsonWriter {
   /// The [RootDataset] to be written.
@@ -60,31 +60,33 @@ class FastJsonWriter {
   String write() => _writeRootDataset(rds, sb);
 
   String _writeRootDataset(RootDataset rds, Indenter sb) {
-    sb.indent('[');
+    sb.down('[');
     if (includeFmi) _writeFmi(rds, sb);
     _writeDataset(rds, '');
-    sb.outdent(']');
+    sb.up(']');
     return sb.toString();
   }
 
   void _writeFmi(RootDataset rds, Indenter sb) {
-    sb.indent('[');
-    final fmi = rds.fmi.elements;
-    final last = fmi.length - 1;
-    for (var i = 0; i < last; i++)
-      _writeElement(fmi.elementAt(i), isLast: false);
-    _writeElement(fmi.elementAt(last), isLast: true);
-    sb.outdent('],');
+    sb.down('[');
+    final fmi = rds.fmi;
+    //final last = fmi.length - 1;
+    for (var e in fmi) {
+      print('writeFmi: $e');
+      _writeElement(e, ',');
+    }
+ //   _writeElement(fmi[last], '');
+    sb.up('],');
   }
 
-  void _writeElement(Element e, {bool isLast}) {
-    final comma = (isLast) ? '' : ',';
+  void _writeElement(Element e, String comma) {
     if (e is SQ) {
-      print('e: $e');
+//      print('e: $e');
       _writeSQ(e, comma);
     } else {
-      print('e: $e');
+//      print('e: $e');
 //      print('e.vr: ${e.vrIndex} tag.vr: ${e.tag.vrIndex}');
+      if (e.vrIndex > 30) print(e);
       _elementWriters[e.vrIndex](e, sb, comma);
     }
   }
@@ -94,32 +96,38 @@ class FastJsonWriter {
     if (items.isEmpty) {
       sb.writeln('["${e.hex}", "${e.vrId}", []]$comma');
     } else {
-      print('WriteSQ: $e');
-      sb.indent('["${e.hex}", "${e.vrId}", [', 2);
+//      print('WriteSQ: $e Items: ${e.items.length}');
+      sb.down('["${e.hex}", "${e.vrId}", [', 2);
       _writeItems(e.items, comma);
-      sb..outdent(']')..outdent(']$comma');
+      sb
+        ..up(']')
+        ..up(']$comma');
     }
   }
 
   void _writeItems(List<Item> items, String comma) {
     final last = items.length - 1;
-    for (var i = 0; i < last; i++) _writeDataset(items.elementAt(i), ',');
+    for (var i = 0; i < last; i++) {
+      final item = items.elementAt(i);
+//      print('item: $item');
+      _writeDataset(item, ',');
+    }
+//    final item = items.elementAt(last);
+//    print('item: $item');
     _writeDataset(items.elementAt(last), '');
   }
 
 //  void _writeItem(Item item, String comma) => _writeDataset(item, comma);
 
   void _writeDataset(Dataset ds, String comma) {
-    sb.indent('[');
+    sb.down('[');
     final elements = ds.elements;
     final last = elements.length - 1;
     for (var i = 0; i < last; i++)
-      _writeElement(elements.elementAt(i), isLast: false);
-    _writeElement(elements.elementAt(last), isLast: true);
-    sb.outdent(']$comma');
+      _writeElement(elements.elementAt(i), ',');
+    _writeElement(elements.elementAt(last), '');
+    sb.up(']$comma');
   }
-
-
 }
 
 typedef void _ElementWriter(Element e, Indenter sb, String comma);
@@ -135,13 +143,16 @@ List<_ElementWriter> _elementWriters = <_ElementWriter>[
 
   // EVR Long
   _writeOtherFloat, _writeOtherFloat, _writeOtherInt,
-  _writeString, _writeText, _writeText,
+  _writeStringList, _writeText, _writeText,
 
   // EVR Short
-  _writeString, _writeString, _writeInt, _writeString, _writeString,
-  _writeString, _writeString, _writeFloat, _writeFloat, _writeString,
-  _writeString, _writeText, _writeString, _writeString, _writeInt,
-  _writeInt, _writeText, _writeString, _writeString, _writeInt, _writeInt,
+  _writeStringList, _writeStringList, _writeInt,
+  _writeStringList, _writeStringList, _writeStringList,
+  _writeStringList, _writeFloat, _writeFloat,
+  _writeStringList, _writeStringList, _writeText,
+  _writeStringList, _writeStringList, _writeInt,
+  _writeInt, _writeText, _writeStringList,
+  _writeStringList, _writeInt, _writeInt,
 ];
 
 Null _sqError(Element e, Indenter sb, String comma) =>
@@ -150,9 +161,9 @@ Null _sqError(Element e, Indenter sb, String comma) =>
 void _writeFloat(Element e, Indenter sb, String comma) {
   assert(e is FloatBase);
   if (!_separateBulkdata || e.vfLength < _bdThreshold) {
-    sb.writeln('["${e.hex}", "${e.vrId}", ${e.values}]');
+    sb.writeln('["${e.hex}", "${e.vrId}", ${e.values}]$comma');
   } else {
-  final url = _bdList.add(e.code, e.vfBytes);
+    final url = _bdList.add(e.code, e.vfBytes);
     sb.writeln('["${e.hex}", "${e.vrId}", ["BulkDataUri", "$url"]]$comma');
   }
 }
@@ -169,9 +180,12 @@ void _writeInt(Element e, Indenter sb, String comma) {
 
 void _writeOtherFloat(Element e, Indenter sb, String comma) {
   assert(e is FloatBase);
+//  print('***** vfLength: ${e.vfLength}');
+//  print('***** vfBytes.Length: ${e.vfBytes.length}');
   if (!_separateBulkdata || e.vfLength < _bdThreshold) {
-    (e.values.isEmpty) ? sb.writeln('["${e.hex}", "${e.vrId}", ""]$comma') : sb
-        .writeln('["${e.hex}", "${e.vrId}", '
+    (e.values.isEmpty)
+        ? sb.writeln('["${e.hex}", "${e.vrId}", ""]$comma')
+        : sb.writeln('["${e.hex}", "${e.vrId}", '
             '["InlineBinary", "${BASE64.encode(e.vfBytes)}"]]$comma');
   } else {
     final url = _bdList.add(e.code, e.vfBytes);
@@ -181,14 +195,81 @@ void _writeOtherFloat(Element e, Indenter sb, String comma) {
 
 void _writeOtherInt(Element e, Indenter sb, String comma) {
   assert(e is IntBase);
+  if (e.code == kPixelData) return _writePixelData(e, sb, comma);
+  final v = e.values;
+  final vb = e.vfBytes;
+  final doPrint = false;
+
+  if (vb is List<int> && vb is TypedData) {
+    if (doPrint) {
+      print('-----           e: $e');
+      print('***** isTypedData: ${e.values is TypedData}');
+      print('*****           v: ${v.runtimeType}: ${v.length}');
+      print('*****          vb: ${vb.runtimeType}: ${vb.length}');
+    //  print('*****      values: (${e.values.length})${e.values}');
+      print('*****    vfLength: ${e.vfLength}');
+      print('*****        size: ${e.sizeInBytes}');
+    //  print('*****     vfBytes: (${e.vfBytes.lengthInBytes})${e.vfBytes}');
+    }
+    final u8 = vb.buffer.asUint8List(vb.offsetInBytes, vb.lengthInBytes);
+    final u8Length = u8.lengthInBytes;
+    final vLIB = vb.lengthInBytes;
+    assert(u8Length == vLIB, 'u8Length: $u8Length vLIB: $vLIB');
+    final vLength = e.values.length * e.sizeInBytes;
+    assert(vLength == vb.lengthInBytes, 'vLength: $vLength vLIB: $vLIB');
+
+  }
   if (!_separateBulkdata || e.vfLength < _bdThreshold) {
-    (e.values.isEmpty) ? sb.writeln('["${e.hex}", "${e.vrId}", ""]') : sb
-        .writeln(
-        '["${e.hex}", "${e.vrId}", ["InlineBinary", '
+    (e.values.isEmpty)
+        ? sb.writeln('["${e.hex}", "${e.vrId}", []]$comma')
+        : sb.writeln('["${e.hex}", "${e.vrId}", ["InlineBinary", '
             '"${BASE64.encode(e.vfBytes)}"]]$comma');
   } else {
     final url = _bdList.add(e.code, e.vfBytes);
     sb.writeln('["${e.hex}", "${e.vrId}", ["BulkDataUri", "$url"]]$comma');
+  }
+}
+
+void _writePixelData(Element e, Indenter sb, String comma) {
+  assert(e is IntBase);
+  assert(e.code == kPixelData);
+  final v = e.values;
+  final vb = e.vfBytes;
+
+  if (vb is List<int> && vb is TypedData) {
+
+    final doPrint = false;
+    if (doPrint) {
+      print('-----           e: $e');
+      print('***** isTypedData: ${e.values is TypedData}');
+      print('*****           v: ${v.runtimeType}: ${v.length}');
+      print('*****          vb: ${vb.runtimeType}: ${vb.length}');
+  //    print('*****      values: (${e.values.length})${e.values}');
+      print('*****    vfLength: ${e.vfLength}');
+      print('*****        size: ${e.sizeInBytes}');
+  //    print('*****     vfBytes: (${e.vfBytes.lengthInBytes})${e.vfBytes}');
+    }
+    final u8 = vb.buffer.asUint8List(vb.offsetInBytes, vb.lengthInBytes);
+    final u8Length = u8.lengthInBytes;
+    final vLIB = vb.lengthInBytes;
+    assert(u8Length == vLIB, 'u8Length: $u8Length vLIB: $vLIB');
+    final vLength = e.values.length * e.sizeInBytes;
+    assert(vLength == vb.lengthInBytes, 'vLength: $vLength vLIB: $vLIB');
+
+  }
+  if (e.tag.code ==  kPixelData && e is IntBase) {
+    if (!_separateBulkdata || e.vfLength < _bdThreshold) {
+      final bytes = (e.fragments == null) ? e.vfBytes : e.fragments.bulkdata;
+      (e.values.isEmpty)
+      ? sb.writeln('["${e.hex}", "${e.vrId}", []]$comma')
+      : sb.writeln('["${e.hex}", "${e.vrId}", ["InlineBinary", '
+                       '"${BASE64.encode(bytes)}"]]$comma');
+    } else {
+      final url = _bdList.add(e.code, e.vfBytes);
+      sb.writeln('["${e.hex}", "${e.vrId}", ["BulkDataUri", "$url"]]$comma');
+    }
+  } else {
+    throw new ArgumentError('$e is not PixelData');
   }
 }
 
@@ -202,7 +283,7 @@ void _writeText(Element e, Indenter sb, String comma) {
   }
 }
 
-void _writeString(Element e, Indenter sb, String comma) {
+void _writeStringList(Element e, Indenter sb, String comma) {
   assert(e is StringBase, '$e is not StringBase');
   final List<String> v = e.values;
   if (v.isEmpty) {
@@ -223,5 +304,3 @@ void _writeString(Element e, Indenter sb, String comma) {
     sb.writeln('["${e.hex}", "${e.vrId}", ["BulkDataUri", "$url"]]$comma');
   }
 }
-
-

@@ -120,8 +120,8 @@ $pad    TS: ${rds0.transferSyntax}''');
     }
 
     if (noisy) {
-      final aList = rds0.elements.elements;
-      final bList = rds1.elements.elements;
+      final aList = rds0.elements.asList;
+      final bList = rds1.elements.asList;
       //final length = (aList.length > bList.length) ? aList.length : bList.length;
       if (aList.length != bList.length)
         log.warn('** rds0.length(${bList.length}) != rds1.length(${aList.length})');

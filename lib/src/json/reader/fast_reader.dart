@@ -15,7 +15,7 @@ class FastJsonReader {
 
   FastJsonReader(String json)
       : rootList = JSON.decode(json),
-        rds = new TagRootDataset();
+        rds = new TagRootDataset.empty();
 
   RootDataset read() => _readRootDataset();
 
@@ -30,7 +30,7 @@ class FastJsonReader {
     final fmi = rootList[0];
     for (var eList in fmi) {
       final e = _readElement(eList, rds);
-      rds.fmi.add(e);
+      rds.fmi[e.code] = e;
     }
   }
 
@@ -44,7 +44,7 @@ class FastJsonReader {
   }
 
   Item _readItem(List itemList, Dataset parent) {
-    final item = new TagItem(parent);
+    final item = new TagItem.empty(parent);
     _readDataset(itemList, item);
     return item;
   }
@@ -69,6 +69,7 @@ class FastJsonReader {
   }
 
   Element _readSimpleElement(Tag tag, int vrIndex, List eList) {
+
     final values = readValueField(tag.code, vrIndex, eList[2]);
     return TagElement.make(tag, values, vrIndex);
   }

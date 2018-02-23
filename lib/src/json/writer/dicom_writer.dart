@@ -6,9 +6,8 @@
 
 import 'dart:convert';
 
-import 'package:core/core.dart' hide Indenter;
+import 'package:core/core.dart';
 
-import 'package:convert/src/json/writer/indenter.dart';
 
 typedef void _ElementWriter(Element e, Indenter isb, String comma);
 
@@ -23,7 +22,7 @@ class DicomJsonWriter {
 }
 
 String _writeRootDataset(RootDataset rds, Indenter isb) {
-  isb.indent('{');
+  isb.down('{');
   _writeFmi(rds, isb);
 
   final elements = rds.elements;
@@ -31,16 +30,16 @@ String _writeRootDataset(RootDataset rds, Indenter isb) {
   for (var i = 0; i < last; i++)
     _writeElement(elements.elementAt(i), isb, isLast: false);
   _writeElement(elements.elementAt(last), isb, isLast: true);
-  isb.outdent('}');
+  isb.up('}');
   return isb.toString();
 }
 
 void _writeFmi(RootDataset rds, Indenter isb) {
-  final fmi = rds.fmi.elements;
+  final fmi = rds.fmi;
   final last = fmi.length - 1;
   for (var i = 0; i < last; i++)
-    _writeElement(fmi.elementAt(i), isb, isLast: false);
-  _writeElement(fmi.elementAt(last), isb, isLast: true);
+    _writeElement(fmi[i], isb, isLast: false);
+  _writeElement(fmi[last], isb, isLast: true);
 }
 
 void _writeItems(List<Item> items, Indenter isb, String comma) {
@@ -53,13 +52,13 @@ void _writeItem(Item item, Indenter isb, String comma) =>
     writeDataset(item, isb, comma);
 
 void writeDataset(Dataset ds, Indenter isb, String comma) {
-  isb.indent('{');
+  isb.down('{');
   final elements = ds.elements;
   final last = elements.length - 1;
   for (var i = 0; i < last; i++)
     _writeElement(elements.elementAt(i), isb, isLast: false);
   _writeElement(elements.elementAt(last), isb, isLast: true);
-  isb.outdent('}$comma');
+  isb.up('}$comma');
 }
 
 String writeElement(Element e, {bool isLast}) {
@@ -95,9 +94,9 @@ void _writeSQ(Element e, Indenter isb, String comma) {
     if (items.isEmpty) {
       isb.writeln('"${e.hex}": {"vr": "${e.vrId}", "Values": []}$comma');
     } else {
-      isb.indent('"${e.hex}": {"vr": "${e.vrId}", "Values": [', 2);
+      isb.down('"${e.hex}": {"vr": "${e.vrId}", "Values": [', 2);
       _writeItems(e.items, isb, comma);
-      isb..outdent(']')..outdent('}$comma');
+      isb..up(']')..up('}$comma');
     }
   }
   log.error('$e is not an SQ');

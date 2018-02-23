@@ -126,7 +126,7 @@ abstract class DcmWriterBase<V> {
       ..writeUint32(0);
   }
 
-  void writeEncapsulatedPixelData(Element e) {
+  void writeEncapsulatedPixelData(IntBase e) {
     assert(e.vfLengthField == kUndefinedLength);
     for (final fragment in e.fragments.fragments) {
       print('fragment(${fragment.lengthInBytes})');

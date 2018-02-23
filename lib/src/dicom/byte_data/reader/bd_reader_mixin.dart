@@ -16,10 +16,10 @@ abstract class BDReaderMixin implements DcmReaderBase<int> {
   @override
   Dataset get cds;
   @override
-  ElementList get elements => cds.elements;
+  Iterable<Element> get elements => cds.elements;
 
   BDElement makeElementFromBD(int code, int vrIndex, ByteData bd) =>
-      Evr.make(code, vrIndex, bd);
+      EvrElement.make(code, vrIndex, bd);
 
   Element makeElementFromList(int code, int vrIndex, Iterable values) {
     final tag = Tag.lookupByCode(code);
@@ -29,16 +29,24 @@ abstract class BDReaderMixin implements DcmReaderBase<int> {
   @override
   BDElement makePixelData(int code, int vrIndex, ByteData bd,
           [TransferSyntax ts, VFFragments fragments]) =>
-      Evr.makePixelData(code, vrIndex, bd, ts, fragments);
+      EvrElement.makePixelData(code, vrIndex, bd, ts, fragments);
 
   /// Returns a new Sequence ([SQ]).
   @override
-  SQ makeSequence(int code, ByteData bd, Dataset parent, Iterable<Item> items) =>
-      Evr.makeSequence(code, bd, parent, items);
+  SQ makeSequence(
+          int code, ByteData bd, Dataset parent, Iterable<Item> items) =>
+      EvrElement.makeSequence(code, bd, parent, items);
 
-  RootDataset makeRootDataset({ByteData bd, ElementList elements, String path}) =>
-      new BDRootDataset(bd, elements: elements, path: path);
+  RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
+          ByteData bd, int fmiEnd) =>
+      new BDRootDataset(fmi, eMap, path, bd, fmiEnd);
+
   @override
-  Item makeItem(Dataset parent, {ByteData bd, ElementList elements, SQ sequence}) =>
-      new BDItem(parent, bd);
+  Item makeItem(
+    Dataset parent,
+    Map<int, Element> eMap, [
+    SQ sequence,
+    ByteData bd,
+  ]) =>
+      new BDItem(parent, eMap, sequence, bd);
 }

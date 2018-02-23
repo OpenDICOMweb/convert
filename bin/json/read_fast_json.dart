@@ -47,7 +47,7 @@ Future main() async {
       new File(infoPath)..writeAsStringSync(sb.toString());
       log.debug(sb.toString());
 
-      final z = new Formatter.withIndenter(-1, Indenter.basic);
+      final z = new Formatter.withIndenter(-1, Prefixer.basic);
       final fmtPath = '${path.withoutExtension(fPath)}.fmt';
       log.info('fmtPath: $fmtPath');
       final fmtOut = rds.format(z);

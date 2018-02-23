@@ -8,8 +8,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:core/core.dart';
-
 import 'package:convert/dicom.dart';
 import 'package:convert/src/utilities/dicom_file_utils.dart';
 import 'package:path/path.dart' as path;
@@ -28,7 +26,7 @@ const String k6684x1 =
 Formatter z = new Formatter(maxDepth: -1);
 
 Future main() async {
-  Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
+  Server.initialize(name: 'ReadFile', level: Level.debug, throwOnError: true);
 
   final fPath = k6684x0;
   final z = new Formatter.basic();
@@ -47,7 +45,7 @@ Future main() async {
   }
 
   final bdRDS =
-      BDReader.readBytes(bytes, path: fPath, doLogging: true, showStats: true);
+      BDReader.readBytes(bytes, path: fPath, doLogging: false, showStats: true);
   if (bdRDS == null) {
     log.warn('Invalid DICOM file: $fPath');
   } else {
@@ -65,8 +63,8 @@ Future main() async {
       new File(fmtPath)..writeAsStringSync(sb.toString());
       log.debug(fmtOut);
     } else {
-      print('${bdRDS.summary}');
-      //  print('bdRDS: ${bdRDS.format(z)}');
+      log.debug('${bdRDS.summary}');
+      //  log.debug('bdRDS: ${bdRDS.format(z)}');
     }
   }
 
@@ -74,62 +72,32 @@ Future main() async {
   final writer0 = new FastJsonWriter(bdRDS, outPath, separateBulkdata: true);
   final out = writer0.write();
 
-  print('output length: ${out.length}');
-  print('output length: ${out.length ~/ 1024}K');
+  log
+    ..debug('Length Bytes: ${out.length}')
+    ..debug('Length KB: ${out.length ~/ 1024}KB');
   await new File(outPath).writeAsString(out);
 
   final tagRds = convertBDDSToTagDS(bdRDS);
-  print('tagRDS Summary: ${tagRds.summary}');
-//  print('tagRDS: ${tagRds.format(z)}');
+  log.debug('${tagRds.summary}');
+
+  final dates0 = tagRds.findDates();
+  print(z.fmt('Original: ${dates0.length}', dates0));
 
   final enrollment = new Date(1980, 2, 1);
-  normalizeDates(tagRds, enrollment);
+  final dates1 = normalizeDeIdDates(tagRds, enrollment);
+  print(z.fmt('Normalized: ${dates1.length}', dates1));
 
-  final uids0 = tagRds.findUids();
-  print(z.fmt('Uids: ${uids0.length}', uids0));
-
-  final removed = <Element>[];
-  for (var code in deIdRemoveCodes) {
-    final eList = tagRds.deleteAll(code, recursive: true);
-    if (eList.isNotEmpty) {
-//      print(z.fmt('Removed: ${eList.length}', eList));
-      removed.addAll(eList);
-    }
-  }
-  print(z.fmt('Total Removed: ${removed.length}', removed));
-  print('tagRDS Summary: ${tagRds.summary}');
-
-  final uids1 = tagRds.findUids();
-  print(z.fmt('Uids Removed: ${uids1.length}', uids1));
-
-
-  final private = <Element>[];
-  final pList = tagRds.findAllPrivate();
-  print(z.fmt('Private: ${pList.length}', pList));
-  final dList = tagRds.deleteAllPrivate(recursive: true);
-  if (dList.isNotEmpty) private.addAll(dList);
-  if (dList.isNotEmpty) print('removed: (${dList.length}) $dList');
-  print(z('Total Private Removed: ${dList.length}', private));
-  print('tagRDS Summary: ${tagRds.summary}');
-//  print('tagRDS: ${tagRds.format(z)}');
-
-  tagRds.where((e) {
-    if (e.isPrivate) {
-      print('** P: $e');
-      return true;
-    } else {
-      return false;
-    }
-
-  });
+  final dates2 = tagRds.findDates();
+  print(z.fmt('Final: ${dates2.length}', dates2));
 
   final deIdPath = 'deid.json';
   final writer1 = new FastJsonWriter(tagRds, deIdPath, separateBulkdata: true);
   final deid = writer1.write();
-  print('output length: ${deid.length}');
-  print('output length: ${deid.length ~/ 1024}K');
+  log
+    ..debug('Length bytes: ${deid.length}')
+    ..debug('   Length KB: ${deid.length ~/ 1024}K');
   await new File(deIdPath).writeAsString(deid);
-  print('done');
+  log.debug('done');
 }
 
 Future<Uint8List> readFileAsync(File file) async => await file.readAsBytes();

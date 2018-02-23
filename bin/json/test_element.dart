@@ -9,9 +9,8 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See the AUTHORS file for other contributors.
 
-import 'package:core/core.dart' hide Indenter;
+import 'package:core/core.dart';
 
-import 'package:convert/src/json/writer/indenter.dart';
 import 'package:convert/src/json/writer/dicom_writer.dart';
 
 void main() {

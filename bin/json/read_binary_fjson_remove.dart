@@ -80,13 +80,6 @@ Future main() async {
 
   final tagRds = convertBDDSToTagDS(bdRDS);
   print('tagRDS Summary: ${tagRds.summary}');
-//  print('tagRDS: ${tagRds.format(z)}');
-
-  final enrollment = new Date(1980, 2, 1);
-  normalizeDates(tagRds, enrollment);
-
-  final uids0 = tagRds.findUids();
-  print(z.fmt('Uids: ${uids0.length}', uids0));
 
   final removed = <Element>[];
   for (var code in deIdRemoveCodes) {
@@ -98,30 +91,6 @@ Future main() async {
   }
   print(z.fmt('Total Removed: ${removed.length}', removed));
   print('tagRDS Summary: ${tagRds.summary}');
-
-  final uids1 = tagRds.findUids();
-  print(z.fmt('Uids Removed: ${uids1.length}', uids1));
-
-
-  final private = <Element>[];
-  final pList = tagRds.findAllPrivate();
-  print(z.fmt('Private: ${pList.length}', pList));
-  final dList = tagRds.deleteAllPrivate(recursive: true);
-  if (dList.isNotEmpty) private.addAll(dList);
-  if (dList.isNotEmpty) print('removed: (${dList.length}) $dList');
-  print(z('Total Private Removed: ${dList.length}', private));
-  print('tagRDS Summary: ${tagRds.summary}');
-//  print('tagRDS: ${tagRds.format(z)}');
-
-  tagRds.where((e) {
-    if (e.isPrivate) {
-      print('** P: $e');
-      return true;
-    } else {
-      return false;
-    }
-
-  });
 
   final deIdPath = 'deid.json';
   final writer1 = new FastJsonWriter(tagRds, deIdPath, separateBulkdata: true);

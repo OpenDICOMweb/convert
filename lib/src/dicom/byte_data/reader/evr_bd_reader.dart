@@ -14,14 +14,13 @@ import 'package:convert/src/dicom/base/reader/evr_reader.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 
-
 // ignore_for_file: avoid_positional_boolean_parameters
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [BDRootDataset].
 class EvrBDReader extends EvrReader<int> {
   final bool isEvr = true;
- // final ByteData bd;
+  // final ByteData bd;
   @override
   final ReadBuffer rb;
   @override
@@ -49,10 +48,10 @@ class EvrBDReader extends EvrReader<int> {
   }
 
   @override
-  Item makeItem(Dataset parent, {ByteData bd, ElementList elements, SQ sequence}) =>
-      new BDItem(parent, bd);
+  Item makeItem(Dataset parent,
+          Map<int, Element> eMap, [SQ sequence, ByteData bd]) =>
+      new BDItem.fromBD(parent, eMap, sequence, bd);
 }
-
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [BDRootDataset].
@@ -64,8 +63,8 @@ class EvrLoggingBDReader extends EvrBDReader with LogReadMixin {
 
   /// Creates a new [EvrLoggingBDReader].
   EvrLoggingBDReader(ByteData bd, BDRootDataset rds,
-                     {DecodingParameters dParams = DecodingParameters.kNoChange,
-                       bool reUseBD = true})
+      {DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool reUseBD = true})
       : pInfo = new ParseInfo(rds),
         offsets = new ElementOffsets(),
         super._(bd, rds, dParams, reUseBD);
