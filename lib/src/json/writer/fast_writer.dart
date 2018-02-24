@@ -69,13 +69,10 @@ class FastJsonWriter {
 
   void _writeFmi(RootDataset rds, Indenter sb) {
     sb.down('[');
-    final fmi = rds.fmi;
-    //final last = fmi.length - 1;
-    for (var e in fmi) {
-      print('writeFmi: $e');
+    for (var e in rds.fmi.elements) {
+ //     print('writeFmi: $e');
       _writeElement(e, ',');
     }
- //   _writeElement(fmi[last], '');
     sb.up('],');
   }
 

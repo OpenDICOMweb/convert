@@ -47,7 +47,7 @@ void _convertFmi(RootDataset rootBds, RootDataset rootTagDS) {
     ..debug('  rootBDS FMI: ${rootBds.fmi.length}')
     ..debug('  rootTDS FMI: ${rootTagDS.fmi.length}');
   if (rootTds.fmi.isNotEmpty) throw 'bad rootTagDS: $rootTagDS';
-  for (var e in rootBds.fmi) {
+  for (var e in rootBds.fmi.elements) {
     final te = convertElement(e);
     rootTagDS.fmi[te.code] = te;
     if (te == null) throw 'null TE';
@@ -58,7 +58,7 @@ void _convertFmi(RootDataset rootBds, RootDataset rootTagDS) {
 void _convertRootDataset(RootDataset rootBds, RootDataset rootTds) {
   log.debug('  count: $nElements');
   if (rootTds.isNotEmpty) throw 'bad rootTds: $rootTds';
-  for (var e in rootBds) {
+  for (var e in rootBds.elements) {
     final te = convertElement(e);
     rootTds.add(te);
     if (te == null) throw 'null TE';
@@ -85,9 +85,10 @@ Element convertElement(Element be) {
 Element _convertSimpleElement(Element e) {
 //  log.debug('be.vrIndex: ${e.vrIndex}');
   if (e.vrIndex > 30) throw 'bad be.vr: ${e.vrIndex}';
+  final tag = Tag.lookupByCode(e.code, e.vrIndex);
   return (e.tag == PTag.kPixelData)
       ? TagElement.pixelDataFromBDE(e, rootBds.transferSyntax, e.vrIndex)
-      : TagElement.fromBDE(e, e.vrIndex);
+      : TagElement.from(e, e.vrIndex);
 }
 
 Element _convertMaybeUndefinedElement(Element e) {
@@ -119,8 +120,7 @@ SQ convertSQ(SQ sq) {
   final parentTDS = currentTds;
   for (var i = 0; i < sq.items.length; i++) {
     currentBds = sq.items.elementAt(i);
-    currentTds = new TagItem.empty(parentTDS, sq,
-                                       currentBds.dsBytes.bd);
+    currentTds = new TagItem.empty(parentTDS, sq, currentBds.dsBytes.bd);
     convertItem(currentBds, currentTds);
     tItems[i] = currentTds;
   }
@@ -133,11 +133,17 @@ SQ convertSQ(SQ sq) {
 }
 
 void convertItem(Item bdItem, Item tagItem) {
-  for (var e in bdItem) {
+  var _currentGroup = 0;
+  var _currentSubgroup = 0;
+  Element _currentCreator;
+  String _currentCreatorToken;
+  for (var e in bdItem.elements) {
+    final gNumber = e.group;
+
 //    log.debug('convert: $e');
     final te = convertElement(e);
     if (te == null) throw 'null TE';
-    tagItem.add(e);
+    tagItem.add(te);
   }
 }
 

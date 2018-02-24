@@ -8,7 +8,7 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/utilities/private_dataset.dart';
+import 'package:convert/src/utilities/dataset_by_group.dart';
 
 typedef Element ElementFrom(Element e);
 
@@ -28,7 +28,7 @@ abstract class Converter {
   Dataset get currentTDS;
   set currentTDS(Dataset ds);
 
-  PrivateRootDataset get pRds;
+  RootDatasetByGroup get pRds;
 
   bool get doConvertUN;
   int _index;
@@ -56,8 +56,7 @@ abstract class Converter {
 
   // Does not handle SQ or Private
   void _convertFmi(RootDataset sRds) {
-    //sRds.fmi.forEach(convertFmiElement);
-    for (var e in sRds.fmi) {
+    for (var e in sRds.fmi.elements) {
       final vrIndex = (doConvertUN) ? e.tag.vrIndex : e.vrIndex;
       tRds.fmi.add(fromElement(e, vrIndex));
     }
@@ -122,7 +121,7 @@ class TagConverter extends Converter {
   @override
   Dataset currentTDS;
   @override
-  PrivateRootDataset pRds;
+  RootDatasetByGroup pRds;
   @override
   bool doConvertUN;
 
@@ -132,7 +131,7 @@ class TagConverter extends Converter {
   }
 
   TagConverter._(this.sRds, this.tRds, this.doConvertUN)
-      : pRds = new PrivateRootDataset.empty();
+      : pRds = new RootDatasetByGroup.empty();
 
   @override
   Element makeElement<V>(Tag tag, Iterable<V> values, int vrIndex,

@@ -145,7 +145,7 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
   bool _writeEvrUndefinedLengthHeader(Element e) {
     assert(e != null && wb.wIndex.isEven);
     assert(_isNotShortVR(e.vrIndex), 'vrIndex: ${e.vrIndex}');
-    print('e: $e');
+//    print('e: $e');
     __writeEvrLongHeader(e,  kUndefinedLength);
     return e.vfLength.isOdd;
   }
@@ -154,7 +154,7 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
   bool _writeEvrDefinedLengthHeader(Element e, int vfLength) {
     assert(e != null && vfLength != null && wb.wIndex.isEven);
     assert(_isNotShortVR(e.vrIndex), 'vrIndex: ${e.vrIndex}');
-    print('e: $e');
+//    print('e: $e');
     final isOddLength = vfLength.isOdd;
     final length = vfLength + (isOddLength ? 1 : 0);
     assert(length.isEven);
@@ -255,7 +255,7 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
 
   void writeExistingFmi(RootDataset rootDS, {bool cleanPreamble = true}) {
     writePrefix(rootDS, cleanPreamble: cleanPreamble);
-    for (var e in rootDS.fmi) {
+    for (var e in rootDS.fmi.elements) {
       if (e.code > 0x00030000) break;
       writeElement(e);
     }

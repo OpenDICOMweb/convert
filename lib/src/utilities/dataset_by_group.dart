@@ -10,12 +10,12 @@ import 'package:core/core.dart';
 
 /// A Dataset containing only private [Element]s or Sequences ([SQ])
 /// containing only private [Element]s.
-abstract class PrivateDataset {
-
+abstract class DatasetByGroup {
+  bool hasPrivate;
   // A map that can contain PublicGroup or PrivateGroup
   Map<int, GroupBase> get groups;
 
-  int keyToIndex(int key)  => key;
+  int keyToIndex(int key) => key;
 
   String get info {
     final sb = new Indenter('$runtimeType: ${groups.length}')..down;
@@ -24,55 +24,39 @@ abstract class PrivateDataset {
     return '$sb';
   }
 
+  void add(Element e) {
+    final gNumber = e.group;
+    if (gNumber.isOdd) hasPrivate = true;
+    groups[e.group].add(e);
+  }
+
   void addGroup(GroupBase group) => groups[group.gNumber] = group;
 
-/*
-  void add(Element e, [Issues issues]) {
-    final group = groups[e.group];
-  }
-*/
-
-/// Returns a formatted [String]. See [Formatter].
-/*
-  String format(Formatter z) {
-    final sb = new StringBuffer(z.fmt(this));
-    z.down;
-    sb.writeln(z.fmt('Groups', groups));
-    z.up;
-    return sb.toString();
-  }
-*/
-
-/*  @override
-  String toString() {
-    final seq = (sq == null) ? '' :', SQ = $sq';
-    return '$runtimeType: ${groups.length} groups$seq';
-  }
- */
+  String format(Formatter z) =>
+      z.fmt('$runtimeType: ${groups.length} Groups', this);
 }
 
-class PrivateRootDataset extends MapRootDataset with PrivateDataset {
+class RootDatasetByGroup extends MapRootDataset with DatasetByGroup {
   @override
   final Map<int, GroupBase> groups;
-  PrivateRootDataset.empty([String path = '', ByteData bd, int fmiEnd = 0])
+
+  RootDatasetByGroup.empty([String path = '', ByteData bd, int fmiEnd = 0])
       : groups = <int, GroupBase>{},
         super.empty(path, bd, fmiEnd);
 }
 
 /// A Dataset containing only private [Element]s or Sequences ([SQ])
 /// containing only private [Element]s.
-class PrivateItem extends MapItem with PrivateDataset {
+class ItemByGroup extends MapItem with DatasetByGroup {
   @override
   final Map<int, GroupBase> groups;
-  // A map that can contain PublicGroup or PrivateGroup
-//  final Map<int, GroupBase> groups = <int, GroupBase>{};
 
-  PrivateItem(Dataset parent, [SQ sq])
+  ItemByGroup(Dataset parent, [SQ sq])
       : groups = <int, GroupBase>{},
         super.empty(parent, sq);
 
   @override
-  int keyToIndex(int key)  => key;
+  int keyToIndex(int key) => key;
 
   @override
   String get info {
@@ -81,33 +65,6 @@ class PrivateItem extends MapItem with PrivateDataset {
     sb.up;
     return '$sb';
   }
-
-//  void addGroup(GroupBase group) => groups[group.gNumber] = group;
-
-/*
-  @override
-  void add(Element e, [Issues issues]) {
-    final group = groups[e.group];
-  }
-*/
-
-  /// Returns a formatted [String]. See [Formatter].
-/*
-  String format(Formatter z) {
-    final sb = new StringBuffer(z.fmt(this));
-    z.down;
-    sb.writeln(z.fmt('Groups', groups));
-    z.up;
-    return sb.toString();
-  }
-*/
-
-/*  @override
-  String toString() {
-    final seq = (sq == null) ? '' :', SQ = $sq';
-    return '$runtimeType: ${groups.length} groups$seq';
-  }
- */
 }
 
 abstract class GroupBase {
@@ -116,17 +73,15 @@ abstract class GroupBase {
   String get info;
 
   void add(Element e);
-
-  /// Returns a formatted [String]. See [Formatter].
-  //String format(Formatter z) => z.fmt(this, members);
 }
 
 /// A [PublicGroup] can only contain Sequences ([SQ]) that
 /// contain Public pElement]s.
-class PublicGroup extends GroupBase {
+class PublicGroup implements GroupBase {
   @override
   final int gNumber;
-  SQ e;
+  List<SQ> sequences = <SQ>[];
+  List<SQ> privateSQs = <SQ>[];
 
   @override
   Map<int, Element> members = <int, Element>{};
@@ -136,7 +91,7 @@ class PublicGroup extends GroupBase {
   @override
   String get info {
     final sb = new Indenter('$runtimeType(${hex16(gNumber)}): '
-                                '${members.values.length}')
+        '${members.values.length}')
       ..down;
     members.values.forEach(sb.writeln);
     log.up;
@@ -144,11 +99,22 @@ class PublicGroup extends GroupBase {
   }
 
   @override
-  void add(Element e) {
-    final sq = e;
-    members[sq.code] = new SQtag.from(sq);
+  void add(Element e0) {
+    // members[e.code] = new SQtag.from(sq);
+    members[e0.code] = e0;
+    if (e0 is SQ) {
+      sequences.add(e0);
+      for (var item in e0.items)
+        for (var e1 in item.elements) if (e1.group.isOdd) privateSQs.add(e0);
+    }
   }
 
+  String format(Formatter z) => z.fmt(
+      '$runtimeType(${hex16(gNumber)}): '
+      '${members.length} Groups',
+      members);
+
+/*
   /// Returns a formatted [String]. See [Formatter].
   String format(Formatter z) {
     final s = z.fmt('${hex16(gNumber)} $this Members: ${members.length}');
@@ -158,20 +124,24 @@ class PublicGroup extends GroupBase {
     z.up;
     return sb.toString();
   }
+*/
 
   @override
   String toString() =>
       '$runtimeType(${hex16(gNumber)}) ${members.values.length} members';
 }
 
-/// with Tag Codes (gggg,eeee), where _gggg_ is an odd number,
-/// and 0x07 < _gggg_ < 0xFFFE. Each [PrivateGroup] contains a set
-/// of [PrivateSubgroup]s.
-class PrivateGroup extends GroupBase {
+/// The Tag (gggg,iiii) has Group Number (i.e. gggg).
+/// A [PrivateGroup] is a group of [Element]s that all have the same
+/// Private Group Number. An [Element] is a [PrivateGroup] if its
+/// Group Number, i.e. the _gggg_ part of (gggg,eeee), is an odd
+/// number, and 0x07 < _gggg_ < 0xFFFE.
+///
+/// Each [PrivateGroup] contains a set of [PrivateSubgroup]s.
+class PrivateGroup implements GroupBase {
   /// The Group number for this group
   @override
   final int gNumber;
-  SQ sq;
 
   /// The Group Length Element for this [PrivateGroup].  This
   /// Private [Element] is retired and normally is not present.
@@ -199,14 +169,7 @@ class PrivateGroup extends GroupBase {
     final sb = new Indenter('$runtimeType(${hex16(gNumber)}): '
         '${members.values.length}')
       ..down;
-    for (var sg in members.values) {
-      sb.writeln(sg.info);
-   /*     ..writeln('${hex8(sg.sgNumber)} ${sg.creator} '
-            'Members: ${sg.members.length + 1}')
-        ..down
-        ..writeln(sg.info);
-      */
-    }
+    for (var sg in members.values) sb.writeln(sg.info);
     log.up;
     return '$sb';
   }
@@ -231,11 +194,11 @@ class PrivateGroup extends GroupBase {
       if (tag is PCTag) {
         _currentSubgroup.creator = e;
       } else if (tag is PDTag) {
-        if (e is SQ) {
+/*        if (e is SQ) {
           add(e);
-        } else {
+        } else {*/
           _currentSubgroup.addPD(e);
-        }
+ //       }
       } else if (tag is GroupLengthPrivateTag) {
         if (gLength != null)
           throw 'Duplicate Group Length Element: 1st: $gLength 2nd: e';
@@ -278,15 +241,21 @@ class PrivateGroup extends GroupBase {
     return false;
   }
 
+  String format(Formatter z) => z.fmt(
+      '$runtimeType(${hex16(gNumber)}): ${subgroups.length} Subroups',
+      subgroups);
+
+/*
   /// Returns a formatted [String]. See [Formatter].
   String format(Formatter z) {
     final sb = new StringBuffer('${hex16(gNumber)} $this Subgroups: '
-                                    '${subgroups.length}');
+        '${subgroups.length}');
     z.down;
     sb.write(z.fmt(members));
     z.up;
     return sb.toString();
   }
+*/
 
   @override
   String toString([String prefix = '']) =>
@@ -306,8 +275,6 @@ class PrivateGroup extends GroupBase {
 class PrivateSubgroup {
   final PrivateGroup group;
 
-  /// The Tag (gggg,iiii) Group Number (i.e. gggg).
-
   /// An integer between 0x10 and 0xFF inclusive. If a PCTag Code is denoted
   /// (gggg,00ii), and a PDTag Code is denoted (gggg,iioo) then the Sub-Group
   /// Index corresponds to ii.
@@ -317,15 +284,10 @@ class PrivateSubgroup {
 
   factory PrivateSubgroup(PrivateGroup group, int sgNumber, Element _creator) {
     final tag = _creator.tag;
-//    print('Group: $group sgNumber: $sgNumber creator: $_creator');
-    //   if (Tag.isPCCode(_creator.code)) {
     return (_creator.group == group.gNumber &&
             Tag.pcSubgroup(_creator.code) == sgNumber)
         ? new PrivateSubgroup._(group, sgNumber, _creator)
         : invalidTagError(tag, LO);
-    //   }
-   // log.error('Invalid Creator: $_creator');
-   // return null;
   }
 
   PrivateSubgroup._(this.group, this.sgNumber, [this._creator])
@@ -356,9 +318,10 @@ class PrivateSubgroup {
 
   Element lookup(int code) => (code == creator.index) ? creator : members[code];
 
-  /// Adds a Private Data Element to _this_.
+  void add(Element e) {
+
+  }
   void addPD(Element pd) {
-//    print('addPD: PD: $pd creator: $_creator');
     final code = pd.code;
     if (Tag.isValidPDCode(code, _creator.code)) {
       members[code] = pd;
@@ -370,15 +333,21 @@ class PrivateSubgroup {
   /// Returns a Private Data [Element].
   Element lookupData(int code) => members[code];
 
+  String format(Formatter z) => z.fmt(
+      '$runtimeType(${hex16(sgNumber)}): ${members.length} Subroups $_creator',
+      members);
+
+/*
   /// Returns a formatted [String]. See [Formatter].
   String format(Formatter z) {
     final sb = new StringBuffer('${hex16(sgNumber)} $this Subgroups: '
-                                    '${members.length}');
+        '${members.length}');
     z.down;
     sb.write(z.fmt(members));
     z.up;
     return sb.toString();
   }
+*/
 
   @override
   String toString() => '${hex8(sgNumber)} $runtimeType: '

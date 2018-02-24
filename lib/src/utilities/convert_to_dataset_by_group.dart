@@ -6,7 +6,7 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/utilities/private_dataset.dart';
+import 'package:convert/src/utilities/dataset_by_group.dart';
 
 typedef Element ElementFrom(Element e);
 
@@ -15,7 +15,7 @@ typedef Element ElementMaker<V>(Tag tag, List<V> values, int vrIndex,
 
 typedef Item ItemMaker(Dataset parent, SQ sq);
 
-class PrivateFinder {
+class ConvertToDatasetByGroup {
   final RootDataset rSds;
   final RootDataset rTds;
 
@@ -24,9 +24,9 @@ class PrivateFinder {
   int sIndex = 0;
   int tIndex = 0;
 
-  PrivateFinder(this.rSds) : rTds = new PrivateRootDataset.empty();
+  ConvertToDatasetByGroup(this.rSds) : rTds = new RootDatasetByGroup.empty();
 
-  PrivateRootDataset find() {
+  RootDatasetByGroup find() {
     currentSds = rSds;
     currentTds = rTds;
     log
@@ -37,14 +37,15 @@ class PrivateFinder {
     findInRootDataset();
     log
       ..debug('Finder Out:')
-      ..debug('Source RDS count: $sIndex')
-      ..debug('Target RDS count: $tIndex');
+      ..debug('Source RDS count: $sIndex total: ${rSds.total}')
+      ..debug('Target RDS count: $tIndex total: ${rSds.total}');
     return rTds;
   }
 
   // Does not handle SQ or Private
   void _findFmi() {
-    for (var e in rSds.fmi) if (e.isPrivate) rTds.fmi[e.code] = e;
+    for (var e in rSds.fmi.elements)
+      if (e.isPrivate) rTds.fmi[e.code] = e;
     sIndex += rSds.fmi.length;
     tIndex += rTds.fmi.length;
   }
@@ -56,7 +57,7 @@ class PrivateFinder {
     PrivateSubgroup currentSubgroup;
     var currentGNumber = 0;
     var currentSGNumber = 0;
-    sIndex += currentSds.elements.length;
+//    sIndex += currentSds.elements.length;
     for (var e in currentSds.elements) {
       //  log.debug1('* $e');
       final gNumber = e.group;
@@ -72,10 +73,10 @@ class PrivateFinder {
             ? new PublicGroup(gNumber)
             : new PrivateGroup(gNumber);
 
-        if (currentTds is PrivateItem ) {
-          (currentTds as PrivateItem).addGroup(currentGroup);
-        } else if (currentTds is PrivateRootDataset) {
-          (currentTds as PrivateRootDataset).addGroup(currentGroup);
+        if (currentTds is ItemByGroup ) {
+          (currentTds as ItemByGroup).addGroup(currentGroup);
+        } else if (currentTds is RootDatasetByGroup) {
+          (currentTds as RootDatasetByGroup).addGroup(currentGroup);
         } else {
           throw 'bad dataset: $currentTds';
         }
@@ -136,7 +137,7 @@ class PrivateFinder {
             assert(
                 currentGroup is PrivateGroup && e.isPrivate && tag.isPrivate);
             final thisGNumber = currentGNumber;
-            final privateSQ = findInSequence(e);
+            final privateSQ = findGroupsInSequence(e);
             currentGNumber = thisGNumber;
             currentSubgroup.members[sgNumber] = privateSQ;
           }
@@ -149,7 +150,7 @@ class PrivateFinder {
           tIndex++;
           assert(currentGroup is PublicGroup && e.isPublic && tag.isPublic);
           final thisGNumber = currentGNumber;
-          final publicSQ = findInSequence(e);
+          final publicSQ = findGroupsInSequence(e);
           currentGNumber = thisGNumber;
           currentGroup.add(publicSQ);
         }
@@ -160,7 +161,7 @@ class PrivateFinder {
     log.up;
   }
 
-  SQ findInSequence(SQ sq) {
+  SQ findGroupsInSequence(SQ sq) {
     log.down;
     final psq = new SQtag.from(sq);
     final parentSds = currentSds;
@@ -168,7 +169,7 @@ class PrivateFinder {
 
     for (var i = 0; i < sq.items.length; i++) {
       currentSds = sq.items.elementAt(i);
-      currentTds = new PrivateItem(currentTds);
+      currentTds = new ItemByGroup(currentTds);
       log
         ..debug1('DS: $i')
         ..down;

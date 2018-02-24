@@ -12,7 +12,7 @@ import 'package:core/core.dart';
 
 import 'package:convert/dicom.dart';
 import 'package:convert/src/utilities/dicom_file_utils.dart';
-import 'package:convert/src/utilities/find_private_groups.dart';
+import 'package:convert/src/utilities/convert_to_dataset_by_group.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
 
@@ -29,7 +29,7 @@ const String k6684x1 =
 Formatter z = new Formatter.basic();
 
 Future main() async {
-  Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
+  Server.initialize(name: 'ReadFile', level: Level.debug2, throwOnError: true);
 
   final fPath = k6684x0;
 
@@ -48,7 +48,7 @@ Future main() async {
   }
 
   final bdRDS =
-      BDReader.readBytes(bytes, path: fPath, doLogging: true, showStats: true);
+      BDReader.readBytes(bytes, path: fPath, doLogging: false, showStats: true);
   if (bdRDS == null) {
     log.warn('Invalid DICOM file: $fPath');
   } else {
@@ -81,13 +81,19 @@ Future main() async {
     ..debug('  Output length: ${out.length}')
     ..debug('  Output length: ${out.length ~/ 1024}K\n');
 
-  final finder = new PrivateFinder(bdRDS);
-  final privateRds = finder.find();
-  log.debug('privateRds: ${privateRds.format(z)}');
-//  log.debug('privateRds Summary: ${privateRds.summary}');
-
+  log.debug('Converting bdRds($bdRDS) to TagDataset ...');
   final tagRds0 = convertBDDSToTagDS(bdRDS);
-  log.debug('Convert tagRds0 Summary: ${tagRds0.summary}');
+  print('tagRds0: ${tagRds0.info}');
+  print('tagRds0: ${tagRds0.format(z)}');
+  log
+    ..debug('Converted tagRds0: $tagRds0')
+    ..debug(' ${tagRds0.summary}');
+
+  final converter = new ConvertToDatasetByGroup(bdRDS);
+  final privateRds = converter.find();
+  log
+    ..debug('privateRds: ${privateRds.format(z)}')
+    ..debug('privateRds: ${privateRds.summary}');
 
   var count = 0;
   // Urgent: where not working
