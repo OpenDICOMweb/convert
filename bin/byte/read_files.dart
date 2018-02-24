@@ -13,7 +13,6 @@ import 'package:convert/data/test_files.dart';
 import 'package:convert/convert.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
-import 'package:convert/src/utilities/file_utils.dart';
 
 const String xx3 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
 const String xx2 =

@@ -6,8 +6,6 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
-
 
 import 'package:core/core.dart';
 
@@ -16,16 +14,13 @@ import 'package:convert/src/dicom/byte_data/writer/bd_writer.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/byte_data_tools/job_utils.dart';
 
-
 Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
   final pad = ''.padRight(5);
 
   try {
-    final Uint8List bytes = await f.readAsBytes();
-    final bd = bytes.buffer.asByteData();
-    final reader0 = new BDReader(bd);
+    final reader0 = new BDReader.fromFile(f);
     final rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -49,7 +44,8 @@ $pad    TS: ${rds0.transferSyntax}''');
 
     final offsets = reader0.offsets;
     for (var i = 0; i < offsets.length; i++) {
-    	print('$i: ${offsets.starts[i]} - ${offsets.ends[i]} ${offsets.elements[i]}');
+      print(
+          '$i: ${offsets.starts[i]} - ${offsets.ends[i]} ${offsets.elements[i]}');
     }
 
     // Write the Root Dataset
@@ -66,7 +62,8 @@ $pad    TS: ${rds0.transferSyntax}''');
 
     final wOffsets = writer.outputOffsets;
     for (var i = 0; i < wOffsets.length; i++) {
-	    print('$i: ${wOffsets.starts[i]} - ${wOffsets.ends[i]} ${wOffsets.elements[i]}');
+      print(
+          '$i: ${wOffsets.starts[i]} - ${wOffsets.ends[i]} ${wOffsets.elements[i]}');
     }
 
     if (!fast) {
@@ -77,7 +74,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     BDReader reader1;
     if (fast) {
       // Just read bytes not file
-      reader1 = new BDReader(bd1.buffer.asByteData());
+      reader1 = new BDReader.fromBytes(bd1);
     } else {
       reader1 = new BDReader.fromPath(outPath);
     }
@@ -133,7 +130,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
-      final same = bytesEqual(bytes0, bd1.buffer.asUint8List());
+      final same = uint8ListEqual(bytes0, bd1.buffer.asUint8List());
       if (same == true) {
         log.debug('$pad Files bytes are identical.');
       } else {

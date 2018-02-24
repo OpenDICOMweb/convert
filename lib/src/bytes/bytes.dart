@@ -56,8 +56,8 @@ class Bytes extends ListBase<int> {
 
   Bytes.typedDataView(TypedData td,
       [int offset = 0, int length, this.endian = Endian.little])
-      : _bd = td.buffer
-            .asByteData(td.offsetInBytes, length * td.elementSizeInBytes);
+      : _bd = td.buffer.asByteData(
+            td.offsetInBytes + offset, length * td.elementSizeInBytes);
 
   // Core accessor NOT to be exported?
   ByteData get bd => _bd;
@@ -210,11 +210,10 @@ class Bytes extends ListBase<int> {
   // **** String getters
   // TODO: decide if these should be included
   String getAscii([int offset = 0, int length]) =>
-    ASCII.decode(asUint8List(offset, length ?? lengthInBytes));
+      ASCII.decode(asUint8List(offset, length ?? lengthInBytes));
 
   String getUtf8([int offset = 0, int length]) =>
       UTF8.decode(asUint8List(offset, length ?? lengthInBytes));
-
 
   // **** TypedData Views
 

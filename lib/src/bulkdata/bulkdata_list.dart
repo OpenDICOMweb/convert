@@ -9,10 +9,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:core/core.dart';
 import 'package:path/path.dart' as path;
 
 import 'package:convert/src/bulkdata/bulkdata.dart';
-import 'package:convert/src/bytes/buffer/write_buffer.dart';
 
 const String bulkdataFileExtension = '.bd';
 

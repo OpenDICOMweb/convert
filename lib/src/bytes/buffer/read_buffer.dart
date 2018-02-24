@@ -36,12 +36,10 @@ class ReadBuffer extends BufferBase {
         wIndex_ = offset + (length ?? rb.lengthInBytes),
         bytes = new Bytes.from(rb.bytes, offset, length, endian);
 
-/*
-  ReadBuffer.fromUint8List(Uint8List uint8List, [Endian endian = Endian.little])
+  ReadBuffer.fromBytes(this.bytes)
       : rIndex_ = 0,
-        wIndex_ = uint8List.lengthInBytes,
-        bytes = new Bytes.fromTypedData(uint8List, endian);
-*/
+        wIndex_ = bytes.lengthInBytes;
+
   ReadBuffer.fromList(List<int> list, [Endian endian = Endian.little])
       : rIndex_ = 0,
         wIndex_ = list.length,
@@ -152,7 +150,7 @@ class ReadBuffer extends BufferBase {
   ByteData bdView([int start = 0, int end]) {
     end ??= rIndex_;
     final length = end - start;
- //   final offset = _getOffset(start, length);
+    //   final offset = _getOffset(start, length);
     return bytes.asByteData(start, length);
   }
 
@@ -203,7 +201,7 @@ class ReadBuffer extends BufferBase {
 class LoggingReadBuffer extends ReadBuffer {
   factory LoggingReadBuffer(ByteData bd,
           [int offset = 0, int length, Endian endian = Endian.little]) =>
-      new LoggingReadBuffer._(bd, endian);
+      new LoggingReadBuffer._(bd.buffer.asByteData(offset, length), endian);
 
   factory LoggingReadBuffer.fromUint8List(Uint8List bytes,
       [int offset = 0, int length, Endian endian = Endian.little]) {

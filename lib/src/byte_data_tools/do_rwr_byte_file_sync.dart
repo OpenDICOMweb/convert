@@ -5,7 +5,6 @@
 // See the AUTHORS file for other contributors.
 
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
@@ -14,8 +13,6 @@ import 'package:convert/src/dicom/byte_data/writer/bd_writer.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/byte_data_tools/job_utils.dart';
 
-
-
 bool doRWRByteFileSync(File f, {bool fast = true, bool noisy = false}) {
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
@@ -23,9 +20,7 @@ bool doRWRByteFileSync(File f, {bool fast = true, bool noisy = false}) {
   log.info0('RRWByte $f');
 
   try {
-    final Uint8List bytes = f.readAsBytesSync();
-    final bd = bytes.buffer.asByteData();
-    final reader0 = new BDReader(bd, path: f.path);
+    final reader0 = new BDReader.fromFile(f);
     final rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -50,7 +45,8 @@ $pad    TS: ${rds0.transferSyntax}''');
     if (noisy) {
       final offsets = reader0.offsets;
       for (var i = 0; i < offsets.length; i++) {
-        print('$i: ${offsets.starts[i]} - ${offsets.ends[i]} ${offsets.elements[i]}');
+        print(
+            '$i: ${offsets.starts[i]} - ${offsets.ends[i]} ${offsets.elements[i]}');
       }
     }
 
@@ -69,7 +65,8 @@ $pad    TS: ${rds0.transferSyntax}''');
     if (noisy) {
       final wOffsets = writer.outputOffsets;
       for (var i = 0; i < wOffsets.length; i++) {
-        print('$i: ${wOffsets.starts[i]} - ${wOffsets.ends[i]} ${wOffsets.elements[i]}');
+        print(
+            '$i: ${wOffsets.starts[i]} - ${wOffsets.ends[i]} ${wOffsets.elements[i]}');
       }
     }
 
@@ -78,14 +75,9 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       log.debug('Re-reading: ${bd1.lengthInBytes} bytes from $outPath');
     }
-    BDReader reader1;
-    if (fast) {
-      // Just read bytes not file
-      reader1 = new BDReader(
-          bd1.buffer.asByteData(bd1.offsetInBytes, bd1.lengthInBytes));
-    } else {
-      reader1 = new BDReader.fromPath(outPath);
-    }
+    final reader1 =
+        (fast) ? new BDReader.fromBytes(bd1) : new BDReader.fromPath(outPath);
+
     final rds1 = reader1.readRootDataset();
     log
       ..debug('$pad Read ${reader1.rb.lengthInBytes} bytes')
@@ -124,7 +116,8 @@ $pad    TS: ${rds0.transferSyntax}''');
       final bList = rds1.elements.asList;
       //final length = (aList.length > bList.length) ? aList.length : bList.length;
       if (aList.length != bList.length)
-        log.warn('** rds0.length(${bList.length}) != rds1.length(${aList.length})');
+        log.warn(
+            '** rds0.length(${bList.length}) != rds1.length(${aList.length})');
       final length = aList.length;
       for (var i = 0; i < length; i++) {
         final x = aList.elementAt(i);
@@ -135,9 +128,9 @@ $pad    TS: ${rds0.transferSyntax}''');
             x.vfLengthField != y.vfLengthField ||
             x.eEnd != y.eEnd) {
           log
-	          ..warn('Elements are different:')
-	          ..warn('  $i x: $x')
-	          ..warn('  $i y: $y');
+            ..warn('Elements are different:')
+            ..warn('  $i x: $x')
+            ..warn('  $i y: $y');
         }
       }
     }

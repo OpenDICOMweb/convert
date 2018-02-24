@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
 //import 'package:convert/data/test_files.dart';
-import 'package:convert/src/utilities/file_utils.dart';
+//import 'package:convert/src/utilities/file_utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
 
@@ -78,7 +78,7 @@ Future main() async {
       new File(infoPath)..writeAsStringSync(sb.toString());
       log.debug(sb.toString());
 
-      final z = new Formatter.withIndenter(-1, Indenter.basic);
+      final z = new Formatter.withIndenter(-1, Prefixer.basic);
       final fmtPath = '${path.withoutExtension(fPath)}.fmt';
       log.info('fmtPath: $fmtPath');
       final fmtOut = rds.format(z);

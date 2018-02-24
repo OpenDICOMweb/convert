@@ -10,7 +10,6 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/bytes/bytes.dart';
 import 'package:convert/src/dicom/byte_data/reader/bd_reader.dart';
 import 'package:convert/src/dicom/byte_data/writer/bd_writer.dart';
 import 'package:convert/src/errors.dart';
@@ -33,8 +32,8 @@ bool byteReadWriteFileChecked(String path,
   try {
     final reader0 = new BDReader.fromFile(f);
     final rds0 = reader0.readRootDataset();
-    final bd0 = reader0.rb.asByteData();
-    log.info('$n:   length: ${bd0.lengthInBytes}');
+    final bytes0 = reader0.rb.bytes;
+    log.info('$n:   length: ${bytes0.lengthInBytes}');
     final e = rds0[kPixelData];
     if (e == null) log.warn('$pad ** Pixel Data Element not present');
 
@@ -48,14 +47,14 @@ bool byteReadWriteFileChecked(String path,
     } else {
       writer = new BDWriter.toPath(rds0, outPath, inputOffsets: reader0.offsets);
     }
-    final bd1 = writer.writeRootDataset();
-    log.debug('Bytes written: offset(${bd1.offsetInBytes}) '
-        'length(${bd1.lengthInBytes})\n');
+    final bytes1 = writer.writeRootDataset();
+    log.debug('Bytes written: offset(${bytes1.offsetInBytes}) '
+        'length(${bytes1.lengthInBytes})\n');
 
     BDReader reader1;
     if (fast) {
       // Just read bytes not file
-      reader1 = new BDReader(bd1.bd);
+      reader1 = new BDReader(new ReadBuffer.fromBytes(bytes1));
     } else {
       reader1 = new BDReader.fromPath(outPath);
     }
@@ -89,7 +88,7 @@ bool byteReadWriteFileChecked(String path,
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
-      final same = byteDataEqual(bd0, bd1.bd);
+      final same = bytes0 == bytes1;
       if (!same) {
         success = false;
         log.warn('$pad Files bytes are different!');
@@ -147,7 +146,7 @@ BDRootDataset readFileTimed(File file,
 }
 
 BDRootDataset readFMI(Uint8List bytes, [String path = '']) =>
-    BDReader.readBytes(bytes, path: path);
+    BDReader.readTypedData(bytes, path: path);
 
 Bytes writeTimed(BDRootDataset rds,
     {String path = '', bool fast = true, bool fmiOnly = false, TransferSyntax targetTS}) {

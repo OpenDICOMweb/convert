@@ -12,7 +12,7 @@ import 'package:test/test.dart';
 
 import 'test_utilities.dart';
 
-final String magicAsString = 'DICOM-MD';
+const String magicAsString = 'DICOM-MD';
 final Uint8List magic = magicAsString.codeUnits;
 
 void main() {

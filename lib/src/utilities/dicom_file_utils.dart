@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:core/core.dart';
 import 'package:path/path.dart' as path;
 
 const List<String> stdDcmExtensions = const <String>['.dcm', '', '.DCM'];
@@ -15,7 +16,7 @@ const List<String> stdDcmExtensions = const <String>['.dcm', '', '.DCM'];
 //TODO: what should default be?
 const int kSmallDcmFileLimit = 376;
 
-Future<Uint8List> readDcmPath(String fPath,
+Future<Bytes> readDcmPath(String fPath,
     [List<String> extensions = stdDcmExtensions,
     int sizeLimit = kSmallDcmFileLimit]) async {
   final ext = path.extension(fPath);
@@ -24,7 +25,7 @@ Future<Uint8List> readDcmPath(String fPath,
   return readDcmFile(f, sizeLimit);
 }
 
-Future<Uint8List> readDcmFile(File f, [int sizeLimit = kSmallDcmFileLimit]) async {
+Future<Bytes> readDcmFile(File f, [int sizeLimit = kSmallDcmFileLimit]) async {
   Uint8List bytes;
   int length;
   if (f.existsSync()) {
@@ -35,14 +36,17 @@ Future<Uint8List> readDcmFile(File f, [int sizeLimit = kSmallDcmFileLimit]) asyn
       } on FileSystemException {
         return null;
       }
-      return (bytes.length > kSmallDcmFileLimit) ? bytes : null;
+      return (bytes.length > kSmallDcmFileLimit)
+          ? new Bytes.fromTypedData(bytes)
+          : null;
     }
   }
   return null;
 }
 
 Uint8List readDcmPathSync(String fPath,
-    [List<String> extensions = stdDcmExtensions, int sizeLimit = kSmallDcmFileLimit]) {
+    [List<String> extensions = stdDcmExtensions,
+    int sizeLimit = kSmallDcmFileLimit]) {
   final ext = path.extension(fPath);
   if (!extensions.contains(ext)) return null;
   final f = new File(fPath);

@@ -9,9 +9,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
-
-import 'package:convert/src/binary/byte_data/reader/evr_logging_bd_reader.dart';
-import 'package:convert/src/utilities/file_utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
 
@@ -34,8 +31,8 @@ Future main() async {
   }
 
   final bd = new ByteData(10);
-  final rds = new BDRootDataset(bd);
-  final reader = new EvrLogReaderBD(bd, rds);
+  final rds = new BDRootDataset.empty('', bd);
+  final reader = new EvrLoggingBDReader(bd, rds);
   print('rds: ${reader.rds}');
 
   print('sopClass: ${rds.sopClass}');

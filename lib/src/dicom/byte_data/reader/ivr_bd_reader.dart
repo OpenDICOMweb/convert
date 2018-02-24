@@ -8,9 +8,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/bytes/buffer/read_buffer.dart';
 import 'package:convert/src/dicom/base/reader/debug/log_read_mixin.dart';
-
 import 'package:convert/src/dicom/base/reader/ivr_reader.dart';
 import 'package:convert/src/dicom/byte_data/reader/evr_bd_reader.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
@@ -60,8 +58,8 @@ class IvrBDReader extends IvrReader<int> {
   List<Element> get elements => cds.elements;
 
   @override
-  Item makeItem(Dataset parent,
-                Map<int, Element> eMap, [SQ sequence, ByteData bd]) =>
+  Item makeItem(Dataset parent, Map<int, Element> eMap,
+          [SQ sequence, ByteData bd]) =>
       new BDItem.fromBD(parent, eMap, sequence, bd);
 }
 
@@ -75,9 +73,8 @@ class IvrLoggingBDReader extends IvrBDReader with LogReadMixin {
 
   /// Creates a new [IvrLoggingBDReader].
   IvrLoggingBDReader(ByteData bd, BDRootDataset rds,
-                     {String path = '',
-                       DecodingParameters dParams = DecodingParameters.kNoChange,
-                       bool reUseBD = true})
+      {DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool reUseBD = true})
       : pInfo = new ParseInfo(rds),
         offsets = new ElementOffsets(),
         super._(bd, rds, dParams, reUseBD);
@@ -87,4 +84,3 @@ class IvrLoggingBDReader extends IvrBDReader with LogReadMixin {
         offsets = new ElementOffsets(),
         super.from(reader);
 }
-

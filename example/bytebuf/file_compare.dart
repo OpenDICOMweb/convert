@@ -7,7 +7,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:convert/dicom.dart';
+import 'package:core/core.dart';
 
 void main(List<String> args) {
   // var compare = new FileCompare(path1, path2);
@@ -21,5 +21,5 @@ bool fileCompare(String path1, String path2) {
   final Uint8List bytes1 = f1.readAsBytesSync();
   final Uint8List bytes2 = f2.readAsBytesSync();
 
-  return bytesEqual(bytes1, bytes2);
+  return uint8ListEqual(bytes1, bytes2);
 }

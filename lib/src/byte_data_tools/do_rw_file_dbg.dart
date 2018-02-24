@@ -5,7 +5,6 @@
 // See the AUTHORS file for other contributors.
 
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
@@ -19,10 +18,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
   final pad = ''.padRight(5);
-
-  final Uint8List bytes = f.readAsBytesSync();
-  final bd = bytes.buffer.asByteData();
-  final reader0 = new BDReader(bd);
+  final reader0 = new BDReader.fromFile(f);
   final rds0 = reader0.readRootDataset();
   showRDS(rds0, reader0);
 
@@ -46,9 +42,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
   }
   final bytes1 = writer.writeRootDataset();
   log.debug('$pad    Encoded ${bytes1.lengthInBytes} bytes');
-
-  final bd1 = bytes1.buffer.asByteData();
-  final reader1 = new BDReader(bd1);
+  final reader1 = new BDReader.fromBytes(bytes1);
   final rds1 = reader1.readRootDataset();
   showRDS(rds1, reader1);
 
@@ -59,7 +53,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
   // If duplicates are present the [ElementOffsets]s will not be equal.
   if (!rds0.hasDuplicates) {
     //  Compare the data byte for byte
-    same = bytesEqual(reader0.rb.asUint8List(), reader1.rb.asUint8List());
+    same = uint8ListEqual(reader0.rb.asUint8List(), reader1.rb.asUint8List());
     msg = (same != true) ? '**** Files were different!!!' : 'Files were identical.';
   } else {
     msg = '''

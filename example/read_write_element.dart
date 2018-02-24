@@ -30,7 +30,7 @@ bool elementTest(Element e0, List values) {
 
   // Write the element
   final bd = new ByteData(4096);
-  final writer = new BDWriter(new BDRootDataset(bd));
+  final writer = new BDWriter(new BDRootDataset.empty(bd));
   writer.xWritePublicElement(e1);
   final wIndex = writer.wIndex;
 

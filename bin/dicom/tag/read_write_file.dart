@@ -7,7 +7,7 @@
 import 'package:core/server.dart';
 
 import 'package:convert/data/test_files.dart';
-import 'package:convert/dicom.dart';
+import 'package:convert/convert.dart';
 
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
@@ -19,7 +19,7 @@ void main() {
 
   log.info0('Reading: $path');
   final reader0 = new TagReader.fromPath(path,
-      async: true,
+      doAsync: true,
       dParams: DecodingParameters.kNoChange,
       reUseBD: true,
       doLogging: true,
@@ -43,7 +43,7 @@ void main() {
   final reader1 = new TagReader.fromPath(path);
   final tagDS1 = TagReader.readPath(outPath);
   log
-    ..debug('  Read ${reader1.bd.lengthInBytes} bytes')
+    ..debug('  Read ${reader1.rb.lengthInBytes} bytes')
     ..info0('  DS1: $tagDS1');
 
   if (tagDS0.pInfo != tagDS1.pInfo) {

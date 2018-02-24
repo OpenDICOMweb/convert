@@ -8,13 +8,9 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:core/core.dart';
-
-import 'package:convert/dicom.dart';
-import 'package:convert/src/utilities/dicom_file_utils.dart';
-import 'package:convert/src/utilities/convert_to_dataset_by_group.dart';
-import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
+import 'package:convert/convert.dart';
+import 'package:path/path.dart' as path;
 
 import 'package:convert/src/json/writer/fast_writer.dart';
 
@@ -79,15 +75,12 @@ Future main() async {
   log
     ..debug('Wrote JSON: $outPath')
     ..debug('  Output length: ${out.length}')
-    ..debug('  Output length: ${out.length ~/ 1024}K\n');
-
-  log.debug('Converting bdRds($bdRDS) to TagDataset ...');
+    ..debug('  Output length: ${out.length ~/ 1024}K\n')
+    ..debug('Converting bdRds($bdRDS) to TagDataset ...');
   final tagRds0 = convertBDDSToTagDS(bdRDS);
   print('tagRds0: ${tagRds0.info}');
   print('tagRds0: ${tagRds0.format(z)}');
-  log
-    ..debug('Converted tagRds0: $tagRds0')
-    ..debug(' ${tagRds0.summary}');
+  log..debug('Converted tagRds0: $tagRds0')..debug(' ${tagRds0.summary}');
 
   final converter = new ConvertToDatasetByGroup(bdRDS);
   final privateRds = converter.find();

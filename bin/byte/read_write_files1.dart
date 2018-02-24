@@ -13,9 +13,6 @@ import 'package:core/server.dart';
 
 import 'package:convert/data/test_directories.dart';
 import 'package:convert/data/test_files.dart';
-import 'package:convert/src/binary/byte_data/byte_read_utils.dart';
-import 'package:convert/src/binary/compare_bytes.dart';
-
 
 //TODO: move to appropriate place
 import 'read_utils.dart';
@@ -54,7 +51,7 @@ bool readWritePath(String path, {int reps = 1, bool fmiOnly = false}) {
 
 bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
   final Uint8List bytes0 = inFile.readAsBytesSync();
-  final reader = new BDReader(bytes0.buffer.asByteData());
+  final reader = new BDReader.fromTypedData(bytes0);
   final rds0 = reader.readRootDataset();
 /*  List<int> elementIndex0 = reader.elementIndex;*/
   log..info0(rds0.pInfo)..info0(rds0.info);
@@ -72,7 +69,7 @@ bool readWriteFile(File inFile, {int reps = 1, bool fmiOnly = false}) {
   log..info0(rds1.pInfo)..info0(rds1.info);
   final areDatasetsEqual = _compareDatasets(rds0, rds1);
   log.info0('$rds0 == $rds1: $areDatasetsEqual');
-  final areBytesEqual = _bytesEqual(bytes0, bytes1, true);
+  final areBytesEqual = uint8ListEqual(bytes0, bytes1.asUint8List());
   log.info0('bytes0 == bytes1: $areBytesEqual');
   return areDatasetsEqual && areBytesEqual;
 }
@@ -162,7 +159,7 @@ bool _compareDatasets(BDRootDataset rds0, BDRootDataset rds1,
   return true;
 }
 
-bool _bytesEqual(Uint8List b0, Uint8List b1, [bool throwOnError]) {
+bool _bytesEqual(Bytes b0, Bytes b1, [bool throwOnError]) {
   final v = bytesEqual(b0, b1);
   if (!v) {
     log.error('Unequal datasets:/n'

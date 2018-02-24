@@ -6,10 +6,12 @@
 
 import 'dart:io';
 
-import 'package:convert/byte_tools.dart';
+import 'package:convert/convert.dart';
 import 'package:core/server.dart';
 
-final String dir0 =
+import 'package:convert/byte_data_tools.dart';
+
+const String dir0 =
     'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/';
 String outRoot0 = 'test/output/root0';
 String outRoot1 = 'test/output/root1';

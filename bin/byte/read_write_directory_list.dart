@@ -6,14 +6,11 @@
 
 import 'dart:io';
 
-import 'package:convert/data/test_directories.dart';
 import 'package:convert/convert.dart';
-import 'package:path/path.dart' as p;
 import 'package:core/core.dart';
+import 'package:path/path.dart' as p;
 
-
-import 'package:convert/src/binary/byte_data/byte_read_utils.dart';
-
+import 'package:convert/data/test_directories.dart';
 
 final String dir0 =
     'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/'

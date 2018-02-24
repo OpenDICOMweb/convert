@@ -4,7 +4,7 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:convert/dicom.dart';
+import 'package:convert/convert.dart';
 import 'package:core/core.dart';
 
 /// Simple [Element] test
@@ -66,7 +66,7 @@ bool writeReadElementTest<E>(TagElement<E> e0, [PrivateCreator pc]) {
     return false;
   }
 
-  final wBuf1 = new TagWriter(lengthInBytes: 128);
+  final wBuf1 = new TagWriter.(lengthInBytes: 128);
   wBuf1.xWritePublicElement(e1);
   final wIndex1 = wBuf1.writeIndex;
 
@@ -88,7 +88,7 @@ bool writeReadElementTest<E>(TagElement<E> e0, [PrivateCreator pc]) {
 }
 
 TagElement writeReadDataset<E>(TagRootDataset ds0, Element e0) {
-  final ds0 = new TagRootDataset()..add(e0);
+  final ds0 = new TagRootDataset.empty()..add(e0);
   final wBuf0 = new TagWriter(ds0)..writeRootDataset();
   TagElement<E> e;
   //TODO: create Dataset DS2 and write E1

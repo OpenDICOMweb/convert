@@ -9,8 +9,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:core/core.dart';
 import 'package:convert/src/bulkdata/bulkdata.dart';
-import 'package:convert/src/bytes/bytes.dart';
 
 final Uint8List kBulkdataFileToken = ASCII.encode('Bulkdata');
 

@@ -7,7 +7,6 @@
 import 'package:core/core.dart';
 
 import 'package:convert/src/dicom/base/reader/log_read_mixin_base.dart.old';
-import 'package:convert/src/bytes/buffer/read_buffer.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 
 abstract class LogReadMixin implements LogReadMixinBase {

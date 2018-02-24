@@ -10,7 +10,6 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/bytes/buffer/read_buffer.dart';
 import 'package:convert/src/dicom/base/reader/evr_reader.dart';
 import 'package:convert/src/dicom/byte_data/reader/evr_bd_reader.dart';
 import 'package:convert/src/dicom/byte_data/reader/ivr_bd_reader.dart';
@@ -67,14 +66,13 @@ class BDReader {
   /// Creates a [BDReader] from the contents of the [uint8List].
   factory BDReader.fromUint8List(Uint8List uint8List,
           {Endian endian = Endian.little,
-          String path = '',
-          bool async = true,
+            String path = '',
           DecodingParameters dParams = DecodingParameters.kNoChange,
           bool reUseBD = true,
           bool doLogging = true,
           bool showStats = true}) =>
       new BDReader._(new ReadBuffer.fromTypedData(uint8List, endian),
-          path: '',
+          path: path,
           dParams: dParams,
           reUseBD: reUseBD,
           doLogging: doLogging,
@@ -82,9 +80,7 @@ class BDReader {
 
   /// Creates a [BDReader] from the contents of the [input].
   factory BDReader.fromList(List<int> input,
-          {String path = '',
-          bool async = true,
-          DecodingParameters dParams = DecodingParameters.kNoChange,
+          {DecodingParameters dParams = DecodingParameters.kNoChange,
           bool reUseBD = true,
           bool doLogging = true,
           bool showStats = true}) =>

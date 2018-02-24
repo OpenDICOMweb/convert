@@ -16,7 +16,6 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/bytes/bytes.dart';
 import 'package:convert/src/dicom/base/writer/dcm_writer_base.dart';
 import 'package:convert/src/dicom/base/writer/evr_writer.dart';
 import 'package:convert/src/dicom/base/writer/ivr_writer.dart';

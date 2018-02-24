@@ -7,13 +7,10 @@
 import 'dart:io';
 
 import 'package:convert/convert.dart';
-import 'package:path/path.dart' as p;
 import 'package:core/server.dart';
+import 'package:path/path.dart' as p;
 
-
-//import 'package:convert/data/test_directories.dart';
 import 'package:convert/data/test_files.dart';
-
 
 void main() {
 	Server.initialize(name: 'read_write_file.dart', level: Level.debug);
@@ -65,7 +62,7 @@ bool readWriteFileTimed(File file, {int reps = 1, bool fmiOnly = false}) {
 
   if (bytes1 == null) return false;
 
-  final areEqual = bytesEqual(bytes0, bytes1);
+  final areEqual = bytes0 == bytes1;
   final compare = timer.split;
   final total = timer.elapsed;
   final out = '''

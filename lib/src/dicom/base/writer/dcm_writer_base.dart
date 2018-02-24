@@ -14,8 +14,6 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/bytes/bytes.dart';
-import 'package:convert/src/bytes/buffer/write_buffer.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
 
 /// A library for encoding [Dataset]s in the DICOM File Format.

@@ -39,23 +39,15 @@ Future<bool> doReadByteFile(File f,
   try {
     final bytes = await readDcmPath(cPath);
     if (bytes == null) return false;
-    final bd = bytes.buffer.asByteData();
-
     final doLogging = system.level > Level.debug;
-    final reader0 = new BDReader(bd, path: cPath, doLogging: doLogging);
+    final reader0 = new BDReader.fromBytes(bytes, path: cPath, doLogging:
+    doLogging);
 
     rds0 = reader0.readRootDataset();
     if (rds0 == null) {
       log.info0('Unreadable File: $cPath');
       return false;
     }
-
-/*
-    if (rds0.pInfo == null) {
-      log.info0('No ParseInfo: $cPath');
-      return false;
-    }
-*/
 
     if (rds0.pInfo != null) log.debug('$pad    ${rds0.pInfo.summary(rds0)}');
 

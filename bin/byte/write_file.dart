@@ -5,13 +5,12 @@
 // See the AUTHORS file for other contributors.
 
 import 'dart:async' hide Timer;
-import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
 import 'package:core/core.dart';
 
-Future<Uint8List> writeFile(BDRootDataset rds, String path,
-    {bool fmiOnly = false, TransferSyntax outputTS}) {
+Future<Bytes> writeFile(BDRootDataset rds, String path,
+    {bool fmiOnly = false, TransferSyntax outputTS}) async {
   final timer = new Timer();
   final total = rds.total;
   log.debug('writing ${rds.runtimeType} to "$path"\n'

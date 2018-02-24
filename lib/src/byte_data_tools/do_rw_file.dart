@@ -6,7 +6,6 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:core/core.dart';
 import 'package:path/path.dart' as  path;
@@ -30,9 +29,7 @@ Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) asy
   final pad = ''.padRight(5);
 
   try {
-    final Uint8List bytes = await f.readAsBytes();
-    final bd = bytes.buffer.asByteData();
-    final reader0 = new BDReader(bd);
+    final reader0 = new BDReader.fromFile(f);
     final rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -65,14 +62,14 @@ $pad    TS: ${rds0.transferSyntax}''');
       writer = new BDWriter.toPath(rds0, outPath);
     }
     final bd1 = writer.writeRootDataset();
-    log.debug('$pad    Encoded ${bd.lengthInBytes} bytes');
+    log.debug('$pad    Encoded ${bd1.lengthInBytes} bytes');
 
     // Urgent Jim if file has dups then no test is done. Fix it.
     var same = true;
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
-      same = bytesEqual(bytes0, bd1.buffer.asUint8List());
+      same = uint8ListEqual(bytes0, bd1.buffer.asUint8List());
       if (same != true) log.warn('$pad Files bytes are different!');
     }
     return same;

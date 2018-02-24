@@ -7,11 +7,12 @@
 import 'dart:io';
 
 import 'package:benchmark_harness/benchmark_harness.dart';
-import 'package:convert/dicom.dart';
+import 'package:core/core.dart';
+import 'package:convert/convert.dart';
 import 'package:core/server.dart';
 
-
 import 'test_files.dart';
+
 // Import BenchmarkBase class.
 
 Timer timer;
@@ -61,7 +62,7 @@ bool writeFileTest(File inFile, {int reps = 1, bool fmiOnly = false}) {
 	final uint8List = inFile.readAsBytesSync();
   final rds0 = BDReader.readBytes(uint8List);
 	final bytes = BDWriter.writeBytes(rds0, path: '');
-  if (!bytesEqual(uint8List, bytes.asUint8List())) throw 'Error in DcmWrite';
+  if (!bytesEqual(uint8List, bytes)) throw 'Error in DcmWrite';
 
 	final timer = new Timer();
   for (var i = 0; i < reps; i++) {

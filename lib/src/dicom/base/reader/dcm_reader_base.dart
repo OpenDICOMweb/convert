@@ -9,7 +9,6 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/bytes/buffer/read_buffer.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 
