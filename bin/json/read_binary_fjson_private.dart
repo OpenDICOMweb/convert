@@ -14,10 +14,10 @@ import 'package:path/path.dart' as path;
 
 import 'package:convert/src/json/writer/fast_writer.dart';
 
-const String k6684Dir = 'C:/odw/test_data/6684';
+const String k6684Dir = 'C:/acr/odw/test_data/6684';
 
 const String k6684x0 =
-    'C:/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
+    'C:/acr/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
 
 const String k6684x1 =
     'c:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
@@ -35,7 +35,7 @@ Future main() async {
   final url = new Uri.file(fPath);
   stdout.writeln('Reading(byte): $url');
 
-  final bytes = await readDcmPath(fPath);
+  final bytes = readPath(fPath);
   if (bytes == null) {
     log.error('"$fPath" either does not exist or is not a valid DICOM file');
     return;

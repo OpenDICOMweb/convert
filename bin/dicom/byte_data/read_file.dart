@@ -14,39 +14,40 @@ import 'package:convert/src/utilities/dicom_file_utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
 
-const String xx3 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
+const String xx3 = 'C:/acr/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
 const String xx2 =
-    'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.5.5.dcm';
+    'C:/acr/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1.2.5.5.dcm';
 const String xx1 =
-    'C:/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm';
+    'C:/acr/odw/test_data/mweb/ASPERA/DICOM files only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm';
 const String xx0 =
-    'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm';
-const String xxx = 'C:/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
-const String dcmDir = 'C:/odw/test_data/sfd/MG/DICOMDIR';
-const String evrLarge = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
+    'C:/acr/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm';
+const String xxx = 'C:/acr/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
+const String dcmDir = 'C:/acr/odw/test_data/sfd/MG/DICOMDIR';
+const String evrLarge = 'C:/acr/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
 const String evrULength = 'c:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
-const String evrX = 'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840'
+const String evrX = 'C:/acr/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/1.2.840'
     '.10008.5.1.4.1.1.88.67.dcm';
 // Defined and Undefined datasets
-const String evrXLarge = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368';
-const String evrOWPixels = 'C:/odw/test_data/IM-0001-0001.dcm';
-const String evr38690 = 'C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/'
+const String evrXLarge = 'C:/acr/odw/test_data/mweb/100 MB Studies/1/S234611/15859368';
+const String evrOWPixels = 'C:/acr/odw/test_data/IM-0001-0001.dcm';
+const String evr38690 = 'C:/acr/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/'
     'CT.2.16.840.1.114255.390617858.1794098916.62037.38690.dcm';
 
-const String ivrClean = 'C:/odw/test_data/sfd/MR/PID_BREASTMR/1_DICOM_Original/'
+const String ivrClean = 'C:/acr/odw/test_data/sfd/MR/PID_BREASTMR/1_DICOM_Original/'
     'EFC524F2.dcm';
-const String ivrCleanMR = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy/'
+const String ivrCleanMR = 'C:/acr/odw/test_data/mweb/100 MB Studies/MRStudy/'
     '1.2.840.113619.2.5.1762583153.215519.978957063.99.dcm';
 
 const String evrDataAfterPixels =
-    'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
+    'C:/acr/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
 
-const String ivrWithGroupLengths = 'C:/odw/test_data/mweb/100 MB Studies/MRStudy'
+const String ivrWithGroupLengths = 'C:/acr/odw/test_data/mweb/100 MB Studies/MRStudy'
     '/1.2.840.113619.2.5.1762583153.215519.978957063.101.dcm';
 
-const String bar = 'C:/odw/test_data/mweb/10 Patient IDs/04443352';
+const String bar = 'C:/acr/odw/test_data/mweb/10 Patient IDs/04443352';
 
-const String bas = 'C:/odw/test_data/mweb/100 MB Studies/1/S234611/15859368.fmt';
+const String bas = 'C:/acr/odw/test_data/mweb/100 MB Studies/1/S234611/15859368'
+    '.fmt';
 //Urgent: bug with path20
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
@@ -58,7 +59,7 @@ Future main() async {
   final url = new Uri.file(fPath);
   stdout.writeln('Reading(byte): $url');
 
-  final bytes = await readDcmPath(fPath);
+  final bytes = readPath(fPath);
   if (bytes == null) {
     log.error('"$fPath" either does not exist or is not a valid DICOM file');
     return;
@@ -102,9 +103,9 @@ String getTempFile(String infile, String extension) {
 
 const String x00 = 'c:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/'
     '1.2.392.200036.9123.100.12.11.3.dcm';
-const String x01 = 'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/'
+const String x01 = 'C:/acr/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/'
     '1.2.840.10008.5.1.4.1.1.66.dcm';
-const String x02 = 'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/'
+const String x02 = 'C:/acr/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/'
     'Sop (user 349383158)/1.2.392.200036.9123.100.12.11.3.dcm';
 const String x03 =
     'c:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2'
@@ -128,15 +129,15 @@ const String x11 =
 const String x12 =
     'c:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1'
     '.2.6.1.dcm';
-const String x13 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840'
+const String x13 = 'C:/acr/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840'
     '.10008.5.1.4.1.1.20.dcm';
-const String x14 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840'
+const String x14 = 'C:/acr/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840'
     '.10008.5.1.4.1.1.7.dcm';
-const String x15 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840'
+const String x15 = 'C:/acr/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840'
     '.10008.5.1.4.1.1.88.22.dcm';
-const String x16 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840'
+const String x16 = 'C:/acr/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840'
     '.10008.5.1.4.1.1.88.67.dcm';
-const String x17 = 'C:/odw/test_data/mweb/Sop-selected/1.2.840.10008.5.1.4.1.1.66.dcm';
+const String x17 = 'C:/acr/odw/test_data/mweb/Sop-selected/1.2.840.10008.5.1.4.1.1.66.dcm';
 
 const List<String> badFiles = const <String>[
   x00,

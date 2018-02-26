@@ -28,7 +28,7 @@ Future main() async {
 
 	for (var path in reader) {
 		print('"$path"');
-		final bytes = await readDcmPath(path);
+		final bytes = readPath(path);
 		if (bytes == null) continue;
 		print('${bytes.lengthInBytes}: "$path"');
 	}

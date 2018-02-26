@@ -4,6 +4,7 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -93,7 +94,7 @@ class BDReader {
       bool doLogging = false,
       bool showStats = false}) {
     final Uint8List bytes =
-        (doAsync) ? file.readAsBytes() : file.readAsBytesSync();
+        (doAsync) ? _readAsync(file) : file.readAsBytesSync();
     return new BDReader(new ReadBuffer.fromTypedData(bytes),
         path: file.path,
         dParams: dParams,
@@ -207,4 +208,7 @@ class BDReader {
         showStats: showStats);
     return reader.readRootDataset();
   }
+
+  static Future<Uint8List> _readAsync(File file) async =>
+      await file.readAsBytes();
 }

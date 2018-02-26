@@ -16,50 +16,53 @@ const List<String> stdDcmExtensions = const <String>['.dcm', '', '.DCM'];
 //TODO: what should default be?
 const int kSmallDcmFileLimit = 376;
 
-Future<Bytes> readDcmPath(String fPath,
-    [List<String> extensions = stdDcmExtensions,
-    int sizeLimit = kSmallDcmFileLimit]) async {
+Bytes readPath(String fPath,
+    { // TODO: change to true when async works
+      bool doAsync = false,
+    List<String> extensions = stdDcmExtensions,
+    int minLength = kSmallDcmFileLimit,
+    int maxLength}) {
   final ext = path.extension(fPath);
   if (!extensions.contains(ext)) return null;
   final f = new File(fPath);
-  return readDcmFile(f, sizeLimit);
+  return readFile(f,
+      doAsync: doAsync, minLength: minLength, maxLength: maxLength);
 }
 
-Future<Bytes> readDcmFile(File f, [int sizeLimit = kSmallDcmFileLimit]) async {
-  Uint8List bytes;
-  int length;
-  if (f.existsSync()) {
-    length = await f.length();
-    if (length > kSmallDcmFileLimit) {
-      try {
-        bytes = await f.readAsBytes();
-      } on FileSystemException {
-        return null;
-      }
-      return (bytes.length > kSmallDcmFileLimit)
-          ? new Bytes.fromTypedData(bytes)
-          : null;
-    }
-  }
-  return null;
-}
-
-Uint8List readDcmPathSync(String fPath,
-    [List<String> extensions = stdDcmExtensions,
-    int sizeLimit = kSmallDcmFileLimit]) {
-  final ext = path.extension(fPath);
-  if (!extensions.contains(ext)) return null;
-  final f = new File(fPath);
-  return readDcmFileSync(f, sizeLimit);
-}
-
-Uint8List readDcmFileSync(File f, [int sizeLimit = kSmallDcmFileLimit]) {
-  Uint8List bytes;
-  if (!f.existsSync() && (f.lengthSync() <= kSmallDcmFileLimit)) return null;
+Bytes readFile(File f,
+    { // TODO: change to true when async works
+    bool doAsync = false,
+    List<String> extensions = stdDcmExtensions,
+    int minLength = kSmallDcmFileLimit,
+    int maxLength}) {
+  if (!f.existsSync() || !_checkLength(f, doAsync, minLength, maxLength))
+    return null;
   try {
-    bytes = f.readAsBytesSync();
+    final bytes = doAsync ? _readAsync(f) : _readSync(f);
+    return new Bytes.fromTypedData(bytes);
   } on FileSystemException {
     return null;
   }
-  return (bytes.length > kSmallDcmFileLimit) ? bytes : null;
 }
+
+bool _checkLength(File f, bool doAsync, int min, int max) =>
+  doAsync ? _checkLenAsync(f, min, max) : _checkLenSync(f, min, max);
+
+Future<bool> _checkLenAsync(File f, int min, int max) async {
+  assert(min >= 0 && max > min);
+  final len = await f.length();
+  final max0 = max ?? len;
+  assert(min >= 0 && max0 > min);
+  return (len >= min && len <= max0) ? true : false;
+}
+
+bool _checkLenSync(File f, int min, int max) {
+  final len = f.lengthSync();
+  final max0 = max ?? len;
+  assert(min >= 0 && max0 > min);
+  final v = (len >= min && len <= max0) ? true : false;
+  return v;
+}
+
+Future<Uint8List> _readAsync(File f) async => await f.readAsBytes();
+Uint8List _readSync(File f) => f.readAsBytesSync();

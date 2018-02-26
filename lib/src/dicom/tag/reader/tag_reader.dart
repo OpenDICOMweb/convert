@@ -4,6 +4,7 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -91,7 +92,7 @@ class TagReader {
       bool doLogging = false,
       bool showStats = false}) {
     final Uint8List bytes =
-        (doAsync) ? file.readAsBytes() : file.readAsBytesSync();
+        (doAsync) ? _readFileAsync(file)  : file.readAsBytesSync();
     return new TagReader(new ReadBuffer.fromTypedData(bytes),
         path: file.path,
         dParams: dParams,
@@ -206,3 +207,8 @@ class TagReader {
     return reader.readRootDataset();
   }
 }
+
+Future<Uint8List> _readFileAsync(File file) async =>
+await file.readAsBytes();
+
+

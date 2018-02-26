@@ -59,7 +59,7 @@ Future main() async {
     final url = new Uri.file(fPath);
     stdout.writeln('Reading(byte): $url');
 
-    final bytes = await readDcmPath(fPath);
+    final bytes = readPath(fPath);
     if (bytes == null) {
       log.error('"$fPath" is not a valid DICOM file');
       return;
