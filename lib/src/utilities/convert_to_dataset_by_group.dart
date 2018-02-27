@@ -8,6 +8,8 @@ import 'package:core/core.dart';
 
 import 'package:convert/src/utilities/dataset_by_group.dart';
 
+// ignore_for_file: only_throw_errors
+
 typedef Element ElementFrom(Element e);
 
 typedef Element ElementMaker<V>(Tag tag, List<V> values, int vrIndex,

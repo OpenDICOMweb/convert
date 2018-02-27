@@ -10,6 +10,8 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
+// ignore_for_file: avoid_returning_this
+
 // TODO:
 //  * Finish documentation
 //  * Make buffers Unmodifiable

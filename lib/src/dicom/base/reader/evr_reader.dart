@@ -13,7 +13,7 @@ import 'package:convert/src/dicom/base/reader/dcm_reader_base.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 import 'package:convert/src/errors.dart';
 
-// ignore_for_file: avoid_positional_boolean_parameters
+// ignore_for_file: avoid_positional_boolean_parameters, only_throw_errors
 
 // Reader axioms
 // 1. eStart is always the first byte of the Element being read and eEnd is always

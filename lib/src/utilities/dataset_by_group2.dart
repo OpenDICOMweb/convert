@@ -8,6 +8,8 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
+// ignore_for_file: only_throw_errors
+
 /// A Dataset containing only private [Element]s or Sequences ([SQ])
 /// containing only private [Element]s.
 abstract class DatasetByGroup {

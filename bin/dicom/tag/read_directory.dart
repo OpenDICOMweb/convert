@@ -10,6 +10,8 @@ import 'package:core/core.dart';
 import 'package:path/path.dart' as p;
 import 'package:convert/dicom.dart';
 
+// ignore_for_file: avoid_catches_without_on_clauses
+
 String inRoot0 = 'C:/acr/odw/test_data/sfd/CR';
 String inRoot1 = 'C:/acr/odw/test_data/sfd/CR_and_RF';
 String inRoot2 = 'C:/acr/odw/test_data/sfd/CT';

@@ -12,7 +12,7 @@ import 'package:core/core.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 
-// ignore_for_file: avoid_positional_boolean_parameters
+// ignore_for_file: avoid_positional_boolean_parameters, only_throw_errors
 
 // Reader axioms
 // 1. The read index (rIndex) should always be at the last place read,

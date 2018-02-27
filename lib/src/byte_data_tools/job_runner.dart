@@ -13,6 +13,8 @@ import 'package:convert/src/byte_data_tools/job_args.dart';
 import 'package:convert/src/byte_data_tools/job_reporter.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
+// ignore_for_file: avoid_catches_without_on_clauses
+
 // **** change this name when testing
 const String defaultDirName = 'C:/odw/test_data';
 

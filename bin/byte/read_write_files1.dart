@@ -17,6 +17,8 @@ import 'package:convert/data/test_files.dart';
 //TODO: move to appropriate place
 import 'read_utils.dart';
 
+// ignore_for_file: avoid_catches_without_on_clauses
+
 const String foo = 'C:/odw/test_data/mweb/ASPERA/'
 		'DICOM filesonly/22c82bd4-6926-46e1-b055-c6b788388014.dcm';
 void main() {

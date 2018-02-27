@@ -6,6 +6,8 @@
 
 import 'package:core/core.dart';
 
+// ignore_for_file: only_throw_errors
+
 class ElementOffsets {
 	int index = 0;
   List<int> starts = <int>[];

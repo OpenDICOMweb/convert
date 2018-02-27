@@ -13,7 +13,7 @@ import 'package:core/server.dart';
 
 import 'test_files.dart';
 
-// Import BenchmarkBase class.
+// ignore_for_file: only_throw_errors
 
 Timer timer;
 Duration time;

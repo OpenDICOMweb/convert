@@ -101,7 +101,7 @@ Future main() async {
   });
   log.debug('Private count: $count');
 
-  final pList = tagRds0.findAllPrivate();
+  final pList = tagRds0.findPrivate();
   log
     ..debug('Private Top Level: ${pList.length}')
     ..debug(z.fmt('Private: ${pList.length}', pList));

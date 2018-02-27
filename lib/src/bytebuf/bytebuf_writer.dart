@@ -11,6 +11,8 @@ import 'package:core/core.dart';
 
 import 'bytebuf_reader.dart';
 
+// ignore_for_file: avoid_returning_this
+
 //const int kMB = 1024 * 1024;
 //const int kGB = 1024 * 1024 * 1024;
 

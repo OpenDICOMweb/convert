@@ -9,6 +9,8 @@ import 'package:core/core.dart';
 import 'package:convert/src/dicom/base/writer/log_write_mixin_base.dart.old';
 import 'package:convert/src/utilities/element_offsets.dart';
 
+// ignore_for_file: avoid_positional_boolean_parameters, only_throw_errors
+
 abstract class LogWriteMixin implements LogWriteMixinBase {
   int get elementCount;
   LoggingWriteBuffer get wb;

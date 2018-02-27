@@ -41,6 +41,9 @@ const String k6684x1 =
 
 Formatter z = new Formatter(maxDepth: -1);
 
+/// Implements basic profile with Retain Logitudinal Date option and
+/// Retain Safe Private option
+
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug, throwOnError: true);
 
@@ -61,9 +64,8 @@ Future main() async {
   }
 
   /// Read the Study as BD
-  final bdRds =
-      BDReader.readBytes(bytes, path: fPath, doLogging: false, showStats:
-      false);
+  final bdRds = BDReader.readBytes(bytes,
+      path: fPath, doLogging: true, showStats: false);
   if (bdRds == null) {
     log.warn('Invalid DICOM file: $fPath');
   } else {
@@ -82,23 +84,24 @@ Future main() async {
       log.debug(fmtOut);
     } else {
       print('${bdRds.summary}');
-      //  print('bdRDS: ${bdRDS.format(z)}');
+      print('bdRDS: ${bdRds.format(z)}');
     }
   }
 
+  print(z.fmt('FMI: ${bdRds.fmi.length}', bdRds.fmi.elements));
   final outPath = 'out.json';
   final writer0 = new FastJsonWriter(bdRds, outPath, separateBulkdata: true);
   final out = writer0.write();
   await new File(outPath).writeAsString(out);
   log
     ..debug('Wrote JSON: $outPath')
-    ..debug('  Output length: ${out.length}')
-    ..debug('  Output length: ${out.length ~/ 1024}K\n');
+    ..debug('  Length: ${out.length} bytes ${out.length ~/ 1024}K');
 
   // Delete all X Elements (excluding DA and UI) in Basic DeId Profile
   final deleted = bdRds.deleteCodes(deIdRemoveCodes);
   print('deIdXCodes deleted: ${deleted.length} of ${deIdRemoveCodes.length}');
 
+/*
   // Delete all Private Elements
   final privatesDeleted = bdRds.deleteAllPrivate();
   print('Privates deleted: ${privatesDeleted.length}');
@@ -107,6 +110,7 @@ Future main() async {
       bdRds.deleteAllPrivateInPublicSQs(recursive: false);
   print('Privates in Public SQs: ${privatesInPublicSQs.length}');
   print('bdRds Summary: ${bdRds.summary}');
+*/
 
   // Convert BDRootDataset to TagRootDataset
   final tagRds = convertBDDSToTagDS(bdRds);
@@ -127,16 +131,15 @@ Future main() async {
 
   final newUids = tagRds.findUids();
   print(z.fmt('Replaced old Uids: ${newUids.length}', newUids));
-  final uids1 = tagRds.findUids();
+//  final uids1 = tagRds.findUids();
   print(z.fmt('    with new Uids: ${newUids.length}', newUids));
   print('tagRDS Summary after Uid replacement: ${tagRds.summary}');
 
-
-  final deIdPath = 'Output: deid.json';
+  print(z.fmt('tagRds: ${tagRds.elements.length}', tagRds.elements));
+  final deIdPath = 'deid.json';
   final writer1 = new FastJsonWriter(tagRds, deIdPath, separateBulkdata: true);
   final deid = writer1.write();
-  print('  Output length: ${deid.length}');
-  print('  Output length: ${deid.length ~/ 1024}K');
+  print('  Length: ${deid.length} bytes ${deid.length ~/ 1024}K');
   await new File(deIdPath).writeAsString(deid);
   print('done');
 }

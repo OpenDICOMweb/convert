@@ -104,7 +104,7 @@ void _writeSQ(Element e, Indenter isb, String comma) {
 }
 
 void _writeFloat(Element e, Indenter sb, String comma) {
-  assert(e is FloatBase);
+  assert(e is Float);
   sb.writeln('"${e.hex}": {"vr": "${e.vrId}", "Value": ${e.values}}$comma');
 }
 
@@ -114,7 +114,7 @@ void _writeInt(Element e, Indenter sb, String comma) {
 }
 
 void _writeOtherFloat(Element e, Indenter sb, String comma) {
-  assert(e is FloatBase);
+  assert(e is Float);
   sb.writeln(
       '"${e.hex}": {"vr": "${e.vrId}", '
           '"Base64": "${BASE64.encode(e.vfBytes)}"}$comma');

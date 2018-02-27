@@ -1,0 +1,488 @@
+{
+	"age": "67",
+	"caseid": "12655",
+	"creationdate": "2015-12-23T20:41:02-05:00",
+	"enrollmentdate": "2003-10-30T00:00:00-05:00",
+	"es_index": "Image_Study",
+	"es_type": "json",
+	"ethnicity": "Not Hispanic or Latino",
+	"gender": "Female",
+	"id": "fa90b6cb-d313-411a-8f9e-b92c243d71b7",
+	"level": "instance",
+	"lifecyclestage": "Published",
+	"modificationdate": "0001-01-01T00:00:00-05:00",
+	"programid": "ACR-CTMS-76",
+	"programname": "ECOG-ACRIN",
+	"projectid": "ACR-CTMS-76-518",
+	"projectname": "National Lung Screening Trial",
+	"projectshortname": "6654",
+	"race": "White",
+	"seriesinstanceuid": "1.3.12.2.1107.5.1.4.54044.30000005112815214534300013238",
+	"siteshortname": "4217",
+	"sopinstanceuid": "1.3.12.2.1107.5.1.4.54044.30000005112815214534300013245",
+	"studyinstanceuid": "1.2.124.113532.129.255.5.220.20051128.150659.4272423",
+	"tags": [{
+			"name": "Specific Character Set",
+			"number": "00080005",
+			"value": "ISO_IR 100",
+			"vr": "CS"
+		}, {
+			"name": "Image Type",
+			"number": "00080008",
+			"value": "" "ORIGINAL\PRIMARY\AXIAL\CT_SOM5 SPI" "",
+			"vr": "CS"
+		}, {
+			"name": "SOP Class UID",
+			"number": "00080016",
+			"value": "1.2.840.10008.5.1.4.1.1.2",
+			"vr": "UI"
+		}, {
+			"name": "SOP Instance UID",
+			"number": "00080018",
+			"value": "1.3.12.2.1107.5.1.4.54044.30000005112815214534300013245",
+			"vr": "UI"
+		}, {
+			"name": "Study Date",
+			"number": "00080020",
+			"value": "20051128",
+			"vr": "DA"
+		}, {
+			"name": "Series Date",
+			"number": "00080021",
+			"value": "20051128",
+			"vr": "DA"
+		}, {
+			"name": "Acquisition Date",
+			"number": "00080022",
+			"value": "20051128",
+			"vr": "DA"
+		}, {
+			"name": "Content Date",
+			"number": "00080023",
+			"value": "20051128",
+			"vr": "DA"
+		}, {
+			"name": "Study Time",
+			"number": "00080030",
+			"value": "151503.906000",
+			"vr": "TM"
+		}, {
+			"name": "Series Time",
+			"number": "00080031",
+			"value": "152050.406000",
+			"vr": "TM"
+		}, {
+			"name": "Acquisition Time",
+			"number": "00080032",
+			"value": "151641.389298",
+			"vr": "TM"
+		}, {
+			"name": "Content Time",
+			"number": "00080033",
+			"value": "151641.389298",
+			"vr": "TM"
+		}, {
+			"name": "Accession Number",
+			"number": "00080050",
+			"value": "2246257987917650",
+			"vr": "SH"
+		}, {
+			"name": "Modality",
+			"number": "00080060",
+			"value": "CT",
+			"vr": "CS"
+		}, {
+			"name": "Manufacturer",
+			"number": "00080070",
+			"value": "SIEMENS",
+			"vr": "LO"
+		}, {
+			"name": "Institution Name",
+			"number": "00080080",
+			"value": "University of Iowa Hospital",
+			"vr": "LO"
+		}, {
+			"name": "Referring Physician's Name",
+			"number": "00080090",
+			"value": "REMOVED^BY^TRIAD",
+			"vr": "PN"
+		}, {
+			"name": "Station Name",
+			"number": "00081010",
+			"value": "CT54044",
+			"vr": "SH"
+		}, {
+			"name": "Study Description",
+			"number": "00081030",
+			"value": "Thorax^3_NLST_VOLUME (Adult)",
+			"vr": "LO"
+		}, {
+			"name": "Series Description",
+			"number": "0008103E",
+			"value": "ACRIN_2.0_ B30f",
+			"vr": "LO"
+		}, {
+			"name": "Operators' Name",
+			"number": "00081070",
+			"value": "REMOVED^BY^TRIAD",
+			"vr": "PN"
+		}, {
+			"name": "Manufacturer's Model Name",
+			"number": "00081090",
+			"value": "Sensation 64",
+			"vr": "LO"
+		}, {
+			"name": "Referenced Image Sequence",
+			"number": "00081140",
+			"value": "(0008,1140) Referenced Image Sequence",
+			"vr": "SQ"
+		}, {
+			"name": "Source Image Sequence",
+			"number": "00082112",
+			"value": "(0008,2112) Source Image Sequence",
+			"vr": "SQ"
+		}, {
+			"name": "Patient's Name",
+			"number": "00100010",
+			"value": "12655^4217^6654",
+			"vr": "PN"
+		}, {
+			"name": "Patient ID",
+			"number": "00100020",
+			"value": "12655",
+			"vr": "LO"
+		}, {
+			"name": "Patient's Birth Date",
+			"number": "00100030",
+			"value": "19360701",
+			"vr": "DA"
+		}, {
+			"name": "Patient's Sex",
+			"number": "00100040",
+			"value": "O",
+			"vr": "CS"
+		}, {
+			"name": "Other Patient IDs",
+			"number": "00101000",
+			"value": "",
+			"vr": "LO"
+		}, {
+			"name": "Patient's Age",
+			"number": "00101010",
+			"value": "069Y",
+			"vr": "AS"
+		}, {
+			"name": "Clinical Trial Sponsor Name",
+			"number": "00120010",
+			"value": "American_College_of_Radiology",
+			"vr": "LO"
+		}, {
+			"name": "Clinical Trial Protocol ID",
+			"number": "00120020",
+			"value": "6654",
+			"vr": "LO"
+		}, {
+			"name": "Clinical Trial Protocol Name",
+			"number": "00120021",
+			"value": "National Lung Screening Trial",
+			"vr": "LO"
+		}, {
+			"name": "Clinical Trial Site ID",
+			"number": "00120030",
+			"value": "4217",
+			"vr": "LO"
+		}, {
+			"name": "Clinical Trial Site Name",
+			"number": "00120031",
+			"value": "University of Iowa Hospital",
+			"vr": "LO"
+		}, {
+			"name": "Clinical Trial Subject ID",
+			"number": "00120040",
+			"value": "12655",
+			"vr": "LO"
+		}, {
+			"name": "Clinical Trial Subject Reading ID",
+			"number": "00120042",
+			"value": "12655",
+			"vr": "LO"
+		}, {
+			"name": "Clinical Trial Time Point ID",
+			"number": "00120050",
+			"value": "",
+			"vr": "LO"
+		}, {
+			"name": "Clinical Trial Time Point Description",
+			"number": "00120051",
+			"value": "",
+			"vr": "ST"
+		}, {
+			"name": "Clinical Trial Coordinating Center Name",
+			"number": "00120060",
+			"value": "American_College_of_Radiology",
+			"vr": "LO"
+		}, {
+			"name": "Patient Identity Removed",
+			"number": "00120062",
+			"value": "YES",
+			"vr": "CS"
+		}, {
+			"name": "De-identification Method",
+			"number": "00120063",
+			"value": "\\TRIAD Anonymization; Date=12/23/2015; Time=8:40 PM",
+			"vr": "LO"
+		}, {
+			"name": "Body Part Examined",
+			"number": "00180015",
+			"value": "CHEST",
+			"vr": "CS"
+		}, {
+			"name": "Slice Thickness",
+			"number": "00180050",
+			"value": "2",
+			"vr": "DS"
+		}, {
+			"name": "KVP",
+			"number": "00180060",
+			"value": "120",
+			"vr": "DS"
+		}, {
+			"name": "Data Collection Diameter",
+			"number": "00180090",
+			"value": "500",
+			"vr": "DS"
+		}, {
+			"name": "Device Serial Number",
+			"number": "00181000",
+			"value": "",
+			"vr": "LO"
+		}, {
+			"name": "Software Version(s)",
+			"number": "00181020",
+			"value": "syngo CT 2005A",
+			"vr": "LO"
+		}, {
+			"name": "Protocol Name",
+			"number": "00181030",
+			"value": "3_NLST_VOLUME",
+			"vr": "LO"
+		}, {
+			"name": "Reconstruction Diameter",
+			"number": "00181100",
+			"value": "266",
+			"vr": "DS"
+		}, {
+			"name": "Distance Source to Detector",
+			"number": "00181110",
+			"value": "1040",
+			"vr": "DS"
+		}, {
+			"name": "Distance Source to Patient",
+			"number": "00181111",
+			"value": "570",
+			"vr": "DS"
+		}, {
+			"name": "Gantry/Detector Tilt",
+			"number": "00181120",
+			"value": "0",
+			"vr": "DS"
+		}, {
+			"name": "Table Height",
+			"number": "00181130",
+			"value": "154",
+			"vr": "DS"
+		}, {
+			"name": "Rotation Direction",
+			"number": "00181140",
+			"value": "CW",
+			"vr": "CS"
+		}, {
+			"name": "Exposure Time",
+			"number": "00181150",
+			"value": "500",
+			"vr": "IS"
+		}, {
+			"name": "X-Ray Tube Current",
+			"number": "00181151",
+			"value": "80",
+			"vr": "IS"
+		}, {
+			"name": "Exposure ",
+			"number": "00181152",
+			"value": "40",
+			"vr": "IS"
+		}, {
+			"name": "Filter Type",
+			"number": "00181160",
+			"value": "0",
+			"vr": "SH"
+		}, {
+			"name": "Generator Power",
+			"number": "00181170",
+			"value": "9",
+			"vr": "IS"
+		}, {
+			"name": "Focal Spot(s)",
+			"number": "00181190",
+			"value": "1.2",
+			"vr": "DS"
+		}, {
+			"name": "Date of Last Calibration",
+			"number": "00181200",
+			"value": "20051128",
+			"vr": "DA"
+		}, {
+			"name": "Time of Last Calibration",
+			"number": "00181201",
+			"value": "083030.000000",
+			"vr": "TM"
+		}, {
+			"name": "Convolution Kernel",
+			"number": "00181210",
+			"value": "B30f",
+			"vr": "SH"
+		}, {
+			"name": "Patient Position",
+			"number": "00185100",
+			"value": "HFS",
+			"vr": "CS"
+		}, {
+			"name": "Study Instance UID",
+			"number": "0020000D",
+			"value": "1.2.124.113532.129.255.5.220.20051128.150659.4272423",
+			"vr": "UI"
+		}, {
+			"name": "Series Instance UID",
+			"number": "0020000E",
+			"value": "1.3.12.2.1107.5.1.4.54044.30000005112815214534300013238",
+			"vr": "UI"
+		}, {
+			"name": "Study ID",
+			"number": "00200010",
+			"value": "2246257987917650",
+			"vr": "SH"
+		}, {
+			"name": "Series Number",
+			"number": "00200011",
+			"value": "4",
+			"vr": "IS"
+		}, {
+			"name": "Acquisition Number",
+			"number": "00200012",
+			"value": "2",
+			"vr": "IS"
+		}, {
+			"name": "Instance Number",
+			"number": "00200013",
+			"value": "167",
+			"vr": "IS"
+		}, {
+			"name": "Image Position (Patient)",
+			"number": "00200032",
+			"value": "" "-143.740234375\\-286.740234375\-338.2" "",
+			"vr": "DS"
+		}, {
+			"name": "Image Orientation (Patient)",
+			"number": "00200037",
+			"value": "" "1\0\0\0\1\0" "",
+			"vr": "DS"
+		}, {
+			"name": "Frame of Reference UID",
+			"number": "00200052",
+			"value": "1.3.12.2.1107.5.1.4.54044.30000005112814255456200000635",
+			"vr": "UI"
+		}, {
+			"name": "Position Reference Indicator",
+			"number": "00201040",
+			"value": "",
+			"vr": "LO"
+		}, {
+			"name": "Slice Location",
+			"number": "00201041",
+			"value": "-338.2",
+			"vr": "DS"
+		}, {
+			"name": "Samples per Pixel",
+			"number": "00280002",
+			"value": "1",
+			"vr": "US"
+		}, {
+			"name": "Photometric Interpretation",
+			"number": "00280004",
+			"value": "MONOCHROME2",
+			"vr": "CS"
+		}, {
+			"name": "Rows",
+			"number": "00280010",
+			"value": "512",
+			"vr": "US"
+		}, {
+			"name": "Columns",
+			"number": "00280011",
+			"value": "512",
+			"vr": "US"
+		}, {
+			"name": "Pixel Spacing",
+			"number": "00280030",
+			"value": "0.51953125\\0.51953125",
+			"vr": "DS"
+		}, {
+			"name": "Bits Allocated",
+			"number": "00280100",
+			"value": "16",
+			"vr": "US"
+		}, {
+			"name": "Bits Stored",
+			"number": "00280101",
+			"value": "12",
+			"vr": "US"
+		}, {
+			"name": "High Bit",
+			"number": "00280102",
+			"value": "11",
+			"vr": "US"
+		}, {
+			"name": "Pixel Representation",
+			"number": "00280103",
+			"value": "0",
+			"vr": "US"
+		}, {
+			"name": "Smallest Image Pixel Value",
+			"number": "00280106",
+			"value": "0",
+			"vr": "US"
+		}, {
+			"name": "Largest Image Pixel Value",
+			"number": "00280107",
+			"value": "2068",
+			"vr": "US"
+		}, {
+			"name": "Window Center",
+			"number": "00281050",
+			"value": "-400\\0",
+			"vr": "DS"
+		}, {
+			"name": "Window Width",
+			"number": "00281051",
+			"value": "1600\\2",
+			"vr": "DS"
+		}, {
+			"name": "Rescale Intercept",
+			"number": "00281052",
+			"value": "-1024",
+			"vr": "DS"
+		}, {
+			"name": "Rescale Slope",
+			"number": "00281053",
+			"value": "1",
+			"vr": "DS"
+		}, {
+			"name": "Window Center & Width Explanation",
+			"number": "00281055",
+			"value": "WINDOW1\\WINDOW2",
+			"vr": "LO"
+		}
+	],
+	"versionnumber": 1,
+	"data_type": "instance"
+}

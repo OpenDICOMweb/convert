@@ -9,6 +9,8 @@ import 'dart:io';
 
 import 'package:convert/src/utilities/io_utils.dart';
 
+// ignore_for_file: only_throw_errors
+
 Future main() async {
   final  dir = new Directory('C:/odw/test_data');
   final  stat = await dir.stat();

@@ -15,6 +15,8 @@ import 'package:convert/src/dicom/byte_data/writer/bd_writer.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
+// ignore_for_file: avoid_catches_without_on_clauses
+
 //TODO:  Move to IO
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 

@@ -11,6 +11,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
+// ignore_for_file: only_throw_errors
 
 /// TODO DOC
 bool bytesEqual1(Uint8List b0, Uint8List b1) {

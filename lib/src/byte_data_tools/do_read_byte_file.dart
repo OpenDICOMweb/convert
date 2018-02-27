@@ -15,6 +15,8 @@ import 'package:convert/src/errors.dart';
 import 'package:convert/src/utilities/dicom_file_utils.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
+// ignore_for_file: avoid_catches_without_on_clauses
+
 Future<Uint8List> readFileFast(File f, {bool fast = true}) async =>
     (fast) ? await f.readAsBytes() : f.readAsBytesSync();
 

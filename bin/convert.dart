@@ -12,6 +12,8 @@ import 'package:convert/data/test_files.dart';
 import 'package:convert/convert.dart';
 import 'package:convert/byte_data_tools.dart';
 
+// ignore_for_file: only_throw_errors, avoid_catches_without_on_clauses
+
 /// A Program that reads a [File], decodes it into a [RootDataset],
 /// and then converts that into a [TagRootDataset].
 void main(List<String> args) {

@@ -7,6 +7,7 @@
 import 'package:core/core.dart';
 import 'package:convert/convert.dart';
 
+// ignore_for_file: only_throw_errors, avoid_catches_without_on_clauses
 
 class FileListReader {
   List<String> paths;

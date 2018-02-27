@@ -15,6 +15,8 @@ import 'package:convert/src/dicom/byte_data/writer/bd_writer.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/byte_data_tools/job_utils.dart';
 
+// ignore_for_file: only_throw_errors, avoid_catches_without_on_clauses
+
 /// Read a file then write it to a buffer.
 Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) async {
   log.level = Level.error;
