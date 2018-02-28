@@ -20,7 +20,7 @@ class FileListReader {
   List<String> badTransferSyntax = [];
 
   FileListReader(this.paths,
-      {this.fmiOnly: false, this.throwOnError = false, this.printEvery = 100});
+      {this.fmiOnly: false, this.throwOnError = true, this.printEvery = 100});
 
   int get length => paths.length;
   int get successCount => successful.length;

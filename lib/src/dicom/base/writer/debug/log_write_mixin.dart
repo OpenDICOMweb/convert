@@ -160,23 +160,29 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
     log.debug(s);
   }
 
-  String _endWriteElement(int eStart, Element e, String name, {bool ok = true}) {
+  String _endWriteElement(int eStart, Element e, String name,
+      {bool ok = true}) {
     final eEnd = wb.wIndex;
     _doEndOfElementStats(e.code, eStart, e, ok);
-    final sb = new StringBuffer('$wee $e $eStart - $eEnd = ${eEnd - eStart}:$remaining');
+    final sb = new StringBuffer(
+        '$wee $e $eStart - $eEnd = ${eEnd - eStart}:$remaining');
     return sb.toString();
   }
 
   @override
   void logStartSQWrite(Element e, String name) {
     final s = _startWriteElement(e, name);
-    log..debug(s)..down;
+    log
+      ..debug(s)
+      ..down;
   }
 
   @override
   void logEndSQWrite(int eStart, Element e, String name, {bool ok = true}) {
     final s = _endWriteElement(eStart, e, name, ok: ok);
-    log..up..debug(s);
+    log
+      ..up
+      ..debug(s);
   }
 
   void _doEndOfElementStats(int code, int eStart, Element e, bool ok) {
@@ -194,6 +200,7 @@ abstract class LogWriteMixin implements LogWriteMixinBase {
     } else {
       pInfo.nDuplicateElements++;
     }
-    if (e is! SQ) outputOffsets.add(eStart, wb.wIndex, e);
+    if (e is! SQ && outputOffsets != null)
+      outputOffsets.add(eStart, wb.wIndex, e);
   }
 }

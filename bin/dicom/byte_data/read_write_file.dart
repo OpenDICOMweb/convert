@@ -10,6 +10,7 @@ import 'package:convert/dicom.dart';
 import 'package:convert/data/test_files.dart';
 
 const String pathX = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
+const String xxx = 'C:/acr/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
 final String path = testEvrPaths[0];
 // Problem Files
 //   1. fileList2
@@ -17,7 +18,7 @@ void main() {
   Server.initialize(name: 'read_write_file', level: Level.debug3);
 
   // *** Modify the [path0] value to read/write a different file
-  final path = pathX;
+  final path = xxx;
 
   byteReadWriteFileChecked(path, fileNumber: 1, width: 5, fast: true);
 }

@@ -52,7 +52,7 @@ const String bas = 'C:/acr/odw/test_data/mweb/100 MB Studies/1/S234611/15859368'
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
 
-  final fPath = evrLarge;
+  final fPath = xxx;
 
   print('path: $fPath');
   print(' out: ${getTempFile(fPath, 'dcmout')}');

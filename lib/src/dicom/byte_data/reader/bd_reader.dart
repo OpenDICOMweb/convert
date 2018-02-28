@@ -88,7 +88,7 @@ class BDReader {
 
   /// Creates a [BDReader] from the contents of the [file].
   factory BDReader.fromFile(File file,
-      {bool doAsync = true,
+      {bool doAsync = false,
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD: true,
       bool doLogging = false,
@@ -105,13 +105,13 @@ class BDReader {
 
   /// Creates a [BDReader] from the contents of the [File] at [path].
   factory BDReader.fromPath(String path,
-          {bool async = true,
+          {bool doAsync = false,
           DecodingParameters dParams = DecodingParameters.kNoChange,
           bool reUseBD: true,
           bool doLogging = false,
           bool showStats = false}) =>
       new BDReader.fromFile(new File(path),
-          doAsync: async,
+          doAsync: doAsync,
           dParams: dParams,
           reUseBD: reUseBD,
           doLogging: doLogging,
@@ -143,7 +143,6 @@ class BDReader {
   /// Reads the [BDRootDataset] from a [Uint8List].
   static BDRootDataset readBytes(Bytes bytes,
       {String path = '',
-      bool async = true,
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD = true,
       bool doLogging = false,
@@ -160,7 +159,6 @@ class BDReader {
   /// Reads the [BDRootDataset] from a [Uint8List].
   static BDRootDataset readTypedData(TypedData bytes,
       {String path = '',
-      bool async = true,
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD = true,
       bool doLogging = false,
@@ -177,7 +175,7 @@ class BDReader {
 
   /// Reads the [BDRootDataset] from a [File].
   static BDRootDataset readFile(File file,
-      {bool doAsync = true,
+      {bool doAsync = false,
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD: true,
       bool doLogging = false,
@@ -194,7 +192,7 @@ class BDReader {
 
   /// Reads the [BDRootDataset] from a [path] ([File] or URL).
   static BDRootDataset readPath(String path,
-      {bool doAsync = true,
+      {bool doAsync = false,
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD = true,
       bool doLogging = false,

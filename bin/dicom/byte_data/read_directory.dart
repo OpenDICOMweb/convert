@@ -6,11 +6,9 @@
 
 import 'dart:io';
 
-import 'package:core/core.dart';
 import 'package:convert/convert.dart';
-import 'package:path/path.dart' as p;
-
 import 'package:core/server.dart';
+import 'package:path/path.dart' as p;
 
 //import 'package:convert/data/test_directories.dart';
 
@@ -24,7 +22,7 @@ void main() {
   Server.initialize(name: 'read_write_file', level: Level.error);
 
   /// *** Change directory path name here
-  final path = 'C:/odw/test_data/sfd/MR/Patient_20_-_FMRI_brain/1_DICOM_Original';
+  final path = 'C:/acr/odw/test_data/6684';
   final dir = new Directory(path);
   final fList = dir.listSync(recursive: true);
   final fsEntityCount = fList.length;
