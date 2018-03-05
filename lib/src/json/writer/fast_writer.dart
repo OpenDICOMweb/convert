@@ -10,9 +10,6 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/bulkdata/bulkdata_list.dart';
-
-// Urgent: convert all for(var i = 0... to for(var e in ...)
 class FastJsonWriter {
   /// The [RootDataset] to be written.
   final RootDataset rds;
@@ -61,15 +58,15 @@ class FastJsonWriter {
   String write() => _writeRootDataset(rds, sb);
 
   String _writeRootDataset(RootDataset rds, Indenter sb) {
-    sb.down('[');
+    sb.indent('[');
     if (includeFmi) _writeFmi(rds, sb);
     _writeDataset(rds, '');
-    sb.up(']');
+    sb.outdent(']');
     return sb.toString();
   }
 
   void _writeFmi(RootDataset rds, Indenter sb) {
-    sb.down('[');
+    sb.indent('[');
 /*    for (var e in rds.fmi.elements) {
  //     print('writeFmi: $e');
       _writeElement(e, ',');
@@ -79,7 +76,7 @@ class FastJsonWriter {
     for (var i = 0; i < last; i++)
       _writeElement(elements.elementAt(i), ',');
     _writeElement(elements.elementAt(last), '');
-    sb.up('],');
+    sb.outdent('],');
   }
 
   void _writeElement(Element e, String comma) {
@@ -100,11 +97,10 @@ class FastJsonWriter {
       sb.writeln('["${e.hex}", "${e.vrId}", []]$comma');
     } else {
 //      print('WriteSQ: $e Items: ${e.items.length}');
-      sb.down('["${e.hex}", "${e.vrId}", [', 2);
+      sb.indent('["${e.hex}", "${e.vrId}", [', 2);
       _writeItems(e.items, comma);
-      sb
-        ..up(']')
-        ..up(']$comma');
+      sb.outdent(']]$comma', 2);
+
     }
   }
 
@@ -123,21 +119,20 @@ class FastJsonWriter {
 //  void _writeItem(Item item, String comma) => _writeDataset(item, comma);
 
   void _writeDataset(Dataset ds, String comma) {
-    sb.down('[');
+    sb.indent('[');
     final elements = ds.elements;
     final last = elements.length - 1;
     for (var i = 0; i < last; i++)
       _writeElement(elements.elementAt(i), ',');
     _writeElement(elements.elementAt(last), '');
-    sb.up(']$comma');
+    sb.outdent(']$comma');
   }
 
   void _writeDataset1(Dataset ds, String comma) {
-    sb.down('[');
-    final elements = ds.elements;
+    sb.indent('[');
     for (var e in ds.elements)
       _writeElement(e, ', ');
-    sb.up(']$comma');
+    sb.outdent(']$comma');
   }
 }
 
@@ -179,16 +174,6 @@ void _writeFloat(Element e, Indenter sb, String comma) {
   }
 }
 
-void _writeInt(Element e, Indenter sb, String comma) {
-  assert(e is IntBase);
-  if (!_separateBulkdata || e.vfLength < _bdThreshold) {
-    sb.writeln('["${e.hex}", "${e.vrId}", ${e.values}]$comma');
-  } else {
-    final url = _bdList.add(e.code, e.vfBytes);
-    sb.writeln('["${e.hex}", "${e.vrId}", ["BulkDataUri", "$url"]]$comma');
-  }
-}
-
 void _writeOtherFloat(Element e, Indenter sb, String comma) {
   assert(e is Float);
 //  print('***** vfLength: ${e.vfLength}');
@@ -203,6 +188,17 @@ void _writeOtherFloat(Element e, Indenter sb, String comma) {
     sb.writeln('["${e.hex}", "${e.vrId}", ["BulkDataUri", "$url"]]$comma');
   }
 }
+
+void _writeInt(Element e, Indenter sb, String comma) {
+  assert(e is IntBase);
+  if (!_separateBulkdata || e.vfLength < _bdThreshold) {
+    sb.writeln('["${e.hex}", "${e.vrId}", ${e.values}]$comma');
+  } else {
+    final url = _bdList.add(e.code, e.vfBytes);
+    sb.writeln('["${e.hex}", "${e.vrId}", ["BulkDataUri", "$url"]]$comma');
+  }
+}
+
 
 void _writeOtherInt(Element e, Indenter sb, String comma) {
   assert(e is IntBase);

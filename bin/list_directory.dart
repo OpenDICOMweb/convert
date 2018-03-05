@@ -11,14 +11,19 @@ import 'package:convert/src/utilities/io_utils.dart';
 
 // ignore_for_file: only_throw_errors
 
+const String k6684 = 'C:/acr/odw/test_data/6684';
+const String k6688 = 'C:/acr/odw/test_data/6688';
+const String dir6684_2017_5 = 'C:/acr/odw/test_data/6684/2017/5/12/16/0EE11F7A';
+
 Future main() async {
-  final  dir = new Directory('C:/odw/test_data');
+  final  dir = new Directory(dir6684_2017_5);
   final  stat = await dir.stat();
   final  length = dir.listSync(recursive: true).length;
   print(stat);
   print('length: $length');
 
   print('Walking ${dir.path}...');
+
   await walkDirectory(dir, printIt);
   print('... Done');
 }

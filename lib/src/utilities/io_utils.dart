@@ -16,6 +16,12 @@ String getPaddedInt(int n, int width) => (n == null) ? '' : '${"$n".padLeft(widt
 
 String cleanPath(String path) => path.replaceAll('\\', '/');
 
+String getTempFile(String infile, String extension) {
+  final name = path.basenameWithoutExtension(infile);
+  final dir = Directory.systemTemp.path;
+  return '$dir/$name.$extension';
+}
+
 //TODO: move to io_utils
 /// Checks that [dataset] is not empty.
 void checkRootDataset(Dataset dataset) {
@@ -58,10 +64,10 @@ File pathToFile(String path, {bool mustExist = true}) {
   return (mustExist && !file.existsSync()) ? null : file;
 }
 
-typedef void Runner(File f, [int level]);
+typedef void FSERunner(FileSystemEntity f, [int level]);
 
 /// Walks a [Directory] recursively and applies [Runner] [f] to each [File].
-Future<int> walkDirectory(Directory dir, Runner f, [int level = 0]) async {
+Future<int> walkDirectory(Directory dir, FSERunner f, [int level = 0]) async {
   final eList = dir.list(recursive: false, followLinks: true);
 
   var count = 0;
@@ -78,6 +84,74 @@ Future<int> walkDirectory(Directory dir, Runner f, [int level = 0]) async {
   }
   return count;
 }
+
+typedef void FileRunner(File f, [int level]);
+
+/// Walks a [Directory] recursively and applies [Runner] [f] to each [File].
+Future<int> walkDirectoryFiles(Directory dir, FileRunner f, [int level = 0]) async {
+  final eList = dir.list(recursive: false, followLinks: true);
+
+  var count = 0;
+  var _level = level;
+  await for (FileSystemEntity e in eList) {
+    if (e is Directory) {
+      count += await walkDirectory(e, f, _level++);
+    } else if (e is File) {
+      await new Future(() => f(e, level));
+      count++;
+    } else {
+      stderr.write('Warning: $e is not a File or Directory');
+    }
+  }
+  return count;
+}
+
+/// Walks a [Directory] recursively and applies [Runner] [f] to each [File].
+int walkDirectorySync(Directory dir, FSERunner f, [int level = 0]) {
+  var _level = level;
+  f(dir, _level);
+  final eList = dir.listSync(recursive: false, followLinks: true);
+
+  _level++;
+  var count = 0;
+  for (var e in eList) {
+    if (e is Directory) {
+      count +=  walkDirectorySync(e, f, _level);
+    } else if (e is File) {
+      f(e, _level);
+      count++;
+    } else {
+      stderr.write('Warning: $e is not a File or Directory');
+    }
+  }
+  print('${''.padRight(_level * 2)}Count: $count');
+  _level--;
+  return count;
+}
+
+/// Walks a [Directory] recursively and applies [Runner] [f] to each [File].
+int walkDirectoryFilesSync(Directory dir, FileRunner f, [int level = 0]) {
+  var _level = level;
+ // f(dir, _level);
+  final eList = dir.listSync(recursive: false, followLinks: true);
+
+  _level++;
+  var count = 0;
+  for (var e in eList) {
+    if (e is Directory) {
+      count +=  walkDirectorySync(e, f, _level);
+    } else if (e is File) {
+      f(e, _level);
+      count++;
+    } else {
+      stderr.write('Warning: $e is not a File or Directory');
+    }
+  }
+  print('${''.padRight(_level * 2)}Count: $count');
+  _level--;
+  return count;
+}
+
 
 typedef Null RunFile(File f, [int count]);
 

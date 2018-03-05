@@ -22,7 +22,7 @@ class DicomJsonWriter {
 }
 
 String _writeRootDataset(RootDataset rds, Indenter isb) {
-  isb.down('{');
+  isb.indent('{');
   _writeFmi(rds, isb);
 
   final elements = rds.elements;
@@ -30,7 +30,7 @@ String _writeRootDataset(RootDataset rds, Indenter isb) {
   for (var i = 0; i < last; i++)
     _writeElement(elements.elementAt(i), isb, isLast: false);
   _writeElement(elements.elementAt(last), isb, isLast: true);
-  isb.up('}');
+  isb.outdent('}');
   return isb.toString();
 }
 
@@ -52,13 +52,13 @@ void _writeItem(Item item, Indenter isb, String comma) =>
     writeDataset(item, isb, comma);
 
 void writeDataset(Dataset ds, Indenter isb, String comma) {
-  isb.down('{');
+  isb.indent('{');
   final elements = ds.elements;
   final last = elements.length - 1;
   for (var i = 0; i < last; i++)
     _writeElement(elements.elementAt(i), isb, isLast: false);
   _writeElement(elements.elementAt(last), isb, isLast: true);
-  isb.up('}$comma');
+  isb.outdent('}$comma');
 }
 
 String writeElement(Element e, {bool isLast}) {
@@ -94,9 +94,9 @@ void _writeSQ(Element e, Indenter isb, String comma) {
     if (items.isEmpty) {
       isb.writeln('"${e.hex}": {"vr": "${e.vrId}", "Values": []}$comma');
     } else {
-      isb.down('"${e.hex}": {"vr": "${e.vrId}", "Values": [', 2);
+      isb.indent('"${e.hex}": {"vr": "${e.vrId}", "Values": [', 2);
       _writeItems(e.items, isb, comma);
-      isb..up(']')..up('}$comma');
+      isb.outdent(']}$comma', 2);
     }
   }
   log.error('$e is not an SQ');

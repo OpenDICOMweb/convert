@@ -68,6 +68,7 @@ class ItemByGroup extends MapItem with DatasetByGroup {
     return '$sb';
   }
 }
+/*
 
 abstract class GroupBase {
   int get gNumber;
@@ -116,6 +117,7 @@ class PublicGroup implements GroupBase {
       '${members.length} Groups',
       members);
 
+*/
 /*
   /// Returns a formatted [String]. See [Formatter].
   String format(Formatter z) {
@@ -126,7 +128,8 @@ class PublicGroup implements GroupBase {
     z.up;
     return sb.toString();
   }
-*/
+*//*
+
 
   @override
   String toString() =>
@@ -196,11 +199,7 @@ class PrivateGroup implements GroupBase {
       if (tag is PCTag) {
         _currentSubgroup.creator = e;
       } else if (tag is PDTag) {
-/*        if (e is SQ) {
-          add(e);
-        } else {*/
           _currentSubgroup.addPD(e);
- //       }
       } else if (tag is GroupLengthPrivateTag) {
         if (gLength != null)
           throw 'Duplicate Group Length Element: 1st: $gLength 2nd: e';
@@ -247,6 +246,7 @@ class PrivateGroup implements GroupBase {
       '$runtimeType(${hex16(gNumber)}): ${subgroups.length} Subroups',
       subgroups);
 
+*/
 /*
   /// Returns a formatted [String]. See [Formatter].
   String format(Formatter z) {
@@ -257,7 +257,8 @@ class PrivateGroup implements GroupBase {
     z.up;
     return sb.toString();
   }
-*/
+*//*
+
 
   @override
   String toString([String prefix = '']) =>
@@ -267,12 +268,12 @@ class PrivateGroup implements GroupBase {
 /// A [PrivateSubgroup] is a group of Private Elements that have the
 /// same Private Creator (see PS3.5).
 ///
-/// Unlike other Private Elements, [PrivateCreator]s extends the
-/// [LO] [Element]. All [PrivateCreator]s must have only
+/// Unlike other Private Elements, PrivateCreators extend the
+/// [LO] [Element]. All PrivateCreators should have only
 /// 1 value, which is a [String] that is an identifier for the
 /// [PrivateSubgroup].
 ///
-/// _Note_: The [PrivateCreator] read from an encoded Dataset might
+/// _Note_: The PrivateCreator read from an encoded Dataset might
 /// have a VR of UN, but it will be converted to LO Element when created.
 class PrivateSubgroup {
   final PrivateGroup group;
@@ -320,9 +321,14 @@ class PrivateSubgroup {
 
   Element lookup(int code) => (code == creator.index) ? creator : members[code];
 
+*/
+/*
   void add(Element e) {
 
   }
+*//*
+
+
   void addPD(Element pd) {
     final code = pd.code;
     if (Tag.isValidPDCode(code, _creator.code)) {
@@ -339,6 +345,7 @@ class PrivateSubgroup {
       '$runtimeType(${hex16(sgNumber)}): ${members.length} Subroups $_creator',
       members);
 
+*/
 /*
   /// Returns a formatted [String]. See [Formatter].
   String format(Formatter z) {
@@ -349,9 +356,11 @@ class PrivateSubgroup {
     z.up;
     return sb.toString();
   }
-*/
+*//*
+
 
   @override
   String toString() => '${hex8(sgNumber)} $runtimeType: '
       '$creator Members: ${members.length}';
 }
+*/

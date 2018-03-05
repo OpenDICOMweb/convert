@@ -48,23 +48,7 @@ Future main() async {
   if (bdRDS == null) {
     log.warn('Invalid DICOM file: $fPath');
   } else {
-    if (bdRDS.pInfo != null) {
-      final infoPath = '${path.withoutExtension(fPath)}.info';
-      log.info('infoPath: $infoPath');
-      final sb = new StringBuffer('${bdRDS.pInfo.summary(bdRDS)}\n')
-        ..write('Bytes Dataset: ${bdRDS.summary}');
-      new File(infoPath)..writeAsStringSync(sb.toString());
-      log.debug(sb.toString());
-
-      final fmtPath = '${path.withoutExtension(fPath)}.fmt';
-      log.info('fmtPath: $fmtPath');
-      final fmtOut = bdRDS.format(z);
-      new File(fmtPath)..writeAsStringSync(sb.toString());
-      log.debug(fmtOut);
-    } else {
-      log.debug('bdRDS: ${bdRDS.summary}');
-      //   log.debug('bdRDS: ${bdRDS.format(z)}');
-    }
+    log.debug('bdRDS: ${bdRDS.summary}');
   }
 
   final outPath = 'out.json';
@@ -77,13 +61,13 @@ Future main() async {
     ..debug('  Output length: ${out.length}')
     ..debug('  Output length: ${out.length ~/ 1024}K\n')
     ..debug('Converting bdRds($bdRDS) to TagDataset ...');
-  final tagRds0 = convertBDDSToTagDS(bdRDS);
+  final tagRds0 = DatasetConverter.fromBDRootDataset(bdRDS);
   print('tagRds0: ${tagRds0.info}');
   print('tagRds0: ${tagRds0.format(z)}');
   log..debug('Converted tagRds0: $tagRds0')..debug(' ${tagRds0.summary}');
 
-  final converter = new ConvertToDatasetByGroup(bdRDS);
-  final privateRds = converter.find();
+  final converter = new DatasetConverterByGroup(bdRDS);
+  final privateRds = converter.findAll();
   log
     ..debug('privateRds: ${privateRds.format(z)}')
     ..debug('privateRds: ${privateRds.summary}');
@@ -101,7 +85,7 @@ Future main() async {
   });
   log.debug('Private count: $count');
 
-  final pList = tagRds0.findPrivate();
+  final pList = tagRds0.findAllPrivateCodes();
   log
     ..debug('Private Top Level: ${pList.length}')
     ..debug(z.fmt('Private: ${pList.length}', pList));

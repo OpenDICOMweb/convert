@@ -5,7 +5,7 @@
 // See the   AUTHORS file for other contributors.
 
 import 'package:core/core.dart';
-import 'package:convert/dicom.dart';
+import 'package:convert/convert.dart';
 
 
 String path0 = 'C:/odw/test_data/IM-0001-0001.dcm';

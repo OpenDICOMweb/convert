@@ -7,16 +7,16 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import '../../lib/src/bytebuf/bytebuf.dart';
-import '../../lib/src/bytebuf/bytebuf_reader.dart';
+import 'package:core/core.dart';
 
 Uint8List toUtf8(String s) => UTF8.encode(s);
 
 String stringFromBytes(Uint8List bytes) => UTF8.decode(bytes);
 
-ByteBufReader readerFromString(String s) => new ByteBufReader(toUtf8(s));
+ReadBuffer readerFromString(String s) =>
+    new ReadBuffer.fromTypedData(toUtf8(s));
 
-ByteBuf byteBufFromString(String s) {
-  final v = UTF8.encode(s);
-  return new ByteBuf.reader(v);
+ReadBuffer byteBufFromString(String s) {
+  final Uint8List bytes = UTF8.encode(s);
+  return new ReadBuffer.fromTypedData(bytes);
 }

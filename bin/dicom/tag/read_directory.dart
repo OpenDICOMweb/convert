@@ -8,7 +8,7 @@ import 'dart:io';
 
 import 'package:core/core.dart';
 import 'package:path/path.dart' as p;
-import 'package:convert/dicom.dart';
+import 'package:convert/convert.dart';
 
 // ignore_for_file: avoid_catches_without_on_clauses
 

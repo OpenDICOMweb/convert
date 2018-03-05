@@ -8,17 +8,17 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:convert/dicom.dart';
+import 'package:convert/convert.dart';
 import 'package:convert/src/utilities/dicom_file_utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
 
 import 'package:convert/src/json/writer/fast_writer.dart';
 
-const String k6684Dir = 'C:/odw/test_data/6684';
+const String k6684Dir = 'C:/acr/odw/test_data/6684';
 
 const String k6684x0 =
-    'C:/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
+    'C:/acr/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
 
 const String k6684x1 =
     'c:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
@@ -77,7 +77,7 @@ Future main() async {
     ..debug('Length KB: ${out.length ~/ 1024}KB');
   await new File(outPath).writeAsString(out);
 
-  final tagRds = convertBDDSToTagDS(bdRDS);
+  final tagRds = DatasetConverter.fromBDRootDataset(bdRDS);
   log.debug('${tagRds.summary}');
 
   final uids0 = tagRds.findUids();

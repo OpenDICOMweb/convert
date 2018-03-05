@@ -6,7 +6,7 @@
 
 import 'dart:async';
 
-import 'package:convert/src/byte_data_tools/file_list_reader.dart';
+import 'package:convert/src/tools/file_list_reader.dart';
 import 'package:convert/src/utilities/dicom_file_utils.dart';
 
 const Map<String, List<String>> badTransferSyntax = const <String, List<String>>{

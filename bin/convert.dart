@@ -10,7 +10,7 @@ import 'package:core/server.dart';
 
 import 'package:convert/data/test_files.dart';
 import 'package:convert/convert.dart';
-import 'package:convert/byte_data_tools.dart';
+import 'package:convert/tools.dart';
 
 // ignore_for_file: only_throw_errors, avoid_catches_without_on_clauses
 
@@ -53,53 +53,54 @@ TagRootDataset convertFile(File file, {int reps = 1, bool fmiOnly = false}) {
   final log = new Logger('convertFile', Level.info)
     ..level = Level.warn1
     ..debug2('Reading: $file');
-  final bRoot = BDReader.readFile(file);
-  print('TS: ${bRoot.transferSyntax}');
+  final bdRds = BDReader.readFile(file);
+  print('TS: ${bdRds.transferSyntax}');
   log
-    ..debug('bRoot.isRoot: ${bRoot.isRoot}')
-    ..debug1(bRoot.pInfo.summary(bRoot));
-  if (bRoot == null) return null;
+    ..debug('bRoot.isRoot: ${bdRds.isRoot}')
+    ..debug1(bdRds.pInfo.summary(bdRds));
+  if (bdRds == null) return null;
 
-  final tRoot = convertBDDSToTagDS(bRoot);
+  final tRoot = DatasetConverter.fromBDRootDataset(bdRds);
   // Test dataset equality
-  log..info0('tRoot: $tRoot')..info0('Byte DS: $bRoot')..info0('Tag DS$tRoot');
-  if (bRoot.length != tRoot.length) {
+  log..info0('tRoot: $tRoot')..info0('Byte DS: $bdRds')..info0('Tag DS$tRoot');
+  if (bdRds.length != tRoot.length) {
     log
       ..error('map.length Not equal')
-      ..info0('  rds0.map.length: ${bRoot.length}')
+      ..info0('  rds0.map.length: ${bdRds.length}')
       ..info0('  rds1.map.length: ${tRoot.length}');
     throw 'Unequal Top Level';
   }
-  if (bRoot.total != tRoot.total) {
+  if (bdRds.total != tRoot.total) {
     log
       ..error('total Not equal')
-      ..info0('  rds0.total: ${bRoot.total}')
+      ..info0('  rds0.total: ${bdRds.total}')
       ..info0('  rds1.total: ${tRoot.total}');
     throw 'Unequal Total';
   }
 
-  log..info0('Byte DS: ${bRoot.summary}')..info0(' Tag DS: ${tRoot.summary}');
+  log..info0('Byte DS: ${bdRds.summary}')..info0(' Tag DS: ${tRoot.summary}');
   // write out converted dataset and compare the bytes
   // Urgent: make this work
   // Uint8List bytes1 = DcmWriter.writeBytes(rds1, reUseBD: true);
   //  if (bytes1 == null) return false;
   //  bytesEqual(bytes0, bytes1);
 
-  if (bRoot.parent != tRoot.parent) {
+  if (bdRds.parent != tRoot.parent) {
     log
       ..error('Parents Not equal')
-      ..warn0('  rds0.parent: ${bRoot.parent}')
+      ..warn0('  rds0.parent: ${bdRds.parent}')
       ..warn0('  rds1.parent: ${tRoot.parent}');
   }
-  if (bRoot.hadULength != tRoot.hadULength) {
+  if (bdRds.hadULength != tRoot.hadULength) {
     log
       ..error('hadULength Not equal')
-      ..info0('  rds0.hadULength: ${bRoot.hadULength}')
+      ..info0('  rds0.hadULength: ${bdRds.hadULength}')
       ..info0('  rds1.hadULength: ${tRoot.hadULength}');
   }
 
-  for (var code in bRoot.elements.keys) {
-    final be = bRoot.lookup(code);
+  for (var e in bdRds.elements) {
+    final code = e.code;
+    final be = bdRds.lookup(code);
     final te = tRoot.lookup(code);
 
     var error = false;
@@ -129,7 +130,7 @@ TagRootDataset convertFile(File file, {int reps = 1, bool fmiOnly = false}) {
     }
     if (error) {
       log
-        ..error('***: ${bRoot.lookup(code)}\n'
+        ..error('***: ${bdRds.lookup(code)}\n'
             '        !=: ${tRoot.lookup(code)}')
         ..info0('be: ${be.info}')
         ..info0('te: ${te.info}');

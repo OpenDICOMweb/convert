@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/dicom.dart';
+import 'package:convert/convert.dart';
 import 'package:convert/src/utilities/dicom_file_utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
@@ -113,7 +113,7 @@ Future main() async {
 */
 
   // Convert BDRootDataset to TagRootDataset
-  final tagRds = convertBDDSToTagDS(bdRds);
+  final tagRds = new DatasetConverter(bdRds).convert();
   print('tagRDS Summary: ${tagRds.summary}');
 //  print('tagRDS: ${tagRds.format(z)}');
 

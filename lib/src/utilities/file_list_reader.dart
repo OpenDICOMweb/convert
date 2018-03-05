@@ -61,7 +61,7 @@ class FileListReader {
         log
           ..info0('Fail: $path ')
           ..reset;
-        failures.add('"$path "');
+        failures.add('"$path"');
         //   log.info0('failures: ${failure.length}');
         if (throwOnError) throw 'Failed: $path ';
         continue;

@@ -10,17 +10,17 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/dicom.dart';
+import 'package:convert/convert.dart';
 import 'package:convert/src/utilities/dicom_file_utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
 
 import 'package:convert/src/json/writer/fast_writer.dart';
 
-const String k6684Dir = 'C:/odw/test_data/6684';
+const String k6684Dir = 'C:/acr/odw/test_data/6684';
 
 const String k6684x0 =
-    'C:/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
+    'C:/acr/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
 
 const String k6684x1 =
     'c:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
@@ -51,23 +51,7 @@ Future main() async {
   if (bdRDS == null) {
     log.warn('Invalid DICOM file: $fPath');
   } else {
-    if (bdRDS.pInfo != null) {
-      final infoPath = '${path.withoutExtension(fPath)}.info';
-      log.info('infoPath: $infoPath');
-      final sb = new StringBuffer('${bdRDS.pInfo.summary(bdRDS)}\n')
-        ..write('Bytes Dataset: ${bdRDS.summary}');
-      new File(infoPath)..writeAsStringSync(sb.toString());
-      log.debug(sb.toString());
-
-      final fmtPath = '${path.withoutExtension(fPath)}.fmt';
-      log.info('fmtPath: $fmtPath');
-      final fmtOut = bdRDS.format(z);
-      new File(fmtPath)..writeAsStringSync(sb.toString());
-      log.debug(fmtOut);
-    } else {
-      print('${bdRDS.summary}');
-      //  print('bdRDS: ${bdRDS.format(z)}');
-    }
+    print('${bdRDS.summary}');
   }
 
   final outPath = 'out.json';
@@ -78,7 +62,7 @@ Future main() async {
   print('output length: ${out.length ~/ 1024}K');
   await new File(outPath).writeAsString(out);
 
-  final tagRds = convertBDDSToTagDS(bdRDS);
+  final tagRds = DatasetConverter.fromBDRootDataset(bdRDS);
   print('tagRDS Summary: ${tagRds.summary}');
 
   final removed = <Element>[];

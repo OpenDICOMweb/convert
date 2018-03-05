@@ -69,58 +69,6 @@ class ItemByGroup extends MapItem with DatasetByGroup {
   }
 }
 
-abstract class GroupBase {
-  int get gNumber;
-  Map<int, dynamic> get members;
-  String get info;
-
-  void add(Element e);
-}
-
-/// A [PublicGroup] can only contain Sequences ([SQ]) that
-/// contain Public pElement]s.
-class PublicGroup implements GroupBase {
-  @override
-  final int gNumber;
-  List<SQ> sequences = <SQ>[];
-  List<SQ> privateSQs = <SQ>[];
-
-  @override
-  Map<int, Element> members = <int, Element>{};
-
-  PublicGroup(this.gNumber) : assert(gNumber.isEven);
-
-  @override
-  void add(Element e0) {
-    // members[e.code] = new SQtag.from(sq);
-    members[e0.code] = e0;
-    if (e0 is SQ) {
-      sequences.add(e0);
-      for (var item in e0.items)
-        for (var e1 in item.elements) if (e1.group.isOdd) privateSQs.add(e0);
-    }
-  }
-
-  @override
-  String get info {
-    final sb = new Indenter('$runtimeType(${hex16(gNumber)}): '
-        '${members.values.length}')
-      ..down;
-    members.values.forEach(sb.writeln);
-    log.up;
-    return '$sb';
-  }
-
-  String format(Formatter z) => z.fmt(
-      '$runtimeType(${hex16(gNumber)}): '
-      '${members.length} Groups',
-      members);
-
-  @override
-  String toString() =>
-      '$runtimeType(${hex16(gNumber)}) ${members.values.length} members';
-}
-
 /// The Tag (gggg,iiii) has Group Number (i.e. gggg).
 /// A [PrivateGroup] is a group of [Element]s that all have the same
 /// Private Group Number. An [Element] is a [PrivateGroup] if its
@@ -143,8 +91,6 @@ class PrivateGroup implements GroupBase {
   /// A [Map] from ```subgroupNumber``` to [PrivateSubgroup].
   final Map<int, PrivateSubgroup> subgroups = <int, PrivateSubgroup>{};
 
-  var _currentSGNumber = 0;
-  PrivateSubgroup _currentSubgroup;
 
   PrivateGroup(this.gNumber) : assert(gNumber.isOdd);
 
@@ -167,13 +113,16 @@ class PrivateGroup implements GroupBase {
   /// Returns _true_ if [code] has a Group number equal to [gNumber].
   bool inGroup(int code) => Tag.toGroup(code) == gNumber;
 
+  var _currentSGNumber = 0;
+  PrivateSubgroup _currentSubgroup;
+
   @override
   void add(Element e) {
     assert(e.isPrivate);
     final tag = e.tag;
     if (tag is PrivateTag) {
       final sgNumber = tag.sgNumber;
-      log.debug('currentSGIndex $_currentSGNumber sgNumber $sgNumber');
+  //    log.debug('currentSGIndex $_currentSGNumber sgNumber $sgNumber');
       assert(_currentSGNumber < sgNumber);
       if (tag is PDTag) {
         if (sgNumber > _currentSGNumber) {
@@ -235,12 +184,12 @@ class PrivateGroup implements GroupBase {
 /// A [PrivateSubgroup] is a group of Private Elements that have the
 /// same Private Creator (see PS3.5).
 ///
-/// Unlike other Private Elements, [PrivateCreator]s extends the
-/// [LO] [Element]. All [PrivateCreator]s must have only
+/// Unlike other Private Elements, PrivateCreators extends the
+/// [LO] [Element]. All PrivateCreators must have only
 /// 1 value, which is a [String] that is an identifier for the
 /// [PrivateSubgroup].
 ///
-/// _Note_: The [PrivateCreator] read from an encoded Dataset might
+/// _Note_: The PrivateCreator read from an encoded Dataset might
 /// have a VR of UN, but it will be converted to LO Element when created.
 class PrivateSubgroup {
   final PrivateGroup parent;

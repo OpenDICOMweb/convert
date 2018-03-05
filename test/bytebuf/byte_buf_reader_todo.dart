@@ -6,7 +6,6 @@
 
 import 'dart:typed_data';
 
-import 'package:convert/src/bytebuf/bytebuf_reader.dart';
 import 'package:core/server.dart';
 import 'package:test/test.dart';
 
@@ -24,7 +23,7 @@ void main() {
     //log.debug('code units = $cu');
     final list = toUtf8(s);
     log..debug('utf8= $list')..debug('list= $list');
-    final reader = new ByteBufReader(list);
+    final reader = new ReadBuffer(list);
     log.debug('reader= $reader');
     final name = reader.readString(8);
     log.debug('name= "$name:"');
@@ -34,7 +33,7 @@ void main() {
   test('Read String', () {
     final list = ['foo', 'bar', 'baz'];
     final strings = list.join('\\');
-    final reader = new ByteBufReader.fromString(strings);
+    final reader = new ReadBuffer.fromString(strings);
     final s = reader.readString(strings.length);
     expect(s, equals(strings));
   });
@@ -42,7 +41,7 @@ void main() {
   test('Read String List', () {
     final list = ['foo', 'bar', 'baz'];
     final strings = list.join('\\');
-    final reader = new ByteBufReader.fromString(strings);
+    final reader = new ReadBuffer.fromString(strings);
     final l1 = reader.readStringList(strings.length);
     expect(l1, equals(list));
   });
@@ -51,7 +50,7 @@ void main() {
     final uints = [0, 1, 2, 3, 4];
     final uint8list = new Uint8List.fromList(uints);
     final bytes = uint8list.buffer.asUint8List();
-    final reader = new ByteBufReader(bytes);
+    final reader = new ReadBuffer(bytes);
     var n = reader.readUint8();
     log.debug('Uint8 = $n');
     expect(n, equals(uints[0]));
@@ -70,7 +69,7 @@ void main() {
     final uints = [0, 1, 2, 3, 4];
     final uint8list = new Uint8List.fromList(uints);
     final bytes = uint8list.buffer.asUint8List();
-    final reader = new ByteBufReader(bytes);
+    final reader = new ReadBuffer(bytes);
 
     final list = reader.readUint8List(uint8list.lengthInBytes);
     log.debug('Uint8List = $list');
@@ -81,7 +80,7 @@ void main() {
     final ints = [0, -1, 2, -3, 4];
     final int8list = new Int8List.fromList(ints);
     final bytes = int8list.buffer.asUint8List();
-    final reader = new ByteBufReader(bytes);
+    final reader = new ReadBuffer(bytes);
 
     var n = reader.readInt8();
     log.debug('Int8 = $n');
@@ -101,7 +100,7 @@ void main() {
     final ints = [0, -1, 2, -3, 4];
     final int8list = new Int8List.fromList(ints);
     final bytes = int8list.buffer.asUint8List();
-    final buf = new ByteBufReader(bytes);
+    final buf = new ReadBuffer(bytes);
 
     final list = buf.readInt8List(int8list.lengthInBytes);
     log.debug('Int8List = $list');
@@ -116,7 +115,7 @@ void main() {
       ..debug('Uint16s: $uint16s')
       ..debug('Uint16list: $uint16list')
       ..debug('bytes: $bytes');
-    final reader = new ByteBufReader(bytes);
+    final reader = new ReadBuffer(bytes);
 
     var n = reader.readUint16();
     log.debug('Uint16 = $n');
@@ -144,7 +143,7 @@ void main() {
       ..debug('uint16s: $uint16s')
       ..debug('uint16list: $uint16list')
       ..debug('bytes: $bytes');
-    final reader = new ByteBufReader(bytes);
+    final reader = new ReadBuffer(bytes);
 
     log.debug('Uint16List.lengthInBytes= ${uint16list.length}');
     final list = reader.readUint16List(uint16list.length);
@@ -157,7 +156,7 @@ void main() {
     final int16list = new Int16List.fromList(int16s);
     final bytes = int16list.buffer.asUint8List();
     log..debug('int16s: $int16s')..debug('int16list: $int16list')..debug('bytes: $bytes');
-    final reader = new ByteBufReader(bytes);
+    final reader = new ReadBuffer(bytes);
 
     var n = reader.readInt16();
     log.debug('Int16 = $n');
@@ -182,7 +181,7 @@ void main() {
     final int16list = new Int16List.fromList(int16s);
     final bytes = int16list.buffer.asUint8List();
     log..debug('int16s: $int16s')..debug('int16list: $int16list')..debug('bytes: $bytes');
-    final buf = new ByteBufReader(bytes);
+    final buf = new ReadBuffer(bytes);
 
     log.debug('int16List.lengthInBytes= ${int16list.length}');
     final list = buf.readInt16List(int16list.length);
@@ -198,7 +197,7 @@ void main() {
       ..debug('Uint32s: $uint32s')
       ..debug('Uint32list: $uint32list')
       ..debug('bytes: $bytes');
-    final buf = new ByteBufReader(bytes);
+    final buf = new ReadBuffer(bytes);
 
     var n = buf.readUint32();
     log.debug('Uint32 = $n');
@@ -226,7 +225,7 @@ void main() {
       ..debug('int32s: $uint32s')
       ..debug('int32list: $uint32list')
       ..debug('bytes: $bytes');
-    final buf = new ByteBufReader(bytes);
+    final buf = new ReadBuffer(bytes);
 
     log.debug('int32List.lengthInBytes= ${uint32list.length}');
     final list = buf.readUint32List(uint32list.length);
@@ -239,7 +238,7 @@ void main() {
     final int32list = new Int32List.fromList(int32s);
     final bytes = int32list.buffer.asUint8List();
     log..debug('int32s: $int32s')..debug('int32list: $int32list')..debug('bytes: $bytes');
-    final buf = new ByteBufReader(bytes);
+    final buf = new ReadBuffer(bytes);
 
     var n = buf.readInt32();
     log.debug('Int32 = $n');
@@ -264,7 +263,7 @@ void main() {
     final int32list = new Int32List.fromList(int32s);
     final bytes = int32list.buffer.asUint8List();
     log..debug('int32s: $int32s')..debug('int32list: $int32list')..debug('bytes: $bytes');
-    final buf = new ByteBufReader(bytes);
+    final buf = new ReadBuffer(bytes);
 
     log.debug('int32List.lengthInBytes= ${int32list.lengthInBytes}');
     final list = buf.readInt32List(int32list.lengthInBytes);
@@ -280,7 +279,7 @@ void main() {
       ..debug('Uint64s: $uint64s')
       ..debug('Uint64list: $uint64list')
       ..debug('bytes: $bytes');
-    final buf = new ByteBufReader(bytes);
+    final buf = new ReadBuffer(bytes);
 
     var n = buf.readUint64();
     log.debug('Uint64 = $n');
@@ -308,7 +307,7 @@ void main() {
       ..debug('int64s: $uint64s')
       ..debug('int64list: $uint64list')
       ..debug('bytes: $bytes');
-    final buf = new ByteBufReader(bytes);
+    final buf = new ReadBuffer(bytes);
 
     log.debug('int64List.lengthInBytes= ${uint64list.lengthInBytes}');
     final list = buf.readUint64List(uint64list.lengthInBytes);
@@ -327,7 +326,7 @@ void main() {
     final int64list = new Int64List.fromList(int64s);
     final bytes = int64list.buffer.asUint8List();
     log..debug('int64s: $int64s')..debug('int64list: $int64list')..debug('bytes: $bytes');
-    final buf = new ByteBufReader(bytes);
+    final buf = new ReadBuffer(bytes);
 
     var n = buf.readInt64();
     log.debug('Int64 = $n');
@@ -358,7 +357,7 @@ void main() {
     final int64list = new Int64List.fromList(int64s);
     final bytes = int64list.buffer.asUint8List();
     log..debug('int64s: $int64s')..debug('int64list: $int64list')..debug('bytes: $bytes');
-    final buf = new ByteBufReader(bytes);
+    final buf = new ReadBuffer(bytes);
 
     final list = buf.readInt64List(int64list.lengthInBytes);
     log
@@ -373,7 +372,7 @@ void main() {
     final float8List = float32List.buffer.asUint8List();
     log..debug('float32List: $float32List')..debug('float8List: $float8List');
 
-    final buf = new ByteBufReader(float8List);
+    final buf = new ReadBuffer(float8List);
     var a = buf.readFloat32();
     log.debug('Float32 = $a');
     expect(a, equals(float32List[0]));
@@ -394,7 +393,7 @@ void main() {
     final float8List = float32List.buffer.asUint8List();
     log..debug('float32List: $float32List')..debug('float8List: $float8List');
 
-    final buf = new ByteBufReader(float8List);
+    final buf = new ReadBuffer(float8List);
     final list = buf.readFloat32List(float8List.lengthInBytes);
     log.debug('Float32List = $list');
     expect(list, equals(float32List));
@@ -406,7 +405,7 @@ void main() {
     final float8List = float64List.buffer.asUint8List();
     log..debug('float64List: $float64List')..debug('float8List: $float8List');
 
-    final buf = new ByteBufReader(float8List);
+    final buf = new ReadBuffer(float8List);
     var a = buf.readFloat64();
     log.debug('Float64 = $a');
     expect(a, equals(float64List[0]));
@@ -427,7 +426,7 @@ void main() {
     final float8List = float64List.buffer.asUint8List();
     log..debug('float64List: $float64List')..debug('float8List: $float8List');
 
-    final buf = new ByteBufReader(float8List);
+    final buf = new ReadBuffer(float8List);
     final list = buf.readFloat64List(float8List.lengthInBytes);
     log.debug('Float64List = $list');
     expect(list, equals(float64List));

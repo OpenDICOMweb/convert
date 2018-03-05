@@ -8,11 +8,15 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:convert/dicom.dart';
+import 'package:convert/convert.dart';
 //import 'package:dcm_convert/data/test_files.dart';
 import 'package:convert/src/utilities/dicom_file_utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
+
+const String f6684a =
+    'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
+
 
 const String xx3 = 'C:/acr/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
 const String xx2 =
@@ -52,7 +56,7 @@ const String bas = 'C:/acr/odw/test_data/mweb/100 MB Studies/1/S234611/15859368'
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
 
-  final fPath = xxx;
+  final fPath = f6684a;
 
   print('path: $fPath');
   print(' out: ${getTempFile(fPath, 'dcmout')}');

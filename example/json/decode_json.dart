@@ -38,6 +38,7 @@ Map<int, TagElement> toDataset(Map<String, dynamic> jsMap) {
   return eMap;
 }
 
+// ignore: avoid_annotating_with_dynamic
 void decodeMap(String s,  dynamic map) {
   final code = int.parse(s, radix: 16);
   String vrId;

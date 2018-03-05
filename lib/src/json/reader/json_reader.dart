@@ -10,9 +10,9 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/dicom/base/reader/evr_reader.dart';
-import 'package:convert/src/dicom/byte_data/reader/evr_bd_reader.dart';
-import 'package:convert/src/dicom/byte_data/reader/ivr_bd_reader.dart';
+import 'package:convert/src/binary/base/reader/evr_reader.dart';
+import 'package:convert/src/binary/byte_data/reader/evr_bd_reader.dart';
+import 'package:convert/src/binary/byte_data/reader/ivr_bd_reader.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 import 'package:convert/src/utilities/io_utils.dart';

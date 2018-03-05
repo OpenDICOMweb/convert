@@ -5,7 +5,7 @@
 // See the   AUTHORS file for other contributors.
 
 import 'package:core/server.dart';
-import 'package:convert/dicom.dart';
+import 'package:convert/convert.dart';
 
 import 'package:convert/data/test_files.dart';
 
@@ -15,7 +15,7 @@ final String path = testEvrPaths[0];
 // Problem Files
 //   1. fileList2
 void main() {
-  Server.initialize(name: 'read_write_file', level: Level.debug3);
+  Server.initialize(name: 'read_write_file', level: Level.debug);
 
   // *** Modify the [path0] value to read/write a different file
   final path = xxx;

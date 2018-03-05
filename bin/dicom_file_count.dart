@@ -24,11 +24,15 @@ String outRoot2 = 'test/output/root2';
 String outRoot3 = 'test/output/root3';
 String outRoot4 = 'test/output/root4';
 
+const String k6684 = 'C:/acr/odw/test_data/6684';
+const String k6688 = 'C:/acr/odw/test_data/6688';
+const String dir6684_2017_5 = 'C:/acr/odw/test_data/6684/2017/5/12/16/0EE11F7A';
+
 Logger log = new Logger('read_a_directory', Level.info);
 
 void main() {
 
-    final dirs = getDirectories(inRoot6);
+    final dirs = getDirectories(dir6684_2017_5);
     var count = 0;
     for(var dir in dirs) {
       log.info0('  $dir');

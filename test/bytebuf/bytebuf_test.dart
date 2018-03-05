@@ -9,7 +9,6 @@ import 'dart:typed_data';
 import 'package:core/server.dart';
 import 'package:test/test.dart';
 
-import '../../lib/src/bytebuf/bytebuf.dart';
 import 'test_utilities.dart';
 
 String magicAsString = 'DICOM-MD';
@@ -21,8 +20,8 @@ void main() {
 	  final s = 'DICOM-MD';
     final list = toUtf8(s);
 
-    final buf = new ByteBuf.fromList(list);
-    final name = buf.readString(8);
+    final rb = new ReadBuffer.fromList(list);
+    final name = rb.readString(8);
     expect(name, equals('DICOM-MD'));
   });
 
