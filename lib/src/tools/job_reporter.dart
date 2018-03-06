@@ -55,10 +55,13 @@ class JobReporter {
         this.log = (logIt) ? new Logger('JobReporter') : null,
         this.timer = new Timer(start: false) {
     longInterval = (long == null) ? 10 * shortInterval : long;
+
+/*
     print('short: $short');
     print('shortInterval: $shortInterval');
     print('long: $long');
     print('longInterval: $longInterval');
+ */
   }
 
   String operator +(int v) {

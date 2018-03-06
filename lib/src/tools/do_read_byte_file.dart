@@ -12,7 +12,6 @@ import 'package:core/core.dart';
 
 import 'package:convert/convert.dart';
 import 'package:convert/src/errors.dart';
-import 'package:convert/src/utilities/dicom_file_utils.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
 // ignore_for_file: avoid_catches_without_on_clauses
@@ -72,6 +71,6 @@ Future<bool> doReadByteFile(File f,
     log.error(e);
   }
   if (rds0 != null) log.info1('$pad Success!');
-//  print('summary: ${rds0.summary}');
+  log.debug('summary: ${rds0.summary}');
   return true;
 }

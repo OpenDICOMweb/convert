@@ -53,7 +53,7 @@ abstract class JsonWriterBase {
         bdList = new BulkdataList(path);
 
   // **** Interface
-  String writeRootDataset(RootDataset rds);
+  String writeRootDataset();
   void writeSimpleElement(Element e, String separator);
   void writeEmptyElement(Element e, String separator);
   void writeBulkdata(Element e, String separator, BulkdataUri url);
@@ -63,11 +63,11 @@ abstract class JsonWriterBase {
 
 
   // **** End Interface
-  String write() => writeRootDataset(rds);
+  String write() => writeRootDataset();
 
   void writeList(Iterable values) => sb.writeList(values);
 
-  void writeElementList(Iterable<Element> elements, String separator) {
+  void writeElementList(Iterable<Element> elements, [String separator = '']) {
     if (elements.isEmpty) return;
     final it = elements.iterator;
     final length = elements.length;
@@ -80,7 +80,7 @@ abstract class JsonWriterBase {
   }
 
   void writeItems(
-      List<Item> items, String start, String end, String separator) {
+      List<Item> items, String start, String end, [String separator = '']) {
     final it = items.iterator;
     final length = items.length;
     for (var i = 0; i < length - 1; i++) {
@@ -95,7 +95,7 @@ abstract class JsonWriterBase {
     sb.outdent(end);
   }
 
-  void writeElement(Element e, String separator) {
+  void writeElement(Element e, [String separator = '']) {
     if (e.isEmpty) {
       writeEmptyElement(e, separator);
     } else if (e is SQ) {
@@ -108,4 +108,7 @@ abstract class JsonWriterBase {
       writeSimpleElement(e, separator);
     }  
   }
+
+  @override
+  String toString() => sb.toString();
 }

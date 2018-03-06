@@ -13,7 +13,6 @@ import 'package:convert/convert.dart';
 import 'package:path/path.dart' as path;
 
 import 'package:convert/data/test_files.dart';
-import 'package:convert/src/utilities/dicom_file_utils.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
 const String k6684x0 =

@@ -64,8 +64,6 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
   /// and a _defined length_.
   void writeLongDefinedLength(Element e, int vrIndex) {
     logStartWrite(e, 'writeEvrLong');
-
-//    print('vfLengthField: ${e.vfLengthField} $e');
     assert(e.vfLengthField != kUndefinedLength);
     final eStart = wb.wIndex;
     assert(eStart.isEven);
@@ -76,13 +74,11 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
 
   /// Write a non-Sequence Element (OB, OW, UN) that may have an undefined length
   void writeMaybeUndefined(Element e, int vrIndex) {
-//    logStartWrite(e, 'writeEvrMaybeUndefined');
     if (e.hadULength && !eParams.doConvertUndefinedLengths) {
       _writeLongEvrUndefinedLength(e, vrIndex);
     } else {
       writeLongDefinedLength(e, vrIndex);
     }
-//    logEndWrite(wb.wIndex, e, 'writeEvrMaybeUndefined');
   }
 
   /// Write a non-Sequence _undefined length_ Element.
@@ -131,7 +127,6 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
   // Note: A Sequence cannot have an _odd_ length.
   void _writeEvrSQUndefinedLength(SQ e, int vrIndex) {
     logStartSQWrite(e, 'writeEvrUndefinedLengthSequence');
-
     assert(e is SQ && vrIndex == kSQIndex);
     final eStart = wb.wIndex;
     assert(eStart.isEven);
@@ -146,7 +141,6 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
   bool _writeEvrUndefinedLengthHeader(Element e) {
     assert(e != null && wb.wIndex.isEven);
     assert(_isNotShortVR(e.vrIndex), 'vrIndex: ${e.vrIndex}');
-//    print('e: $e');
     __writeEvrLongHeader(e,  kUndefinedLength);
     return e.vfLength.isOdd;
   }
@@ -155,7 +149,6 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
   bool _writeEvrDefinedLengthHeader(Element e, int vfLength) {
     assert(e != null && vfLength != null && wb.wIndex.isEven);
     assert(_isNotShortVR(e.vrIndex), 'vrIndex: ${e.vrIndex}');
-//    print('e: $e');
     final isOddLength = vfLength.isOdd;
     final length = vfLength + (isOddLength ? 1 : 0);
     assert(length.isEven);
@@ -229,7 +222,7 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
   /// media type, writes it to a [Uint8List], and returns that list.
   /// Writes File Meta Information (FMI) to the output.
   /// _Note_: FMI is always Explicit Little Endian
-  Uint8List writeFmi() {
+  Bytes writeFmi() {
     //  if (encoding.doUpdateFMI) return writeODWFMI();
     if (rds is! RootDataset) log.error('Not _rootDS');
     if (!rds.hasFmi) {
@@ -238,20 +231,20 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
       log.warn('Root Dataset does not have FMI: $rds');
       if (!eParams.allowMissingFMI || !eParams.doAddMissingFMI) {
         log.error('Dataset $rds is missing FMI elements');
-        return kEmptyUint8List;
+        return Bytes.kEmptyBytes;
       }
       if (eParams.doUpdateFMI) return writeOdwFmi(rds);
     }
     assert(rds.hasFmi);
     writeExistingFmi(rds, cleanPreamble: eParams.doCleanPreamble);
-    return wb.asUint8List(0, wb.wIndex);
+    return wb.asBytes(0, wb.wIndex);
   }
 
-  Uint8List writeOdwFmi(RootDataset rootDS) {
+  Bytes writeOdwFmi(RootDataset rootDS) {
     if (rootDS is! RootDataset) log.error('Not rds');
     writeCleanPrefix();
     //Urgent finish
-    return wb.asUint8List(0, wb.wIndex);
+    return wb.asBytes(0, wb.wIndex);
   }
 
   void writeExistingFmi(RootDataset rootDS, {bool cleanPreamble = true}) {

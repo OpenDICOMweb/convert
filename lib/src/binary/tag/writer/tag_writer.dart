@@ -108,7 +108,7 @@ class TagWriter {
         showStats: showStats);
   }
 
-  Uint8List writeFmi() => _evrWriter.writeFmi();
+  Bytes writeFmi() => _evrWriter.writeFmi();
 
   /// Writes a [TagRootDataset] to a [Uint8List], then returns it.
   Bytes writeRootDataset() {

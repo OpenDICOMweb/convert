@@ -36,16 +36,14 @@ class FileListReader {
     var count = -1;
     for (var i = 0; i < paths.length; i++) {
       final path = cleanPath(paths[i]);
+
       if (count++ % printEvery == 0) {
-        final n = getPaddedInt(count, fileNoWidth);
-        print('$n good($successCount), bad($failureCount)');
+        final i = getPaddedInt(count, fileNoWidth);
+        log.info('$i Reading: $path ');
       }
 
-      log.info0('$i Reading: $path ');
       try {
         success = byteReadWriteFileChecked(path, fileNumber: i);
-//        log.info0('${rds.pInfo}');
-//        log.info0('  Dataset: $rds');
         if (success == false) {
           failures.add('"$path "');
         } else {

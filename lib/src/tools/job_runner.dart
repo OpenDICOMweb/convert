@@ -100,10 +100,7 @@ class JobRunner {
       if (!success)
       	failures.add(path);
     } catch (e) {
-      print(e);
-      print('In File: $path');
-      if (throwOnError)
-      	rethrow;
+      if (throwOnError) rethrow;
     }
     return reporter.report(path, wasSuccessful: success);
   }

@@ -6,13 +6,15 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:core/core.dart';
 import 'package:path/path.dart' as path;
 
 int getFieldWidth(int total) => '$total'.length;
 
-String getPaddedInt(int n, int width) => (n == null) ? '' : '${"$n".padLeft(width)}';
+String getPaddedInt(int n, int width) =>
+    (n == null) ? '' : '${"$n".padLeft(width)}';
 
 String cleanPath(String path) => path.replaceAll('\\', '/');
 
@@ -33,7 +35,7 @@ void checkRootDataset(Dataset dataset) {
 void checkFile(File file, {bool overwrite = false}) {
   if (file == null) throw new ArgumentError('null File');
   if (file.existsSync() && (file.lengthSync() == 0))
-  	throw new ArgumentError('$file has zero length');
+    throw new ArgumentError('$file has zero length');
 }
 
 /// Checks that [path] is not empty.
@@ -45,13 +47,25 @@ String checkPath(String path) {
 final path.Context pathContext = new path.Context(style: path.Style.posix);
 final String separator = pathContext.separator;
 
-// Urgent: move to IO and make work for reading one place and writing another
-String getOutputPath(String inPath, {String outDir, String outBase, String outExt}) {
-  final dir = path.dirname(path.current);
-  final base = path.basenameWithoutExtension(inPath);
-  final ext = (outExt == null) ? path.extension(inPath) : outExt;
-
+String getOutputPath(String inPath, {String dir, String base, String ext}) {
+  dir ??= path.dirname(path.current);
+  base ??= path.basenameWithoutExtension(inPath);
+  ext ??= path.extension(inPath);
   return path.absolute(dir, '$base.$ext');
+}
+String getOutPath(String base, String ext, {String dir}) {
+  dir ??= path.dirname(path.current);
+  return cleanPath(path.absolute(dir, '$base.$ext'));
+}
+
+String getVNAPath(RootDataset rds, String rootDir, String ext) {
+  final study = rds.getUid(kStudyInstanceUID);
+  final series = rds.getUid(kSeriesInstanceUID);
+  final instance = rds.getUid(kSOPInstanceUID);
+  final dirPath = '$rootDir/$study/$series';
+  final dir = new Directory(dirPath);
+  if (!dir.existsSync()) dir.createSync(recursive: true);
+  return '$dirPath/$instance.$ext';
 }
 
 Directory pathToDirectory(String path, {bool mustExist = true}) {
@@ -88,7 +102,8 @@ Future<int> walkDirectory(Directory dir, FSERunner f, [int level = 0]) async {
 typedef void FileRunner(File f, [int level]);
 
 /// Walks a [Directory] recursively and applies [Runner] [f] to each [File].
-Future<int> walkDirectoryFiles(Directory dir, FileRunner f, [int level = 0]) async {
+Future<int> walkDirectoryFiles(Directory dir, FileRunner f,
+    [int level = 0]) async {
   final eList = dir.list(recursive: false, followLinks: true);
 
   var count = 0;
@@ -116,7 +131,7 @@ int walkDirectorySync(Directory dir, FSERunner f, [int level = 0]) {
   var count = 0;
   for (var e in eList) {
     if (e is Directory) {
-      count +=  walkDirectorySync(e, f, _level);
+      count += walkDirectorySync(e, f, _level);
     } else if (e is File) {
       f(e, _level);
       count++;
@@ -124,7 +139,6 @@ int walkDirectorySync(Directory dir, FSERunner f, [int level = 0]) {
       stderr.write('Warning: $e is not a File or Directory');
     }
   }
-  print('${''.padRight(_level * 2)}Count: $count');
   _level--;
   return count;
 }
@@ -132,14 +146,14 @@ int walkDirectorySync(Directory dir, FSERunner f, [int level = 0]) {
 /// Walks a [Directory] recursively and applies [Runner] [f] to each [File].
 int walkDirectoryFilesSync(Directory dir, FileRunner f, [int level = 0]) {
   var _level = level;
- // f(dir, _level);
+  // f(dir, _level);
   final eList = dir.listSync(recursive: false, followLinks: true);
 
   _level++;
   var count = 0;
   for (var e in eList) {
     if (e is Directory) {
-      count +=  walkDirectorySync(e, f, _level);
+      count += walkDirectorySync(e, f, _level);
     } else if (e is File) {
       f(e, _level);
       count++;
@@ -147,11 +161,9 @@ int walkDirectoryFilesSync(Directory dir, FileRunner f, [int level = 0]) {
       stderr.write('Warning: $e is not a File or Directory');
     }
   }
-  print('${''.padRight(_level * 2)}Count: $count');
   _level--;
   return count;
 }
-
 
 typedef Null RunFile(File f, [int count]);
 
@@ -189,3 +201,59 @@ int fileCount(Directory d, {List<String> extensions, bool recursive: true}) {
   for (var fse in eList) if (fse is File) count++;
   return count;
 }
+
+const List<String> stdDcmExtensions = const <String>['.dcm', '', '.DCM'];
+
+//TODO: what should default be?
+const int kSmallDcmFileLimit = 376;
+
+Bytes readPath(String fPath,
+    { // TODO: change to true when async works
+    bool doAsync = false,
+    List<String> extensions = stdDcmExtensions,
+    int minLength = kSmallDcmFileLimit,
+    int maxLength}) {
+  final ext = path.extension(fPath);
+  if (!extensions.contains(ext)) return null;
+  final f = new File(fPath);
+  return readFile(f,
+      doAsync: doAsync, minLength: minLength, maxLength: maxLength);
+}
+
+Bytes readFile(File f,
+    { // TODO: change to true when async works
+    bool doAsync = false,
+    List<String> extensions = stdDcmExtensions,
+    int minLength = kSmallDcmFileLimit,
+    int maxLength}) {
+  if (!f.existsSync() || !_checkLength(f, doAsync, minLength, maxLength))
+    return null;
+  try {
+    final bytes = doAsync ? _readAsync(f) : _readSync(f);
+    return new Bytes.fromTypedData(bytes);
+  } on FileSystemException {
+    return null;
+  }
+}
+
+bool _checkLength(File f, bool doAsync, int min, int max) =>
+    doAsync ? _checkLenAsync(f, min, max) : _checkLenSync(f, min, max);
+
+Future<bool> _checkLenAsync(File f, int min, int max) async {
+  assert(min >= 0 && max > min);
+  final len = await f.length();
+  final max0 = max ?? len;
+  assert(min >= 0 && max0 > min);
+  return (len >= min && len <= max0) ? true : false;
+}
+
+bool _checkLenSync(File f, int min, int max) {
+  final len = f.lengthSync();
+  final max0 = max ?? len;
+  assert(min >= 0 && max0 > min);
+  final v = (len >= min && len <= max0) ? true : false;
+  return v;
+}
+
+Future<Uint8List> _readAsync(File f) async => await f.readAsBytes();
+Uint8List _readSync(File f) => f.readAsBytesSync();

@@ -10,12 +10,12 @@ import 'package:convert/src/utilities/dataset_by_group.dart';
 
 // ignore_for_file: only_throw_errors
 
-typedef Element ElementFrom(Element e);
+typedef Element _ElementFrom(Element e);
 
-typedef Element ElementMaker<V>(Tag tag, List<V> values, int vrIndex,
+typedef Element _ElementMaker<V>(Tag tag, List<V> values, int vrIndex,
     [int vfLengthField]);
 
-typedef Item ItemMaker(Dataset parent, SQ sq);
+typedef Item _ItemMaker(Dataset parent, SQ sq);
 
 class DatasetConverterByGroup {
   final RootDataset rSds;
@@ -109,12 +109,7 @@ class DatasetConverterByGroup {
           currentSubgroup = sg;
           currentGroup.subgroups[sgNumber] = sg;
         } else if (tag is PDTag) {
-//          print(currentGroup.subgroups);
           final sgNumber = tag.sgNumber;
-//          print('sgNumber: ${hex8(sgNumber)} currentSGNumber: '
-//              '${hex8(currentSGNumber)}');
-//          print('currentSubgroup: $currentSubgroup');
-
           if (sgNumber != currentSubgroup.sgNumber) {
             log
               ..up

@@ -42,16 +42,14 @@ class FileListIterator implements Iterator<String> {
 
   @override
   String get current {
- // 	print('current $_dirIndex:$_fileIndex');
-  	final dir = _currentDir;
-  	final file = _fileList.elementAt(_fileIndex);
-  	return '$dir$file';
+    final dir = _currentDir;
+    final file = _fileList.elementAt(_fileIndex);
+    return '$dir$file';
   }
 
   @override
   bool moveNext() {
-	  _fileIndex++;
-//  	print('move $_dirIndex $_fileIndex ${_fileList.length}');
+    _fileIndex++;
     if (_fileIndex >= _fileList.length) {
       _dirIndex++;
       if (_dirIndex >= _dirList.length) return false;

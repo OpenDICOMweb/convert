@@ -8,51 +8,35 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:convert/convert.dart';
-//import 'package:dcm_convert/data/test_files.dart';
-import 'package:convert/src/utilities/dicom_file_utils.dart';
 import 'package:core/server.dart';
 
-import 'package:convert/src/json/writer/dcm_writer2.dart';
-
-const String k6684x0 =
-    'C:/acr/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
-
-const String k6684x1 =
-    'c:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
+import 'package:convert/data/test_files.dart';
 
 Future main() async {
-  Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
+  Server.initialize(name: 'ReadFile', level: Level.info, throwOnError: true);
 
-  final fPath = k6684x0;
+  final inPath = cleanPath(k6684x0);
+  log.info('path: $inPath');
+  stdout.writeln('Reading(byte): $inPath');
 
-  log.info('path: $fPath');
-  final url = new Uri.file(fPath);
-  stdout.writeln('Reading(byte): $url');
 
-  final bytes = readPath(fPath);
-  if (bytes == null) {
-    log.error('"$fPath" either does not exist or is not a valid DICOM file');
-    return;
-  } else {
-    stdout.writeln('  Length in bytes: ${bytes.lengthInBytes}');
-  }
-
-  final rds =
-      BDReader.readBytes(bytes, path: fPath, doLogging: true, showStats: true);
+  final rds = BDReader.readPath(inPath, doLogging: false, showStats: true);
   if (rds == null) {
-    log.warn('Invalid DICOM file: $fPath');
+    log.warn('Invalid DICOM file: $inPath');
   } else {
     log.info('${rds.summary}');
   }
 
-  log.info(' out: ${getTempFile(fPath, 'dcmout')}');
-  final outPath = 'out.json';
+  final study = rds.getUid(kStudyInstanceUID);
+  final series = rds.getUid(kSeriesInstanceUID);
+  final instance = rds.getUid(kSOPInstanceUID);
+  final base = '$study-$series-$instance';
+  final outPath =
+      getOutputPath(inPath, dir: 'bin/output', base: base, ext: 'json');
+  log.info('outPath: $outPath');
   final out =
-      new FastJsonWriter(rds, outPath, separateBulkdata: true, tabSize: 2)
-          .write();
-  log.info('output length: ${out.length ~/ 1024}');
+      new JsonWriter(rds, outPath, separateBulkdata: true, tabSize: 2).write();
+  log.info('Output length: ${out.length}(${out.length ~/ 1024}K)');
   new File(outPath).writeAsStringSync(out);
   log.info('done');
 }
-
-

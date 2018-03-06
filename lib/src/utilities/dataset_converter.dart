@@ -4,18 +4,16 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-// TODO: uncomment when ready to finish
-
 import 'package:core/core.dart';
 
 import 'package:convert/src/utilities/dataset_by_group.dart';
 
-typedef Element ElementFrom(Element e);
+typedef Element _ElementFrom(Element e);
 
-typedef Element ElementMaker<V>(Tag tag, List<V> values, int vrIndex,
+typedef Element _ElementMaker<V>(Tag tag, List<V> values, int vrIndex,
     [int vfLengthField]);
 
-typedef Item ItemMaker(Dataset parent, SQ sq);
+typedef Item _ItemMaker(Dataset parent, SQ sq);
 
 abstract class Converter {
   RootDataset get sRds;

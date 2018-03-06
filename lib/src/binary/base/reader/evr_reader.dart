@@ -87,8 +87,8 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
     // Note: this is only relevant for EVR
     if (tag != null) {
       if (dParams.doCheckVR && isNotValidVR(code, vrIndex, tag)) {
-        final vrIndex = vrIndexFromCode(vrCode);
-        log.error('VR $vrIndex is not valid for $tag');
+        final vr = vrIdFromIndex(vrIndex);
+        log.error('**** VR $vr is not valid for $tag');
       }
 
       if (dParams.doCorrectVR) {

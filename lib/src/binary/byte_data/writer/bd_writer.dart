@@ -10,7 +10,6 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -62,7 +61,7 @@ class BDWriter {
   /// Writes the [BDRootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
   factory BDWriter.toFile(BDRootDataset ds, File file,
-      {EncodingParameters eParams,
+      {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool overwrite = false,
       int minLength,
@@ -87,7 +86,7 @@ class BDWriter {
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
   factory BDWriter.toPath(BDRootDataset ds, String path,
-      {EncodingParameters eParams,
+      {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool overwrite = false,
       int minLength,
@@ -108,7 +107,8 @@ class BDWriter {
         showStats: showStats);
   }
 
-  Uint8List writeFmi() => _evrWriter.writeFmi();
+  Bytes write() => writeRootDataset();
+  Bytes writeFmi() => _evrWriter.writeFmi();
 
   /// Writes a [BDRootDataset] to a [Uint8List], then returns it.
   Bytes writeRootDataset() {
@@ -126,7 +126,7 @@ class BDWriter {
   /// Writes the [BDRootDataset] to a [Uint8List], and returns the [Uint8List].
   static Bytes writeBytes(BDRootDataset rds,
       {String path = '',
-      EncodingParameters eParams,
+      EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool overwrite = false,
       int minLength,
@@ -150,15 +150,15 @@ class BDWriter {
 
   /// Writes the [BDRootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
-  static Future<Bytes> writeFile(BDRootDataset ds, File file,
-      {EncodingParameters eParams,
+  static Bytes writeFile(BDRootDataset ds, File file,
+      {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool overwrite = false,
       int minLength,
       ElementOffsets inputOffsets,
       bool reUseBD = false,
       bool doLogging = true,
-      bool showStats = false}) async {
+      bool showStats = false}) {
     checkFile(file, overwrite: overwrite);
     final bytes = writeBytes(ds,
         path: file.path,
@@ -170,15 +170,15 @@ class BDWriter {
         reUseBD: reUseBD,
         doLogging: doLogging,
         showStats: showStats);
-    await file.writeAsBytes(bytes.asUint8List());
+    file.writeAsBytesSync(bytes.asUint8List());
     return bytes;
   }
 
   /// Creates a new empty [File] from [path], writes the [BDRootDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  static Future<Bytes> writePath(BDRootDataset ds, String path,
-      {EncodingParameters eParams,
+  static Bytes writePath(BDRootDataset ds, String path,
+      {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool overwrite = false,
       int minLength,

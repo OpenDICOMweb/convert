@@ -35,9 +35,7 @@ class EvrBDReader extends EvrReader<int> {
   EvrBDReader(ByteData bd, this.rds,
       {this.dParams = DecodingParameters.kNoChange, this.reUseBD = true})
       : rb = new ReadBuffer(bd),
-        cds = rds {
-    print('rds: $rds');
-  }
+        cds = rds;
 
   /// Creates a new [EvrBDReader].
   EvrBDReader._(ByteData bd, this.rds, this.dParams, this.reUseBD)
@@ -47,8 +45,8 @@ class EvrBDReader extends EvrReader<int> {
   }
 
   @override
-  Item makeItem(Dataset parent,
-          Map<int, Element> eMap, [SQ sequence, ByteData bd]) =>
+  Item makeItem(Dataset parent, Map<int, Element> eMap,
+          [SQ sequence, ByteData bd]) =>
       new BDItem.fromBD(parent, eMap, sequence, bd);
 }
 

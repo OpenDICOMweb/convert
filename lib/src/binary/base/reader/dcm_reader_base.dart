@@ -311,7 +311,6 @@ abstract class DcmReaderBase<V> {
     if (tag.hasNormalVR && vrIndex == tag.vrIndex) return true;
     if (tag.hasSpecialVR && isNormalVRIndex(vrIndex)) return true;
     if (tag is PDTagUnknown) return true;
-    log.error('**** vrIndex $vrIndex is not valid for $tag');
     return false;
   }
 

@@ -8,14 +8,21 @@ import 'dart:convert';
 
 import 'package:core/core.dart' hide Indenter;
 
-typedef Element ValueFieldReader(Tag tag, int vrIndex, List vf);
+typedef Element _ValueFieldReader(Tag tag, int vrIndex, List vf);
 
-Element readValueField(int code, int vrIndex, List values) {
-  final tag = Tag.lookupByCode(code, vrIndex);
+Element readValueField(Tag tag, int vrIndex, Object vf) {
+  dynamic values;
+  if (vf is Uri) {
+    values = new IntBulkdataRef(tag.code, vf);
+  } else if (vrIndex >= kOBIndex && vrIndex <= kODIndex) {
+    values = BASE64.decode(vf).buffer.asUint8List();
+  } else if (vf is List) {
+    values = vf;
+  }
   return _readers[vrIndex](tag, vrIndex, values);
 }
 
-const List<ValueFieldReader> _readers = const <ValueFieldReader>[
+const List<_ValueFieldReader> _readers = const <_ValueFieldReader>[
   // Begin maybe undefined length
   _readSQ, // Sequence == 0,
   // Begin EVR Long
@@ -32,17 +39,20 @@ const List<ValueFieldReader> _readers = const <ValueFieldReader>[
 
 Null _readSQ(Tag tag, int vrIndex, Iterable vf) => invalidElementIndex(vrIndex);
 
-OBtag _readOB(Tag tag, int vrIndex, Iterable vf) {
+OBtag _readOB(Tag tag, int vrIndex, Object vf) {
   assert(vrIndex == kOBIndex);
-  final String key = vf.elementAt(0);
-  final String value = vf.elementAt(1);
-  if (key == 'InlineBinary')
-    return OBtag.make(tag, BASE64.decode(value).buffer.asUint8List());
-
-  if (key == 'BulkDataURI')
-    return OBtag.make(tag, new IntBulkdata(tag.code, value));
-
-  return invalidValuesError(vf);
+  dynamic values;
+  if (vf is String) {values = BASE64.decode(vf).buffer.asUint8List();
+  } else
+  if (vf is Uri) {
+    values = new IntBulkdataRef(tag.code, vf);
+  } else
+  if (vf is List) {
+    values = vf;
+  } else {
+    return invalidValuesError(vf);
+  }
+  return OBtag.make(tag, values);
 }
 
 OWtag _readOW(Tag tag, int vrIndex, Iterable vf) {
@@ -52,23 +62,32 @@ OWtag _readOW(Tag tag, int vrIndex, Iterable vf) {
   if (key == 'InlineBinary')
     return OWtag.make(tag, BASE64.decode(value).buffer.asUint8List());
 
-  if (key == 'BulkDataURI')
-    return OWtag.make(tag, new IntBulkdata(tag.code, value));
+  if (key == 'BulkDataURI') {
+    final uri = new Uri.dataFromString(value);
+    return OWtag.make(tag, new IntBulkdataRef(tag.code, uri));
+  }
 
   return invalidValuesError(vf);
 }
 
 UNtag _readUN(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kUNIndex);
-  final String key = vf.elementAt(0);
-  final String value = vf.elementAt(1);
-  if (key == 'InlineBinary')
-    return UNtag.make(tag, BASE64.decode(value).buffer.asUint8List());
-
-  if (key == 'BulkDataURI')
-    return UNtag.make(tag, new IntBulkdata(tag.code, value));
-
-  return invalidValuesError(vf);
+  dynamic values;
+  if (vf.isEmpty) {
+    values = kEmptyUint8List;
+  } else {
+    final String key = vf.elementAt(0);
+    final String value = vf.elementAt(1);
+    if (key == 'InlineBinary') {
+      values = BASE64.decode(value).buffer.asUint8List();
+    } else if (key == 'BulkDataURI') {
+      final uri = new Uri.dataFromString(value);
+      values = new IntBulkdataRef(tag.code, uri);
+    } else {
+      return invalidValuesError(vf);
+    }
+  }
+  return UNtag.make(tag, values);
 }
 
 OLtag _readOL(Tag tag, int vrIndex, Iterable vf) {
@@ -76,11 +95,9 @@ OLtag _readOL(Tag tag, int vrIndex, Iterable vf) {
   final String key = vf.elementAt(0);
   final String value = vf.elementAt(1);
   if (key == 'InlineBinary')
-    return OLtag.make(tag, BASE64.decode(value).buffer.asUint8List());
-
+    return OLtag.fromUint8List(tag, BASE64.decode(value).buffer.asUint8List());
   if (key == 'BulkDataURI')
-    return OLtag.make(tag, new IntBulkdata(tag.code, value));
-
+    return OLtag.make(tag, new FloatBulkdataRef(tag.code, Uri.parse(value)));
   return invalidValuesError(vf);
 }
 
@@ -89,10 +106,10 @@ OFtag _readOF(Tag tag, int vrIndex, Iterable vf) {
   final String key = vf.elementAt(0);
   final String value = vf.elementAt(1);
   if (key == 'InlineBinary')
-    return OFtag.fromBytes(tag, BASE64.decode(value).buffer.asUint8List());
+    return OFtag.fromUint8List(tag, BASE64.decode(value).buffer.asUint8List());
 
   if (key == 'BulkDataURI')
-    return OFtag.make(tag, new FloatBulkdata(tag.code, value));
+    return OFtag.make(tag, new FloatBulkdataRef(tag.code, Uri.parse(value)));
 
   return invalidValuesError(vf);
 }
@@ -102,22 +119,21 @@ ODtag _readOD(Tag tag, int vrIndex, Iterable vf) {
   final String key = vf.elementAt(0);
   final String value = vf.elementAt(1);
   if (key == 'InlineBinary')
-    return ODtag.fromBytes(tag, BASE64.decode(value).buffer.asUint8List());
-
+    return ODtag.fromUint8List(tag, BASE64.decode(value).buffer.asUint8List());
   if (key == 'BulkDataURI')
-    return ODtag.make(tag, new FloatBulkdata(tag.code, value));
-
+    return ODtag.make(tag, new FloatBulkdataRef(tag.code, Uri.parse(value)));
   return invalidValuesError(vf);
 }
 
-IntBulkdata _getIntBulkdata(Tag tag, Iterable vf) {
+IntBulkdataRef _getIntBulkdata(Tag tag, Iterable vf) {
   assert(vf.isNotEmpty);
   final Object key = vf.elementAt(0);
   return (key is String && key == 'BulkDataURI')
-      ? new IntBulkdata(tag.code, vf.elementAt(1))
+      ? new IntBulkdataRef(tag.code, vf.elementAt(1))
       : null;
 }
 
+/*
 StringBulkdata _getStringBulkdata(Tag tag, Iterable vf) {
   assert(vf.isNotEmpty);
   final Object key = vf.elementAt(0);
@@ -125,6 +141,7 @@ StringBulkdata _getStringBulkdata(Tag tag, Iterable vf) {
       ? new StringBulkdata(tag.code, vf.elementAt(1))
       : null;
 }
+*/
 
 SStag _readSS(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kSSIndex);
@@ -148,9 +165,7 @@ SLtag _readSL(Tag tag, int vrIndex, Iterable vf) {
 
 ATtag _readAT(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kATIndex);
-  return (vf is List<int>)
-      ? ATtag.make(tag, vf)
-      : invalidValueField('', vf);
+  return (vf is List<int>) ? ATtag.make(tag, vf) : invalidValueField('', vf);
 }
 
 UStag _readUS(Tag tag, int vrIndex, Iterable vf) {
@@ -173,11 +188,11 @@ ULtag _readUL(Tag tag, int vrIndex, Iterable vf) {
       : invalidValueField('', vf);
 }
 
-FloatBulkdata _getFloatBulkdata(Tag tag, Iterable vf) {
+FloatBulkdataRef _getFloatBulkdata(Tag tag, Iterable vf) {
   assert(vf.isNotEmpty);
   final Object key = vf.elementAt(0);
   return (key is String && key == 'BulkDataURI')
-      ? new FloatBulkdata(tag.code, vf.elementAt(1))
+      ? new FloatBulkdataRef(tag.code, vf.elementAt(1))
       : null;
 }
 
@@ -203,9 +218,7 @@ FDtag _readFD(Tag tag, int vrIndex, Iterable vf) {
 
 AEtag _readAE(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kAEIndex);
-  return (vf is List<String>)
-      ? AEtag.make(tag, vf)
-      : invalidValueField('', vf);
+  return (vf is List<String>) ? AEtag.make(tag, vf) : invalidValueField('', vf);
 }
 
 CStag _readCS(Tag tag, int vrIndex, Iterable vf) {

@@ -86,7 +86,7 @@ class TagReader {
 
   /// Creates a [TagReader] from the contents of the [file].
   factory TagReader.fromFile(File file,
-      {bool doAsync = true,
+      {bool doAsync = false,
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD: true,
       bool doLogging = false,
@@ -103,7 +103,7 @@ class TagReader {
 
   /// Creates a [TagReader] from the contents of the [File] at [path].
   factory TagReader.fromPath(String path,
-          {bool doAsync = true,
+          {bool doAsync = false,
           DecodingParameters dParams = DecodingParameters.kNoChange,
           bool reUseBD: true,
           bool doLogging = false,
@@ -141,7 +141,7 @@ class TagReader {
   /// Reads the [TagRootDataset] from a [Uint8List].
   static RootDataset readBytes(Bytes bytes,
       {String path = '',
-      bool async = true,
+      bool doAsync = false,
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD = true,
       bool doLogging = false,
@@ -158,7 +158,7 @@ class TagReader {
   /// Reads the [TagRootDataset] from a [Uint8List].
   static RootDataset readTypedData(TypedData bytes,
       {String path = '',
-      bool async = true,
+      bool doAsync = false,
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD = true,
       bool doLogging = false,
@@ -175,7 +175,7 @@ class TagReader {
 
   /// Reads the [TagRootDataset] from a [File].
   static TagRootDataset readFile(File file,
-      {bool doAsync = true,
+      {bool doAsync = false,
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD: true,
       bool doLogging = false,
@@ -192,7 +192,7 @@ class TagReader {
 
   /// Reads the [TagRootDataset] from a [path] ([File] or URL).
   static TagRootDataset readPath(String path,
-      {bool doAsync = true,
+      {bool doAsync = false,
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD = true,
       bool doLogging = false,

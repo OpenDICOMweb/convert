@@ -4,15 +4,18 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the   AUTHORS file for other contributors.
 
-import 'package:core/core.dart';
-import 'package:convert/data/test_files.dart';
+import 'package:core/server.dart';
 import 'package:convert/convert.dart';
 
-final Logger log = new Logger('io/bin/read_files_old.dart', Level.info);
+// This import contains a bunch of predefined paths
+import 'package:convert/data/test_files.dart';
+
 
 void main() {
+  Server.initialize(name: 'ReadFile', level: Level.info, throwOnError: true);
+
   final path = path1; //test6684_02;
   log.info0('TagReader: $path');
   final rds0 = TagReader.readPath(path);
-  log..info0('${rds0.pInfo}')..info0('TagDataset: ${rds0.info}');
+  log.info('${rds0.summary}');
 }

@@ -87,12 +87,14 @@ class DatasetConverter {
         : TagElement.from(e, e.vrIndex);
   }
 
+/*
   Element _convertMaybeUndefinedElement(Element e) {
     if (e.vrIndex > 30) throw 'bad e.vr: ${e.vrIndex}';
     return (e.tag == PTag.kPixelData)
         ? TagElement.pixelDataFrom(e, sourceRDS.transferSyntax, e.vrIndex)
         : TagElement.from(e, e.vrIndex);
   }
+*/
 
   static const int kDefaultCount = 5;
 

@@ -10,11 +10,11 @@ import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
 //import 'package:dcm_convert/data/test_files.dart';
-import 'package:convert/src/utilities/dicom_file_utils.dart';
+import 'package:convert/src/utilities/io_utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
 
-import 'package:convert/src/json/writer/dicom_writer.dart';
+import 'package:convert/src/json/writer/json_writer.dart';
 
 const String xx3 = 'C:/acr/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
 const String xx2 =
@@ -93,8 +93,8 @@ Future main() async {
     }
   }
 
-  final jsonWriter = new DicomJsonWriter(rds);
-  final out = jsonWriter.write(rds);
+  final jsonWriter = new JsonWriter(rds, '');
+  final out = jsonWriter.write();
   print('output length: ${out.length ~/ 1024}');
   await new File('out.json').writeAsString(out);
   print('done');

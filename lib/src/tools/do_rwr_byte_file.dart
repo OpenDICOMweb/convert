@@ -46,8 +46,8 @@ $pad    TS: ${rds0.transferSyntax}''');
 
     final offsets = reader0.offsets;
     for (var i = 0; i < offsets.length; i++) {
-      print(
-          '$i: ${offsets.starts[i]} - ${offsets.ends[i]} ${offsets.elements[i]}');
+      log.debug('$i: ${offsets.starts[i]} - '
+          '${offsets.ends[i]} ${offsets.elements[i]}');
     }
 
     // Write the Root Dataset
@@ -64,8 +64,8 @@ $pad    TS: ${rds0.transferSyntax}''');
 
     final wOffsets = writer.outputOffsets;
     for (var i = 0; i < wOffsets.length; i++) {
-      print(
-          '$i: ${wOffsets.starts[i]} - ${wOffsets.ends[i]} ${wOffsets.elements[i]}');
+      log.debug('$i: ${wOffsets.starts[i]} - '
+          '${wOffsets.ends[i]} ${wOffsets.elements[i]}');
     }
 
     if (!fast) {
@@ -120,8 +120,6 @@ $pad    TS: ${rds0.transferSyntax}''');
     for (var i = 0; i < length; i++) {
       final x = aList.elementAt(i);
       final y = bList.elementAt(i);
-      print('$i x: $x');
-      print('$i y: $y');
       if (x.eStart != y.eStart) print('** Starts are different');
       if (x.code != y.code) print('** Codes are different');
       if (x.vrCode != y.vrCode) print('** VRCodes are different');

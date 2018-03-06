@@ -5,81 +5,150 @@
 // See the AUTHORS file for other contributors.
 
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:core/core.dart' hide Indenter;
-import 'package:convert/src/json/reader/fast_reader_utils.dart';
+import 'package:convert/src/json/reader/json_reader_base.dart';
 
-class FastJsonReader {
+class FastJsonReader extends JsonReaderBase {
   final List<List<List>> rootList;
+  @override
   final TagRootDataset rds;
+  @override
+  Dataset cds;
 
   FastJsonReader(String json)
       : rootList = JSON.decode(json),
         rds = new TagRootDataset.empty();
 
-  RootDataset read() => _readRootDataset();
+  List get fmiList => rootList[0];
+  List get rdsList => rootList[1];
 
-
-  RootDataset _readRootDataset() {
-    _readFmi();
-    _readDataset(rootList[1], rds);
-    return rds;
-  }
+  void readFmi() => _readFmi();
 
   void _readFmi() {
-    final fmi = rootList[0];
-    for (var eList in fmi) {
-      final e = _readElement(eList, rds);
+    for (var entry in fmiList) {
+      final e = readEntry(entry);
       rds.fmi[e.code] = e;
     }
   }
 
-  List<TagItem> _readItems(List<List> itemLists, Dataset parent) {
-    final items = <TagItem>[];
-    for (var itemList in itemLists) {
-      final item = _readItem(itemList, parent);
-      items.add(item);
-    }
-    return items;
+  @override
+  RootDataset readRootDataset() {
+    _readFmi();
+    for (var entry in rdsList) rds.add(readEntry(entry));
+    return rds;
   }
 
-  Item _readItem(List itemList, Dataset parent) {
-    final item = new TagItem.empty(parent);
-    _readDataset(itemList, item);
+  @override
+  void readItems(SQ sq, Iterable itemList) {
+    for (var i = 0; i < itemList.length; i++)
+      readItem(sq, sq.items.elementAt(i), itemList.elementAt(i));
+  }
+
+
+  @override
+  Item readItem(SQ sequence, Item item, Iterable entries) {
+    final parentDS = cds;
+    cds = item;
+    for (var entry in entries) {
+      final e = readEntry(entry);
+      print('e: $e');
+      cds.add(e);
+    }
+    cds = parentDS;
     return item;
   }
 
-  void _readDataset(List itemList, Dataset ds) {
-    for (var eList in itemList) {
-      final e = _readElement(eList, ds);
-      print('RDS: $e');
-      ds.add(e);
-    }
-  }
+  Map<int, String> privateCreatorsMap = <int, String>{};
+  Map<int, PCTag> knownPrivateCreators = <int, PCTag>{};
 
-  Element _readElement(List eList, Dataset ds) {
-    final code = int.parse(eList[0]);
-    final tag = Tag.lookupByCode(code);
-    final vrIndex = vrIndexFromId(eList[1]);
-    if (vrIndex == kSQIndex) {
-      return _readSequence(tag, vrIndex, eList, ds);
+  Element readEntry(List entry) {
+    print('entry: $entry');
+    final code = int.parse(entry[0], radix: 16);
+    final vrIndex = vrIndexFromId(entry[1]);
+    final dynamic values = readValueField(entry[2]);
+    Tag tag;
+    var csg = 0;
+    PCTag cPCTag;
+    print('${dcm(code)} vr($vrIndex) : $values');
+    if (Tag.isPublicCode(code)) {
+      print('PTag: ${dcm(code)} : $values');
+      tag = PTag.lookupByCode(code, vrIndex);
+    } else if (Tag.isPDCode(code)) {
+      print('PCTag: ${dcm(code)} : $values');
+      final sg = Tag.pdSubgroup(code);
+      if (sg > csg) {
+        csg = sg;
+        cPCTag = knownPrivateCreators[csg];
+      }
+      tag = PDTag.make(code, vrIndex, cPCTag);
+    } else if (Tag.isPCCode(code)) {
+      print('PDTag: ${dcm(code)} : $values');
+      String name;
+      if (vrIndex == kLOIndex) {
+        name = values[0];
+      } else if (vrIndex == kUNIndex) {
+        name = ASCII.decode(values);
+      } else {
+        if (values is Uint8List) {
+          name = ASCII.decode(values);
+        } else {
+          throw 'PCTag with token: $values';
+        }
+      }
+
+      privateCreatorsMap[Tag.pcSubgroup(code)] = name;
+      tag = PCTag.make(code, vrIndex, name);
+      knownPrivateCreators[code] = tag;
+      return readElement(tag, [name], vrIndex);
     } else {
-      return _readSimpleElement(tag, vrIndex, eList);
+      print('entry: $entry');
+      throw 'error';
     }
+    return readElement(tag, values, vrIndex);
   }
 
-  Element _readSimpleElement(Tag tag, int vrIndex, List eList) {
-
-    final values = readValueField(tag.code, vrIndex, eList[2]);
-    return TagElement.make(tag, values, vrIndex);
+  Object readValueField(List vField) {
+    print('vField: $vField');
+    if (vField.length <2) return vField;
+    final Object key = vField[0];
+    final Object value = vField[1];
+    if (key == 'InlineBinary') return BASE64.decode(value);
+    if (key == 'BulkDataUrl') return value;
+    return vField;
   }
 
-  SQ _readSequence(Tag tag, int vrIndex, List eList, Dataset ds) {
-    if (vrIndex == kSQIndex && (tag.vrIndex == kSQIndex ||
-        tag.vrIndex == kUNIndex)) {
-      final values = _readItems(eList[2], ds);
-      return SQtag.make(tag, values);
+
+  @override
+  Element readSimpleElement(
+      Tag tag,
+      Object value,
+      int vrIndex,
+      ) =>
+      TagElement.make(tag, value, vrIndex);
+
+  @override
+  SQ readSequence(Tag tag, Iterable entries, int vrIndex) {
+    if (vrIndex == kSQIndex &&
+        (tag.vrIndex == kSQIndex || tag.vrIndex == kUNIndex)) {
+      final length = entries.length;
+      final items = new List<TagItem>(length);
+      final sq = SQtag.make(tag, items, kSQIndex);
+      // Add the empty Items
+      for (var i = 0; i < length; i++)
+        items[i] = new TagItem.empty(cds, sq);
+      readItems(sq, entries);
+      return sq;
     }
-    return invalidSequenceElement(eList);
+    return invalidSequenceElement(entries);
   }
+
+  static RootDataset fromString(String s) =>
+      new FastJsonReader(s).readRootDataset();
+
+  static RootDataset fromFile(File file) => fromString(file.readAsStringSync());
+
+  static RootDataset fromPath(String path) => fromFile(new File(path));
 }

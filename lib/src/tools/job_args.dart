@@ -9,7 +9,6 @@ import 'dart:io' show Platform;
 import 'package:args/args.dart';
 import 'package:core/core.dart';
 
-
 class JobArgs {
   /// The name of the program that is running
   String program;
@@ -44,16 +43,16 @@ class JobArgs {
   /// The argument processor for Job arguments.
   ArgParser parser;
 
-
   JobArgs(List<String> args) {
-	  program = programName;
-	  parser = getParser();
-	  argResults = parser.parse(args);
+    program = programName;
+    parser = getParser();
+    argResults = parser.parse(args);
   }
 
   void setLogPath(Object path) => (path is String) ? logPath = path : null;
 
-  void setSummary(Object results) => (results is String) ? summary = results : null;
+  void setSummary(Object results) =>
+      (results is String) ? summary = results : null;
 
   void setOutDir(Object dir) => (dir is String) ? outDir = dir : null;
 
@@ -61,7 +60,7 @@ class JobArgs {
       (count is String) ? shortMsgEvery = parseInt(count) : null;
 
   void setLongInterval(Object count) =>
-		  (count is String) ? longMsgEvery = parseInt(count) : null;
+      (count is String) ? longMsgEvery = parseInt(count) : null;
 
   void setDebugLevel(Object mode) => baseLevel = Level.lookup(mode);
 
@@ -147,11 +146,7 @@ class JobArgs {
         callback: (v) => (v) ? showHelp = true : showHelp = false,
         help: 'prints some helpful information about this program');
 
-  static JobArgs parse(List<String> args) {
-    final jArgs = new JobArgs(args);
-    print(jArgs);
-    return jArgs;
-  }
+  static JobArgs parse(List<String> args) => new JobArgs(args);
 
   @override
   String toString() => '$runtimeType: $argResults';

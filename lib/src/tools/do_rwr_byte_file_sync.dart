@@ -47,8 +47,8 @@ $pad    TS: ${rds0.transferSyntax}''');
     if (noisy) {
       final offsets = reader0.offsets;
       for (var i = 0; i < offsets.length; i++) {
-        print(
-            '$i: ${offsets.starts[i]} - ${offsets.ends[i]} ${offsets.elements[i]}');
+        log.debug('$i: ${offsets.starts[i]} - '
+            '${offsets.ends[i]} ${offsets.elements[i]}');
       }
     }
 

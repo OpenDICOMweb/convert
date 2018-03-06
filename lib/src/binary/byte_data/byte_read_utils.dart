@@ -4,7 +4,6 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -171,8 +170,8 @@ Bytes writeTimed(BDRootDataset rds,
   return bytes;
 }
 
-Future<Bytes> writeFMI(BDRootDataset rds, [String path]) async =>
-    await BDWriter.writePath(rds, path);
+Bytes writeFMI(BDRootDataset rds, [String path]) =>
+    BDWriter.writePath(rds, path);
 
-Future<Bytes> writeRoot(BDRootDataset rds, {String path}) =>
+Bytes writeRoot(BDRootDataset rds, {String path}) =>
     BDWriter.writePath(rds, path);

@@ -7,11 +7,10 @@
 import 'dart:convert';
 
 import 'package:core/core.dart';
+import 'package:convert/src/json/writer/json_writer_base.dart';
 
-import 'package:convert/src/json/writer/writer_base.dart';
-
-class FastJsonWriter extends JsonWriterBase {
-  FastJsonWriter(RootDataset rds, String path,
+class JsonWriter extends JsonWriterBase {
+  JsonWriter(RootDataset rds, String path,
       {int bulkdataThreshold = 1024,
       bool separateBulkdata = false,
       bool includeFmi = true,
@@ -22,8 +21,19 @@ class FastJsonWriter extends JsonWriterBase {
             includeFmi: includeFmi,
             tabSize: tabSize);
 
+  JsonWriter.empty({String path = '',
+                     int bulkdataThreshold = 1024,
+                     bool separateBulkdata = false,
+                     bool includeFmi = true,
+                     int tabSize = 2})
+      : super(null, path,
+                  bulkdataThreshold: bulkdataThreshold,
+                  separateBulkdata: separateBulkdata,
+                  includeFmi: includeFmi,
+                  tabSize: tabSize);
+
   @override
-  String writeRootDataset(RootDataset rds) {
+  String writeRootDataset() {
     sb.indent('{');
     if (includeFmi) {
       for (var e in rds.fmi.elements) writeElement(e, ',');
