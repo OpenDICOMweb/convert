@@ -12,7 +12,7 @@ import 'package:core/core.dart';
 void main(List<String> args) {
   // var compare = new FileCompare(path1, path2);
 }
-
+//
 /// helper
 bool fileCompare(String path1, String path2) {
   final f1 = new File(path1);
