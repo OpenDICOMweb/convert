@@ -17,13 +17,15 @@ void main() {
       final iterations = 1024 * 1;
       final wb = new WriteBuffer(startSize);
       log.debug('''
-iterations: $iterations')
- index: ${wb.wIndex}
- maxLength: ${wb.limit}
+iterations: $iterations
+  index: ${wb.wIndex}
+  length: ${wb.lengthInBytes}
+  maxLength: ${wb.limit}
 ''');
 
-      expect(wb.wIndex == startSize, true);
-      for (var i = 0; i < iterations - 1; i++) {
+      expect(wb.index == 0, true);
+      expect(wb.lengthInBytes == startSize, true);
+      for (var i = 0; i <= iterations - 1; i++) {
         final v = i % 127;
         wb.writeInt8(v);
       }
