@@ -11,6 +11,7 @@ void main() {
   Server.initialize(name: 'byte_date_writer.dart', level: Level.debug);
 
   group('ByteDataBuffer', () {
+
     test('Buffer Growing Test', () {
       final startSize = 1;
       final iterations = 1024 * 1;
