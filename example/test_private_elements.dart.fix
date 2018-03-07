@@ -1,0 +1,174 @@
+// Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
+// Use of this source code is governed by the open source license
+// that can be found in the LICENSE file.
+// Author: Jim Philbin <jfphilbin@gmail.edu> -
+// See the AUTHORS file for other contributors.
+//
+import 'package:convert/convert.dart';
+import 'package:core/core.dart';
+
+/// Simple [Element] test
+void main(List<String> args) {
+  testPublicElement();
+  /*
+  testPrivateGroupLength();
+  testPrivateIllegal();
+  testPrivateCreator();
+  testPrivateData();
+//AE ae = new AE(PTag.kReceivingApplicationEntityTitle, ["foo bar"]);
+//elementTest(ae, ["abc", "def"]);
+*/
+}
+
+bool writeReadElementTest<E>(TagElement<E> e0, [PrivateCreator pc]) {
+  log.debug('writeReadElement: $e0');
+  // Create Dataset DS0 and write E0
+  final rds0 = new TagRootDataset();
+  final writer0 = new TagWriter(rds0);
+  writer0.xWritePublicElement(e0);
+  final wIndex0 = writer0.index;
+  log.debug('wIndex0($wIndex0)');
+
+  // Now read the Dataset from the bytes.
+  final bytes = writer0.bytes;
+  log.debug('bytes: (${bytes.length})$bytes');
+  final rBuf0 = new BDReader(writer0.bytes);
+  log.debug('rBuf0: $rBuf0');
+
+  int rIndex0;
+  TagElement pc0;
+  TagElement e1;
+  if (e0.tag is PTag) {
+    e1 = rBuf0.xReadPublicElement();
+    log.debug('PTag: $e1');
+  } else if (e0.tag is PCTag) {
+    pc0 = rBuf0.xReadPrivateCreator();
+    log.debug('PCTag: $pc0');
+  } else if (e0.tag is PDTag) {
+    e1 = rBuf0.xReadPrivateData(pc0);
+    log.debug('PDTag: $e1');
+  } else if (e0.tag is PrivateGroupLengthTag) {
+    e1 = rBuf0.xReadPrivateData(pc0);
+    log.debug('PrivateGroupLengthTag: $e1');
+  } else if (e0.tag is PrivateTag) {
+    e1 = rBuf0.xReadPrivateData(pc0);
+    log.debug('PrivateTag.illegal: $e1');
+  }
+  rIndex0 = rBuf0.index;
+
+  // Now Compare the buffer index and the elements
+  if (wIndex0 != rIndex0) {
+    log.warn('Unequal: wIndex: $wIndex0, rIndex: $rIndex0');
+    return false;
+  }
+  if (e0 != e1) {
+    log.warn('Unequal: $e0, $e1');
+    return false;
+  }
+
+  final wBuf1 = new TagWriter.(lengthInBytes: 128);
+  wBuf1.xWritePublicElement(e1);
+  final wIndex1 = wBuf1.writeIndex;
+
+  // Now read the Dataset from the bytes.
+  final rBuf1 = new DcmReader.fromBytes(wBuf1.bytes);
+  final e2 = rBuf1.xReadPublicElement();
+  final rIndex1 = rBuf1.rIndex;
+
+  // Now Compare the buffer index and the elements
+  if (wIndex1 != rIndex1) {
+    log.warn('Unequal: wIndex: $wIndex1, rIndex: $rIndex1');
+    return false;
+  }
+  if (e1 != e2) {
+    log.warn('Unequal: $e1, $e2');
+    return false;
+  }
+  return true;
+}
+
+TagElement writeReadDataset<E>(TagRootDataset ds0, Element e0) {
+  final ds0 = new TagRootDataset.empty()..add(e0);
+  final wBuf0 = new TagWriter(ds0)..writeRootDataset();
+  TagElement<E> e;
+  //TODO: create Dataset DS2 and write E1
+
+  // Dataset rds1 = rBuf.readRootDataset()
+
+  return e;
+}
+
+/// Test Public Element
+void testPublicElement() {
+  var e0Tag = Tag.lookupByCode(0x00020000, kULIndex);
+  var e0 = new ULtag(e0Tag, [128]);
+  log.debug('e0: $e0');
+  var v = writeReadElementTest(e0);
+  log.debug('expect true: $v');
+
+  e0Tag = Tag.lookupByCode(0x00080000, kULIndex);
+  e0 = new ULtag(e0Tag, [128]);
+  log.debug('e0: $e0');
+  v = writeReadElementTest(e0);
+  log.debug('expect true: $v');
+}
+
+void testPrivateGroupLengthElement() {
+  final e0Tag = Tag.lookupByCode(0x00090000, kULIndex);
+  final e0 = new ULtag(e0Tag, [128]);
+  log.debug('e0: $e0');
+  final v = writeReadElementTest(e0);
+  log.debug('expect true: $v');
+}
+
+
+bool testPrivateGroupLength() {
+  // Create Element
+  final tag = new PrivateGroupLengthTag(0x00090000, kCSIndex);
+  final e0 = new ULtag(tag, [1024]);
+  //TODO: create Dataset DS0 and write E0
+  //      create writer
+  final rds0 = new TagRootDataset()
+  ..add(e0);
+  final writer0 = new TagWriter( rds0);
+  writer0.xWritePublicElement(e0);
+  // wBuf0.writeDataset(rds0);
+  final wIndex0 = writer0.wIndex;
+
+  // Read the Dataset from the bytes.
+  //TODO: create Dataset DS1
+  final reader0 = TagReader.fromBytes(writer0.bytes);
+  final e1 = reader0.xReadPublicElement();
+  final rds1 = reader0.readRootDataset()
+  final rIndex = reader0.rIndex;
+  if (wIndex0 != rIndex || e0 != e1) {
+    log.warn('Unequal: wIndex: $wIndex0, rIndex: $rIndex');
+    return false;
+  }
+  if (e0 != e1) {
+    log.warn('Unequal: $e0, $e1');
+  }
+  //TODO: create Dataset DS2 and write E1
+  final wBuf1 = new TagWriter(rds0);
+
+  wBuf1.xWritePublicElement(e0);
+  final wIndex1 = wBuf1.wIndex;
+  if (wIndex0 != wIndex1) return false;
+  return true;
+}
+
+bool testPrivateIllegal(){
+  bool v;
+
+  return v;
+}
+bool testPrivateCreator(){
+  bool v;
+
+  return v;
+}
+bool testPrivateData(){
+  bool v;
+
+  return v;
+}
