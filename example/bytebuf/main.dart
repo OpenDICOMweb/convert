@@ -7,10 +7,10 @@
 import 'dart:typed_data';
 
 void main() {
-  List<int> a = <int>[0, 1, 2, 3];
-  Uint8List b = new Uint8List.fromList(a);
-  Uint8List c = b.buffer.asUint8List(1);
-  Uint8List d = new Uint8List.view(c.buffer);
+  final a = <int>[0, 1, 2, 3];
+  final b = new Uint8List.fromList(a);
+  final c = b.buffer.asUint8List(1);
+  final d = new Uint8List.view(c.buffer);
 
   print(a);
   print(b);

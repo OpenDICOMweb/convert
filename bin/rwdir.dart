@@ -6,12 +6,12 @@
 
 import 'dart:io';
 
-import 'package:dcm_convert/tools.dart';
-import 'package:system/server.dart';
+import 'package:convert/tools.dart';
+import 'package:core/server.dart';
 
-//import 'package:dcm_convert/data/test_directories.dart';
+//import 'package:convert/data/test_directories.dart';
 
-/// [rwdir] is a fast correctness checker for the [convert] package.
+/// rwdir is a fast correctness checker for the convert package.
 ///
 /// It first reads and parshes a DICOM file into a buffer, writes it
 /// to a second buffer, and the does a byte by byte comparison of the two buffers.
@@ -23,7 +23,7 @@ void main(List<String> args) {
   Server.initialize(name: 'rwdir', level: Level.error);
 
   /// The processed arguments for this program.
-  var jobArgs = new JobArgs(args);
+  final jobArgs = new JobArgs(args);
 
   if (jobArgs.showHelp) showHelp(jobArgs);
 
@@ -33,14 +33,14 @@ void main(List<String> args) {
 
 /// The help message
 void showHelp(JobArgs jobArgs) {
-  var msg = '''
+  final msg = '''
 Usage: rwrdir <input-directory> [<options>]
 
 For each application/dicom file in the <directory> tree:
   1. Decodes (reads) the data in a byte array (file) into a Root Dataset [0]
   2. Encodes (writes) the Root Dataset into a new byte array
   3. Decodes (reads) the new bytes array (file) into a new Root Dataset [1]
-  4. It than compares the ElementLists, Datasets, and bytes arrays to 
+  4. It than compares the ElementOffsets, Datasets, and bytes arrays to 
     determine whether the writter and re-read Dataset and bytes are equivalent
     to the original byte array that was read in step 1.
     

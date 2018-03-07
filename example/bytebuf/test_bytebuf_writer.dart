@@ -6,10 +6,10 @@
 
 import 'dart:typed_data';
 
-import '../../lib/bytebuf.dart';
+//import 'package:core/core.dart';
 
 void main() {
-  ByteBuf buf = new ByteBuf();
+ // final rb = new WriteBuffer();
   /*
   var s = "aaaaaaa aaaaaaa aaaaaaa aaaaaaaab";
   print('s(${s.length}): $s');
@@ -20,15 +20,16 @@ void main() {
   print('t(${s.length}): $t');
   */
   //var l = [-1, -2, -3, -4];
-  List<int> list = <int>[0x01, 0x02, 0x03, 0x04];
+  final list = <int>[0x01, 0x02, 0x03, 0x04];
   print('List<int> list: $list');
-  Int32List list1 = new Int32List.fromList(list);
+  final list1 = new Int32List.fromList(list);
   print('Int32List list1: $list1');
 
-  buf.writeInt32List(list1);
+  // Fix
+//  rb.writeInt32List(list1);
 
-  Int32List list2 = buf.readInt32List(list.length);
-  print('list2: $list2');
+//  final list2 = rb.readInt32List(list.length);
+//  print('list2: $list2');
 
 /*
   List<int> uints = [0, 1, 2, 3, 4];

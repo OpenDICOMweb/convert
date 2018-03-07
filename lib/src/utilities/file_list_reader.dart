@@ -4,8 +4,10 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'package:system/core.dart';
-import 'package:dcm_convert/dcm.dart';
+import 'package:core/core.dart';
+import 'package:convert/convert.dart';
+
+// ignore_for_file: only_throw_errors, avoid_catches_without_on_clauses
 
 class FileListReader {
   List<String> paths;
@@ -18,7 +20,7 @@ class FileListReader {
   List<String> badTransferSyntax = [];
 
   FileListReader(this.paths,
-      {this.fmiOnly: false, this.throwOnError = false, this.printEvery = 100});
+      {this.fmiOnly: false, this.throwOnError = true, this.printEvery = 100});
 
   int get length => paths.length;
   int get successCount => successful.length;
@@ -26,38 +28,38 @@ class FileListReader {
   int get badTSCount => badTransferSyntax.length;
 
   List<String> get read {
-    int count = -1;
-    RootByteDataset rds;
-    int fileNoWidth = getFieldWidth(paths.length);
+    RootDataset rds;
+    final fileNoWidth = getFieldWidth(paths.length);
 
     bool success;
 
-    for (int i = 0; i < paths.length; i++) {
-      var path = cleanPath(paths[i]);
+    var count = -1;
+    for (var i = 0; i < paths.length; i++) {
+      final path = cleanPath(paths[i]);
+
       if (count++ % printEvery == 0) {
-        var n = getPaddedInt(count, fileNoWidth);
-        print('$n good($successCount), bad($failureCount)');
+        final i = getPaddedInt(count, fileNoWidth);
+        log.info('$i Reading: $path ');
       }
 
-      log.info0('$i Reading: $path ');
       try {
-        success = byteReadWriteFileChecked(path, i);
-//        log.info0('${rds.parseInfo}');
-//        log.info0('  Dataset: $rds');
+        success = byteReadWriteFileChecked(path, fileNumber: i);
         if (success == false) {
           failures.add('"$path "');
         } else {
           log.debug('Dataset: ${rds.info}');
           successful.add('"$path "');
         }
-      } on InvalidTransferSyntaxError catch (e) {
-        log.info0(e);
-        log.reset;
+      } on InvalidTransferSyntax catch (e) {
+        log
+          ..info0(e)
+          ..reset;
         badTransferSyntax.add(path);
       } catch (e) {
-        log.info0('Fail: $path ');
-        log.reset;
-        failures.add('"$path "');
+        log
+          ..info0('Fail: $path ')
+          ..reset;
+        failures.add('"$path"');
         //   log.info0('failures: ${failure.length}');
         if (throwOnError) throw 'Failed: $path ';
         continue;
@@ -65,17 +67,18 @@ class FileListReader {
       log.reset;
     }
 
-    log.info0('Files: $length');
-    log.info0('Success: $successCount');
-    log.info0('Failure: $failureCount');
-    log.info0('Bad TS : $badTSCount');
-    log.info0('Total: ${successCount + failureCount + badTSCount}');
-//  var good = success.join(',  \n');
-    var bad = failures.join(',  \n');
-    var badTS = badTransferSyntax.join(',  \n');
-//  log.info0('Good Files: [\n$good,\n]\n');
-    log.info0('bad Files($failureCount): [\n$bad,\n]\n');
-    log.info0('bad TS Files($badTSCount): [\n$badTS,\n]\n');
+    final bad = failures.join(',  \n');
+    final badTS = badTransferSyntax.join(',  \n');
+    //  var good = success.join(',  \n');
+    log
+      ..info0('Files: $length')
+      ..info0('Success: $successCount')
+      ..info0('Failure: $failureCount')
+      ..info0('Bad TS : $badTSCount')
+      ..info0('Total: ${successCount + failureCount + badTSCount}')
+      ..info0('bad Files($failureCount): [\n$bad,\n]\n')
+      ..info0('bad TS Files($badTSCount): [\n$badTS,\n]\n');
+    //  ..info0('Good Files: [\n$good,\n]\n');
 
     return failures;
   }

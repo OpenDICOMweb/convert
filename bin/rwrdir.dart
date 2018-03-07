@@ -6,10 +6,10 @@
 
 import 'dart:io';
 
-import 'package:dcm_convert/tools.dart';
-import 'package:system/server.dart';
+import 'package:convert/tools.dart';
+import 'package:core/server.dart';
 
-//import 'package:dcm_convert/data/test_directories.dart';
+//import 'package:convert/data/test_directories.dart';
 
 //TODO: improve performance
 //TODO: On error write the log file to dir/output/name.log where name if path
@@ -20,31 +20,36 @@ import 'package:system/server.dart';
 // TODO: print out the version numbers of the different packages.
 //TODO: better doc
 
-const defaultDirectory = 'C:/odw/test_data/sfd/MG';
+const String defaultDirectory = 'C:/odw/test_data/sfd/MG';
+const String mWeb1000 = 'C:/odw/test_data/mweb/1000+';
+
+final List<String> defaultArgs = ['$mWeb1000'];
 
 /// A program for doing read/write/read testing on DICOM files.
 void main(List<String> args) {
-  Server.initialize(name: 'read_write_file', level: Level.error);
+  Server.initialize(name: 'read_write_file', level: Level.info);
+
+  final xArgs =  (args.isEmpty) ? defaultArgs : args;
 
   /// The processed arguments for this program.
-  var jobArgs = new JobArgs(args);
+  final jobArgs = new JobArgs(xArgs);
 
   if (jobArgs.showHelp) showHelp(jobArgs);
 
-  JobRunner.job(jobArgs, doRWRByteFile,
+  JobRunner.job(jobArgs, doRWFile,
       interval: jobArgs.shortMsgEvery, level: jobArgs.baseLevel);
 }
 
 /// The help message
 void showHelp(JobArgs jobArgs) {
-  var msg = '''
+	final msg = '''
 Usage: rwrdir <input-directory> [<options>]
 
 For each application/dicom file in the <directory> tree:
   1. Decodes (reads) the data in a byte array (file) into a Root Dataset [0]
   2. Encodes (writes) the Root Dataset into a new byte array
   3. Decodes (reads) the new bytes array (file) into a new Root Dataset [1]
-  4. It than compares the ElementLists, Datasets, and bytes arrays to 
+  4. It than compares the ElementOffsets, Datasets, and bytes arrays to 
     determine whether the writter and re-read Dataset and bytes are equivalent
     to the original byte array that was read in step 1.
     

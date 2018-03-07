@@ -6,11 +6,10 @@
 
 import 'dart:io';
 
-import 'package:dcm_convert/tools.dart';
-import 'package:system/server.dart';
+import 'package:convert/tools.dart';
+import 'package:core/server.dart';
 
-//import 'package:dcm_convert/data/test_directories.dart';
-
+//import 'package:convert/data/test_directories.dart';
 
 //TODO: On error write the log file to dir/output/name.log where name if path
 // - dir (i.e. remove the prefix dir and replace with dir/output.
@@ -20,12 +19,21 @@ import 'package:system/server.dart';
 // TODO: print out the version numbers of the different packages.
 //TODO: better doc
 
+const String k6684 = 'C:/acr/odw/test_data/6684';
+const String k6688 = 'C:/acr/odw/test_data/6688';
+const String dir6684_2017_5 = 'C:/acr/odw/test_data/6684/2017/5/12/16/0EE11F7A';
+
 /// A program for doing read/write/read testing on DICOM files.
 void main(List<String> args) {
-  Server.initialize(name: 'read_write_file', level: Level.error, throwOnError: true);
+  Server.initialize(
+      name: 'read_write_file', level: Level.warn1, throwOnError: true);
 
   /// The processed arguments for this program.
-  JobArgs jobArgs = new JobArgs(args);
+  // final jobArgs = new JobArgs(args);
+
+  final jobArgs = new JobArgs([dir6684_2017_5]);
+
+  print('jobArgs: ${jobArgs.summary}');
 
   if (jobArgs.showHelp) showHelp(jobArgs);
 
@@ -35,7 +43,7 @@ void main(List<String> args) {
 
 /// The help message
 void showHelp(JobArgs jobArgs) {
-  var msg = '''
+  final msg = '''
 Usage: readdir <input-directory> [<options>]
 
 Tries to read each each file in the <directory> tree. If successful, infomation
