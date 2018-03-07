@@ -16,6 +16,7 @@ abstract class DatasetByGroup {
   bool hasPrivate;
   // A map that can contain PublicGroup or PrivateGroup
   Map<int, GroupBase> get groups;
+  Iterable<Element> get elements;
 
   int keyToIndex(int key) => key;
 
@@ -45,6 +46,9 @@ class RootDatasetByGroup extends MapRootDataset with DatasetByGroup {
   RootDatasetByGroup.empty([String path = '', ByteData bd, int fmiEnd = 0])
       : groups = <int, GroupBase>{},
         super.empty(path, bd, fmiEnd);
+
+  @override
+  void addGroup(GroupBase group) => groups[group.gNumber] = group;
 }
 
 /// A Dataset containing only private [Element]s or Sequences ([SQ])
@@ -61,10 +65,5 @@ class ItemByGroup extends MapItem with DatasetByGroup {
   int keyToIndex(int key) => key;
 
   @override
-  String get info {
-    final sb = new Indenter('$runtimeType: ${groups.length}')..down;
-    for (var group in groups.values) sb.writeln('${group.info}');
-    sb.up;
-    return '$sb';
-  }
+  void addGroup(GroupBase group) => groups[group.gNumber] = group;
 }

@@ -11,6 +11,8 @@ import 'dart:typed_data';
 import 'package:core/core.dart';
 import 'package:convert/src/json/reader/json_reader_base.dart';
 
+// ignore_for_file: only_throw_errors
+
 class JsonReader extends JsonReaderBase {
   final Map<String, Map<String, dynamic>> rootMap;
   @override

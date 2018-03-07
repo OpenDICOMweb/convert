@@ -10,19 +10,19 @@ import 'package:convert/src/utilities/dataset_by_group.dart';
 
 // ignore_for_file: only_throw_errors
 
-typedef Element _ElementFrom(Element e);
+//typedef Element _ElementFrom(Element e);
 
-typedef Element _ElementMaker<V>(Tag tag, List<V> values, int vrIndex,
-    [int vfLengthField]);
+//typedef Element _ElementMaker<V>(Tag tag, List<V> values, int vrIndex,
+//    [int vfLengthField]);
 
-typedef Item _ItemMaker(Dataset parent, SQ sq);
+//typedef Item _ItemMaker(Dataset parent, SQ sq);
 
 class DatasetConverterByGroup {
-  final RootDataset rSds;
-  final RootDataset rTds;
+  final RootDatasetByGroup rSds;
+  final RootDatasetByGroup rTds;
 
-  Dataset currentSds;
-  Dataset currentTds;
+  DatasetByGroup currentSds;
+  DatasetByGroup currentTds;
   int sIndex = 0;
   int tIndex = 0;
 
@@ -75,10 +75,10 @@ class DatasetConverterByGroup {
             ? new PublicGroup(gNumber)
             : new PrivateGroup(gNumber);
 
-        if (currentTds is ItemByGroup ) {
-          (currentTds as ItemByGroup).addGroup(currentGroup);
+        if (currentTds is DatasetByGroup ) {
+          currentTds.addGroup(currentGroup);
         } else if (currentTds is RootDatasetByGroup) {
-          (currentTds as RootDatasetByGroup).addGroup(currentGroup);
+          currentTds.addGroup(currentGroup);
         } else {
           throw 'bad dataset: $currentTds';
         }
@@ -165,8 +165,11 @@ class DatasetConverterByGroup {
     final parentTds = currentTds;
 
     for (var i = 0; i < sq.items.length; i++) {
-      currentSds = sq.items.elementAt(i);
-      currentTds = new ItemByGroup(currentTds);
+      final ItemByGroup sItem = sq.items.elementAt(i);
+      currentSds =  sItem;
+      final ItemByGroup cItem = currentTds;
+      final tItem = new ItemByGroup(cItem);
+      currentTds = tItem;
       log
         ..debug1('DS: $i')
         ..down;

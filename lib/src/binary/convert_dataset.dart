@@ -131,7 +131,8 @@ class DatasetConverter {
   }
 
   void convertItem(Item sourceItem, Item targetItem) {
-    var _currentGroup = 0;
+
+/*    var _currentGroup = 0;
     var _currentSubgroup = 0;
     Element _currentCreator;
     String _currentCreatorToken;
@@ -143,6 +144,7 @@ class DatasetConverter {
       if (te == null) throw 'null TE';
       targetItem.add(te);
     }
+ */
   }
 
   final Map<int, PCTag> pcTags = <int, PCTag>{};

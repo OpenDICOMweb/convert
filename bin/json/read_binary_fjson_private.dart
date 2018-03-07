@@ -67,11 +67,14 @@ Future main() async {
   print('tagRds0: ${tagRds0.format(z)}');
   log..debug('Converted tagRds0: $tagRds0')..debug(' ${tagRds0.summary}');
 
-  final converter = new DatasetConverterByGroup(bdRDS);
+//  final converter = new DatasetConverterByGroup(bdRDS);
+
+/*
   final privateRds = converter.findAll();
   log
     ..debug('privateRds: ${privateRds.format(z)}')
     ..debug('privateRds: ${privateRds.summary}');
+*/
 
   var count = 0;
   // Urgent: where not working

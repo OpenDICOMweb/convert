@@ -129,12 +129,12 @@ SQ convertSQ(SQ sq) {
 }
 
 void convertItem(Item sourceItem, Item targetItem) {
-  var _currentGroup = 0;
-  var _currentSubgroup = 0;
-  Element _currentCreator;
-  String _currentCreatorToken;
+  //var _currentGroup = 0;
+ // var _currentSubgroup = 0;
+//  Element _currentCreator;
+//  String _currentCreatorToken;
   for (var e in sourceItem.elements) {
-    final gNumber = e.group;
+//    final gNumber = e.group;
 
 //    log.debug('convert: $e');
     final te = convertElement(e);
