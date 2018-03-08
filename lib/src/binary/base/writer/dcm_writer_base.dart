@@ -131,7 +131,7 @@ abstract class DcmWriterBase<V> {
       wb
         ..writeUint32(kItem32BitLE)
         ..writeUint32(fragment.lengthInBytes)
-        ..write(fragment);
+        ..writeUint8List(fragment);
       // If odd length write padding byte
       if (fragment.length.isOdd) {
         log.warn('Odd length(${fragment.lengthInBytes}) fragment');

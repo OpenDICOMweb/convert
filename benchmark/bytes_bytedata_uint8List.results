@@ -1,0 +1,64 @@
+Uint8List
+[C0] minYear: 1900, minYearLimit: -144169
+[C0] maxYear:  2050, maxYearLimit:  148108
+[C0] log level:  Info0
+Uint8List Benchmark(Server V0.6.1): file:///C:/acr/odw/sdk/convert/benchmark/uint8List_benchmark.dart
+Uint8List length: 20917520
+Uint8List benchmark start: 0:00:00.000000
+  Read Uint8List Time: 0:00:03.775913
+  Read Uint8List Time: 0:00:01.639732
+  Read Uint8List Time: 0:00:01.699025
+  Read Uint8List Time: 0:00:01.652333
+  Read Uint8List Time: 0:00:01.662459
+  Read Uint8List Time: 0:00:01.733625
+  Read Uint8List Time: 0:00:01.697125
+  Read Uint8List Time: 0:00:01.677494
+  Read Uint8List Time: 0:00:01.642067
+  Read Uint8List Time: 0:00:01.661715
+  Read Uint8List Time: 0:00:01.669929
+Uint8List benchmark end: 0:00:20.511417, elapsed: 0:00:27.251435
+Template(RunTime): 23359000.0 us.
+
+ByteData
+Template(RunTime): 29152000.0 us.
+[C0] minYear: 1900, minYearLimit: -144169
+[C0] maxYear:  2050, maxYearLimit:  148108
+[C0] log level:  Info0
+ByteData Benchmark(Server V0.6.1): file:///C:/acr/odw/sdk/convert/benchmark/bytedata_benchmark.dart
+ByteData length: 20917520
+ByteData benchmark start: 0:00:00.000000
+  Read ByteData Time: 0:00:05.051133
+  Read ByteData Time: 0:00:02.116270
+  Read ByteData Time: 0:00:02.110932
+  Read ByteData Time: 0:00:02.064006
+  Read ByteData Time: 0:00:02.064693
+  Read ByteData Time: 0:00:02.067502
+  Read ByteData Time: 0:00:02.062666
+  Read ByteData Time: 0:00:02.095148
+  Read ByteData Time: 0:00:02.070042
+  Read ByteData Time: 0:00:02.063080
+  Read ByteData Time: 0:00:02.038935
+ByteData benchmark end: 0:00:25.804407, elapsed: 0:00:34.544296
+Template(RunTime): 29190000.0 us.
+
+Bytes
+[C0] minYear: 1900, minYearLimit: -144169
+[C0] maxYear:  2050, maxYearLimit:  148108
+[C0] log level:  Info0
+bytes_benchmark(Server V0.6.1): file:///C:/acr/odw/sdk/convert/benchmark/bytes_benchmark.dart
+Bytes length: 20917520
+Bytes benchmark start: 0:00:00.000000
+  Read Bytes Time: 0:00:05.038945
+  Read Bytes Time: 0:00:02.157192
+  Read Bytes Time: 0:00:02.187193
+  Read Bytes Time: 0:00:02.177390
+  Read Bytes Time: 0:00:02.190440
+  Read Bytes Time: 0:00:01.993997
+  Read Bytes Time: 0:00:01.596603
+  Read Bytes Time: 0:00:01.582319
+  Read Bytes Time: 0:00:02.052990
+  Read Bytes Time: 0:00:02.227549
+  Read Bytes Time: 0:00:02.216552
+ByteData benchmark end: 0:00:25.421170, elapsed: 0:00:36.080537
+Template(RunTime): 30860000.0 us.
+

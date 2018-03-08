@@ -9,7 +9,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
-//import 'package:dcm_convert/data/test_files.dart';
+import 'package:convert/data/test_files.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
@@ -54,7 +54,7 @@ const String bas = 'C:/acr/odw/test_data/mweb/100 MB Studies/1/S234611/15859368'
     '.fmt';
 //Urgent: bug with path20
 Future main() async {
-  Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
+  Server.initialize(name: 'ReadFile', level: Level.info, throwOnError: true);
 
   final fPath = f6684a;
 
@@ -63,15 +63,17 @@ Future main() async {
   final url = new Uri.file(fPath);
   stdout.writeln('Reading(byte): $url');
 
-  final bytes = readPath(fPath);
+/*
+  final bytes = readPath(fPath,);
   if (bytes == null) {
     log.error('"$fPath" either does not exist or is not a valid DICOM file');
     return;
   } else {
     stdout.writeln('  Length in bytes: ${bytes.lengthInBytes}');
   }
+*/
 
-  final rds = BDReader.readBytes(bytes, path: fPath, doLogging: true, showStats: true);
+  final rds = BDReader.readPath(fPath, doLogging: false, showStats: true);
   if (rds == null) {
     log.warn('Invalid DICOM file: $fPath');
   } else {

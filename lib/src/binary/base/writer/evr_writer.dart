@@ -170,7 +170,7 @@ abstract class EvrWriter<V> extends DcmWriterBase<V> {
 
   void _writeValueField(Element e, bool lengthIsOdd) {
     assert(wb.wIndex.isEven);
-    wb.write(e.vfBytes);
+    wb.writeUint8List(e.vfBytes);
     if (lengthIsOdd)
       _writePaddingChar(e);
     assert(wb.wIndex.isEven);

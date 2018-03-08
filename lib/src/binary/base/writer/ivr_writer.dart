@@ -111,7 +111,7 @@ abstract class IvrWriter<V> extends DcmWriterBase<V> {
   void _writeValueField(Element e, int padChar) {
     final bytes = e.vfBytes;
     assert(bytes.lengthInBytes.isEven);
-    wb.write(bytes);
+    wb.writeUint8List(bytes);
 /* Flush when working
     if (bytes.length.isOdd) {
       log.debug('Odd length VF: ${bytes.length}');

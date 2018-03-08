@@ -5,14 +5,15 @@
 // See the AUTHORS file for other contributors.
 
 import 'package:benchmark_harness/benchmark_harness.dart';
-import 'package:convert/convert.dart';
 import 'package:core/server.dart';
 
 import 'test_files.dart';
+// Import BenchmarkBase class.
 
-const String f6684a =
-    'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
-
+String path = ivrle;
+final Bytes bytes = Bytes.fromPath(path);
+int warmup = 4;
+int loops = 10;
 Timer timer;
 Duration time;
 
@@ -27,23 +28,25 @@ class TemplateBenchmark extends BenchmarkBase {
   // The benchmark code.
   @override
   void run() {
-    readFileTest(f6684a, reps: 20, fmiOnly: false);
+    time += readBytesTest(reps: 10);
   }
 
   // Not measured: setup code executed before the benchmark runs.
   @override
   void setup() {
-    Server.initialize(name: 'BDReader benchmark', level: Level.info);
+    Server.initialize(name: 'bytes_benchmark', level: Level.info);
+    print('Bytes length: ${bytes.lengthInBytes}');
     timer = new Timer();
-    print('BDReader benchmark start');
+    time = new Duration(minutes: 0);
+    print('Bytes benchmark start: $time');
   }
 
   // Not measured: teardown code executed after the benchmark runs.
   @override
   void teardown() {
     timer.stop();
-    final time = timer.elapsed;
-    print('BDReader benchmark end: $time');
+    final elapsed = timer.elapsed;
+    print('ByteData benchmark end: $time, elapsed: $elapsed');
   }
 }
 
@@ -53,13 +56,23 @@ void main() {
   TemplateBenchmark.main();
 }
 
-void readFileTest(String path, {int reps = 1, bool fmiOnly = false}) {
-	final bytes = Bytes.fromPath(path);
-  final timer = new Timer();
-  for (var i = 0; i < reps; i++) {
-    BDReader.readBytes(bytes, doLogging: false, showStats: true);
+Duration readBytesTest({int reps = 1}) {
+
+  for (var i = 0; i < warmup; i++)
+    for (var i = 0; i < bytes.length; i++) {
+      final n = bytes[i];
+      bytes[i] = n;
+    }
+
+  final timer = new Timer()..start();
+  for (var i = 0; i < loops; i++) {
+    for (var i = 0; i < bytes.length; i++) {
+      final n = bytes[i];
+      bytes[i] = n;
+    }
   }
   timer.stop();
-  print('readFileTest Time: ${timer.elapsed}');
 
+  print('  Read Bytes Time: ${timer.elapsed}');
+  return timer.elapsed;
 }
