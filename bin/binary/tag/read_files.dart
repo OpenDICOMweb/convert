@@ -12,10 +12,12 @@ import 'package:convert/data/test_files.dart';
 import 'package:convert/convert.dart';
 import 'package:convert/src/utilities/file_list_reader.dart';
 
+const String dir6684_2017_5 = 'C:/acr/odw/test_data/6684/2017/5';
+
 void main() {
   // readFile(path0);
 
-  readFiles(testEvrPaths);
+ // readFiles(dir6684_2017_5);
 }
 
 void readFile(String path) {

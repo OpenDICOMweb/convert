@@ -15,17 +15,19 @@ abstract class TagReaderMixin implements DcmReaderBase<int> {
   RootDataset get rds;
   @override
   Dataset get cds;
+  @override
+  Iterable<Element> get elements => cds.elements;
 
   Element makeTagElement(int code, int vrIndex, BDElement bd) =>
       TagElement.make(bd.tag, bd.values, vrIndex);
 
   Element makeTagPixelData(int code, int vrIndex, BDElement bd,
           [TransferSyntax ts, VFFragments fragments]) =>
-      null;
+      TagElement.make(code, vrIndex, bd, ts, fragments);;
 
   SQ makeTagSequence(
           int code, BDElement bd, Dataset parent, List<Item> items) =>
-      null;
+      TagElement.makeSequence(code, bd, parent, items);
 
   RootDataset makeTagRootDataset(String path, ByteData bd, int fmiEnd) =>
       new TagRootDataset.empty(path, bd, fmiEnd);

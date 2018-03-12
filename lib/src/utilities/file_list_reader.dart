@@ -57,7 +57,7 @@ class FileListReader {
         badTransferSyntax.add(path);
       } catch (e) {
         log
-          ..info0('Fail: $path ')
+          ..info0('$e\n  Fail: $path ')
           ..reset;
         failures.add('"$path"');
         //   log.info0('failures: ${failure.length}');

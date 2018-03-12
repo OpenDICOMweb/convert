@@ -6,7 +6,7 @@
 
 import 'dart:io';
 
-import 'package:core/core.dart';
+import 'package:core/server.dart';
 import 'package:path/path.dart' as p;
 import 'package:convert/convert.dart';
 
@@ -33,13 +33,13 @@ String hologic = 'C:/acr/odw/test_data/mweb/Hologic';
 
 String badDir0 = 'C:/acr/odw/test_data/mweb/100 MB Studies/MRStudy';
 String badDir1 = 'C:/acr/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop';
-
-Logger log = new Logger(' read_a_directory', Level.info);
+const String dir6684_2017_5 = 'C:/acr/odw/test_data/6684/2017/5';
 
 void main() {
+  Server.initialize(name: 'Tag Read Directory', level: Level.info, throwOnError: true);
   int fsEntityCount;
 
-  final dir = new Directory(mweb0);
+  final dir = new Directory(dir6684_2017_5);
 
   final fList = dir.listSync(recursive: true);
   fsEntityCount = fList.length;
@@ -50,7 +50,7 @@ void main() {
     if (fse is File) {
       final path = fse.path;
       final ext = p.extension(path);
-      if (ext == '.dcm') {
+      if (ext == '.dcm' || ext == '') {
         log.debug('File: $fse');
         files.add(fse);
       }
@@ -68,7 +68,7 @@ void main() {
 }
 
 void readFileList(List<File> files, {bool fmiOnly = false}) {
-  final printEvery = 25;
+  final printEvery = 5;
   int fsEntityCount;
   int successCount;
   int failureCount;

@@ -35,9 +35,7 @@ class EvrTagReader extends EvrReader<int> {
   EvrTagReader(ByteData bd, this.rds,
       {this.dParams = DecodingParameters.kNoChange, this.reUseBD = true})
       : rb = new ReadBuffer(bd),
-        cds = rds {
-    print('rds: $rds');
-  }
+        cds = rds;
 
   /// Creates a new [EvrTagReader].
   EvrTagReader.from(IvrTagReader reader)
@@ -45,21 +43,17 @@ class EvrTagReader extends EvrReader<int> {
         rds = reader.rds,
         dParams = reader.dParams,
         reUseBD = reader.reUseBD,
-        cds = reader.cds {
-    print('rds: $rds');
-  }
+        cds = reader.cds;
 
   /// Creates a new [EvrTagReader].
   EvrTagReader._(ByteData bd, this.rds, this.dParams, this.reUseBD)
       : rb = new ReadBuffer(bd),
-        cds = rds {
-    print('rds: $rds');
-  }
+        cds = rds;
 
   @override
   Item makeItem(Dataset parent, Map<int, Element> eMap,
           [SQ sequence, ByteData bd]) =>
-      new BDItem.fromBD(parent, eMap, sequence, bd);
+      new TagItem.fromList(parent, eMap.values, sequence);
 }
 
 /// A decoder for Binary DICOM (application/dicom).

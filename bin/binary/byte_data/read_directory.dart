@@ -39,11 +39,11 @@ void main() {
     final path = fse.path;
     final ext = p.extension(path);
     if (ext == '.dcm' || ext == '') {
-      log.debug('File: $fse');
+      log.debug1('$fse');
       files.add(fse.path);
     }
   }
-
+  
   final timer = new Timer();
   log.config('Reading ${files.length} files from ${dir.path}:');
   new FileListReader(files, fmiOnly: true, printEvery: 100)..read;

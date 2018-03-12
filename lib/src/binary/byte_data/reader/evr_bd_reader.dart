@@ -40,9 +40,7 @@ class EvrBDReader extends EvrReader<int> {
   /// Creates a new [EvrBDReader].
   EvrBDReader._(ByteData bd, this.rds, this.dParams, this.reUseBD)
       : rb = new ReadBuffer(bd),
-        cds = rds {
-    print('rds: $rds');
-  }
+        cds = rds;
 
   @override
   Item makeItem(Dataset parent, Map<int, Element> eMap,

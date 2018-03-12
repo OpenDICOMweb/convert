@@ -10,12 +10,15 @@ import 'package:convert/convert.dart';
 // This import contains a bunch of predefined paths
 import 'package:convert/data/test_files.dart';
 
+const String f6684a =
+    'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
 
 void main() {
   Server.initialize(name: 'ReadFile', level: Level.info, throwOnError: true);
 
-  final path = path1; //test6684_02;
+  final path = f6684a;
   log.info0('TagReader: $path');
-  final rds0 = TagReader.readPath(path);
+  final rds0 = TagReader.readPath(path, doLogging: true);
+  rds0.format(new Formatter.basic());
   log.info('${rds0.summary}');
 }
