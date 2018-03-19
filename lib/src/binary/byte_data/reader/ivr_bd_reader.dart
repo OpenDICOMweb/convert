@@ -4,8 +4,6 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:typed_data';
-
 import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/reader/debug/log_read_mixin.dart';
@@ -29,16 +27,16 @@ class IvrBDReader extends IvrReader<int> {
   Dataset cds;
 
   /// Creates a new [IvrBDReader].
-  IvrBDReader(ByteData bd, this.rds,
+  IvrBDReader(Bytes bytes, this.rds,
       {this.dParams = DecodingParameters.kNoChange, this.reUseBD = false})
-      : rb = new ReadBuffer(bd),
+      : rb = new ReadBuffer(bytes),
         cds = rds {
     print('rds: $rds');
   }
 
   /// Creates a new [EvrBDReader].
-  IvrBDReader._(ByteData bd, this.rds, this.dParams, this.reUseBD)
-      : rb = new ReadBuffer(bd),
+  IvrBDReader._(Bytes bytes, this.rds, this.dParams, this.reUseBD)
+      : rb = new ReadBuffer(bytes),
         cds = rds {
     print('rds: $rds');
   }
@@ -58,9 +56,9 @@ class IvrBDReader extends IvrReader<int> {
   List<Element> get elements => cds.elements;
 
   @override
-  Item makeItem(Dataset parent, Map<int, Element> eMap,
-          [SQ sequence, ByteData bd]) =>
-      new BDItem.fromBD(parent, eMap, sequence, bd);
+  Item makeItem(Dataset parent,
+          [SQ sequence, Map<int, Element> eMap, Bytes bd]) =>
+      new BDItem.fromBD(parent, sequence, eMap ?? <int, Element>{}, bd);
 }
 
 /// A decoder for Binary DICOM (application/dicom).
@@ -72,7 +70,7 @@ class IvrLoggingBDReader extends IvrBDReader with LogReadMixin {
   final ElementOffsets offsets;
 
   /// Creates a new [IvrLoggingBDReader].
-  IvrLoggingBDReader(ByteData bd, BDRootDataset rds,
+  IvrLoggingBDReader(Bytes bd, BDRootDataset rds,
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD = true})
       : pInfo = new ParseInfo(rds),

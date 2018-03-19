@@ -131,6 +131,7 @@ class TagConverter extends Converter {
   TagConverter._(this.sRds, this.tRds, this.doConvertUN)
       : pRds = new RootDatasetByGroup.empty();
 
+  // TODO: Tag tag to int code
   @override
   Element makeElement<V>(Tag tag, Iterable<V> values, int vrIndex,
           [int vfLengthField]) =>

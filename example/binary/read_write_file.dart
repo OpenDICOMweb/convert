@@ -16,7 +16,8 @@ void main() async {
 
   final inPath = cleanPath(k6684x0);
   log.info('path: $inPath');
-  stdout.writeln('Reading(byte): $inPath');
+  final length = new File(inPath).lengthSync();
+  stdout.writeln('Reading($length bytes): $inPath');
 
   final rds = BDReader.readPath(inPath, doLogging: false, showStats: true);
   if (rds == null) {

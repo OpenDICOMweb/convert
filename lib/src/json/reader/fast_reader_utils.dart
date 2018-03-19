@@ -15,7 +15,7 @@ Element readValueField(Tag tag, int vrIndex, Object vf) {
   if (vf is Uri) {
     values = new IntBulkdataRef(tag.code, vf);
   } else if (vrIndex >= kOBIndex && vrIndex <= kODIndex) {
-    values = BASE64.decode(vf).buffer.asUint8List();
+    values = base64.decode(vf).buffer.asUint8List();
   } else if (vf is List) {
     values = vf;
   }
@@ -42,7 +42,7 @@ Null _readSQ(Tag tag, int vrIndex, Iterable vf) => invalidElementIndex(vrIndex);
 OBtag _readOB(Tag tag, int vrIndex, Object vf) {
   assert(vrIndex == kOBIndex);
   dynamic values;
-  if (vf is String) {values = BASE64.decode(vf).buffer.asUint8List();
+  if (vf is String) {values = base64.decode(vf).buffer.asUint8List();
   } else
   if (vf is Uri) {
     values = new IntBulkdataRef(tag.code, vf);
@@ -60,7 +60,7 @@ OWtag _readOW(Tag tag, int vrIndex, Iterable vf) {
   final String key = vf.elementAt(0);
   final String value = vf.elementAt(1);
   if (key == 'InlineBinary')
-    return OWtag.make(tag, BASE64.decode(value).buffer.asUint8List());
+    return OWtag.make(tag, base64.decode(value).buffer.asUint8List());
 
   if (key == 'BulkDataURI') {
     final uri = new Uri.dataFromString(value);
@@ -79,7 +79,7 @@ UNtag _readUN(Tag tag, int vrIndex, Iterable vf) {
     final String key = vf.elementAt(0);
     final String value = vf.elementAt(1);
     if (key == 'InlineBinary') {
-      values = BASE64.decode(value).buffer.asUint8List();
+      values = base64.decode(value).buffer.asUint8List();
     } else if (key == 'BulkDataURI') {
       final uri = new Uri.dataFromString(value);
       values = new IntBulkdataRef(tag.code, uri);
@@ -95,7 +95,7 @@ OLtag _readOL(Tag tag, int vrIndex, Iterable vf) {
   final String key = vf.elementAt(0);
   final String value = vf.elementAt(1);
   if (key == 'InlineBinary')
-    return OLtag.fromUint8List(tag, BASE64.decode(value).buffer.asUint8List());
+    return OLtag.fromUint8List(tag, base64.decode(value).buffer.asUint8List());
   if (key == 'BulkDataURI')
     return OLtag.make(tag, new FloatBulkdataRef(tag.code, Uri.parse(value)));
   return invalidValuesError(vf);
@@ -106,7 +106,7 @@ OFtag _readOF(Tag tag, int vrIndex, Iterable vf) {
   final String key = vf.elementAt(0);
   final String value = vf.elementAt(1);
   if (key == 'InlineBinary')
-    return OFtag.fromUint8List(tag, BASE64.decode(value).buffer.asUint8List());
+    return OFtag.fromUint8List(tag, base64.decode(value).buffer.asUint8List());
 
   if (key == 'BulkDataURI')
     return OFtag.make(tag, new FloatBulkdataRef(tag.code, Uri.parse(value)));
@@ -119,7 +119,7 @@ ODtag _readOD(Tag tag, int vrIndex, Iterable vf) {
   final String key = vf.elementAt(0);
   final String value = vf.elementAt(1);
   if (key == 'InlineBinary')
-    return ODtag.fromUint8List(tag, BASE64.decode(value).buffer.asUint8List());
+    return ODtag.fromUint8List(tag, base64.decode(value).buffer.asUint8List());
   if (key == 'BulkDataURI')
     return ODtag.make(tag, new FloatBulkdataRef(tag.code, Uri.parse(value)));
   return invalidValuesError(vf);

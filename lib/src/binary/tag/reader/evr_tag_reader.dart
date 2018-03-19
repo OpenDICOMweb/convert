@@ -4,8 +4,6 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:typed_data';
-
 import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/reader/evr_reader.dart';
@@ -32,7 +30,7 @@ class EvrTagReader extends EvrReader<int> {
   Dataset cds;
 
   /// Creates a new [EvrTagReader].
-  EvrTagReader(ByteData bd, this.rds,
+  EvrTagReader(Bytes bd, this.rds,
       {this.dParams = DecodingParameters.kNoChange, this.reUseBD = true})
       : rb = new ReadBuffer(bd),
         cds = rds;
@@ -46,14 +44,14 @@ class EvrTagReader extends EvrReader<int> {
         cds = reader.cds;
 
   /// Creates a new [EvrTagReader].
-  EvrTagReader._(ByteData bd, this.rds, this.dParams, this.reUseBD)
+  EvrTagReader._(Bytes bd, this.rds, this.dParams, this.reUseBD)
       : rb = new ReadBuffer(bd),
         cds = rds;
 
   @override
-  Item makeItem(Dataset parent, Map<int, Element> eMap,
-          [SQ sequence, ByteData bd]) =>
-      new TagItem.fromList(parent, eMap.values, sequence);
+  Item makeItem(Dataset parent,
+          [SQ sequence, Map<int, Element> eMap, Bytes bd]) =>
+      new TagItem(parent, eMap ?? <int, Element>{}, sequence);
 }
 
 /// A decoder for Binary DICOM (application/dicom).
@@ -65,7 +63,7 @@ class EvrLoggingTagReader extends EvrTagReader with LogReadMixin {
   final ElementOffsets offsets;
 
   /// Creates a new [EvrLoggingTagReader].
-  EvrLoggingTagReader(ByteData bd, TagRootDataset rds,
+  EvrLoggingTagReader(Bytes bd, TagRootDataset rds,
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD = true})
       : pInfo = new ParseInfo(rds),

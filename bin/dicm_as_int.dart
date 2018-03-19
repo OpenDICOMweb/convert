@@ -6,11 +6,10 @@
 
 
 import 'dart:convert';
-import 'dart:typed_data';
 
 void main(List<String> args) {
-	final token = 'DICM';
-	final Uint8List bytes = ASCII.encode(token);
+	const token = 'DICM';
+	final bytes = ascii.encode(token);
 	final bd = bytes.buffer.asByteData();
 	final v = bd.getUint32(0);
 	final s = v.toRadixString(16).padLeft(8, '0');

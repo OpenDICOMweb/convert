@@ -118,7 +118,7 @@ class DatasetConverter {
     final parentTDS = currentTDS;
     for (var i = 0; i < sq.items.length; i++) {
       currentSDS = sq.items.elementAt(i);
-      currentTDS = new TagItem.empty(parentTDS, sq, currentSDS.dsBytes.bd);
+      currentTDS = new TagItem.empty(parentTDS, sq, currentSDS.dsBytes.bytes);
       convertItem(currentSDS, currentTDS);
       tItems[i] = currentTDS;
     }
@@ -149,6 +149,7 @@ class DatasetConverter {
 
   final Map<int, PCTag> pcTags = <int, PCTag>{};
 
+/*
 // TODO: integrate this into /dictionary/tag
   int _pcCodeFromPDCode(int pdCode) {
     final group = Tag.toGroup(pdCode);
@@ -157,6 +158,7 @@ class DatasetConverter {
     final pcCode = (group << 16) + cElt;
     return pcCode;
   }
+*/
 
   void _warnVRIndex(Element e) {
     final vrIndex = e.vrIndex;

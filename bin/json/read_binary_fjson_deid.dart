@@ -47,7 +47,7 @@ Formatter z = new Formatter(maxDepth: -1);
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug, throwOnError: true);
 
-  final fPath = k6684x0;
+  const fPath = k6684x0;
   final z = new Formatter.basic();
 
   print('path: $fPath');
@@ -89,7 +89,7 @@ Future main() async {
   }
 
   print(z.fmt('FMI: ${bdRds.fmi.length}', bdRds.fmi.elements));
-  final outPath = 'out.json';
+  const outPath = 'out.json';
   final writer0 = new FastJsonWriter(bdRds, outPath, separateBulkdata: true);
   final out = writer0.write();
   await new File(outPath).writeAsString(out);
@@ -136,7 +136,7 @@ Future main() async {
   print('tagRDS Summary after Uid replacement: ${tagRds.summary}');
 
   print(z.fmt('tagRds: ${tagRds.elements.length}', tagRds.elements));
-  final deIdPath = 'deid.json';
+  const deIdPath = 'deid.json';
   final writer1 = new FastJsonWriter(tagRds, deIdPath, separateBulkdata: true);
   final deid = writer1.write();
   print('  Length: ${deid.length} bytes ${deid.length ~/ 1024}K');

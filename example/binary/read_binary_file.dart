@@ -24,7 +24,8 @@ Future main() async {
       showSdkBanner: true);
 
   final inPath = cleanPath(k6684x0);
-  stdout.writeln('Reading(binary): $inPath');
+  final fLength = new File(inPath).lengthSync();
+  stdout.writeln('Reading($fLength bytes): $inPath');
 
   final rds = BDReader.readPath(inPath, doLogging: true, showStats: true);
 

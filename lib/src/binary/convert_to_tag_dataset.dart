@@ -87,12 +87,14 @@ Element _convertSimpleElement(Element e) {
       : TagElement.from(e, e.vrIndex);
 }
 
+/*
 Element _convertMaybeUndefinedElement(Element e) {
   if (e.vrIndex > 30) throw 'bad e.vr: ${e.vrIndex}';
   return (e.tag == PTag.kPixelData)
       ? TagElement.pixelDataFrom(e, sourceRDS.transferSyntax, e.vrIndex)
       : TagElement.from(e, e.vrIndex);
 }
+*/
 
 const int kDefaultCount = 5;
 
@@ -116,7 +118,7 @@ SQ convertSQ(SQ sq) {
   final parentTDS = currentTDS;
   for (var i = 0; i < sq.items.length; i++) {
     currentSDS = sq.items.elementAt(i);
-    currentTDS = new TagItem.empty(parentTDS, sq, currentSDS.dsBytes.bd);
+    currentTDS = new TagItem.empty(parentTDS, sq, currentSDS.dsBytes.bytes);
     convertItem(currentSDS, currentTDS);
     tItems[i] = currentTDS;
   }
@@ -145,6 +147,7 @@ void convertItem(Item sourceItem, Item targetItem) {
 
 final Map<int, PCTag> pcTags = <int, PCTag>{};
 
+/*
 // TODO: integrate this into /dictionary/tag
 int _pcCodeFromPDCode(int pdCode) {
   final group = Tag.toGroup(pdCode);
@@ -153,6 +156,7 @@ int _pcCodeFromPDCode(int pdCode) {
   final pcCode = (group << 16) + cElt;
   return pcCode;
 }
+*/
 
 void _warnVRIndex(Element e) {
   final vrIndex = e.vrIndex;

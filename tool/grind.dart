@@ -118,7 +118,7 @@ void buildRelease() {
 //@Depends(init)
 void compile() {
   log('Dart Dev Compiler: Compiling...');
-  final dartDevCOutPath = 'dart_dev_output';
+  const dartDevCOutPath = 'dart_dev_output';
   final dartDevCOutputDir = new Directory(dartDevCOutPath);
   new DevCompiler().compile('lib', dartDevCOutputDir);
 }

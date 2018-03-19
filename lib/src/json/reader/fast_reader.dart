@@ -20,8 +20,8 @@ class FastJsonReader extends JsonReaderBase {
   @override
   Dataset cds;
 
-  FastJsonReader(String json)
-      : rootList = JSON.decode(json),
+  FastJsonReader(String s)
+      : rootList = json.decode(s),
         rds = new TagRootDataset.empty();
 
   List get fmiList => rootList[0];
@@ -92,10 +92,10 @@ class FastJsonReader extends JsonReaderBase {
       if (vrIndex == kLOIndex) {
         name = values[0];
       } else if (vrIndex == kUNIndex) {
-        name = ASCII.decode(values);
+        name = ascii.decode(values);
       } else {
         if (values is Uint8List) {
-          name = ASCII.decode(values);
+          name = ascii.decode(values);
         } else {
           throw 'PCTag with token: $values';
         }
@@ -104,12 +104,12 @@ class FastJsonReader extends JsonReaderBase {
       privateCreatorsMap[Tag.pcSubgroup(code)] = name;
       tag = PCTag.make(code, vrIndex, name);
       knownPrivateCreators[code] = tag;
-      return readElement(tag, [name], vrIndex);
+      return readElement(code, [name], vrIndex);
     } else {
       print('entry: $entry');
       throw 'error';
     }
-    return readElement(tag, values, vrIndex);
+    return readElement(code, values, vrIndex);
   }
 
   Object readValueField(List vField) {
@@ -117,7 +117,7 @@ class FastJsonReader extends JsonReaderBase {
     if (vField.length <2) return vField;
     final Object key = vField[0];
     final Object value = vField[1];
-    if (key == 'InlineBinary') return BASE64.decode(value);
+    if (key == 'InlineBinary') return base64.decode(value);
     if (key == 'BulkDataUrl') return value;
     return vField;
   }
@@ -125,14 +125,15 @@ class FastJsonReader extends JsonReaderBase {
 
   @override
   Element readSimpleElement(
-      Tag tag,
+      int code,
       Object value,
       int vrIndex,
       ) =>
-      TagElement.make(tag, value, vrIndex);
+      TagElement.make(Tag.lookupByCode(code, vrIndex, value), value, vrIndex);
 
   @override
-  SQ readSequence(Tag tag, Iterable entries, int vrIndex) {
+  SQ readSequence(int code, Iterable entries, int vrIndex) {
+    final tag = Tag.lookupByCode(code, vrIndex);
     if (vrIndex == kSQIndex &&
         (tag.vrIndex == kSQIndex || tag.vrIndex == kUNIndex)) {
       final length = entries.length;

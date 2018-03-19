@@ -4,13 +4,11 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:typed_data';
-
 import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/reader/dcm_reader_base.dart';
 
-abstract class BDReaderMixin implements DcmReaderBase<int> {
+abstract class BDReaderMixin implements DcmReaderBase {
   @override
   RootDataset get rds;
   @override
@@ -18,35 +16,36 @@ abstract class BDReaderMixin implements DcmReaderBase<int> {
   @override
   Iterable<Element> get elements => cds.elements;
 
-  BDElement makeElementFromBD(int code, int vrIndex, ByteData bd) =>
-      EvrElement.make(code, vrIndex, bd);
+  @override
+  BDElement makeFromBytes(int code, Bytes bd, int vrIndex) =>
+      EvrElement.make(code, bd, vrIndex);
+
+  @override
+  BDElement makeFromValues<V>(int code, List<V> values, int vrIndex,
+          [Bytes bd]) =>
+      unsupportedError();
 
   Element makeElementFromList(int code, int vrIndex, Iterable values) {
-    final tag = Tag.lookupByCode(code);
+    final tag = Tag.lookupByCode(code, vrIndex, values);
     return TagElement.make(tag, values, vrIndex);
   }
 
   @override
-  BDElement makePixelData(int code, int vrIndex, ByteData bd,
+  BDElement makePixelData(int code, Bytes bd, int vrIndex,
           [TransferSyntax ts, VFFragments fragments]) =>
-      EvrElement.makePixelData(code, vrIndex, bd, ts, fragments);
+      EvrElement.makePixelData(code, bd, vrIndex, ts, fragments);
 
   /// Returns a new Sequence ([SQ]).
   @override
-  SQ makeSequence(
-          int code, ByteData bd, Dataset parent, Iterable<Item> items) =>
-      EvrElement.makeSequence(code, bd, parent, items);
+  SQ makeSequence(int code, Dataset parent, Iterable<Item> items, [Bytes bd]) =>
+      EvrElement.makeSequence(code, parent, items, bd);
 
   RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
-          ByteData bd, int fmiEnd) =>
+          Bytes bd, int fmiEnd) =>
       new BDRootDataset(fmi, eMap, path, bd, fmiEnd);
 
   @override
-  Item makeItem(
-    Dataset parent,
-    Map<int, Element> eMap, [
-    SQ sequence,
-    ByteData bd,
-  ]) =>
-      new BDItem(parent, eMap, sequence, bd);
+  Item makeItem(Dataset parent,
+          [SQ sequence, Map<int, Element> eMap, Bytes bd]) =>
+      new BDItem(parent, sequence, eMap ?? <int, Element>{}, bd);
 }

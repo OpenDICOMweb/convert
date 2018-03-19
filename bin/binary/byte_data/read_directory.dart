@@ -23,14 +23,15 @@ const String k6688 = 'C:/acr/odw/test_data/6688';
 const String dir6684_2017_5 = 'C:/acr/odw/test_data/6684/2017/5';
 
 void main() {
-  Server.initialize(name: 'read_write_file', level: Level.debug);
+  Server.initialize(
+      name: 'read_write_file', level: Level.debug, throwOnError: true);
 
   /// *** Change directory path name here
-  final path = dir6684_2017_5;
+  const path = dir6684_2017_5;
   final dir = new Directory(path);
   final fList = dir.listSync(recursive: true);
   final fsEntityCount = fList.length;
-  print('List: $fsEntityCount');
+  print('List length: $fsEntityCount');
   log.debug('FSEntity count: $fsEntityCount');
 
   final files = <String>[];
@@ -43,9 +44,9 @@ void main() {
       files.add(fse.path);
     }
   }
-  
+
   final timer = new Timer();
   log.config('Reading ${files.length} files from ${dir.path}:');
-  new FileListReader(files, fmiOnly: true, printEvery: 100)..read;
+  new FileListReader(files, fmiOnly: false, throwOnError: throwOnError, printEvery: 1)..read;
   log.config('Elapsed time: ${timer.elapsed}');
 }

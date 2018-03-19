@@ -26,7 +26,7 @@ Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug2, throwOnError: true);
   // for (var i = 0; i < 1; i++) {
   for (var i = 0; i < testPaths2.length; i++) {
-    final fPath = k6684x0;
+    const fPath = k6684x0;
 
     print('$i: path: $fPath');
     print(' out: ${getTempFile(fPath, 'dcmout')}');

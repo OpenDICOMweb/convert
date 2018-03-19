@@ -68,7 +68,7 @@ void main() {
 }
 
 void readFileList(List<File> files, {bool fmiOnly = false}) {
-  final printEvery = 5;
+  const printEvery = 5;
   int fsEntityCount;
   int successCount;
   int failureCount;

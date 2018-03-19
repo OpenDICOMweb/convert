@@ -22,9 +22,11 @@ abstract class JsonReaderBase {
   Dataset get cds;
   set cds(Dataset ds);
   RootDataset readRootDataset();
+
   void readItem(SQ sequence, Item item, Iterable entries);
-  SQ readSequence(Tag tag, Iterable entries, int vrIndex);
-  Element readSimpleElement(Tag tag, Object value, int vrIndex);
+
+  SQ readSequence(int code, Iterable entries, int vrIndex);
+  Element readSimpleElement(int code, Object value, int vrIndex);
 //  Element readEntry(Object entry);
 
   // **** End Interface
@@ -36,14 +38,15 @@ abstract class JsonReaderBase {
       readItem(sq, sq.items.elementAt(i), itemList.elementAt(i).entries);
   }
 
-  Element readElement(Tag tag, Object values, int vrIndex) {
+  Element readElement(int code, Object values, int vrIndex) {
+    final tag = Tag.lookupByCode(code, vrIndex);
     if (tag.vrIndex != vrIndex) {
       log.warn('vrIndex($vrIndex) != tag.vrIndex(${tag.vrIndex}');
     }
     if (vrIndex == kSQIndex) {
-      return readSequence(tag, values, vrIndex);
+      return readSequence(code, values, vrIndex);
     } else {
-      return readSimpleElement(tag, values, vrIndex);
+      return readSimpleElement(code, values, vrIndex);
     }
   }
 }

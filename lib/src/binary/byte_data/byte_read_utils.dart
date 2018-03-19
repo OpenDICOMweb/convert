@@ -22,7 +22,7 @@ String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 final Formatter format = new Formatter();
 
 bool byteReadWriteFileChecked(String path,
-    {int fileNumber, int width = 5, bool fast = true}) {
+    {int fileNumber, int width = 5, bool fast = true, bool doLogging = false}) {
   var success = true;
   final n = getPaddedInt(fileNumber, width);
   final pad = ''.padRight(width);
@@ -31,7 +31,7 @@ bool byteReadWriteFileChecked(String path,
 
   final f = new File(fPath);
   try {
-    final reader0 = new BDReader.fromFile(f);
+    final reader0 = new BDReader.fromFile(f, doLogging: doLogging);
     final rds0 = reader0.readRootDataset();
     final bytes0 = reader0.rb.bytes;
     log.info('$n:   length: ${bytes0.lengthInBytes}');
@@ -44,19 +44,27 @@ bool byteReadWriteFileChecked(String path,
     BDWriter writer;
     if (fast) {
       // Just write bytes not file
-      writer = new BDWriter(rds0, inputOffsets: reader0.offsets);
+      log.debug('  Writing (${rds0.lengthInBytes} bytes');
+      writer = new BDWriter(rds0,
+          inputOffsets: reader0.offsets, doLogging: doLogging);
     } else {
-      writer = new BDWriter.toPath(rds0, outPath, inputOffsets: reader0.offsets);
+      log.debug('  Writing (${rds0.lengthInBytes} bytes) to: $outPath');
+      writer = new BDWriter.toPath(rds0, outPath,
+          inputOffsets: reader0.offsets, doLogging: doLogging);
     }
     final bytes1 = writer.writeRootDataset();
-    log.debug('Bytes written: offset(${bytes1.offsetInBytes}) '
+
+    log.debug('  Bytes written: offset(${bytes1.offsetInBytes}) '
         'length(${bytes1.lengthInBytes})\n');
 
     BDReader reader1;
     if (fast) {
       // Just read bytes not file
-      reader1 = new BDReader(new ReadBuffer.fromBytes(bytes1));
+      log.debug('  Reading (${bytes1.lengthInBytes} bytes');
+      reader1 = new BDReader(new ReadBuffer(bytes1));
     } else {
+      log.debug(
+          '  Reading (${new File(outPath).lengthSync()} bytes) from: $outPath');
       reader1 = new BDReader.fromPath(outPath);
     }
     final rds1 = reader1.readRootDataset();
@@ -120,7 +128,8 @@ BDRootDataset readFileTimed(File file,
   timer.stop();
 //  log.debug('   read ${bytes.length} bytes in ${timer.elapsedMicroseconds}us');
 
-  if (bytes.length < 1024) log.warn('***** Short file length(${bytes.length}): $path');
+  if (bytes.length < 1024)
+    log.warn('***** Short file length(${bytes.length}): $path');
 
   RootDataset rds;
   timer.start();
@@ -150,7 +159,10 @@ BDRootDataset readFMI(Uint8List bytes, [String path = '']) =>
     BDReader.readTypedData(bytes, path: path);
 
 Bytes writeTimed(BDRootDataset rds,
-    {String path = '', bool fast = true, bool fmiOnly = false, TransferSyntax targetTS}) {
+    {String path = '',
+    bool fast = true,
+    bool fmiOnly = false,
+    TransferSyntax targetTS}) {
   final timer = new Stopwatch();
   final timestamp = new Timestamp();
   final total = rds.total;

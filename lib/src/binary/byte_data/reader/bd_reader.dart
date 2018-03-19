@@ -32,6 +32,7 @@ class BDReader {
   /// Creates a new [BDReader], which is decoder for Binary
   /// DICOM (application/dicom).
   BDReader(this.rb,
+      // Urgent fix: rds is always null
       {this.rds,
       this.path = '',
       this.dParams = DecodingParameters.kNoChange,
@@ -40,9 +41,9 @@ class BDReader {
       this.showStats = false})
       : _evrReader = (doLogging)
             ? new EvrLoggingBDReader(
-                rb.bd, new BDRootDataset.empty(path, rb.bd),
+                rb.bytes, new BDRootDataset.empty(path, rb.bytes),
                 dParams: dParams, reUseBD: reUseBD)
-            : new EvrBDReader(rb.bd, new BDRootDataset.empty(path, rb.bd),
+            : new EvrBDReader(rb.bytes, new BDRootDataset.empty(path, rb.bytes),
                 dParams: dParams, reUseBD: reUseBD);
 
   /// Creates a [BDReader] from the contents of the [uint8List].
@@ -52,7 +53,7 @@ class BDReader {
           bool reUseBD = true,
           bool doLogging = false,
           bool showStats = false}) =>
-      new BDReader(new ReadBuffer.fromBytes(bytes),
+      new BDReader(new ReadBuffer(bytes),
           path: path,
           dParams: dParams,
           reUseBD: reUseBD,
@@ -121,7 +122,7 @@ class BDReader {
   ElementOffsets get offsets => _evrReader.offsets;
 
   bool isFmiRead = false;
-  int readFmi() => _evrReader.readFmi();
+  int readFmi(int eStart) => _evrReader.readFmi(eStart);
 
   IvrBDReader __ivrReader;
   IvrBDReader get _ivrReader => __ivrReader ??= (doLogging)
@@ -130,13 +131,13 @@ class BDReader {
 
   BDRootDataset readRootDataset() {
     var fmiEnd = -1;
-    if (!isFmiRead) fmiEnd = readFmi();
+    if (!isFmiRead) fmiEnd = readFmi(0);
 
     final ds = (_evrReader.rds.transferSyntax.isEvr)
         ? _evrReader.readRootDataset(fmiEnd)
         : _ivrReader.readRootDataset(fmiEnd);
 
-    if (showStats) _evrReader.rds.summary;
+    if (showStats) _evrReader.  rds.summary;
     return ds;
   }
 
@@ -163,7 +164,7 @@ class BDReader {
       bool reUseBD = true,
       bool doLogging = false,
       bool showStats = false}) {
-    assert(bytes is Uint8List || bytes is ByteData);
+    assert(bytes is Uint8List || bytes is Bytes);
     final reader = new BDReader.fromTypedData(bytes,
         path: path,
         dParams: dParams,

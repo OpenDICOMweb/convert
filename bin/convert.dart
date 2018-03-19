@@ -30,7 +30,7 @@ void main(List<String> args) {
 
   system.log.level = jobArgs.baseLevel;
   // Short circuiting args for testing
-  final pathList = [path0];
+  final pathList = [path1];
 
   TagRootDataset rds;
   for (var path in pathList) {

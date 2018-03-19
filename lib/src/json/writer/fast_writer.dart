@@ -91,13 +91,13 @@ class FastJsonWriter extends JsonWriterBase {
       sb.write('[${e.values.join(', ')}]');
 
   static void _writeOtherFloat(Element e, Indenter sb) =>
-      sb.write('["InlineBinary", "${BASE64.encode(e.vfBytes)}"]');
+      sb.write('["InlineBinary", "${base64.encode(e.vfBytes)}"]');
 
   static void _writeInt(Element e, Indenter sb) => sb.write('[${e.values.join
     (', ')}]');
 
   static void _writeOtherInt(Element e, Indenter sb) =>
-      sb.write('["InlineBinary", "${BASE64.encode(e.vfBytes)}"]');
+      sb.write('["InlineBinary", "${base64.encode(e.vfBytes)}"]');
 
   static void _writeText(Element e, Indenter sb) => sb.write('["${e.value}"]');
 

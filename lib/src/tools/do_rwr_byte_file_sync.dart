@@ -30,8 +30,8 @@ bool doRWRByteFileSync(File f, {bool fast = true, bool noisy = false}) {
       return false;
     }
     if (rds0.pInfo == null) throw 'Bad File - No ParseInfo: $f';
-    final bd0 = reader0.rb.asByteData();
-    log.debug('''$pad  Read ${bd0.lengthInBytes} bytes
+    final bytes0 = reader0.rb.asBytes();
+    log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');
     if (rds0.pInfo != null) log.debug('$pad    ${rds0.pInfo.summary(rds0)}');
@@ -61,8 +61,8 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       writer = new BDWriter.toPath(rds0, outPath);
     }
-    final bd1 = writer.writeRootDataset();
-    log.debug('$pad    Encoded ${bd1.lengthInBytes} bytes');
+    final bytes1 = writer.writeRootDataset();
+    log.debug('$pad    Encoded ${bytes1.lengthInBytes} bytes');
 
     if (noisy) {
       final wOffsets = writer.outputOffsets;
@@ -73,12 +73,12 @@ $pad    TS: ${rds0.transferSyntax}''');
     }
 
     if (!fast) {
-      log.debug('Re-reading: ${bd1.lengthInBytes} bytes');
+      log.debug('Re-reading: ${bytes1.lengthInBytes} bytes');
     } else {
-      log.debug('Re-reading: ${bd1.lengthInBytes} bytes from $outPath');
+      log.debug('Re-reading: ${bytes1.lengthInBytes} bytes from $outPath');
     }
     final reader1 =
-        (fast) ? new BDReader.fromBytes(bd1) : new BDReader.fromPath(outPath);
+        (fast) ? new BDReader.fromBytes(bytes1) : new BDReader.fromPath(outPath);
 
     final rds1 = reader1.readRootDataset();
     log
@@ -140,7 +140,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
-      final same = byteDataEqual(bd0, bd1.bd);
+      final same = bytesEqual(bytes0, bytes1);
       if (same == true) {
         log.debug('$pad Files bytes are identical.');
       } else {

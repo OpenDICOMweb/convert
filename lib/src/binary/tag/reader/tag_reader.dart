@@ -38,9 +38,9 @@ class TagReader {
       this.showStats = false})
       : _evrReader = (doLogging)
             ? new EvrLoggingTagReader(
-                rb.bd, new TagRootDataset.empty(path, rb.bd),
+                rb.bytes, new TagRootDataset.empty(path, rb.bytes),
                 dParams: dParams, reUseBD: reUseBD)
-            : new EvrTagReader(rb.bd, new TagRootDataset.empty(path, rb.bd),
+            : new EvrTagReader(rb.bytes, new TagRootDataset.empty(path, rb.bytes),
                 dParams: dParams, reUseBD: reUseBD);
 
   /// Creates a [TagReader] from the contents of the [bytes].
@@ -50,7 +50,7 @@ class TagReader {
           bool reUseBD = true,
           bool doLogging = true,
           bool showStats = false}) =>
-      new TagReader(new ReadBuffer.fromBytes(bytes),
+      new TagReader(new ReadBuffer(bytes),
           path: path,
           dParams: dParams,
           reUseBD: reUseBD,
@@ -119,7 +119,7 @@ class TagReader {
   ElementOffsets get offsets => _evrReader.offsets;
 
   bool isFmiRead = false;
-  int readFmi() => _evrReader.readFmi();
+  int readFmi() => _evrReader.readFmi(rb.index);
 
   IvrTagReader __ivrReader;
   IvrTagReader get _ivrReader => __ivrReader ??= (doLogging)
@@ -163,7 +163,7 @@ class TagReader {
       bool reUseBD = true,
       bool doLogging = false,
       bool showStats = false}) {
-    assert(bytes is Uint8List || bytes is ByteData);
+    assert(bytes is Uint8List || bytes is Bytes);
     final reader = new TagReader.fromTypedData(bytes,
         path: path,
         dParams: dParams,

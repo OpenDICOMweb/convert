@@ -17,6 +17,6 @@ import 'package:convert/src/utilities/decoding_parameters.dart';
 /// Creates a new [EvrReader]  where [rb].rIndex = 0.
 abstract class LogEvrReader extends EvrReader with LogReadMixin {
   LogEvrReader(
-      ByteData bd, RootDataset rds, String path, DecodingParameters dParams, bool reUseBD)
+      Bytes bd, RootDataset rds, String path, DecodingParameters dParams, bool reUseBD)
       : super(bd, rds, path, dParams, reUseBD);
 }

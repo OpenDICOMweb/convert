@@ -111,18 +111,7 @@ abstract class IvrWriter<V> extends DcmWriterBase<V> {
   void _writeValueField(Element e, int padChar) {
     final bytes = e.vfBytes;
     assert(bytes.lengthInBytes.isEven);
-    wb.writeUint8List(bytes);
-/* Flush when working
-    if (bytes.length.isOdd) {
-      log.debug('Odd length VF: ${bytes.length}');
-      final padChar = paddingChar(e.vrIndex);
-      if (padChar.isNegative) {
-        wb.error('Writing padding to a non-padded VR: $e');
-        invalidVFLength(e.vfBytes.length, -1);
-      }
-      wb.uint8(e.padChar);
-    }
-*/
+    wb.writeUint8List(bytes.asUint8List());
   }
 }
 

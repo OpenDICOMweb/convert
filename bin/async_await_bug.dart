@@ -4,7 +4,7 @@ import 'dart:io';
 
 void main() {
 
-  final path = 'foo';
+  const path = 'foo';
   final String s = readFile(new File(path));
   print('s $s');
 

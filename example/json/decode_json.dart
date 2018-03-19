@@ -14,7 +14,7 @@ void main(List<String> args) {
 
   final inFile = new File('C:/odw/sdk/encode/example/json/example.json');
   final s = inFile.readAsStringSync();
-  final Map code = JSON.decode(s);
+  final Map code = json.decode(s);
   print('json array(${code.length}');
   final Map ds0 = code[0];
   final Map ds1 = code[1];
@@ -24,7 +24,7 @@ void main(List<String> args) {
   // Map dsx0 = toDataset(ds0);
 //  Map dsx1 = toDataset(ds1);
 
- final encoder = const JsonEncoder.withIndent('  ');
+ const encoder = const JsonEncoder.withIndent('  ');
  final pretty = encoder.convert(code);
 
   new File('C:/odw/sdk/encode/example/json/output.json')

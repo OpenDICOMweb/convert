@@ -28,7 +28,7 @@ Formatter z = new Formatter.basic();
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug2, throwOnError: true);
 
-  final fPath = k6684x0;
+  const fPath = k6684x0;
 
   ///  final z = new Formatter.basic();
 
@@ -52,7 +52,7 @@ Future main() async {
     log.debug('bdRDS: ${bdRDS.summary}');
   }
 
-  final outPath = 'out.json';
+  const outPath = 'out.json';
   log.debug('Writing "$outPath"...');
   final writer0 = new FastJsonWriter(bdRDS, outPath, separateBulkdata: true);
   final out = writer0.write();
@@ -116,7 +116,7 @@ Future main() async {
   });
   log.debug('Private count: $count');
 
-  final deIdPath = 'deid.json';
+  const deIdPath = 'deid.json';
   final writer1 = new FastJsonWriter(tagRds0, deIdPath, separateBulkdata: true);
   final deid = writer1.write();
   await new File(deIdPath).writeAsString(deid);

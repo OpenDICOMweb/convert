@@ -31,7 +31,7 @@ abstract class DcmWriterBase<V> {
   WriteBuffer get wb;
   RootDataset get rds;
   int get minLength;
-//  ByteData get fmiBD;
+//  Bytes get fmiBD;
   EncodingParameters get eParams;
   bool get reUseBD;
 
@@ -40,7 +40,7 @@ abstract class DcmWriterBase<V> {
 
   bool get isEvr => rds.isEvr;
 
-  /// Returns a [Uint8List] view of the [ByteData] buffer at the current time
+  /// Returns a [Uint8List] view of the [Bytes] buffer at the current time
   Uint8List get asUint8List => wb.asUint8List(0, wb.wIndex);
 
   /// Return's the current position of the write index ([wIndex]).
@@ -79,7 +79,7 @@ abstract class DcmWriterBase<V> {
   /// writes it to a Uint8List, and returns the [Uint8List].
   Bytes writeRootDataset() {
     _writeDataset(rds);
-    return wb.asBytes(0, wb.wIndex);
+    return wb.subbytes(0, wb.wIndex);
   }
 
   void _writeDataset(Dataset ds) {
@@ -127,7 +127,7 @@ abstract class DcmWriterBase<V> {
   void writeEncapsulatedPixelData(IntBase e) {
     assert(e.vfLengthField == kUndefinedLength);
     for (final fragment in e.fragments.fragments) {
-      print('fragment(${fragment.lengthInBytes})');
+//      log.debug('fragment(${fragment.lengthInBytes})');
       wb
         ..writeUint32(kItem32BitLE)
         ..writeUint32(fragment.lengthInBytes)
@@ -138,8 +138,7 @@ abstract class DcmWriterBase<V> {
         wb.writeUint8(0);
       }
     }
-    //  wb..writeUint32(kSequenceDelimitationItem32BitLE)..writeUint32(0);
-    print('End of pixelData: ${wb.wIndex}');
+//    log.debug('End of pixelData: ${wb.wIndex}');
   }
 
   // **** Logging Interface ****
@@ -163,7 +162,7 @@ abstract class DcmWriterBase<V> {
   }
 }
 
-/// The default [ByteData] buffer length, if none is provided.
+/// The default [Bytes] buffer length, if none is provided.
 const int kDefaultWriteBufferLength = k1MB; //200 * k1MB;
 
 /// A reusable  [WriteBuffer] is stored here.
@@ -197,14 +196,14 @@ void writeFile(Uint8List bytes, File file) {
 /*
 //TODO: make this work for [async] == true and make that the default.
 /// Writes [bd] to [file] if it is not null or empty.
-void _writeFileSync(ByteData bd, File file) {
+void _writeFileSync(Bytes bd, File file) {
 	final bytes = bd.buffer.asUint8List(bd.offsetInBytes, bd.lengthInBytes);
 	file.writeAsBytesSync(bytes);
 }
 */
 
 /*
-void _writePathSync(ByteData bd, String path) {
+void _writePathSync(Bytes bd, String path) {
   assert(path != null && path.isNotEmpty);
   if (path.isNotEmpty) _writeFileSync(bd, new File(path));
 }

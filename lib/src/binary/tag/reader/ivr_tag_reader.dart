@@ -4,8 +4,6 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:typed_data';
-
 import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/reader/ivr_reader.dart';
@@ -31,7 +29,7 @@ class IvrTagReader extends IvrReader<int> {
   Dataset cds;
 
   /// Creates a new [IvrTagReader].
-  IvrTagReader(ByteData bd, this.rds,
+  IvrTagReader(Bytes bd, this.rds,
       {this.dParams = DecodingParameters.kNoChange, this.reUseBD = true})
       : rb = new ReadBuffer(bd),
         cds = rds {
@@ -48,16 +46,16 @@ class IvrTagReader extends IvrReader<int> {
   }
 
   /// Creates a new [EvrTagReader].
-  IvrTagReader._(ByteData bd, this.rds, this.dParams, this.reUseBD)
+  IvrTagReader._(Bytes bd, this.rds, this.dParams, this.reUseBD)
       : rb = new ReadBuffer(bd),
         cds = rds {
     print('rds: $rds');
   }
 
   @override
-  Item makeItem(Dataset parent, Map<int, Element> eMap,
-          [SQ sequence, ByteData bd]) =>
-      new BDItem.fromBD(parent, eMap, sequence, bd);
+  Item makeItem(Dataset parent,
+          [SQ sequence, Map<int, Element> eMap, Bytes bd]) =>
+      new BDItem.fromBD(parent, sequence, eMap, bd);
 }
 
 /// A decoder for Binary DICOM (application/dicom).
@@ -69,7 +67,7 @@ class IvrLoggingTagReader extends IvrTagReader with LogReadMixin {
   final ElementOffsets offsets;
 
   /// Creates a new [EvrLoggingTagReader].
-  IvrLoggingTagReader(ByteData bd, TagRootDataset rds,
+  IvrLoggingTagReader(Bytes bd, TagRootDataset rds,
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD = true})
       : pInfo = new ParseInfo(rds),

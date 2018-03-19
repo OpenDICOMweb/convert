@@ -13,13 +13,13 @@ import 'package:path/path.dart' as p;
 //import 'package:convert/data/test_directories.dart';
 
 const String dir6684_2017_5 = 'C:/acr/odw/test_data/6684/2017/5';
-final String dir0 = 'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/'
+const String dir0 = 'C:/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX/'
     'Thorax 1CTA_THORACIC_AORTA_GATED (Adult)/';
-String outRoot0 = 'test/output/root0';
-String outRoot1 = 'test/output/root1';
-String outRoot2 = 'test/output/root2';
-String outRoot3 = 'test/output/root3';
-String outRoot4 = 'test/output/root4';
+const String outRoot0 = 'test/output/root0';
+const String outRoot1 = 'test/output/root1';
+const String outRoot2 = 'test/output/root2';
+const String outRoot3 = 'test/output/root3';
+const String outRoot4 = 'test/output/root4';
 
 //TODO: modify so that it takes the following arguments
 // 1. dirname
@@ -36,8 +36,8 @@ void main() {
   //TODO: add asyn argument and async I/O to handle multiple files at the same
   // time.
   /// *** Change directory path name here
-  final reportEveryNFiles = 1;
-  final path = dir6684_2017_5;
+  const reportEveryNFiles = 1;
+  const path = dir6684_2017_5;
   final dir = new Directory(path);
 
   final fList = dir.listSync(recursive: true);

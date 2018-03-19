@@ -34,7 +34,7 @@ import 'package:convert/src/utilities/element_offsets.dart';
 ///  [Element] itself.
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
-abstract class DcmReaderBase<V> {
+abstract class DcmReaderBase {
   // **** Interface ****
   /// The [ReadBuffer] being read.
   ReadBuffer get rb;
@@ -46,32 +46,39 @@ abstract class DcmReaderBase<V> {
   Dataset get cds;
   set cds(Dataset ds);
 
-  /// Returns a new [Element].
-  Element makeFromByteData(int code, int vrIndex, ByteData bd);
+  /// Creates an Element from [Bytes].
+  Element makeFromBytes(int code, Bytes bytes, int vrIndex);
 
   /// Returns a new [Element].
-//  Element makeFromValues(int code, int vrIndex, ByteData bd);
+  Element makeFromValues<V>(
+          int code, List<V> values, int vrIndex, Bytes bytes) =>
+      unsupportedError();
 
   /// Returns a new Pixel Data [Element].
-  Element makePixelData(int code, int vrIndex, ByteData bd,
+  Element makePixelData(int code, Bytes bd, int vrIndex,
       [TransferSyntax ts, VFFragments fragments]);
 
   /// Returns a new Sequence ([SQ]).
-  SQ makeSequence(int code, ByteData bd, Dataset cds, List<Item> items);
+  SQ makeSequence(int code, Dataset cds, List<Item> items, Bytes bd);
 
+/*
   /// Returns a new [RootDataset].
-//  RootDataset makeRootDataset({ByteData bd, ElementList elements, String path});
+  RootDataset makeRootDatasetFromBytes(
+      {Bytes bytes, Iterable elements, String path});
+*/
 
   /// Returns a new [Item].
-  Item makeItem(Dataset parent, Map<int, Element> eMap,
-      [SQ sequence, ByteData bd]);
+  Item makeItem(Dataset parent,
+      [SQ sequence, Map<int, Element> eMap, Bytes bd]);
 
   /// Returns a new [Item].
-  Item makeEmptyItem(Dataset parent) => makeItem(parent, <int, Element>{});
+  Item makeEmptyItem(Dataset parent) => makeItem(parent);
 
-  void readFmi();
+  int readFmi(int eStart);
 
   Element readElement();
+
+//  Element readSimpleElement(int code, int eStart, int vrIndex);
 
   Element readSequence(int code, int eStart, int vrIndex);
 
@@ -108,7 +115,7 @@ abstract class DcmReaderBase<V> {
     final rdsStart = rb.rIndex;
     readDatasetDefinedLength(rds, rdsStart, rb.rRemaining);
     final rdsLength = rb.rIndex - rdsStart;
-    final rbd = rb.asByteData(rdsStart, rdsLength);
+    final rbd = rb.asBytes(rdsStart, rdsLength);
     rds.dsBytes = new RDSBytes(rbd, fmiEnd);
     return rds;
   }
@@ -132,7 +139,7 @@ abstract class DcmReaderBase<V> {
         ? readDatasetUndefinedLength(item)
         : readDatasetDefinedLength(item, rb.rIndex, vfLengthField);
 
-    final bd = rb.asByteData(iStart, rb.rIndex - iStart);
+    final bd = rb.subbytes(iStart, rb.rIndex);
     final dsBytes = new IDSBytes(bd);
     item.dsBytes = dsBytes;
     cds = parentDS;
@@ -150,6 +157,7 @@ abstract class DcmReaderBase<V> {
     while (rb.rIndex < dsEnd) {
       // Elements are always read into the current dataset.
       final e = readElement();
+//      print('@${rb.index}: $e');
       final ok = ds.tryAdd(e);
       if (!ok) log.warn('*** duplicate: $e');
     }

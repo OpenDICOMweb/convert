@@ -20,8 +20,8 @@ class JsonReader extends JsonReaderBase {
   @override
   Dataset cds;
 
-  JsonReader(String json)
-      : rootMap = JSON.decode(json),
+  JsonReader(String s)
+      : rootMap = json.decode(s),
         rds = new TagRootDataset.empty();
 
   @override
@@ -81,10 +81,10 @@ class JsonReader extends JsonReaderBase {
       if (vrIndex == kLOIndex) {
          name = values[0];
       } else if (vrIndex == kUNIndex) {
-        name = ASCII.decode(values);
+        name = ascii.decode(values);
       } else {
         if (values is Uint8List) {
-          name = ASCII.decode(values);
+          name = ascii.decode(values);
         } else {
           throw 'PCTag with token: $values';
         }
@@ -93,19 +93,19 @@ class JsonReader extends JsonReaderBase {
       privateCreatorsMap[Tag.pcSubgroup(code)] = name;
       tag = PCTag.make(code, vrIndex, name);
       knownPrivateCreators[code] = tag;
-      return readElement(tag, [name], vrIndex);
+      return readElement(code, [name], vrIndex);
     } else {
       print('entry: $entry');
       throw 'error';
     }
-    return readElement(tag, values, vrIndex);
+    return readElement(code, values, vrIndex);
   }
 
   Object readValueField(Map<String, dynamic> vField) {
     Object values = vField['Values'];
     if (values != null) return values;
     values = vField['InlineBinary'];
-    if (values != null) return BASE64.decode(values);
+    if (values != null) return base64.decode(values);
     values = vField['BulkDataUrl'];
     if (values != null) return values;
     return parseError('Invalid values Map: $vField');
@@ -113,14 +113,15 @@ class JsonReader extends JsonReaderBase {
 
   @override
   Element readSimpleElement(
-    Tag tag,
+    int code,
     Object value,
     int vrIndex,
   ) =>
-      TagElement.make(tag, value, vrIndex);
+      TagElement.make(Tag.lookupByCode(code, vrIndex, value), value, vrIndex);
 
   @override
-  SQ readSequence(Tag tag, Iterable entries, int vrIndex) {
+  SQ readSequence(int code, Iterable entries, int vrIndex) {
+    final tag = Tag.lookupByCode(code, vrIndex);
     if (vrIndex == kSQIndex &&
         (tag.vrIndex == kSQIndex || tag.vrIndex == kUNIndex)) {
       final length = entries.length;

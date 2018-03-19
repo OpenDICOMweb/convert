@@ -10,7 +10,7 @@ import 'package:convert/convert.dart';
 import 'package:core/server.dart';
 //import 'package:convert/data/test_files.dart';
 //
-final String k6684x0 = 'C:/acr/odw/sdk/convert/bin/output/'
+const String k6684x0 = 'C:/acr/odw/sdk/convert/bin/output/'
     '1.2.840.113745.101000.1061000.41090.4218.18582671-'
     '1.3.46.670589.11.21290.5.0.6524.2012072512045421001-'
     '1.3.46.670589.11.21290.5.0.6524.2012072512045712193.json';

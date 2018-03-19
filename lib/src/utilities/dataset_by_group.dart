@@ -4,8 +4,6 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:typed_data';
-
 import 'package:core/core.dart';
 
 // ignore_for_file: only_throw_errors
@@ -43,9 +41,9 @@ class RootDatasetByGroup extends MapRootDataset with DatasetByGroup {
   @override
   final Map<int, GroupBase> groups;
 
-  RootDatasetByGroup.empty([String path = '', ByteData bd, int fmiEnd = 0])
+  RootDatasetByGroup.empty([String path = '', Bytes bytes, int fmiEnd = 0])
       : groups = <int, GroupBase>{},
-        super.empty(path, bd, fmiEnd);
+        super.empty(path, bytes, fmiEnd);
 
   @override
   void addGroup(GroupBase group) => groups[group.gNumber] = group;

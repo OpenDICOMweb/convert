@@ -9,8 +9,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
-import 'package:convert/data/test_files.dart';
-import 'package:convert/src/utilities/io_utils.dart';
+//import 'package:convert/data/test_files.dart';
 import 'package:path/path.dart' as path;
 import 'package:core/server.dart';
 
@@ -56,8 +55,8 @@ const String bas = 'C:/acr/odw/test_data/mweb/100 MB Studies/1/S234611/15859368'
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.info, throwOnError: true);
 
-  final fPath = f6684a;
-
+//  const fPath = 'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
+  const fPath = 'C:/acr/odw/test_data/6684/2017/5/12/16/0EE11F7A/0A0DDB1E/02AB88BC';
   print('path: $fPath');
   print(' out: ${getTempFile(fPath, 'dcmout')}');
   final url = new Uri.file(fPath);

@@ -42,6 +42,8 @@ class FileListReader {
         log.info('$i Reading: $path ');
       }
 
+      log.info('$i Reading: $path ');
+
       try {
         success = byteReadWriteFileChecked(path, fileNumber: i);
         if (success == false) {

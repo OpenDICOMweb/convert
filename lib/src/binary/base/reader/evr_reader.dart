@@ -43,13 +43,13 @@ bool doConvertUNSequences = false;
 ///  [Element] itself.
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
-abstract class EvrReader<V> extends DcmReaderBase<V> {
+abstract class EvrReader<V> extends DcmReaderBase {
   @override
   ReadBuffer get rb;
   DecodingParameters get dParams;
 
   @override
-  int readFmi() {
+  int readFmi(int eStart) {
     //TODO: make method an invalidReadIndex(int index)
     if (rb.rIndex != 0) throw 'InvalidReadBufferIndex: ${rb.rIndex}';
     return _readFmi();
@@ -109,7 +109,7 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
   Map<int, PCTag> _creators;
   PCTag _creator;
 
-  Tag _getPrivateTag(int code, int vrIndex, int group, Element v) {
+  Tag _getPrivateTag(int code, int vrIndex, int group, Element e) {
     assert(group.isOdd);
     if (_group == -1) {
       _group = group;
@@ -124,9 +124,18 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
     if ((elt >= 0x10) && (elt <= 0xFF)) {
       // Private Creator - might not be LO
       final subgroup = elt & 0xFF;
-      final String token = (vrIndex == kLOIndex)
-          ? v.value
-          : ASCII.decode(v.vfBytes, allowInvalid: true).trimRight();
+
+      String token;
+      if (vrIndex == kLOIndex) {
+        if (e.isEmpty) {
+          token = 'Creator w/o token';
+        } else {
+          token = e.value;
+        }
+      } else {
+        token = ascii.decode(e.vfBytes, allowInvalid: true).trimRight();
+      }
+
       final tag = PCTag.make(code, vrIndex, token);
       _creators[subgroup] = tag;
       return tag;
@@ -164,20 +173,18 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
   }
 
   @override
-  Element makeFromByteData(int code, int vrIndex, ByteData bd) =>
-      EvrElement.make(code, vrIndex, bd);
+  Element makeFromBytes(int code, Bytes bd, int vrIndex) =>
+      EvrElement.make(code, bd, vrIndex);
 
   /// Read a Short EVR Element, i.e. one with a 16-bit Value Field Length field.
   /// These Elements can not have an kUndefinedLength value.
   Element readShort(int code, int vrIndex, int eStart) {
     final vlf = rb.readUint16();
     if (vlf.isOdd) log.error('Odd vlf: $vlf');
-    logStartRead(code, vrIndex, eStart, vlf, 'readEvrShort');
+//    logStartRead(code, vrIndex, eStart, vlf, 'readEvrShort');
 
     rb.rSkip(vlf);
-    final e = makeFromByteData(code, vrIndex, rb.bdView(eStart));
-    logEndRead(eStart, e, 'readEvrShort');
-    return e;
+    return makeFromBytes(code, rb.subbytes(eStart, rb.index), vrIndex);
   }
 
   /// Read a Long EVR Element (not SQ) with a 32-bit vfLengthField,
@@ -187,25 +194,26 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
   Element readLongDefinedLength(int code, int vrIndex, int eStart) {
     rb.rSkip(2);
     final vlf = rb.readUint32();
-    logStartRead(code, vrIndex, eStart, vlf, 'readEvrLong');
+//    logStartRead(code, vrIndex, eStart, vlf, 'readEvrLong');
     return _makeLong(code, vrIndex, eStart, vlf);
   }
 
+  /// Returns an EVR Element with a long Value Field
   Element _makeLong(int code, int vrIndex, int eStart, int vlf) {
     assert(vlf != kUndefinedLength);
     rb.rSkip(vlf);
     final e = (code == kPixelData)
-        ? makePixelData(code, vrIndex, rb.bdView(eStart))
-        : makeFromByteData(code, vrIndex, rb.bdView(eStart));
-    logEndRead(eStart, e, 'readEvrLong');
+        ? makePixelData(code, rb.subbytes(eStart, rb.index), vrIndex)
+        : makeFromBytes(code, rb.subbytes(eStart, rb.index), vrIndex);
+//    logEndRead(eStart, e, 'readEvrLong');
     return e;
   }
 
   @override
-  Element makePixelData(int code, int vrIndex, ByteData bd,
+  Element makePixelData(int code, Bytes bd, int vrIndex,
       [TransferSyntax ts, VFFragments fragments]) {
     ts ??= defaultTS;
-    return EvrElement.makePixelData(code, vrIndex, bd, ts, fragments);
+    return EvrElement.makePixelData(code, bd, vrIndex, ts, fragments);
   }
 
   TransferSyntax get defaultTS => _defaultTS ??= rds.transferSyntax;
@@ -222,23 +230,24 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
   Element readMaybeUndefined(int code, int vrIndex, int eStart) {
     rb.rSkip(2);
     final vlf = rb.readUint32();
-    logStartRead(code, vrIndex, eStart, vlf, 'readEvrMaybeUndefined');
+//    logStartRead(code, vrIndex, eStart, vlf, 'readEvrMaybeUndefined');
 
     // If VR is UN then this might be a Sequence
     if ((vrIndex == kUNIndex) && doConvertUNSequences && isUNSequence(vlf)) {
       log.warn('Converting UN to SQ');
       final sq = _readUSQ(code, vrIndex, eStart, vlf);
-      logEndRead(eStart, sq, 'readEvrMaybeUndefined');
+//      logEndRead(eStart, sq, 'readEvrMaybeUndefined');
       return sq;
     }
 
     if (vlf != kUndefinedLength) return _makeLong(code, vrIndex, eStart, vlf);
 
     final fragments = readUndefinedLength(code, eStart, vrIndex, vlf);
+    final bytes = rb.subbytes(eStart, rb.index);
     final e = (code == kPixelData)
-        ? makePixelData(code, vrIndex, rb.bdView(eStart), defaultTS, fragments)
-        : makeFromByteData(code, vrIndex, rb.bdView(eStart));
-    logEndRead(eStart, e, 'readEvrMaybeUndefined');
+        ? makePixelData(code, bytes, vrIndex, defaultTS, fragments)
+        : makeFromBytes(code, bytes, vrIndex);
+//    logEndRead(eStart, e, 'readEvrMaybeUndefined');
     return e;
   }
 
@@ -248,15 +257,15 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
     assert(vrIndex == kSQIndex);
     rb.rSkip(2);
     final vlf = rb.readUint32();
-    logStartSQRead(code, vrIndex, eStart, vlf, 'readEvrSequence');
+//    logStartSQRead(code, vrIndex, eStart, vlf, 'readEvrSequence');
     return (vlf == kUndefinedLength)
         ? _readUSQ(code, vrIndex, eStart, vlf)
         : _readDSQ(code, vrIndex, eStart, vlf);
   }
 
   @override
-  SQ makeSequence(int code, ByteData bd, Dataset cds, List<Item> items) =>
-      EvrElement.makeSequence(code, bd, cds, items);
+  SQ makeSequence(int code, Dataset cds, List<Item> items, [Bytes bd]) =>
+      EvrElement.makeSequence(code, cds, items, bd);
 
   /// Reads a [kUndefinedLength] Sequence.
   SQ _readUSQ(int code, int vrIndex, int eStart, int vlf) {
@@ -267,8 +276,8 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
       final item = readItem();
       items.add(item);
     }
-    final e = makeSequence(code, rb.bdView(eStart), cds, items);
-    logEndSQRead(eStart, e, 'readEvrSequenceULength');
+    final e = makeSequence(code, cds, items, rb.subbytes(eStart, rb.index));
+//    logEndSQRead(eStart, e, 'readEvrSequenceULength');
     return e;
   }
 
@@ -277,16 +286,16 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
     assert(vrIndex == kSQIndex);
     assert(vfl != kUndefinedLength);
     final items = <Item>[];
-    final eEnd = rb.rIndex + vfl;
+    final eEnd = rb.index + vfl;
 
-    while (rb.rIndex < eEnd) {
+    while (rb.index < eEnd) {
       final item = readItem();
       items.add(item);
     }
-    final end = rb.rIndex;
+    final end = rb.index;
     assert(eEnd == end, '$eEnd == $end');
-    final e = makeSequence(code, rb.bdView(eStart), cds, items);
-    logEndSQRead(eStart, e, 'readEvrSequenceDLength');
+    final e = makeSequence(code, cds, items, rb.subbytes(eStart, end));
+//    logEndSQRead(eStart, e, 'readEvrSequenceDLength');
     return e;
   }
 
@@ -295,7 +304,7 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
     final items = readDSQ(code, vrIndex, eStart, vlf);
     final eb = rb.makeEvrLongEBytes(eStart);
     final e = makeSequence(code, eb, cds, items);
-    logEndSQRead(eStart, e, 'readEvrSequenceDLength');
+//    logEndSQRead(eStart, e, 'readEvrSequenceDLength');
     return e;
   }
 
@@ -303,7 +312,7 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
     final items = readUSQ(code, vrIndex, eStart, vlf);
     final eb = rb.makeEvrULengthEBytes(eStart);
     final e = makeSequence(code, eb, cds, items);
-    logEndSQRead(eStart, e, 'readEvrSequenceULength');
+//    logEndSQRead(eStart, e, 'readEvrSequenceULength');
     return e;
   }
 */
@@ -311,12 +320,12 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
   /// Reads File Meta Information (FMI) and returns a Map<int, Element>
   /// if any [Fmi] [Element]s were present; otherwise, returns null.
   int _readFmi() {
-    assert(rb.rIndex == 0, 'Non-Zero Read Buffer Index');
+    assert(rb.index == 0, 'Non-Zero Read Buffer Index');
     if (!_readPrefix(rb)) {
-      rb.rIndex = 0;
+      rb.rIndex_ = 0;
       return -1;
     }
-    assert(rb.rIndex == 132, 'Non-Prefix start index: ${rb.rIndex}');
+    assert(rb.index == 132, 'Non-Prefix start index: ${rb.index}');
     while (rb.isReadable) {
       final code = rb.peekCode();
       if (code >= 0x00030000) break;
@@ -324,9 +333,9 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
       rds.fmi[e.code] = e;
     }
 
-    if (!rb.rHasRemaining(dParams.shortFileThreshold - rb.rIndex)) {
+    if (!rb.rHasRemaining(dParams.shortFileThreshold - rb.index)) {
       throw new EndOfDataError(
-          '_readFmi', 'index: ${rb.rIndex} bdLength: ${rb.lengthInBytes}');
+          '_readFmi', 'index: ${rb.index} bdLength: ${rb.lengthInBytes}');
     }
 
     final ts = rds.transferSyntax;
@@ -336,13 +345,13 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
     }
     if (dParams.targetTS != null && ts != dParams.targetTS)
       return invalidTransferSyntax(ts, dParams.targetTS);
-    return rb.rIndex;
+    return rb.index;
   }
 
   /// Reads the Preamble (128 bytes) and Prefix ('DICM') of a PS3.10 DICOM File Format.
   /// Returns true if a valid Preamble and Prefix where read.
   bool _readPrefix(ReadBuffer rb) {
-    if (rb.rIndex_ != 0) return false;
+    if (rb.index != 0) return false;
     return _isDcmPrefixPresent(rb);
   }
 
@@ -359,14 +368,14 @@ abstract class EvrReader<V> extends DcmReaderBase<V> {
   /// Read as ASCII String
   static bool isAsciiPrefixPresent(ReadBuffer rb) {
     final chars = rb.readUint8View(4);
-    final prefix = ASCII.decode(chars);
+    final prefix = ascii.decode(chars);
     if (prefix == 'DICM') return true;
     log.warn('No DICOM Prefix present');
     return false;
   }
 
   // **** Static Interface if implemented by subclasses.
-  // static RootDataset readInstance(ByteData bd, RootDataset rds);
+  // static RootDataset readInstance(Bytes bd, RootDataset rds);
 
 }
 

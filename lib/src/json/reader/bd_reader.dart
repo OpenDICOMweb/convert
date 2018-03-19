@@ -30,7 +30,7 @@ class BDReader {
   final EvrReader _evrReader;
 
   /// Creates a new [BDReader], which is decoder for Binary DICOM (application/dicom).
-  factory BDReader(ByteData bd,
+  factory BDReader(Bytes bd,
       {BDRootDataset rds,
       String path = '',
       DecodingParameters dParams = DecodingParameters.kNoChange,
@@ -58,15 +58,15 @@ class BDReader {
       // Why is this failing
       : _evrReader = (doLogging)
             ? new EvrLoggingBDReader(
-                rb.bd, new BDRootDataset.empty(path, rb.bd),
+                rb.bytes, new BDRootDataset.empty(path, rb.bytes),
                 dParams: dParams, reUseBD: reUseBD)
-            : new EvrBDReader(rb.bd, new BDRootDataset.empty(path, rb.bd),
+            : new EvrBDReader(rb.bytes, new BDRootDataset.empty(path, rb.bytes),
                 dParams: dParams, reUseBD: reUseBD);
 
   /// Creates a [BDReader] from the contents of the [uint8List].
   factory BDReader.fromUint8List(Uint8List uint8List,
           {Endian endian = Endian.little,
-            String path = '',
+          String path = '',
           DecodingParameters dParams = DecodingParameters.kNoChange,
           bool reUseBD = true,
           bool doLogging = true,
@@ -97,10 +97,10 @@ class BDReader {
       bool reUseBD: true,
       bool doLogging = true,
       bool showStats = true}) {
-    final Uint8List bytes =
+    final Uint8List bList =
         (doAsync) ? _readAsync(file) : file.readAsBytesSync();
-    final bd = bytes.buffer.asByteData();
-    return new BDReader(bd,
+    final bytes = new Bytes.fromTypedData(bList);
+    return new BDReader(bytes,
         path: file.path,
         dParams: dParams,
         reUseBD: reUseBD,
@@ -126,7 +126,7 @@ class BDReader {
   ElementOffsets get offsets => _evrReader.offsets;
 
   bool isFmiRead = false;
-  int readFmi() => _evrReader.readFmi();
+  int readFmi() => _evrReader.readFmi(rb.index);
 
   IvrBDReader __ivrReader;
   IvrBDReader get _ivrReader => __ivrReader ??= (doLogging)

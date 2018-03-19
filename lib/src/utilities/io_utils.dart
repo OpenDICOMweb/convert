@@ -53,6 +53,7 @@ String getOutputPath(String inPath, {String dir, String base, String ext}) {
   ext ??= path.extension(inPath);
   return path.absolute(dir, '$base.$ext');
 }
+
 String getOutPath(String base, String ext, {String dir}) {
   dir ??= path.dirname(path.current);
   return cleanPath(path.absolute(dir, '$base.$ext'));
@@ -75,7 +76,13 @@ Directory pathToDirectory(String path, {bool mustExist = true}) {
 
 File pathToFile(String path, {bool mustExist = true}) {
   final file = new File(path);
-  return (mustExist && !file.existsSync()) ? null : file;
+  final exists = file.existsSync();
+  if (mustExist && !exists) {
+    if (throwOnError) throw new FileSystemException('Non-Existant File', path);
+    return null;
+  } else {
+    return file;
+  }
 }
 
 typedef void FSERunner(FileSystemEntity f, [int level]);

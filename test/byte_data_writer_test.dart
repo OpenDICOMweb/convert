@@ -13,8 +13,8 @@ void main() {
   group('ByteDataBuffer', () {
 
     test('Buffer Growing Test', () {
-      final startSize = 1;
-      final iterations = 1024 * 1;
+      const startSize = 1;
+      const iterations = 1024 * 1;
       final wb = new WriteBuffer(startSize);
       log.debug('''
 iterations: $iterations
