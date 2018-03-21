@@ -16,7 +16,7 @@ import 'package:convert/data/test_files.dart';
 Future main() async {
   Server.initialize(
       name: 'ReadFile',
-      level: Level.info,
+      level: Level.debug,
       throwOnError: true,
       minYear: 1901,
       maxYear: 2049,
@@ -26,6 +26,8 @@ Future main() async {
   final inPath = cleanPath(k6684x0);
   final fLength = new File(inPath).lengthSync();
   stdout.writeln('Reading($fLength bytes): $inPath');
+
+  stdout.writeln('Reading(binary): $inPath');
 
   final rds = BDReader.readPath(inPath, doLogging: true, showStats: true);
 

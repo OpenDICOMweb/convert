@@ -11,11 +11,11 @@ export 'package:convert/src/binary/base/writer/dcm_writer_base.dart';
 export 'package:convert/src/binary/base/writer/evr_writer.dart';
 export 'package:convert/src/binary/base/writer/ivr_writer.dart';
 
-export 'package:convert/src/binary/byte_data/reader/bd_reader.dart';
-export 'package:convert/src/binary/byte_data/reader/evr_bd_reader.dart';
-export 'package:convert/src/binary/byte_data/reader/ivr_bd_reader.dart';
-export 'package:convert/src/binary/byte_data/writer/bd_writer.dart';
-export 'package:convert/src/binary/byte_data/byte_read_utils.dart';
+export 'package:convert/src/binary/bytes/reader/bd_reader.dart';
+export 'package:convert/src/binary/bytes/reader/evr_bd_reader.dart';
+export 'package:convert/src/binary/bytes/reader/ivr_bd_reader.dart';
+export 'package:convert/src/binary/bytes/writer/bd_writer.dart';
+export 'package:convert/src/binary/bytes/byte_read_utils.dart';
 
 export 'package:convert/src/binary/compare_bytes.dart';
 export 'package:convert/src/binary/convert_dataset.dart';

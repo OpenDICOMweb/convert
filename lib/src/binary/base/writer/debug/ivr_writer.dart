@@ -39,7 +39,7 @@ abstract class LogIvrWriter extends IvrWriter<int> with LogWriteMixin {
     if (_isIvrDefinedLengthVR(vrIndex)) {
       _writeIvrDefinedLength(e, vrIndex);
     } else if (_isSequenceVR(vrIndex)) {
-      _writeIvrSQ(e, vrIndex);
+      writeSequence(e, vrIndex);
     } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
       _writeIvrMaybeUndefined(e, vrIndex);
 //    } else if (_isSpecialVR(vrIndex)) {
@@ -63,7 +63,7 @@ abstract class LogIvrWriter extends IvrWriter<int> with LogWriteMixin {
   /// Write a non-Sequence Element with a defined length in the Value Field Length field.
   void _writeIvrDefinedLength(Element e, int vrIndex) {
     log.debug('${wb.wbb} writeSimpleIvr $e :${wb.remaining}', 1);
-    super.writeIvrDefinedLength(e, vrIndex);
+    super.writeDefinedLength(e, vrIndex);
     pInfo.nLongElements++;
   }
 
@@ -80,13 +80,14 @@ abstract class LogIvrWriter extends IvrWriter<int> with LogWriteMixin {
   void _writeIvrUndefinedLength(Element e, int vrIndex) {
     assert(e.vfLengthField == kUndefinedLength);
     log.debug('${wb.wmm} writeIvrUndefined $e :${wb.remaining}');
-    super.writeIvrUndefinedLength(e, vrIndex);
+    super.writeUndefinedLength(e, vrIndex);
     if (e.code == kPixelData) pInfo.pixelDataEnd = wb.wIndex;
     pInfo.nUndefinedLengthElements++;
     log.debug('${wb.wbb} writeIvrUndefined $e :${wb.remaining}', 1);
   }
 
-  void _writeIvrSQ(SQ e, int vrIndex) {
+  @override
+  void writeSequence(SQ e, int vrIndex) {
     pInfo.nSequences++;
     if (e.isPrivate) pInfo.nPrivateSequences++;
     return (e.hadULength && !eParams.doConvertUndefinedLengths)
@@ -100,7 +101,7 @@ abstract class LogIvrWriter extends IvrWriter<int> with LogWriteMixin {
     pInfo.nDefinedLengthSequences++;
     final eStart = wb.wIndex;
 
-    super.writeIvrSQDefinedLength(e, vrIndex);
+    super.writeSQDefinedLength(e, vrIndex);
 
     final eEnd = wb.wIndex;
     assert(e.vfLength + 8 == e.eEnd - e.eStart, '${e.vfLength}, $eEnd - $eStart');
@@ -112,7 +113,7 @@ abstract class LogIvrWriter extends IvrWriter<int> with LogWriteMixin {
     log.debug('${wb.wbb} _writeIvrSQUndefined $e :${wb.remaining}', 1);
     final index = outputOffsets.reserveSlot;
     final eStart = wb.wIndex;
-    super.writeIvrSQUndefinedLength(e, vrIndex);
+    super.writeSQUndefinedLength(e, vrIndex);
     pInfo.nUndefinedLengthSequences++;
     outputOffsets.insertAt(index, eStart, wb.wIndex, e);
   }

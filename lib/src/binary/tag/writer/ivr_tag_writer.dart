@@ -12,7 +12,7 @@ import 'package:convert/src/utilities/encoding_parameters.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 import 'package:convert/src/binary/base/writer/ivr_writer.dart';
 import 'package:convert/src/binary/base/writer/log_write_mixin_base.dart.old';
-import 'package:convert/src/binary/byte_data/writer/evr_bd_writer.dart';
+import 'package:convert/src/binary/bytes/writer/evr_bd_writer.dart';
 
 
 // ignore_for_file: avoid_positional_boolean_parameters

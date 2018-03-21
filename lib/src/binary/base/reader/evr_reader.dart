@@ -17,7 +17,6 @@ import 'package:convert/src/errors.dart';
 
 // Reader axioms
 // 1. eStart is always the first byte of the Element being read and eEnd is always
-//    the end of the Element be
 // 2. The read index (rIndex) should always be at the last place read,
 //    and the end of the value field should be calculated by subtracting
 //    the length of the delimiter (and delimiter length), which is 8 bytes.
@@ -50,15 +49,14 @@ abstract class EvrReader<V> extends DcmReaderBase {
 
   @override
   int readFmi(int eStart) {
-    //TODO: make method an invalidReadIndex(int index)
-    if (rb.rIndex != 0) throw 'InvalidReadBufferIndex: ${rb.rIndex}';
+    if (rb.rIndex != 0) throw new InvalidReadBufferIndex(rb.index, rb);
     return _readFmi();
   }
 
   /// For EVR Datasets, all Elements are read by this method.
   @override
   Element readElement() {
-    final eStart = rb.rIndex;
+    final eStart = rb.index;
     final code = rb.readCode();
     final group = code >> 16;
     final vrCode = rb.readUint16();
@@ -66,13 +64,13 @@ abstract class EvrReader<V> extends DcmReaderBase {
 
     Element e;
     if (_isShortVR(vrIndex)) {
-      e = readShort(code, vrIndex, eStart);
+      e = _readShort(code, vrIndex, eStart);
     } else if (_isLongVR(vrIndex)) {
-      e = readLongDefinedLength(code, vrIndex, eStart);
+      e = _readLongDefinedLength(code, vrIndex, eStart);
     } else if (_isSequenceVR(vrIndex)) {
-      e = readSequence(code, vrIndex, eStart);
+      e = _readSequence(code, vrIndex, eStart);
     } else if (_isUndefinedLengthVR(vrIndex)) {
-      e = readMaybeUndefined(code, vrIndex, eStart);
+      e = _readMaybeUndefined(code, vrIndex, eStart);
     }
     if (e == null) return invalidVRIndex(vrIndex, null, null);
 
@@ -153,19 +151,18 @@ abstract class EvrReader<V> extends DcmReaderBase {
     return invalidTagCode(code);
   }
 
-  //TODO: speed this up
   int _lookupEvrVRIndex(int code, int eStart, int vrCode) {
     final vrIndex = vrIndexFromCode(vrCode);
+    if (_isNormalVRIndex(vrIndex)) return vrIndex;
     if (vrIndex == null) {
       log.warn('Null VR: vrCode(${hex16(vrCode)}, $vrCode) '
           '${dcm(code)} start: $eStart');
-    }
-    if (_isSpecialVR(vrIndex)) {
-      log.info('-- Changing (${hex32(code)}) with Special VR '
+    } else if (_isSpecialVR(vrIndex)) {
+      log.warn('-- Changing (${hex32(code)}) with Special VR '
           '${vrIdFromIndex(vrIndex)}) to VR.kUN');
       return VR.kUN.index;
-    }
-    if (Tag.isPCCode(code) && (vrIndex != kLOIndex && vrIndex != kUNIndex)) {
+    } else if (Tag.isPCCode(code) &&
+        (vrIndex != kLOIndex && vrIndex != kUNIndex)) {
       log.warn('** Invalid Private Creator (${hex32(code)}) '
           '${vrIdFromIndex(vrIndex)}($vrIndex) should be VR.kLO');
     }
@@ -174,27 +171,27 @@ abstract class EvrReader<V> extends DcmReaderBase {
 
   @override
   Element makeFromBytes(int code, Bytes bd, int vrIndex) =>
+      _makeFromBytes(code, bd, vrIndex);
+
+  Element _makeFromBytes(int code, Bytes bd, int vrIndex) =>
       EvrElement.make(code, bd, vrIndex);
 
   /// Read a Short EVR Element, i.e. one with a 16-bit Value Field Length field.
   /// These Elements can not have an kUndefinedLength value.
-  Element readShort(int code, int vrIndex, int eStart) {
+  Element _readShort(int code, int vrIndex, int eStart) {
     final vlf = rb.readUint16();
     if (vlf.isOdd) log.error('Odd vlf: $vlf');
-//    logStartRead(code, vrIndex, eStart, vlf, 'readEvrShort');
-
     rb.rSkip(vlf);
-    return makeFromBytes(code, rb.subbytes(eStart, rb.index), vrIndex);
+    return _makeFromBytes(code, rb.subbytes(eStart, rb.index), vrIndex);
   }
 
   /// Read a Long EVR Element (not SQ) with a 32-bit vfLengthField,
   /// which cannot have the value kUndefinedValue.
   ///
   /// Reads one of OD, OF, OL, UC, UR, or UT.
-  Element readLongDefinedLength(int code, int vrIndex, int eStart) {
+  Element _readLongDefinedLength(int code, int vrIndex, int eStart) {
     rb.rSkip(2);
     final vlf = rb.readUint32();
-//    logStartRead(code, vrIndex, eStart, vlf, 'readEvrLong');
     return _makeLong(code, vrIndex, eStart, vlf);
   }
 
@@ -202,15 +199,18 @@ abstract class EvrReader<V> extends DcmReaderBase {
   Element _makeLong(int code, int vrIndex, int eStart, int vlf) {
     assert(vlf != kUndefinedLength);
     rb.rSkip(vlf);
-    final e = (code == kPixelData)
-        ? makePixelData(code, rb.subbytes(eStart, rb.index), vrIndex)
-        : makeFromBytes(code, rb.subbytes(eStart, rb.index), vrIndex);
-//    logEndRead(eStart, e, 'readEvrLong');
-    return e;
+    final bytes = rb.subbytes(eStart, rb.index);
+    return (code == kPixelData)
+        ? makePixelData(code, bytes, vrIndex)
+        : makeFromBytes(code, bytes, vrIndex);
   }
 
   @override
   Element makePixelData(int code, Bytes bd, int vrIndex,
+          [TransferSyntax ts, VFFragments fragments]) =>
+      _makePixelData(code, bd, vrIndex, ts, fragments);
+
+  Element _makePixelData(int code, Bytes bd, int vrIndex,
       [TransferSyntax ts, VFFragments fragments]) {
     ts ??= defaultTS;
     return EvrElement.makePixelData(code, bd, vrIndex, ts, fragments);
@@ -227,45 +227,43 @@ abstract class EvrReader<V> extends DcmReaderBase {
   //  If the VR is UN then it may be a Sequence.  If it is a Sequence, it will
   //  start with either a kItem delimiter or if it is an empty undefined length
   //  Sequence it will start with a kSequenceDelimiter.
-  Element readMaybeUndefined(int code, int vrIndex, int eStart) {
+  Element _readMaybeUndefined(int code, int vrIndex, int eStart) {
     rb.rSkip(2);
     final vlf = rb.readUint32();
-//    logStartRead(code, vrIndex, eStart, vlf, 'readEvrMaybeUndefined');
-
     // If VR is UN then this might be a Sequence
     if ((vrIndex == kUNIndex) && doConvertUNSequences && isUNSequence(vlf)) {
       log.warn('Converting UN to SQ');
-      final sq = _readUSQ(code, vrIndex, eStart, vlf);
-//      logEndRead(eStart, sq, 'readEvrMaybeUndefined');
-      return sq;
+      return _readUSQ(code, vrIndex, eStart, vlf);
     }
 
     if (vlf != kUndefinedLength) return _makeLong(code, vrIndex, eStart, vlf);
-
     final fragments = readUndefinedLength(code, eStart, vrIndex, vlf);
     final bytes = rb.subbytes(eStart, rb.index);
-    final e = (code == kPixelData)
+    return (code == kPixelData)
         ? makePixelData(code, bytes, vrIndex, defaultTS, fragments)
         : makeFromBytes(code, bytes, vrIndex);
-//    logEndRead(eStart, e, 'readEvrMaybeUndefined');
-    return e;
   }
 
   /// Read an EVR Sequence.
   @override
-  SQ readSequence(int code, int vrIndex, int eStart) {
+  SQ readSequence(int code, int vrIndex, int eStart) =>
+      _readSequence(code, vrIndex, eStart);
+
+  SQ _readSequence(int code, int vrIndex, int eStart) {
     assert(vrIndex == kSQIndex);
     rb.rSkip(2);
     final vlf = rb.readUint32();
-//    logStartSQRead(code, vrIndex, eStart, vlf, 'readEvrSequence');
     return (vlf == kUndefinedLength)
         ? _readUSQ(code, vrIndex, eStart, vlf)
         : _readDSQ(code, vrIndex, eStart, vlf);
   }
 
   @override
-  SQ makeSequence(int code, Dataset cds, List<Item> items, [Bytes bd]) =>
-      EvrElement.makeSequence(code, cds, items, bd);
+  SQ makeSequence(int code, Dataset cds, List<Item> items, [Bytes bytes]) =>
+      _makeSequence(code, cds, items, bytes);
+
+  SQ _makeSequence(int code, Dataset cds, List<Item> items, [Bytes bytes]) =>
+      EvrElement.makeSequence(code, cds, items, bytes);
 
   /// Reads a [kUndefinedLength] Sequence.
   SQ _readUSQ(int code, int vrIndex, int eStart, int vlf) {
@@ -298,24 +296,6 @@ abstract class EvrReader<V> extends DcmReaderBase {
 //    logEndSQRead(eStart, e, 'readEvrSequenceDLength');
     return e;
   }
-
-/*
-  SQ _readSequenceDLength(int code, int vrIndex, int eStart, int vlf) {
-    final items = readDSQ(code, vrIndex, eStart, vlf);
-    final eb = rb.makeEvrLongEBytes(eStart);
-    final e = makeSequence(code, eb, cds, items);
-//    logEndSQRead(eStart, e, 'readEvrSequenceDLength');
-    return e;
-  }
-
-  SQ _readSequenceULength(int code, int vrIndex, int eStart, int vlf) {
-    final items = readUSQ(code, vrIndex, eStart, vlf);
-    final eb = rb.makeEvrULengthEBytes(eStart);
-    final e = makeSequence(code, eb, cds, items);
-//    logEndSQRead(eStart, e, 'readEvrSequenceULength');
-    return e;
-  }
-*/
 
   /// Reads File Meta Information (FMI) and returns a Map<int, Element>
   /// if any [Fmi] [Element]s were present; otherwise, returns null.
@@ -379,6 +359,9 @@ abstract class EvrReader<V> extends DcmReaderBase {
 
 }
 
+bool _isNormalVRIndex(int vrIndex) =>
+    vrIndex >= kVRNormalIndexMin && vrIndex <= kVRNormalIndexMin;
+
 bool _isSequenceVR(int vrIndex) => vrIndex == 0;
 
 bool _isSpecialVR(int vrIndex) =>
@@ -393,3 +376,13 @@ bool _isUndefinedLengthVR(int vrIndex) =>
 
 bool _isLongVR(int vrIndex) =>
     vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
+
+class InvalidReadBufferIndex extends Error {
+  final int index;
+  final ReadBuffer rb;
+
+  InvalidReadBufferIndex(this.index, this.rb);
+
+  @override
+  String toString() => 'InvalidReadBufferIndex($index): $rb';
+}

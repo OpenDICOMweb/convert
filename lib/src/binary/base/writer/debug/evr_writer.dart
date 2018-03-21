@@ -24,7 +24,7 @@ abstract class LoggingEvrWriter extends EvrWriter<int> with LogWriteMixin {
 
   @override
   void writeElement(Element e) {
-    logStartWrite(e, 'writeEvrElement');
+    logStartWrite(e, 'writeElement');
     elementCount++;
     final eStart = wb.wIndex;
     var vrIndex = e.vrIndex;
@@ -35,15 +35,15 @@ abstract class LoggingEvrWriter extends EvrWriter<int> with LogWriteMixin {
       log.warn('** vrIndex changed to VR.kUN.index');
     }
 
-//    log.debug('${wb.wbb} #$elementCount writeEvrElement $e :${wb.remaining}', 1);
-    if (_isEvrShortLengthVR(vrIndex)) {
+//    log.debug('${wb.wbb} #$elementCount writeElement $e :${wb.remaining}', 1);
+    if (_isShortLengthVR(vrIndex)) {
       writeShort(e, vrIndex);
-    } else if (_isEvrLongLengthVR(vrIndex)) {
+    } else if (_isLongLengthVR(vrIndex)) {
       writeLongDefinedLength(e, vrIndex);
     } else if (_isSequenceVR(vrIndex)) {
       writeSequence(e, vrIndex);
     } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
-      writeMaybeUndefined(e, vrIndex);
+      writeMaybeUndefinedLength(e, vrIndex);
     } else {
       throw new ArgumentError('Invalid VR: $e');
     }
@@ -57,40 +57,40 @@ abstract class LoggingEvrWriter extends EvrWriter<int> with LogWriteMixin {
 
     pInfo.nElements++;
     doEndOfElementStats(eStart, wb.wIndex, e);
-//    log.debug('${wb.wee} #$elementCount writeEvrElement ${e.dcm} ${e.keyword}', -2);
+//    log.debug('${wb.wee} #$elementCount writeElement ${e.dcm} ${e.keyword}', -2);
   }
 
   @override
   void writeShort(Element e, int vrIndex) {
-//    log.debug('${wb.wbb} writeShortEvr $e :${wb.remaining}', 1);
-    super.writeShortEvr(e, vrIndex);
+//    log.debug('${wb.wbb} writeShort $e :${wb.remaining}', 1);
+    super.writeShort(e, vrIndex);
     pInfo.nShortElements++;
   }
 
   /// Write a non-Sequence _defined length_ Element.
   @override
   void writeLongDefinedLength(Element e, int vrIndex) {
-//    log.debug('${wb.wbb} writeLongEvrDefinedLength $e :${wb.remaining}', 1);
-    super.writeLongEvrDefinedLength(e, vrIndex);
+//    log.debug('${wb.wbb} writeLongDefinedLength $e :${wb.remaining}', 1);
+    super.writeLongDefinedLength(e, vrIndex);
     pInfo.nLongElements++;
   }
 
   @override
-  void writeMaybeUndefined(Element e, int vrIndex) {
-//    log.debug('${wb.wbb} writeEvrMaybeUndefined $e :${wb.remaining}', 1);
+  void writeMaybeUndefinedLength(Element e, int vrIndex) {
+//    log.debug('${wb.wbb} writeMaybeUndefined $e :${wb.remaining}', 1);
 
-    super.writeEvrMaybeUndefined(e, vrIndex);
+    super.writeMaybeUndefinedLength(e, vrIndex);
 
     pInfo.nMaybeUndefinedElements++;
     return (e.hadULength && !eParams.doConvertUndefinedLengths)
-        ? _writeLongEvrUndefinedLength(e, vrIndex)
+        ? _writeLongUndefinedLength(e, vrIndex)
         : writeLongDefinedLength(e, vrIndex);
   }
 
-  void _writeLongEvrUndefinedLength(Element e, int vrIndex) {
-//    log.debug('${wb.wmm} writeEvrUndefined $e :${wb.remaining}');
+  void _writeLongUndefinedLength(Element e, int vrIndex) {
+//    log.debug('${wb.wmm} writeUndefined $e :${wb.remaining}');
 
-    super.writeLongEvrUndefinedLength(e, vrIndex);
+    super.writeLongUndefinedLength(e, vrIndex);
 
     pInfo.nUndefinedLengthElements++;
   }
@@ -100,17 +100,17 @@ abstract class LoggingEvrWriter extends EvrWriter<int> with LogWriteMixin {
     pInfo.nSequences++;
     if (e.isPrivate) pInfo.nPrivateSequences++;
     return (e.hadULength && !eParams.doConvertUndefinedLengths)
-        ? _writeEvrSQUndefinedLength(e, vrIndex)
-        : _writeEvrSQDefinedLength(e, vrIndex);
+        ? _writeSQUndefinedLength(e, vrIndex)
+        : _writeSQDefinedLength(e, vrIndex);
   }
 
-  void _writeEvrSQDefinedLength(SQ e, int vrIndex) {
-//    log.debug('${wb.wbb} writeEvrSQDefinedLength $e :${wb.remaining}', 1);
+  void _writeSQDefinedLength(SQ e, int vrIndex) {
+//    log.debug('${wb.wbb} writeSQDefinedLength $e :${wb.remaining}', 1);
     final index = outputOffsets.reserveSlot;
     pInfo.nDefinedLengthSequences++;
     final eStart = wb.wIndex;
 
-    super.writeEvrSQUndefinedLength(e, vrIndex);
+    super.writeSQUndefinedLength(e, vrIndex);
 
     final eEnd = wb.wIndex;
     assert(e.vfLength + 12 == e.eEnd - e.eStart, '${e.vfLength}, $eEnd - $eStart');
@@ -118,11 +118,11 @@ abstract class LoggingEvrWriter extends EvrWriter<int> with LogWriteMixin {
     outputOffsets.insertAt(index, eStart, eEnd, e);
   }
 
-  void _writeEvrSQUndefinedLength(SQ e, int vrIndex) {
-    log.debug('${wb.wbb} writeEvrSQUndefinedLength $e :${wb.remaining}', 1);
+  void _writeSQUndefinedLength(SQ e, int vrIndex) {
+    log.debug('${wb.wbb} writeSQUndefinedLength $e :${wb.remaining}', 1);
     final eStart = wb.wIndex;
     final index = outputOffsets.reserveSlot;
-    super.writeEvrSQUndefinedLength(e, vrIndex);
+    super.writeSQUndefinedLength(e, vrIndex);
     pInfo.nUndefinedLengthSequences++;
     outputOffsets.insertAt(index, eStart, wb.wIndex, e);
   }
@@ -136,8 +136,8 @@ bool _isSpecialVR(int vrIndex) =>
 bool _isMaybeUndefinedLengthVR(int vrIndex) =>
     vrIndex >= kVRMaybeUndefinedIndexMin && vrIndex <= kVRMaybeUndefinedIndexMax;
 
-bool _isEvrLongLengthVR(int vrIndex) =>
+bool _isLongLengthVR(int vrIndex) =>
     vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
 
-bool _isEvrShortLengthVR(int vrIndex) =>
+bool _isShortLengthVR(int vrIndex) =>
     vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;

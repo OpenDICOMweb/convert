@@ -8,8 +8,8 @@ import 'dart:io';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/byte_data/reader/bd_reader.dart';
-import 'package:convert/src/binary/byte_data/writer/bd_writer.dart';
+import 'package:convert/src/binary/bytes/reader/bd_reader.dart';
+import 'package:convert/src/binary/bytes/writer/bd_writer.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
 /// Read a file then write it to a buffer.

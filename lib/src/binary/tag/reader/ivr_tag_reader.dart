@@ -22,6 +22,7 @@ class IvrTagReader extends IvrReader<int> {
   final ReadBuffer rb;
   @override
   final TagRootDataset rds;
+  @override
   final DecodingParameters dParams;
   final bool reUseBD;
 

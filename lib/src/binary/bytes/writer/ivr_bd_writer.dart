@@ -9,7 +9,7 @@ import 'package:core/core.dart';
 import 'package:convert/src/binary/base/writer/dcm_writer_base.dart';
 import 'package:convert/src/binary/base/writer/ivr_writer.dart';
 import 'package:convert/src/binary/base/writer/debug/log_write_mixin.dart';
-import 'package:convert/src/binary/byte_data/writer/evr_bd_writer.dart';
+import 'package:convert/src/binary/bytes/writer/evr_bd_writer.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 

@@ -7,12 +7,14 @@
 import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/reader/dcm_reader_base.dart';
+import 'package:convert/src/utilities/decoding_parameters.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters
 
 abstract class IvrReader<V> extends DcmReaderBase {
   @override
   ReadBuffer get rb;
+  DecodingParameters get dParams;
 
   @override
   int readFmi(int eStart) => unsupportedError();
@@ -26,10 +28,10 @@ abstract class IvrReader<V> extends DcmReaderBase {
     final vrIndex = _lookupIvrVRIndex(code, eStart, tag);
 
     if (_isIvrDefinedLengthVR(vrIndex))
-      return readIvrDefinedLength(code, eStart, vrIndex);
-    if (_isSequenceVR(vrIndex)) return readSequence(code, eStart, vrIndex);
+      return _readDefinedLength(code, eStart, vrIndex);
+    if (_isSequenceVR(vrIndex)) return _readSequence(code, eStart, vrIndex);
     if (_isMaybeUndefinedLengthVR(vrIndex))
-      return readMaybeUndefined(code, vrIndex, eStart);
+      return _readMaybeUndefined(code, vrIndex, eStart);
     invalidVRIndex(vrIndex, null, null);
     return null;
   }
@@ -50,9 +52,8 @@ abstract class IvrReader<V> extends DcmReaderBase {
 
   /// Read an IVR Element (not SQ) with a 32-bit vfLengthField (vlf),
   /// but that cannot have kUndefinedValue.
-  Element readIvrDefinedLength(int code, int eStart, int vrIndex) {
+  Element _readDefinedLength(int code, int eStart, int vrIndex) {
     final vlf = rb.readUint32();
-    logStartRead(code, vrIndex, eStart, vlf, 'readIvrDefinedLength');
     assert(vlf != kUndefinedLength);
     return _makeIvr(code, vrIndex, eStart, vlf);
   }
@@ -60,11 +61,11 @@ abstract class IvrReader<V> extends DcmReaderBase {
   Element _makeIvr(int code, int vrIndex, int eStart, int vlf) {
     assert(vlf != kUndefinedLength);
     rb.rSkip(vlf);
-    final bd = rb.subbytes(eStart, rb.index);
+    final bytes = rb.subbytes(eStart, rb.index);
     final e = (code == kPixelData)
-        ? makePixelData(code, bd, vrIndex)
-        : makeFromBytes(code, bd, vrIndex);
-    logEndRead(eStart, e, 'makeIvr');
+        ? makePixelData(code, bytes, vrIndex)
+        : makeFromBytes(code, bytes, vrIndex);
+//    logEndRead(eStart, e, 'makeIvr');
     return e;
   }
 
@@ -79,9 +80,8 @@ abstract class IvrReader<V> extends DcmReaderBase {
 
   /// Read an Element (not SQ)  with a 32-bit vfLengthField, that might have
   /// kUndefinedValue.
-  Element readMaybeUndefined(int code, int vrIndex, int eStart) {
+  Element _readMaybeUndefined(int code, int vrIndex, int eStart) {
     final vlf = rb.readUint32();
-    logStartRead(code, vrIndex, eStart, vlf, 'readMaybeUndefined');
     // If VR is UN then this might be a Sequence
     if (vrIndex == kUNIndex && isUNSequence(vlf))
       return _readUSQ(code, vrIndex, eStart, vlf);
@@ -93,15 +93,17 @@ abstract class IvrReader<V> extends DcmReaderBase {
     final e = (code == kPixelData)
         ? makePixelData(code, bd, vrIndex, rds.transferSyntax, fragments)
         : makeFromBytes(code, bd, vrIndex);
-    logEndRead(eStart, e, 'readMaybeUndefined');
+//    logEndRead(eStart, e, 'readMaybeUndefined');
     return e;
   }
 
   @override
-  Element readSequence(int code, int eStart, int vrIndex) {
+  Element readSequence(int code, int eStart, int vrIndex) =>
+      _readSequence(code, eStart, vrIndex);
+
+  Element _readSequence(int code, int eStart, int vrIndex) {
     assert(vrIndex == kSQIndex);
     final vlf = rb.readUint32();
-    logStartSQRead(code, vrIndex, eStart, vlf, 'readIvrSequence');
     return (vlf == kUndefinedLength)
         ? _readUSQ(code, vrIndex, eStart, vlf)
         : _readDSQ(code, vrIndex, eStart, vlf);
@@ -123,7 +125,6 @@ abstract class IvrReader<V> extends DcmReaderBase {
       items,
       rb.subbytes(eStart, rb.index),
     );
-    logEndSQRead(eStart, e, 'readEvrSequenceULength');
     return e;
   }
 
@@ -145,7 +146,6 @@ abstract class IvrReader<V> extends DcmReaderBase {
     final end = rb.rIndex;
     assert(eEnd == end, '$eEnd == $end');
     final e = makeSequence(code, cds, items, rb.asBytes(eStart, rb.index));
-    logEndSQRead(eStart, e, 'readEvrSequenceDLength');
     return e;
   }
 }
