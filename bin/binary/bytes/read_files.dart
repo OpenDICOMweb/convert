@@ -41,7 +41,7 @@ Future main() async {
 
     final doLogging = system.level > Level.debug;
     final rds =
-        BDReader.readBytes(bytes, path: fPath, doLogging: doLogging, showStats: true);
+        ByteReader.readBytes(bytes, path: fPath, doLogging: doLogging, showStats: true);
 
     if (rds == null) {
       log.warn('Invalid DICOM file: $fPath');

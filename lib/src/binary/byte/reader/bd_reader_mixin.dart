@@ -6,25 +6,21 @@
 
 import 'package:core/core.dart';
 
-abstract class ByteReaderMixin {
+import 'package:convert/src/binary/base/reader/dcm_reader_base.dart';
+
+abstract class ByteReaderMixin implements DcmReaderBase {
+  @override
   RootDataset get rds;
-//  @override
-//  Dataset get cds;
-//  @override
-//  Iterable<Element> get elements => cds.elements;
+  @override
+  Dataset get cds;
+  @override
+  Iterable<Element> get elements => cds.elements;
 
-
-  RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
-      Bytes bd, int fmiEnd) =>
-      new BDRootDataset(fmi, eMap, path, bd, fmiEnd);
-
-  Item makeItem(Dataset parent,
-      [SQ sequence, Map<int, Element> eMap, Bytes bd]) =>
-      new BDItem(parent, sequence, eMap ?? <int, Element>{}, bd);
-
+  @override
   BDElement makeFromBytes(int code, Bytes bd, int vrIndex) =>
       EvrElement.make(code, bd, vrIndex);
 
+  @override
   BDElement makeFromValues<V>(int code, List<V> values, int vrIndex,
           [Bytes bd]) =>
       unsupportedError();
@@ -34,11 +30,22 @@ abstract class ByteReaderMixin {
     return TagElement.make(tag, values, vrIndex);
   }
 
+  @override
   BDElement makePixelData(int code, Bytes bd, int vrIndex,
           [TransferSyntax ts, VFFragments fragments]) =>
       EvrElement.makePixelData(code, bd, vrIndex, ts, fragments);
 
   /// Returns a new Sequence ([SQ]).
+  @override
   SQ makeSequence(int code, Dataset parent, Iterable<Item> items, [Bytes bd]) =>
       EvrElement.makeSequence(code, parent, items, bd);
+
+  RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
+          Bytes bd, int fmiEnd) =>
+      new BDRootDataset(fmi, eMap, path, bd, fmiEnd);
+
+  @override
+  Item makeItem(Dataset parent,
+          [SQ sequence, Map<int, Element> eMap, Bytes bd]) =>
+      new BDItem(parent, sequence, eMap ?? <int, Element>{}, bd);
 }

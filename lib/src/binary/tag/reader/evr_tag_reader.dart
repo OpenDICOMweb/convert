@@ -51,7 +51,7 @@ class EvrTagReader extends EvrReader<int> {
   @override
   Item makeItem(Dataset parent,
           [SQ sequence, Map<int, Element> eMap, Bytes bd]) =>
-      new TagItem(parent, eMap ?? <int, Element>{}, sequence);
+      new TagItem(parent, sequence, eMap ?? <int, Element>{});
 }
 
 /// A decoder for Binary DICOM (application/dicom).

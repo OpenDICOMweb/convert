@@ -18,7 +18,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
   final pad = ''.padRight(5);
-  final reader0 = new BDReader.fromFile(f);
+  final reader0 = new ByteReader.fromFile(f);
   final rds0 = reader0.readRootDataset();
   showRDS(rds0, reader0);
 
@@ -42,7 +42,7 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
   }
   final bytes1 = writer.writeRootDataset();
   log.debug('$pad    Encoded ${bytes1.lengthInBytes} bytes');
-  final reader1 = new BDReader.fromBytes(bytes1);
+  final reader1 = new ByteReader.fromBytes(bytes1);
   final rds1 = reader1.readRootDataset();
   showRDS(rds1, reader1);
 
@@ -75,7 +75,7 @@ $f
   return same;
 }
 
-void showRDS(BDRootDataset rds,  BDReader reader) {
+void showRDS(BDRootDataset rds,  ByteReader reader) {
 	final e = rds[kPixelData];
 	final pdMsg =  (e == null)
 	? ' ** Pixel Data Element not present'

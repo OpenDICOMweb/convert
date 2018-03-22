@@ -33,9 +33,9 @@ class TemplateBenchmark extends BenchmarkBase {
   // Not measured: setup code executed before the benchmark runs.
   @override
   void setup() {
-    Server.initialize(name: 'BDReader benchmark', level: Level.info);
+    Server.initialize(name: 'ByteReader benchmark', level: Level.info);
     timer = new Timer();
-    print('BDReader benchmark start');
+    print('ByteReader benchmark start');
   }
 
   // Not measured: teardown code executed after the benchmark runs.
@@ -43,7 +43,7 @@ class TemplateBenchmark extends BenchmarkBase {
   void teardown() {
     timer.stop();
     final time = timer.elapsed;
-    print('BDReader benchmark end: $time');
+    print('ByteReader benchmark end: $time');
   }
 }
 
@@ -57,7 +57,7 @@ void readFileTest(String path, {int reps = 1, bool fmiOnly = false}) {
 	final bytes = Bytes.fromPath(path);
   final timer = new Timer();
   for (var i = 0; i < reps; i++) {
-    BDReader.readBytes(bytes, doLogging: false, showStats: true);
+    ByteReader.readBytes(bytes, doLogging: false, showStats: true);
   }
   timer.stop();
   print('readFileTest Time: ${timer.elapsed}');

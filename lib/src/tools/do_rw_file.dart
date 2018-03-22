@@ -31,7 +31,7 @@ Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) asy
   final pad = ''.padRight(5);
 
   try {
-    final reader0 = new BDReader.fromFile(f);
+    final reader0 = new ByteReader.fromFile(f);
     final rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {

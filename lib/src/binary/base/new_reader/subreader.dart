@@ -9,9 +9,8 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/utilities/decoding_parameters.dart';
 import 'package:convert/src/errors.dart';
-import 'package:convert/src/utilities/element_offsets.dart';
+import 'package:convert/src/utilities/decoding_parameters.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters, only_throw_errors
 
@@ -29,15 +28,19 @@ import 'package:convert/src/utilities/element_offsets.dart';
 // 3. [_finishReadElement] is only called from [readEvrElement] and
 //    [readIvrElement].
 
-typedef Element LongReader(int code, int eStart, int vrIndex);
+typedef Element LongElementReader(int code, int eStart, int vrIndex);
 
 bool doConvertUNSequences = false;
 
-abstract class EvrReader extends Reader {
+abstract class EvrSubReader extends SubReader {
+  @override
+  final DecodingParameters dParams;
   @override
   Dataset cds;
+  @override
+  final bool isEvr = true;
 
-  EvrReader(this.cds);
+  EvrSubReader(this.dParams, this.cds);
 
   bool _isEvrShortVR(int vrIndex) =>
       vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
@@ -56,20 +59,21 @@ abstract class EvrReader extends Reader {
   Element _readElement() => _startReadElement(_readLong);
 
   @override
-  Element _startReadElement(LongReader readLong) {
+  Element _startReadElement(LongElementReader readLong) {
     final eStart = rb.rIndex;
     final code = rb.readCode();
     final vrCode = rb.readUint16();
     final vrIndex = _lookupEvrVRIndex(code, eStart, vrCode);
 //    final tag = _lookupTag(code, vrIndex, e)
+    print('@R${rb.index} ${dcm(code)} ${vrIdByIndex[vrIndex]}($vrIndex)');
     return (_isEvrShortVR(vrIndex))
-        ? _readShort(code, vrIndex, eStart)
-        : readLong(code, vrIndex, eStart);
+        ? _readShort(code,  eStart, vrIndex)
+        : _readLong(code, eStart, vrIndex);
   }
 
   /// Read a Short EVR Element, i.e. one with a 16-bit Value Field Length field.
   /// These Elements can not have an kUndefinedLength value.
-  Element _readShort(int code, int vrIndex, int eStart) {
+  Element _readShort(int code, int eStart, int vrIndex) {
     final vlf = rb.readUint16();
     if (vlf.isOdd) log.error('Odd vlf: $vlf');
     rb.rSkip(vlf);
@@ -101,11 +105,15 @@ abstract class EvrReader extends Reader {
   }
 }
 
-abstract class IvrReader extends Reader {
+abstract class IvrSubReader extends SubReader {
+  @override
+  final DecodingParameters dParams;
   @override
   Dataset cds;
+  @override
+  final bool isEvr = false;
 
-  IvrReader(this.cds);
+  IvrSubReader(this.dParams, this.cds);
 
   @override
   int _readLongVFLengthField() => rb.readUint32();
@@ -114,7 +122,7 @@ abstract class IvrReader extends Reader {
   Element _readElement() => _startReadElement(_readLong);
 
   @override
-  Element _startReadElement(LongReader readLong) {
+  Element _startReadElement(LongElementReader readLong) {
     final eStart = rb.rIndex;
     final code = rb.readCode();
     final tag = checkCode(code, eStart);
@@ -166,7 +174,7 @@ abstract class IvrReader extends Reader {
 ///  [Element] itself.
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
-abstract class Reader {
+abstract class SubReader {
   // **** Interface ****
 
   /// The [ReadBuffer] being read.
@@ -181,6 +189,9 @@ abstract class Reader {
   /// The current Dataset.
   Dataset get cds;
   set cds(Dataset ds);
+
+ // ElementOffsets get offsets => ElementOffsets.kEmpty;
+ // ParseInfo get pInfo => ParseInfo.kEmpty;
 
   Element _readLong(int code, int eStart, int vrIndex);
 
@@ -211,10 +222,11 @@ abstract class Reader {
 
   /// Returns a new Pixel Data [Element].
   Element makePixelData(int code, Bytes bytes, int vrIndex,
-      [TransferSyntax ts, VFFragments fragments]);
+      [int vfLengthField, TransferSyntax ts, VFFragments fragments]);
 
   /// Creates a new Sequence ([SQ]) [Element].
-  SQ makeSequence(int code, Dataset cds, List<Item> items, [Bytes bytes]);
+  SQ makeSequence(int code, Dataset cds, List<Item> items,
+      [int vfLengthField, Bytes bytes]);
 
   // **** End of Interface
 
@@ -233,8 +245,6 @@ abstract class Reader {
   Uint8List get rootBytes => rb.asUint8List(rb.offsetInBytes, rb.lengthInBytes);
 
   String get info => '$runtimeType: rds: ${rds.info}, cds: ${cds.info}';
-
-  ElementOffsets get offsets => null;
 
   bool hasRemaining(int n) => rb.rHasRemaining(n);
 
@@ -365,7 +375,7 @@ abstract class Reader {
   }
 
   // Finish reading an Undefined Length Element. Return [VFFragments] or null.
-  VFFragments readUndefinedLength(int code, int eStart, int vrIndex, int vlf) {
+  VFFragments _readUndefinedLength(int code, int eStart, int vrIndex, int vlf) {
     assert(vlf == kUndefinedLength);
     if (code == kPixelData) {
       return _readEncapsulatedPixelData(code, eStart, vrIndex, vlf);
@@ -510,7 +520,7 @@ Failed to read FMI: "$path"\nException: $x\n'
   Element _readLongDefinedLength(int code, int vrIndex, int eStart) {
     final vlf = _readLongVFLengthField();
     if (vlf.isOdd) log.error('Odd vlf: $vlf');
-    return _makeLong(code, vrIndex, eStart, vlf);
+    return _makeLong(code, eStart, vrIndex, vlf);
   }
 
   //TODO: speed this up
@@ -563,10 +573,10 @@ Failed to read FMI: "$path"\nException: $x\n'
     }
 
     if (vlf != kUndefinedLength) return _makeLong(code, vrIndex, eStart, vlf);
-    final fragments = readUndefinedLength(code, eStart, vrIndex, vlf);
+    final fragments = _readUndefinedLength(code, eStart, vrIndex, vlf);
     final bytes = rb.subbytes(eStart, rb.index);
     return (code == kPixelData)
-        ? makePixelData(code, bytes, vrIndex, defaultTS, fragments)
+        ? makePixelData(code, bytes, vrIndex, vlf, defaultTS, fragments)
         : makeFromBytes(code, bytes, vrIndex);
   }
 
@@ -586,7 +596,7 @@ Failed to read FMI: "$path"\nException: $x\n'
       final item = readItem();
       items.add(item);
     }
-    return makeSequence(code, cds, items, rb.subbytes(eStart, rb.index));
+    return makeSequence(code, cds, items, vlf, rb.subbytes(eStart, rb.index));
   }
 
   /// Reads a defined [vfl].
@@ -601,7 +611,7 @@ Failed to read FMI: "$path"\nException: $x\n'
     }
     final end = rb.index;
     assert(eEnd == end, '$eEnd == $end');
-    return makeSequence(code, cds, items, rb.subbytes(eStart, end));
+    return makeSequence(code, cds, items, vfl, rb.subbytes(eStart, end));
   }
 
   /// Reads File Meta Information (FMI) and returns a Map<int, Element>
@@ -738,14 +748,14 @@ Failed to read FMI: "$path"\nException: $x\n'
     return invalidTagCode(code);
   }
 
-  Element _startReadElement(LongReader readLong);
+  Element _startReadElement(LongElementReader readLong);
   // **** External Interface
 
   Element readElement() => startReadElement(readLongElement);
 
   // Defaults to unsupported for IVR
   Element readShortElement(int code, int eStart, int vrIndex) => unsupportedError();
-  Element startReadElement(LongReader readLong) => _startReadElement(readLong);
+  Element startReadElement(LongElementReader readLong) => _startReadElement(readLong);
   Element readLongElement(int code, int eStart, int vrIndex) =>
       _readLong(code, eStart, vrIndex);
 

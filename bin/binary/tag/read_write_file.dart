@@ -22,8 +22,7 @@ void main() {
       doAsync: true,
       dParams: DecodingParameters.kNoChange,
       reUseBD: true,
-      doLogging: true,
-      showStats: true);
+      doLogging: true);
   final tagDS0 = reader0.readRootDataset();
   final bytes0 = reader0.rb.asBytes();
   log

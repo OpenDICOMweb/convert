@@ -53,7 +53,7 @@ TagRootDataset convertFile(File file, {int reps = 1, bool fmiOnly = false}) {
   final log = new Logger('convertFile', Level.info)
     ..level = Level.warn1
     ..debug2('Reading: $file');
-  final bdRds = BDReader.readFile(file);
+  final bdRds = ByteReader.readFile(file);
   print('TS: ${bdRds.transferSyntax}');
   log
     ..debug('bRoot.isRoot: ${bdRds.isRoot}')

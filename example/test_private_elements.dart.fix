@@ -32,7 +32,7 @@ bool writeReadElementTest<E>(TagElement<E> e0, [PrivateCreator pc]) {
   // Now read the Dataset from the bytes.
   final bytes = writer0.bytes;
   log.debug('bytes: (${bytes.length})$bytes');
-  final rBuf0 = new BDReader(writer0.bytes);
+  final rBuf0 = new ByteReader(writer0.bytes);
   log.debug('rBuf0: $rBuf0');
 
   int rIndex0;

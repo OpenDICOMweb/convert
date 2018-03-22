@@ -41,7 +41,7 @@ Future<bool> doReadByteFile(File f,
     final bytes = readPath(cPath);
     if (bytes == null) return false;
     final doLogging = system.level > Level.debug;
-    final reader0 = new BDReader.fromBytes(bytes, path: cPath, doLogging:
+    final reader0 = new ByteReader.fromBytes(bytes, path: cPath, doLogging:
     doLogging);
 
     rds0 = reader0.readRootDataset();

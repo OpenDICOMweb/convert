@@ -8,8 +8,10 @@ import 'package:core/core.dart';
 
 // ignore_for_file: only_throw_errors
 
-typedef Element<V> Maker<K, V>(K id, List<V> values,
+/*
+typedef Element<V> _Maker<K, V>(K id, List<V> values,
     [int vfLength, VFFragments fragments]);
+*/
 
 class DatasetConverter {
   final RootDataset sourceRDS;

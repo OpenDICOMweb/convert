@@ -36,7 +36,7 @@ bool elementTest(Element e0, List values) {
 
   // Read the element
   final rds1 = new TagRootDataset();
-  final reader = new BDReader.fromList(writer.bytes, rds1);
+  final reader = new ByteReader.fromList(writer.bytes, rds1);
   final e3 = reader.xReadPublicElement();
   final rIndex = reader.rIndex;
   log.debug('wIndex: $wIndex, rIndex: $rIndex');

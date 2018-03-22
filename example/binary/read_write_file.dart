@@ -12,14 +12,14 @@ import 'package:core/server.dart';
 import 'package:convert/data/test_files.dart';
 ///
 void main() async {
-  Server.initialize(name: 'ReadFile', level: Level.info, throwOnError: true);
+  Server.initialize(name: 'ReadFile', level: Level.debug, throwOnError: true);
 
   final inPath = cleanPath(k6684x0);
   log.info('path: $inPath');
   final length = new File(inPath).lengthSync();
   stdout.writeln('Reading($length bytes): $inPath');
 
-  final rds = BDReader.readPath(inPath, doLogging: false, showStats: true);
+  final rds = ByteReader.readPath(inPath, doLogging: false, showStats: true);
   if (rds == null) {
     log.warn('Invalid DICOM file: $inPath');
   } else {
@@ -27,7 +27,7 @@ void main() async {
   }
 
   final outPath = getVNAPath(rds, 'bin/output', 'dcm');
-  final out = BDWriter.writePath(rds, outPath);
+  final out = ByteWriter.writePath(rds, outPath);
   log
     ..info('outPath: $outPath')
     ..info('Output length: ${out.length}(${out.length ~/ 1024}K)')

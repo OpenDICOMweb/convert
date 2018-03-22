@@ -22,7 +22,7 @@ Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
   final pad = ''.padRight(5);
 
   try {
-    final reader0 = new BDReader.fromFile(f);
+    final reader0 = new ByteReader.fromFile(f);
     final rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -73,12 +73,12 @@ $pad    TS: ${rds0.transferSyntax}''');
     } else {
       log.debug('Re-reading: ${bd1.lengthInBytes} bytes from $outPath');
     }
-    BDReader reader1;
+    ByteReader reader1;
     if (fast) {
       // Just read bytes not file
-      reader1 = new BDReader.fromBytes(bd1);
+      reader1 = new ByteReader.fromBytes(bd1);
     } else {
-      reader1 = new BDReader.fromPath(outPath);
+      reader1 = new ByteReader.fromPath(outPath);
     }
     final rds1 = reader1.readRootDataset();
     //   BDRootDatasets rds1 = BDWriter.readPath(outPath);

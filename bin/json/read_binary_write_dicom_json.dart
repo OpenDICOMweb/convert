@@ -68,7 +68,7 @@ Future main() async {
     stdout.writeln('  Length in bytes: ${bytes.lengthInBytes}');
   }
 
-  final rds = BDReader.readBytes(bytes, path: fPath, doLogging: true, showStats: true);
+  final rds = ByteReader.readBytes(bytes, path: fPath, doLogging: true, showStats: true);
   if (rds == null) {
     log.warn('Invalid DICOM file: $fPath');
   } else {

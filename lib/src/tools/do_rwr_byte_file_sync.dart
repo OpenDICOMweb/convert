@@ -22,7 +22,7 @@ bool doRWRByteFileSync(File f, {bool fast = true, bool noisy = false}) {
   log.info0('RRWByte $f');
 
   try {
-    final reader0 = new BDReader.fromFile(f);
+    final reader0 = new ByteReader.fromFile(f);
     final rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
@@ -78,7 +78,7 @@ $pad    TS: ${rds0.transferSyntax}''');
       log.debug('Re-reading: ${bytes1.lengthInBytes} bytes from $outPath');
     }
     final reader1 =
-        (fast) ? new BDReader.fromBytes(bytes1) : new BDReader.fromPath(outPath);
+        (fast) ? new ByteReader.fromBytes(bytes1) : new ByteReader.fromPath(outPath);
 
     final rds1 = reader1.readRootDataset();
     log

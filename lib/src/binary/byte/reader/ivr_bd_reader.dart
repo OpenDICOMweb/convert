@@ -14,7 +14,7 @@ import 'package:convert/src/utilities/element_offsets.dart';
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [BDRootDataset].
-class IvrBDReader extends IvrReader<int> {
+class IvrByteReader extends IvrReader<int> {
   final bool isEvr = false;
   @override
   final ReadBuffer rb;
@@ -27,22 +27,22 @@ class IvrBDReader extends IvrReader<int> {
   @override
   Dataset cds;
 
-  /// Creates a new [IvrBDReader].
-  IvrBDReader(Bytes bytes, this.rds,
+  /// Creates a new [IvrByteReader].
+  IvrByteReader(Bytes bytes, this.rds,
       {this.dParams = DecodingParameters.kNoChange, this.reUseBD = false})
       : rb = new ReadBuffer(bytes),
         cds = rds {
     print('rds: $rds');
   }
 
-  /// Creates a new [EvrBDReader].
-  IvrBDReader._(Bytes bytes, this.rds, this.dParams, this.reUseBD)
+  /// Creates a new [EvrByteReader].
+  IvrByteReader._(Bytes bytes, this.rds, this.dParams, this.reUseBD)
       : rb = new ReadBuffer(bytes),
         cds = rds {
     print('rds: $rds');
   }
 
-  IvrBDReader.from(EvrBDReader reader)
+  IvrByteReader.from(EvrByteReader reader)
       : rb = reader.rb,
         dParams = reader.dParams,
         rds = reader.rds,
@@ -64,21 +64,21 @@ class IvrBDReader extends IvrReader<int> {
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [BDRootDataset].
-class IvrLoggingBDReader extends IvrBDReader with LogReadMixin {
+class IvrLoggingByteReader extends IvrByteReader with LogReadMixin {
   @override
   final ParseInfo pInfo;
   @override
   final ElementOffsets offsets;
 
-  /// Creates a new [IvrLoggingBDReader].
-  IvrLoggingBDReader(Bytes bd, BDRootDataset rds,
+  /// Creates a new [IvrLoggingByteReader].
+  IvrLoggingByteReader(Bytes bd, BDRootDataset rds,
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD = true})
       : pInfo = new ParseInfo(rds),
         offsets = new ElementOffsets(),
         super._(bd, rds, dParams, reUseBD);
 
-  IvrLoggingBDReader.from(EvrLoggingBDReader reader)
+  IvrLoggingByteReader.from(EvrLoggingByteReader reader)
       : pInfo = new ParseInfo(reader.rds),
         offsets = new ElementOffsets(),
         super.from(reader);

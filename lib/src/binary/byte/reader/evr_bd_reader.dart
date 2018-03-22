@@ -16,7 +16,7 @@ import 'package:convert/src/utilities/element_offsets.dart';
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [BDRootDataset].
-class EvrBDReader extends EvrReader<int> with BDReaderMixin {
+class EvrByteReader extends EvrReader<int> with ByteReaderMixin {
   final bool isEvr = true;
   // final Bytes bd;
   @override
@@ -30,14 +30,14 @@ class EvrBDReader extends EvrReader<int> with BDReaderMixin {
   @override
   Dataset cds;
 
-  /// Creates a new [EvrBDReader].
-  EvrBDReader(Bytes bytes, this.rds,
+  /// Creates a new [EvrByteReader].
+  EvrByteReader(Bytes bytes, this.rds,
       {this.dParams = DecodingParameters.kNoChange, this.reUseBD = true})
       : rb = new ReadBuffer(bytes),
         cds = rds;
 
-  /// Creates a new [EvrBDReader].
-  EvrBDReader._(Bytes bytes, this.rds, this.dParams, this.reUseBD)
+  /// Creates a new [EvrByteReader].
+  EvrByteReader._(Bytes bytes, this.rds, this.dParams, this.reUseBD)
       : rb = new ReadBuffer(bytes),
         cds = rds;
 
@@ -49,14 +49,14 @@ class EvrBDReader extends EvrReader<int> with BDReaderMixin {
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [BDRootDataset].
-class EvrLoggingBDReader extends EvrBDReader with LogReadMixin {
+class EvrLoggingByteReader extends EvrByteReader with LogReadMixin {
   @override
   final ParseInfo pInfo;
   @override
   final ElementOffsets offsets;
 
-  /// Creates a new [EvrLoggingBDReader].
-  EvrLoggingBDReader(Bytes bd, BDRootDataset rds,
+  /// Creates a new [EvrLoggingByteReader].
+  EvrLoggingByteReader(Bytes bd, BDRootDataset rds,
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD = true})
       : pInfo = new ParseInfo(rds),

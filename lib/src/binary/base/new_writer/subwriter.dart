@@ -8,7 +8,6 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/writer/dcm_writer_base.dart';
 import 'package:convert/src/binary/base/padding_chars.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
 
@@ -16,24 +15,36 @@ import 'package:convert/src/utilities/encoding_parameters.dart';
 
 const int vfOffset = 12;
 
-typedef void ElementWriter(Element e);
+typedef void ElementSubWriter(Element e);
 
-abstract class EvrWriter<V> extends Writer<V> {
+abstract class EvrSubWriter extends SubWriter {
   @override
   final bool isEvr = true;
+  @override
+  final EncodingParameters eParams;
+  @override
+  Dataset cds;
+
+  EvrSubWriter(this.eParams, this.cds);
 
   /// Write an EVR [Element].
   @override
-  void _writeElement(Element e) {
-    var vrIndex = e.vrIndex;
+  void _writeElement(Element e, [int vrIndex]) {
+    assert(e != null);
+    print(e);
+    vrIndex ??= e.vrIndex;
 
+    assert(!_isSpecialVR(vrIndex), 'Invalid VR: $vrIndex');
+
+/* TODO: remove when fully debugged
     if (_isSpecialVR(vrIndex)) {
-      // This should not happen
       vrIndex = VR.kUN.index;
       log.warn('** vrIndex changed to VR.kUN.index');
     }
-    if (_isShortVR(vrIndex)) {
-      _writeShortEvr(e, vrIndex);
+*/
+
+    if (_isEvrShortVR(vrIndex)) {
+      _writeShort(e, vrIndex);
     } else if (_isLongDefinedLengthVR(vrIndex)) {
       _writeLongDefinedLength(e, vrIndex);
     } else if (_isSequenceVR(vrIndex)) {
@@ -46,47 +57,66 @@ abstract class EvrWriter<V> extends Writer<V> {
   }
 
   /// Write an EVR Element with a short Value Length field.
-  void _writeShortEvr(Element e, int vrIndex) {
-    assert(e != null);
-    assert(e.vfLengthField != kUndefinedLength);
-    assert(wb.index.isEven);
-    assert(_isShortVR(e.vrIndex));
+  @override
+  void _writeShort(Element e, int vrIndex) {
+    assert(e.vfLengthField != kUndefinedLength && wb.index.isEven);
     final vfLength = e.vfLength + (e.vfLength.isOdd ? 1 : 0);
     assert(vfLength.isEven);
-    assert(vfLength >= 0 && vfLength <= kMaxLongVF, 'length: $vfLength');
+    assert(vfLength >= 0 && vfLength <= kMaxShortVF, 'length: $vfLength');
+    __writeShortHeader(e, vrIndex, vfLength);
+    _writeValueField(e, vrIndex);
+  }
+
+  void __writeShortHeader(Element e, int vrIndex, int vfLength) {
+    assert(_isEvrShortVR(vrIndex));
     wb
       ..writeCode(e.code)
-      ..writeUint16(e.vrCode)..writeUint16(vfLength);
-    assert(wb.wIndex.isEven);
-    _writeValueField(e);
+      ..writeUint16(e.vrCode)
+      ..writeUint16(vfLength);
   }
 
   /// Write a Long EVR [Element], i.e. with 32-bit Value Field Length field.
   @override
-  void __writeLongHeader(Element e, int vfLengthField) {
+  void __writeLongHeader(Element e, int vfLengthField, int vrIndex) {
+    assert(_isEvrLongVR(vrIndex));
     wb
       ..writeCode(e.code)
-      ..writeUint16(e.vrCode)..writeUint16(0)
+      ..writeUint16(e.vrCode)
+      ..writeUint16(0)
       ..writeUint32(vfLengthField);
   }
+
+  bool _isEvrLongVR(int vrIndex) =>
+      vrIndex >= kVREvrLongIndexMin && vrIndex <= kVREvrLongIndexMax;
 }
 
 /// A class that writes IVR Elements.
-abstract class IvrWriter<V> extends Writer<V> {
+abstract class IvrSubWriter extends SubWriter {
   @override
   final bool isEvr = false;
+  @override
+  final EncodingParameters eParams;
+  @override
+  Dataset cds;
+
+  IvrSubWriter(this.eParams, this.cds);
 
   /// Write an IVR [Element].
   @override
-  void _writeElement(Element e) {
+  void _writeElement(Element e, [int vrIndex]) {
+    assert(e != null);
     print(e);
-    var vrIndex = e.vrIndex;
-    // This should not happen
-    if (_isSpecialVR(vrIndex)) {
-      vrIndex = VR.kUN.index;
-      log.warn('** vrIndex changed to VR.kUN.index');
-    }
 
+    // Since VR is determinded by Tag, it might be a special VR.
+    vrIndex ??= e.vrIndex;
+    assert(!_isSpecialVR(vrIndex), 'Invalid VR: $vrIndex');
+
+/* TODO: remove when fully debugged
+    if (_isSpecialVR(vrIndex)) {
+      vrIndex = kUNIndex;
+      log.warn('** vrIndex changed to kUNIndex');
+    }
+*/
     if (_isIvrDefinedLengthVR(vrIndex)) {
       _writeLongDefinedLength(e, vrIndex);
     } else if (_isSequenceVR(vrIndex)) {
@@ -94,7 +124,7 @@ abstract class IvrWriter<V> extends Writer<V> {
     } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
       _writeMaybeUndefinedLength(e, vrIndex);
     } else {
-      throw new ArgumentError('Invalid VR: $e');
+      throw new ArgumentError('Invalid VR($vrIndex): $e');
     }
   }
 
@@ -106,14 +136,15 @@ abstract class IvrWriter<V> extends Writer<V> {
   ///
   /// _Note_: all IVR Headers have 32-bit Value Field Length field.
   @override
-  void __writeLongHeader(Element e, int vfLengthField) {
+  void __writeLongHeader(Element e, int _, int vfLengthField) {
+    assert(vfLengthField >= 0 && vfLengthField <= kMaxLongVF);
     wb
       ..writeCode(e.code)
       ..writeUint32(vfLengthField);
   }
 }
 
-abstract class Writer<V>  {
+abstract class SubWriter {
   bool get isEvr;
   WriteBuffer get wb;
   RootDataset get rds;
@@ -121,34 +152,24 @@ abstract class Writer<V>  {
   set cds(Dataset ds);
 
   EncodingParameters get eParams;
-  int get minLength;
-  bool get reUseBD;
 
-  void _writeElement(Element e);
-  void __writeLongHeader(Element e, int vfLengthField);
+  void _writeElement(Element e, [int vrIndex]);
+
+  void _writeShort(Element e, int vrIndex) => unsupportedError();
+
+  void __writeLongHeader(Element e, int vfLengthField, int vrIndex);
 
   // **** End of Interface
-
-//  bool get isEvr => rds.isEvr;
-
-  /// Returns a [Uint8List] view of the [Bytes] buffer at the current time
-  Uint8List get asUint8List => wb.asUint8List(0, wb.wIndex);
 
   /// Return's the current position of the write index ([wIndex]).
   int get wIndex => wb.wIndex;
 
-  /// The root Dataset being encoded.
-  //  RootDataset get rds;
-
   TransferSyntax get ts => rds.transferSyntax;
 
-  /// The current dataset.  This changes as Sequences and Items are encoded.
-  //  Dataset cds;
-
-  /// The current [length] in bytes of this [DcmWriterBase].
+  /// The current [length] in bytes of this [SubWriter].
   int get lengthInBytes => wb.wIndex;
 
-  /// The current [length] in bytes of this [DcmWriterBase].
+  /// The current [length] in bytes of this [SubWriter].
   int get length => lengthInBytes;
 
   bool get removeUndefinedLengths => eParams.doConvertUndefinedLengths;
@@ -162,7 +183,7 @@ abstract class Writer<V>  {
 
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].
-  Bytes writeRootDataset() {
+  Bytes _writeRootDataset() {
     _writeDataset(rds);
     return wb.subbytes(0, wb.wIndex);
   }
@@ -175,7 +196,7 @@ abstract class Writer<V>  {
   }
 
   /// Write all [Item]s in [items].
-  void writeItems(List<Item> items) {
+  void _writeItems(List<Item> items) {
     for (var item in items) {
       final parentDS = cds;
       cds = item;
@@ -185,13 +206,10 @@ abstract class Writer<V>  {
   }
 
   /// Write one [Item].
-  void writeItem(Item item) =>
+  void _writeItem(Item item) =>
       (item.hasULength && !eParams.doConvertUndefinedLengths)
           ? _writeUndefinedLengthItem(item)
           : _writeDefinedLengthItem(item);
-
-  void writeDefinedLengthItem(Item item) => _writeDefinedLengthItem(item);
-  void writeUndefinedLengthItem(Item item) => _writeUndefinedLengthItem(item);
 
   /// Writes a [Dataset] to the buffer.
   void _writeDefinedLengthItem(Item item) {
@@ -200,49 +218,24 @@ abstract class Writer<V>  {
   }
 
   void _writeUndefinedLengthItem(Item item) {
-    wb
-      ..writeUint32(kItem32BitLE)
-      ..writeUint32(kUndefinedLength);
+    wb..writeUint32(kItem32BitLE)..writeUint32(kUndefinedLength);
     _writeDataset(item);
-    wb
-      ..writeUint32(kItemDelimitationItem32BitLE)
-      ..writeUint32(0);
+    wb..writeUint32(kItemDelimitationItem32BitLE)..writeUint32(0);
   }
 
   void _writeEncapsulatedPixelData(IntBase e) {
     assert(e.vfLengthField == kUndefinedLength);
     for (final fragment in e.fragments.fragments) {
-//      log.debug('fragment(${fragment.lengthInBytes})');
       wb
         ..writeUint32(kItem32BitLE)
         ..writeUint32(fragment.lengthInBytes)
         ..writeUint8List(fragment);
+
       // If odd length write padding byte
       if (fragment.length.isOdd) {
         log.warn('Odd length(${fragment.lengthInBytes}) fragment');
         wb.writeUint8(0);
       }
-    }
-//    log.debug('End of pixelData: ${wb.wIndex}');
-  }
-
-  // **** Logging Interface ****
-  void logStartWrite(Element e, String name) {}
-
-  void logEndWrite(int eStart, Element e, String name, {bool ok}) {}
-
-  void logStartSQWrite(Element e, String name) {}
-
-  void logEndSQWrite(int eStart, Element e, String name, {bool ok}) {}
-
-  /// Returns the [outputTS] for the encoded output.
-  static TransferSyntax getOutputTS(RootDataset rds, TransferSyntax outputTS) {
-    if (outputTS == null) {
-      return (rds.transferSyntax == null)
-          ? system.defaultTransferSyntax
-          : rds.transferSyntax;
-    } else {
-      return outputTS;
     }
   }
 
@@ -255,41 +248,41 @@ abstract class Writer<V>  {
 
   bool _isMaybeUndefinedLengthVR(int vrIndex) =>
       vrIndex >= kVRMaybeUndefinedIndexMin &&
-          vrIndex <= kVRMaybeUndefinedIndexMax;
+      vrIndex <= kVRMaybeUndefinedIndexMax;
 
   bool _isLongDefinedLengthVR(int vrIndex) =>
       vrIndex >= kVRIvrDefinedIndexMin && vrIndex <= kVREvrLongIndexMax;
 
-  bool _isShortVR(int vrIndex) =>
+  bool _isEvrShortVR(int vrIndex) =>
       vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
 
-  bool _isNotShortVR(int vrIndex) => !_isShortVR(vrIndex);
+  bool _isNotShortVR(int vrIndex) => !_isEvrShortVR(vrIndex);
 
   /// Write a non-Sequence EVR Element with a long Value Length field
   /// and a _defined length_.
-  void _writeLongDefinedLength(Element e, int vrIndex) {
+  void _writeLongDefinedLength(Element e, [int vrIndex]) {
     assert(e.vfLengthField != kUndefinedLength && wb.index.isEven);
-    _writeLongHeader(e, e.vfLength);
-    _writeValueField(e);
+    _writeLongHeader(e, vrIndex, e.vfLength);
+    _writeValueField(e, vrIndex);
   }
 
   /// Write a non-Sequence Element (OB, OW, UN) that may have an undefined length
-  void _writeMaybeUndefinedLength(Element e, int vrIndex) {
+  void _writeMaybeUndefinedLength(Element e, [int vrIndex]) {
     (e.hadULength && !eParams.doConvertUndefinedLengths)
         ? _writeLongUndefinedLength(e, vrIndex)
         : _writeLongDefinedLength(e, vrIndex);
   }
 
   /// Write a non-Sequence _undefined length_ Element.
-  void _writeLongUndefinedLength(Element e, int vrIndex) {
+  void _writeLongUndefinedLength(Element e, [int vrIndex]) {
     assert(_isMaybeUndefinedLengthVR(vrIndex) &&
         e.vfLengthField == kUndefinedLength &&
         wb.index.isEven);
-    _writeLongHeader(e, kUndefinedLength);
+    _writeLongHeader(e, vrIndex, kUndefinedLength);
     if (e.code == kPixelData) {
       _writeEncapsulatedPixelData(e);
     } else {
-      _writeValueField(e);
+      _writeValueField(e, vrIndex);
     }
     wb..writeUint32(kSequenceDelimitationItem32BitLE)..writeUint32(0);
     assert(wb.wIndex.isEven);
@@ -307,7 +300,7 @@ abstract class Writer<V>  {
     assert(e is SQ && vrIndex == kSQIndex);
     final eStart = wb.wIndex;
     assert(eStart.isEven);
-    _writeLongHeader(e, e.vfLength);
+    _writeLongHeader(e, vrIndex, e.vfLength);
     // This if the offset where the vfLengthField will be written
     final vlfOffset = wb.wIndex - 4;
     writeItems(e.items);
@@ -323,37 +316,37 @@ abstract class Writer<V>  {
   void _writeSQUndefinedLength(SQ e, int vrIndex) {
     assert(e is SQ && vrIndex == kSQIndex);
     assert(wb.index.isEven);
-    _writeLongHeader(e, kUndefinedLength);
+    _writeLongHeader(e, vrIndex, kUndefinedLength);
     writeItems(e.items);
     wb..writeUint32(kSequenceDelimitationItem32BitLE)..writeUint32(0);
     assert(wb.wIndex.isEven);
   }
 
   /// Write a Long Header with Value Length Field equal to [vfLengthField].
-  bool _writeLongHeader(Element e, int vfLengthField) {
+  bool _writeLongHeader(Element e, int vrIndex, int vfLengthField) {
     assert(e != null && wb.wIndex.isEven);
-    assert(_isNotShortVR(e.vrIndex), 'vrIndex: ${e.vrIndex}');
+    assert(_isNotShortVR(vrIndex), 'vrIndex: $vrIndex');
     final vfLength = e.vfLength;
     assert(vfLength != null);
     final isOddLength = vfLength.isOdd;
     final length = vfLength + (isOddLength ? 1 : 0);
     assert(length.isEven);
     assert(length >= 0 && length < kUndefinedLength, 'length: $length');
-    __writeLongHeader(e, vfLengthField);
+    __writeLongHeader(e, vrIndex, vfLengthField);
     assert(wb.index.isEven);
     return isOddLength;
   }
 
-  void _writeValueField(Element e) {
+  void _writeValueField(Element e, int vrIndex) {
     assert(wb.wIndex.isEven);
     wb.write(e.vfBytes);
-    if (e.vfLength.isOdd) _writePaddingChar(e);
+    if (e.vfLength.isOdd) _writePaddingChar(e, vrIndex);
     assert(wb.wIndex.isEven);
   }
 
-  void _writePaddingChar(Element e) {
+  void _writePaddingChar(Element e, int vrIndex) {
     assert(wb.wIndex.isOdd, 'vfLength: ${e.vfLength} - $e');
-    final padChar = paddingChar(e.vrIndex);
+    final padChar = paddingChar(vrIndex);
     if (padChar.isNegative) {
       log.error('Padding a non-padded Element: $e');
       return invalidVFLength(e.vfBytes.length, -1);
@@ -368,34 +361,28 @@ abstract class Writer<V>  {
   /// media type, writes it to a [Uint8List], and returns that list.
   /// Writes File Meta Information (FMI) to the output.
   /// _Note_: FMI is always Explicit Little Endian
-  Bytes writeFmi() {
-    //  if (encoding.doUpdateFMI) return writeODWFMI();
-    if (rds is! RootDataset) log.error('Not _rootDS');
+  Bytes _writeFmi() {
     if (!rds.hasFmi) {
-      final pInfo = rds.pInfo;
-      assert(pInfo.hadPrefix == false || !eParams.doAddMissingFMI);
-      log.warn('Root Dataset does not have FMI: $rds');
       if (!eParams.allowMissingFMI || !eParams.doAddMissingFMI) {
         log.error('Dataset $rds is missing FMI elements');
         return kEmptyBytes;
       }
-      if (eParams.doUpdateFMI) return writeOdwFmi(rds);
+      if (eParams.doUpdateFMI) return _writeOdwFmi();
     }
     assert(rds.hasFmi);
-    writeExistingFmi(rds, cleanPreamble: eParams.doCleanPreamble);
+    _writeExistingFmi(cleanPreamble: eParams.doCleanPreamble);
     return wb.subbytes(0, wb.wIndex);
   }
 
-  Bytes writeOdwFmi(RootDataset rootDS) {
-    if (rootDS is! RootDataset) log.error('Not rds');
-    writeCleanPrefix();
+  Bytes _writeOdwFmi() {
+    _writeCleanPrefix();
     //Urgent finish
     return wb.subbytes(0, wb.wIndex);
   }
 
-  void writeExistingFmi(RootDataset rootDS, {bool cleanPreamble = true}) {
-    writePrefix(rootDS, cleanPreamble: cleanPreamble);
-    for (var e in rootDS.fmi.elements) {
+  void _writeExistingFmi({bool cleanPreamble = true}) {
+    _writePrefix(rds, cleanPreamble: cleanPreamble);
+    for (var e in rds.fmi.elements) {
       if (e.code > 0x00030000) break;
       _writeElement(e);
     }
@@ -403,15 +390,15 @@ abstract class Writer<V>  {
 
   /// Writes a DICOM Preamble and Prefix (see PS3.10) as the
   /// beginning of the encoding.
-  bool writePrefix(RootDataset rds, {bool cleanPreamble = true}) {
+  bool _writePrefix(RootDataset rds, {bool cleanPreamble = true}) {
     if (rds is! RootDataset) log.error('Not rds');
     return (rds.prefix == kEmptyBytes || eParams.doCleanPreamble)
-        ? writeCleanPrefix()
-        : writeExistingPreambleAndPrefix();
+        ? _writeCleanPrefix()
+        : _writeExistingPreambleAndPrefix();
   }
 
   /// Writes a new Open DICOMweb FMI.
-  bool writeCleanPrefix() => wb.writeZeros(128);
+  bool _writeCleanPrefix() => wb.writeZeros(128);
 
 /* Flush when working
   /// Writes a new Open DICOMweb FMI.
@@ -423,7 +410,7 @@ abstract class Writer<V>  {
 */
 
   /// Writes a new Open DICOMweb FMI.
-  bool writeExistingPreambleAndPrefix() {
+  bool _writeExistingPreambleAndPrefix() {
     assert(rds.prefix != kEmptyBytes && !eParams.doCleanPreamble);
     final preamble = rds.preamble;
     for (var i = 0; i < 128; i++) wb.writeUint8(preamble.getUint8(i));
@@ -438,36 +425,90 @@ abstract class Writer<V>  {
     wb.ascii(uid.asString);
   }
 */
+
   // **** External interface for debugging and monitoring
 
 // Urgent: decide on best way to handle this
 //  void writeElement(Element e) => _writeElement(e);
 
+  Bytes writeRootDataset() => _writeRootDataset();
+  Bytes writeFmi() => _writeFmi();
+  void writeExistingFmi({bool cleanPreamble = true}) =>
+      _writeExistingFmi(cleanPreamble: cleanPreamble);
+  Bytes writeOdwFmi() => _writeOdwFmi();
+
+  void writeItems(List<Item> items) => _writeItems(items);
+
+  void writeItem(Item item) => _writeItem(item);
+  void writeDefinedLengthItem(Item item) => _writeDefinedLengthItem(item);
+  void writeUndefinedLengthItem(Item item) => _writeUndefinedLengthItem(item);
+
   /// Write an EVR Element with a short Value Length field.
-  void writeShort(Element e, int vrIndex) => writeShort(e, vrIndex);
+  void writeElement(Element e, [int vrIndex]) => _writeElement(e, vrIndex);
+
+  /// Write an EVR Element with a short Value Length field.
+  void writeShortElement(Element e, [int vrIndex]) => _writeShort(e, vrIndex);
 
   /// Write a non-Sequence EVR Element with a long Value Length field
   /// and a _defined length_.
-  void writeLongDefinedLength(Element e, int vrIndex) =>
+  void writeLongElement(Element e, [int vrIndex]) =>
       _writeLongDefinedLength(e, vrIndex);
 
   /// Write a non-Sequence Element (OB, OW, UN) that may have an undefined length
-  void writeMaybeUndefinedLength(Element e, int vrIndex) =>
+  void writeMaybeUndefinedLengthElement(Element e, [int vrIndex]) =>
       _writeMaybeUndefinedLength(e, vrIndex);
 
+/*
   /// Write a non-Sequence _undefined length_ Element.
-  void writeLongUndefinedLength(Element e, int vrIndex) =>
+  void writeLongUndefinedLength(Element e, [int vrIndex]) =>
       _writeLongUndefinedLength(e, vrIndex);
+*/
 
   /// Write a Sequence Element.
-  void writeSequence(SQ e, int vrIndex) => _writeSequence(e, vrIndex);
+  void writeSequence(SQ e, [int vrIndex]) => _writeSequence(e, vrIndex);
 
   /// Write an EVR Sequence with _defined length_.
-  void writeSQDefinedLength(SQ e, int vrIndex) =>
+  void writeSQDefinedLength(SQ e, [int vrIndex]) =>
       _writeSQDefinedLength(e, vrIndex);
 
   /// Write an EVR Sequence with _defined length_.
-  void writeSQUndefinedLength(SQ e, int vrIndex) =>
+  void writeSQUndefinedLength(SQ e, [int vrIndex]) =>
       _writeSQUndefinedLength(e, vrIndex);
+
+/*
+  // Urgent delete or Move Elsewhere if needed
+  /// Returns the [outputTS] for the encoded output.
+  static TransferSyntax getOutputTS(RootDataset rds, TransferSyntax outputTS) {
+    if (outputTS == null) {
+      return (rds.transferSyntax == null)
+          ? system.defaultTransferSyntax
+          : rds.transferSyntax;
+    } else {
+      return outputTS;
+    }
+  }
+*/
+
 }
 
+/// The default [Bytes] buffer length, if none is provided.
+const int kDefaultWriteBufferLength = k1MB; //200 * k1MB;
+
+/// A reusable  [WriteBuffer] is stored here.
+WriteBuffer _reUseBuffer;
+
+WriteBuffer getWriteBuffer({int length, bool reUseBD = false}) {
+  length ??= kDefaultWriteBufferLength;
+
+  if (!reUseBD || _reUseBuffer == null)
+    return _reUseBuffer = new WriteBuffer(length);
+
+  if (length > _reUseBuffer.lengthInBytes) {
+    _reUseBuffer = new WriteBuffer(length + 1024);
+    log.warn(
+        '**** DcmSubWriterBase creating new Reuse BD of Size: ${_reUseBuffer
+        .lengthInBytes}');
+  }
+  _reUseBuffer.reset;
+  return _reUseBuffer;
+}

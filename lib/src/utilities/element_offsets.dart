@@ -101,4 +101,6 @@ class ElementOffsets {
     sb.write('  Total: $length\n');
     return sb.toString();
   }
+
+  static final ElementOffsets kEmpty = new ElementOffsets();
 }

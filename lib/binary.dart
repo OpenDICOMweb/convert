@@ -4,29 +4,28 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-export 'package:convert/src/binary/base/reader/dcm_reader_base.dart';
-export 'package:convert/src/binary/base/reader/evr_reader.dart';
-export 'package:convert/src/binary/base/reader/ivr_reader.dart';
-export 'package:convert/src/binary/base/writer/dcm_writer_base.dart';
-export 'package:convert/src/binary/base/writer/evr_writer.dart';
-export 'package:convert/src/binary/base/writer/ivr_writer.dart';
+export 'package:convert/src/binary/base/new_reader/logging_subreader.dart';
+export 'package:convert/src/binary/base/new_reader/subreader.dart';
+export 'package:convert/src/binary/base/new_writer/subwriter.dart';
 
-export 'package:convert/src/binary/bytes/reader/bd_reader.dart';
-export 'package:convert/src/binary/bytes/reader/evr_bd_reader.dart';
-export 'package:convert/src/binary/bytes/reader/ivr_bd_reader.dart';
-export 'package:convert/src/binary/bytes/writer/bd_writer.dart';
+export 'package:convert/src/binary/bytes/new_reader/bytes_subreader.dart';
+export 'package:convert/src/binary/bytes/new_reader/logging_bytes_reader.dart';
+export 'package:convert/src/binary/bytes/new_writer/bytes_writer.dart';
 export 'package:convert/src/binary/bytes/byte_read_utils.dart';
 
 export 'package:convert/src/binary/compare_bytes.dart';
 export 'package:convert/src/binary/convert_dataset.dart';
-//export 'package:convert/src/binary/convert_to_tag_dataset.dart';
+export 'package:convert/src/binary/compare_bytes.dart';
+export 'package:convert/src/binary/convert_dataset.dart';
+export 'package:convert/src/binary/convert_to_tag_dataset.dart';
 
-export 'package:convert/src/binary/tag/reader/tag_reader.dart';
-export 'package:convert/src/binary/tag/reader/evr_tag_reader.dart';
-export 'package:convert/src/binary/tag/reader/ivr_tag_reader.dart';
+export 'package:convert/src/binary/tag/new_reader/tag_reader.dart';
+export 'package:convert/src/binary/tag/new_reader/tag_reader_mixin.dart';
+export 'package:convert/src/binary/tag/new_writer/tag_writer.dart';
+
 export 'package:convert/src/utilities/decoding_parameters.dart';
 export 'package:convert/src/utilities/element_offsets.dart';
-export 'package:convert/src/binary/tag/writer/tag_writer.dart';
+
 
 
 

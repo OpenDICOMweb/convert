@@ -31,14 +31,15 @@ bool byteReadWriteFileChecked(String path,
 
   final f = new File(fPath);
   try {
-    final reader0 = new BDReader.fromFile(f, doLogging: doLogging);
+    final reader0 = new ByteReader.fromFile(f, doLogging: doLogging);
     final rds0 = reader0.readRootDataset();
     final bytes0 = reader0.rb.bytes;
     log.info('$n:   length: ${bytes0.lengthInBytes}');
     final e = rds0[kPixelData];
     if (e == null) log.warn('$pad ** Pixel Data Element not present');
 
-    log..debug('${rds0.summary}')..debug('${rds0.pInfo}');
+    log.debug('${rds0.summary}');
+      //..debug('${reader0.pInfo}');
 
     // Write the Root Dataset
     BDWriter writer;
@@ -57,28 +58,30 @@ bool byteReadWriteFileChecked(String path,
     log.debug('  Bytes written: offset(${bytes1.offsetInBytes}) '
         'length(${bytes1.lengthInBytes})\n');
 
-    BDReader reader1;
+    ByteReader reader1;
     if (fast) {
       // Just read bytes not file
       log.debug('  Reading (${bytes1.lengthInBytes} bytes');
-      reader1 = new BDReader(new ReadBuffer(bytes1));
+      reader1 = new ByteReader(new ReadBuffer(bytes1));
     } else {
       log.debug(
           '  Reading (${new File(outPath).lengthSync()} bytes) from: $outPath');
-      reader1 = new BDReader.fromPath(outPath);
+      reader1 = new ByteReader.fromPath(outPath);
     }
     final rds1 = reader1.readRootDataset();
 
     if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
 
+/*
     if (rds0.pInfo != rds1.pInfo) {
       log
         ..warn('$pad ** ParseInfo is Different!')
-        ..debug1('$pad rds0: ${rds0.pInfo.summary(rds0)}')
-        ..debug1('$pad rds1: ${rds1.pInfo.summary(rds1)}')
+    //    ..debug1('$pad rds0: ${rds0.pInfo.summary(rds0)}')
+    //    ..debug1('$pad rds1: ${rds1.pInfo.summary(rds1)}')
         ..debug2(rds0.format(new Formatter(maxDepth: -1)))
         ..debug2(rds1.format(new Formatter(maxDepth: -1)));
     }
+*/
 
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
@@ -133,7 +136,7 @@ BDRootDataset readFileTimed(File file,
 
   RootDataset rds;
   timer.start();
-  rds = BDReader.readBytes(bytes, path: path);
+  rds = ByteReader.readBytes(bytes, path: path);
 
   timer.stop();
   if (rds == null) {
@@ -156,7 +159,7 @@ BDRootDataset readFileTimed(File file,
 }
 
 BDRootDataset readFMI(Uint8List bytes, [String path = '']) =>
-    BDReader.readTypedData(bytes, path: path);
+    ByteReader.readTypedData(bytes, path: path);
 
 Bytes writeTimed(BDRootDataset rds,
     {String path = '',

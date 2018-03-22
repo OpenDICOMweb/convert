@@ -19,7 +19,7 @@ import 'package:convert/src/utilities/io_utils.dart';
 
 /// A decoder for Binary DICOM (application/dicom).
 /// The resulting [Dataset] is a [BDRootDataset].
-class BDReader {
+class ByteReader {
   final ReadBuffer rb;
   final String path;
   final bool reUseBD;
@@ -29,8 +29,8 @@ class BDReader {
   final BDRootDataset rds;
   final EvrReader _evrReader;
 
-  /// Creates a new [BDReader], which is decoder for Binary DICOM (application/dicom).
-  factory BDReader(Bytes bd,
+  /// Creates a new [ByteReader], which is decoder for Binary DICOM (application/dicom).
+  factory ByteReader(Bytes bd,
       {BDRootDataset rds,
       String path = '',
       DecodingParameters dParams = DecodingParameters.kNoChange,
@@ -38,7 +38,7 @@ class BDReader {
       bool doLogging = true,
       bool showStats = true}) {
     rds ??= new BDRootDataset.empty(path, bd);
-    return new BDReader._(new ReadBuffer(bd),
+    return new ByteReader._(new ReadBuffer(bd),
         rds: rds,
         path: path,
         dParams: dParams,
@@ -47,8 +47,8 @@ class BDReader {
         showStats: showStats);
   }
 
-  /// Creates a new [BDReader], which is decoder for Binary DICOM (application/dicom).
-  BDReader._(this.rb,
+  /// Creates a new [ByteReader], which is decoder for Binary DICOM (application/dicom).
+  ByteReader._(this.rb,
       {this.rds,
       this.path = '',
       this.dParams = DecodingParameters.kNoChange,
@@ -57,41 +57,41 @@ class BDReader {
       this.showStats = true})
       // Why is this failing
       : _evrReader = (doLogging)
-            ? new EvrLoggingBDReader(
+            ? new EvrLoggingByteReader(
                 rb.bytes, new BDRootDataset.empty(path, rb.bytes),
                 dParams: dParams, reUseBD: reUseBD)
-            : new EvrBDReader(rb.bytes, new BDRootDataset.empty(path, rb.bytes),
+            : new EvrByteReader(rb.bytes, new BDRootDataset.empty(path, rb.bytes),
                 dParams: dParams, reUseBD: reUseBD);
 
-  /// Creates a [BDReader] from the contents of the [uint8List].
-  factory BDReader.fromUint8List(Uint8List uint8List,
+  /// Creates a [ByteReader] from the contents of the [uint8List].
+  factory ByteReader.fromUint8List(Uint8List uint8List,
           {Endian endian = Endian.little,
           String path = '',
           DecodingParameters dParams = DecodingParameters.kNoChange,
           bool reUseBD = true,
           bool doLogging = true,
           bool showStats = true}) =>
-      new BDReader._(new ReadBuffer.fromTypedData(uint8List, endian),
+      new ByteReader._(new ReadBuffer.fromTypedData(uint8List, endian),
           path: path,
           dParams: dParams,
           reUseBD: reUseBD,
           doLogging: doLogging,
           showStats: showStats);
 
-  /// Creates a [BDReader] from the contents of the [input].
-  factory BDReader.fromList(List<int> input,
+  /// Creates a [ByteReader] from the contents of the [input].
+  factory ByteReader.fromList(List<int> input,
           {DecodingParameters dParams = DecodingParameters.kNoChange,
           bool reUseBD = true,
           bool doLogging = true,
           bool showStats = true}) =>
-      new BDReader._(new ReadBuffer.fromList(input),
+      new ByteReader._(new ReadBuffer.fromList(input),
           dParams: dParams,
           reUseBD: reUseBD,
           doLogging: doLogging,
           showStats: showStats);
 
-  /// Creates a [BDReader] from the contents of the [file].
-  factory BDReader.fromFile(File file,
+  /// Creates a [ByteReader] from the contents of the [file].
+  factory ByteReader.fromFile(File file,
       {bool doAsync = false,
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool reUseBD: true,
@@ -100,7 +100,7 @@ class BDReader {
     final Uint8List bList =
         (doAsync) ? _readAsync(file) : file.readAsBytesSync();
     final bytes = new Bytes.fromTypedData(bList);
-    return new BDReader(bytes,
+    return new ByteReader(bytes,
         path: file.path,
         dParams: dParams,
         reUseBD: reUseBD,
@@ -108,14 +108,14 @@ class BDReader {
         showStats: showStats);
   }
 
-  /// Creates a [BDReader] from the contents of the [File] at [path].
-  factory BDReader.fromPath(String path,
+  /// Creates a [ByteReader] from the contents of the [File] at [path].
+  factory ByteReader.fromPath(String path,
           {bool async = false,
           DecodingParameters dParams = DecodingParameters.kNoChange,
           bool reUseBD: true,
           bool doLogging = true,
           bool showStats = true}) =>
-      new BDReader.fromFile(new File(path),
+      new ByteReader.fromFile(new File(path),
           doAsync: async,
           dParams: dParams,
           reUseBD: reUseBD,
@@ -128,10 +128,10 @@ class BDReader {
   bool isFmiRead = false;
   int readFmi() => _evrReader.readFmi(rb.index);
 
-  IvrBDReader __ivrReader;
-  IvrBDReader get _ivrReader => __ivrReader ??= (doLogging)
-      ? new IvrLoggingBDReader.from(_evrReader)
-      : new IvrBDReader.from(_evrReader);
+  IvrByteReader __ivrReader;
+  IvrByteReader get _ivrReader => __ivrReader ??= (doLogging)
+      ? new IvrLoggingByteReader.from(_evrReader)
+      : new IvrByteReader.from(_evrReader);
 
   BDRootDataset readRootDataset() {
     var fmiEnd = -1;
@@ -153,7 +153,7 @@ class BDReader {
       bool reUseBD = true,
       bool doLogging = true,
       bool showStats = true}) {
-    final reader = new BDReader.fromUint8List(bytes,
+    final reader = new ByteReader.fromUint8List(bytes,
         path: path,
         dParams: dParams,
         reUseBD: reUseBD,
@@ -170,7 +170,7 @@ class BDReader {
       bool doLogging = true,
       bool showStats = true}) {
     checkFile(file);
-    final reader = new BDReader.fromFile(file,
+    final reader = new ByteReader.fromFile(file,
         doAsync: async,
         dParams: dParams,
         reUseBD: reUseBD,
@@ -187,7 +187,7 @@ class BDReader {
       bool doLogging = true,
       bool showStats = true}) {
     checkPath(path);
-    final reader = new BDReader.fromFile(new File(path),
+    final reader = new ByteReader.fromFile(new File(path),
         doAsync: async,
         dParams: dParams,
         reUseBD: reUseBD,
