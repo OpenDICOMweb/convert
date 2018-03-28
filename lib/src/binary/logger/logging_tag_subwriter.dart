@@ -6,7 +6,7 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/new_writer/logging_subwriter.dart';
+import 'package:convert/src/binary/logger/logging_subwriter.dart';
 import 'package:convert/src/binary/tag/new_writer/tag_subwriter.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
 

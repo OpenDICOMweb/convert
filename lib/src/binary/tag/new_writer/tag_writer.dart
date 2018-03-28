@@ -18,7 +18,7 @@ import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/new_writer/writer.dart';
 import 'package:convert/src/binary/base/new_writer/subwriter.dart';
-import 'package:convert/src/binary/tag/new_writer/logging_tag_subwriter.dart';
+import 'package:convert/src/binary/logger/logging_tag_subwriter.dart';
 import 'package:convert/src/binary/tag/new_writer/tag_subwriter.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
 import 'package:convert/src/utilities/io_utils.dart';

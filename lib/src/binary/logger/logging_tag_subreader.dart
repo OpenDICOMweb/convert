@@ -6,8 +6,8 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/new_reader/logging_subreader.dart';
-import 'package:convert/src/binary/tag/new_reader/logging_tag_reader.dart';
+import 'package:convert/src/binary/logger/logging_subreader.dart';
+import 'package:convert/src/binary/logger/logging_tag_reader.dart';
 import 'package:convert/src/binary/tag/new_reader/tag_subreader.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 

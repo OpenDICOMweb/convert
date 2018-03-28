@@ -4,7 +4,7 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-export 'package:convert/src/binary/base/new_reader/logging_subreader.dart';
+export 'package:convert/src/binary/logger/logging_subreader.dart';
 export 'package:convert/src/binary/base/new_reader/subreader.dart';
 export 'package:convert/src/binary/base/new_writer/subwriter.dart';
 

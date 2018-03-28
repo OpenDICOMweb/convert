@@ -6,7 +6,7 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/new_reader/logging_subreader.dart';
+import 'package:convert/src/binary/logger/logging_subreader.dart';
 import 'package:convert/src/binary/byte/new_reader/byte_reader_mixin.dart';
 import 'package:convert/src/binary/byte/new_reader/byte_subreader.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
