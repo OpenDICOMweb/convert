@@ -13,87 +13,82 @@ import 'package:convert/src/utilities/parse_info.dart';
 
 abstract class LoggingEvrSubWriter extends EvrSubWriter with LoggingSubWriter {
   @override
-  final ElementOffsets inputOffsets;
-  @override
-  final ElementOffsets outputOffsets;
+  final ElementOffsets offsets;
   @override
   final ParseInfo pInfo;
-  @override
-  int elementCount;
 
-  LoggingEvrSubWriter(
-      EncodingParameters eParams, RootDataset rds, this.inputOffsets)
-      : outputOffsets = (inputOffsets != null) ? new ElementOffsets() : null,
+  LoggingEvrSubWriter(RootDataset rds, EncodingParameters eParams)
+      : offsets = new ElementOffsets(),
         pInfo = new ParseInfo(rds),
-        elementCount = 0,
-        super(eParams, rds);
+        super(rds, eParams);
+
+  @override
+  EvrSubWriter get subWriter;
 }
 
 abstract class LoggingIvrSubWriter extends IvrSubWriter with LoggingSubWriter {
   @override
-  final ElementOffsets inputOffsets;
-  @override
-  final ElementOffsets outputOffsets;
+  final ElementOffsets offsets;
   @override
   final ParseInfo pInfo;
-  @override
-  int elementCount;
 
-  LoggingIvrSubWriter(
-      EncodingParameters eParams, RootDataset rds, this.inputOffsets)
-      : outputOffsets = (inputOffsets != null) ? new ElementOffsets() : null,
+  LoggingIvrSubWriter(RootDataset rds, EncodingParameters eParams)
+      : offsets = new ElementOffsets(),
         pInfo = new ParseInfo(rds),
-        elementCount = 0,
-        super(eParams, rds);
+        super(rds, eParams);
+
+  @override
+  IvrSubWriter get subWriter;
 }
 
 abstract class LoggingSubWriter {
-  EncodingParameters get eParams;
-  ElementOffsets get inputOffsets;
-  ElementOffsets get outputOffsets;
+  SubWriter get subWriter;
+  ElementOffsets get offsets;
   ParseInfo get pInfo;
-  int get elementCount;
-  RootDataset get rds;
-  WriteBuffer get wb;
-  SubWriter get subwriter;
+  RootDataset get rds => subWriter.rds;
+  EncodingParameters get eParams => subWriter.eParams;
+  WriteBuffer get wb => subWriter.wb;
+  TransferSyntax get outputTS => subWriter.outputTS;
+  bool get doLogging => subWriter.doLogging;
+
   void writeOdwFmi();
   void writeExistingFmi();
   // **** End Interface
 
   Bytes writeRootDataset([int fmiEnd]) {
     log.debug('$_start writeRootDataset: fmiEnd($fmiEnd)');
-    final bytes = subwriter.writeRootDataset();
+    final bytes = subWriter.writeRootDataset();
     log..debug('$_end writeRootDataset: ${bytes.length} written');
     return bytes;
   }
 
   void writeItem(Item item) {
     log.debug('$_start writeItem: $item');
-    subwriter.writeItem(item);
+    subWriter.writeItem(item);
     log.debug('$_end writeItem: $item');
   }
 
   void writeShortElement(Element e) {
     log.debug(_startWrite(e, 'writeShort'));
-    subwriter.writeShortElement(e);
+    subWriter.writeShortElement(e);
     log.debug(_endWrite(e, 'writeShort'));
   }
 
   void writeLongElement(Element e) {
     log.debug(_startWrite(e, 'writeLong'));
-    subwriter.writeLongElement(e);
+    subWriter.writeLongElement(e);
     log.debug(_endWrite(e, 'writeLong'));
   }
 
   void writeMaybeUndefinedElement(Element e) {
     log.debug(_startWrite(e, 'writeMaybeUndefined'));
-    subwriter..writeMaybeUndefinedLengthElement(e);
+    subWriter..writeMaybeUndefinedLengthElement(e);
     log.debug(_endWrite(e, 'writeMaybeUndefined'));
   }
 
   void writeSequence(SQ sq) {
     log.debug(_startWrite(sq, 'writeSQ'));
-    subwriter.writeSequence(sq, sq.vrIndex);
+    subWriter.writeSequence(sq, sq.vrIndex);
     log.debug(_endWrite(sq, 'writeSQ'));
   }
 
@@ -109,10 +104,10 @@ abstract class LoggingSubWriter {
         log.error('Dataset $rds is missing FMI elements');
         return kEmptyBytes;
       }
-      if (eParams.doUpdateFMI) return subwriter.writeOdwFmi();
+      if (eParams.doUpdateFMI) return subWriter.writeOdwFmi();
     }
     assert(rds.hasFmi);
-    subwriter.writeExistingFmi(cleanPreamble: eParams.doCleanPreamble);
+    subWriter.writeExistingFmi(cleanPreamble: eParams.doCleanPreamble);
     return wb.subbytes(0, wb.wIndex);
   }
 

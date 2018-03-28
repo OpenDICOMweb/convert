@@ -10,7 +10,6 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -18,97 +17,89 @@ import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/new_writer/writer.dart';
 import 'package:convert/src/binary/base/new_writer/subwriter.dart';
-import 'package:convert/src/binary/tag/new_writer/logging_tag_subwriter.dart';
-import 'package:convert/src/binary/tag/new_writer/tag_subwriter.dart';
+import 'package:convert/src/binary/byte/new_writer/byte_subwriter.dart';
+import 'package:convert/src/binary/byte/new_writer/logging_byte_subwriter.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
-/// A [class] for writing a [TagRootDataset] to a [Uint8List],
+/// A [class] for writing a [BDRootDataset] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
 /// all LITTLE ENDIAN [TransferSyntax]es.
-class TagWriter extends Writer {
+class ByteWriter extends Writer {
   @override
   final EvrSubWriter evrSubWriter;
 
-  /// Creates a new [TagWriter] where index = 0.
-  TagWriter(TagRootDataset rds,
+  /// Creates a new [ByteWriter] where index = 0.
+  ByteWriter(BDRootDataset rds,
       {EncodingParameters eParams = EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false})
-      : evrSubWriter = (doLogging)
-            ? new LoggingTagEvrSubWriter(rds, eParams,
-                outputTS: outputTS, doLogging: doLogging)
-            : new TagEvrSubWriter(rds, eParams),
-        super(doLogging: doLogging);
+      : evrSubWriter = new ByteEvrSubWriter(rds, eParams,
+            outputTS: outputTS, doLogging: doLogging);
 
-  /// Writes the [TagRootDataset] to a [Uint8List], and then writes the
+  /// Writes the [BDRootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
-  factory TagWriter.toFile(TagRootDataset ds, File file,
-      {EncodingParameters eParams,
+  factory ByteWriter.toFile(BDRootDataset rds, File file,
+      {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false}) {
     checkFile(file);
-    return new TagWriter(ds,
+    return new ByteWriter(rds,
         eParams: eParams, outputTS: outputTS, doLogging: doLogging);
   }
 
-  /// Creates a new empty [File] from [path], writes the [TagRootDataset]
+  /// Creates a new empty [File] from [path], writes the [BDRootDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  factory TagWriter.toPath(TagRootDataset rds, String path,
-      {EncodingParameters eParams,
+  factory ByteWriter.toPath(BDRootDataset rds, String path,
+      {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false}) {
     checkPath(path);
-    return new TagWriter(rds,
+    return new ByteWriter(rds,
         eParams: eParams, outputTS: outputTS, doLogging: doLogging);
   }
 
   @override
   IvrSubWriter get ivrSubWriter => _ivrSubWriter ??= (doLogging)
-      ? new LoggingTagIvrSubWriter.from(evrSubWriter)
-      : new TagIvrSubWriter.from(evrSubWriter);
+      ? new LoggingByteIvrSubWriter.from(evrSubWriter)
+      : new ByteIvrSubWriter.from(evrSubWriter);
+
   IvrSubWriter _ivrSubWriter;
 
-  /// Writes the [RootDataset] to a [Uint8List], and returns the [Uint8List].
-  static Bytes writeBytes(TagRootDataset rds,
-      {EncodingParameters eParams,
+  /// Writes the [BDRootDataset] to a [Uint8List], and returns the [Uint8List].
+  static Bytes writeBytes(BDRootDataset rds,
+      {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
-      bool doLogging = true}) {
-    final writer = new TagWriter(rds,
+      bool doLogging = false}) {
+    checkRootDataset(rds);
+    final writer = new ByteWriter(rds,
         eParams: eParams, outputTS: outputTS, doLogging: doLogging);
     return writer.writeRootDataset();
   }
 
-  /// Writes the [RootDataset] to a [Uint8List], then writes the
-  /// [Uint8List] to the [File], and returns the [Uint8List].
-  static Future<Bytes> writeFile(TagRootDataset ds, File file,
-      {EncodingParameters eParams,
+  /// Writes the [BDRootDataset] to a [Uint8List], and then writes the
+  /// [Uint8List] to the [File]. Returns the [Uint8List].
+  static Bytes writeFile(BDRootDataset rds, File file,
+      {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
-      bool doAsync = true,
-      bool doLogging = false}) async {
+      bool doLogging = false}) {
     checkFile(file);
-    final bytes = writeBytes(ds,
+    final bytes = writeBytes(rds,
         eParams: eParams, outputTS: outputTS, doLogging: doLogging);
-    (doAsync)
-        ? await file.writeAsBytes(bytes.asUint8List())
-        : file.writeAsBytesSync(bytes.asUint8List());
+    file.writeAsBytesSync(bytes.asUint8List());
     return bytes;
   }
 
-  /// Creates a new empty [File] from [path], writes the [TagRootDataset]
+  /// Creates a new empty [File] from [path], writes the [BDRootDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  static Future<Bytes> writePath(TagRootDataset ds, String path,
-      {EncodingParameters eParams,
+  static Bytes writePath(BDRootDataset ds, String path,
+      {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
-      bool doAsync = true,
       bool doLogging = false}) {
     checkPath(path);
     return writeFile(ds, new File(path),
-        eParams: eParams,
-        outputTS: outputTS,
-        doAsync: doAsync,
-        doLogging: doLogging);
+        eParams: eParams, outputTS: outputTS, doLogging: doLogging);
   }
 }

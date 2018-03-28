@@ -152,7 +152,7 @@ class ParseInfo {
 
   final RootDataset rds;
 
-  ParseInfo(this.rds);
+  ParseInfo([this.rds]);
 
   ParseInfo.options(
       this.rds,

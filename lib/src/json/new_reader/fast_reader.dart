@@ -8,33 +8,45 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:core/core.dart';
+import 'package:core/core.dart' hide Indenter;
 import 'package:convert/src/json/reader/json_reader_base.dart';
 
 // ignore_for_file: only_throw_errors
 
-class JsonReader extends JsonReaderBase {
-  final Map<String, Map<String, dynamic>> rootMap;
+class FastJsonReader extends JsonReaderBase {
+  final List<List<List>> rootList;
   @override
   final TagRootDataset rds;
   @override
   Dataset cds;
 
-  JsonReader(String s)
-      : rootMap = json.decode(s),
+  FastJsonReader(String s)
+      : rootList = json.decode(s),
         rds = new TagRootDataset.empty();
+
+  List get fmiList => rootList[0];
+  List get rdsList => rootList[1];
+
+  void readFmi() => _readFmi();
+
+  void _readFmi() {
+    for (var entry in fmiList) {
+      final e = readEntry(entry);
+      rds.fmi[e.code] = e;
+    }
+  }
 
   @override
   RootDataset readRootDataset() {
-    for (var entry in rootMap.entries) {
-      final e = readEntry(entry);
-      if (e.code >= 0x00020000 && e.code < 0x00030000) {
-        rds.fmi.add(e);
-      } else {
-        rds.add(e);
-      }
-    }
+    _readFmi();
+    for (var entry in rdsList) rds.add(readEntry(entry));
     return rds;
+  }
+
+  @override
+  void readItems(SQ sq, Iterable itemList) {
+    for (var i = 0; i < itemList.length; i++)
+      readItem(sq, sq.items.elementAt(i), itemList.elementAt(i));
   }
 
   @override
@@ -53,13 +65,11 @@ class JsonReader extends JsonReaderBase {
   Map<int, String> privateCreatorsMap = <int, String>{};
   Map<int, PCTag> knownPrivateCreators = <int, PCTag>{};
 
-  Element readEntry(MapEntry entry) {
-    print('entry: ${entry.key}, ${entry.value}');
-    final code = int.parse(entry.key, radix: 16);
-    final Map vField = entry.value;
-    print('vField: $vField');
-    final vrIndex = vrIndexFromId(vField['vr']);
-    final dynamic values = readValueField(vField);
+  Element readEntry(List entry) {
+    print('entry: $entry');
+    final code = int.parse(entry[0], radix: 16);
+    final vrIndex = vrIndexFromId(entry[1]);
+    final dynamic values = readValueField(entry[2]);
     Tag tag;
     var csg = 0;
     PCTag cPCTag;
@@ -101,14 +111,14 @@ class JsonReader extends JsonReaderBase {
     return readElement(code, values, vrIndex);
   }
 
-  Object readValueField(Map<String, dynamic> vField) {
-    Object values = vField['Values'];
-    if (values != null) return values;
-    values = vField['InlineBinary'];
-    if (values != null) return base64.decode(values);
-    values = vField['BulkDataUrl'];
-    if (values != null) return values;
-    return parseError('Invalid values Map: $vField');
+  Object readValueField(List vField) {
+    print('vField: $vField');
+    if (vField.length < 2) return vField;
+    final Object key = vField[0];
+    final Object value = vField[1];
+    if (key == 'InlineBinary') return base64.decode(value);
+    if (key == 'BulkDataUrl') return value;
+    return vField;
   }
 
   @override
@@ -132,7 +142,7 @@ class JsonReader extends JsonReaderBase {
   }
 
   static RootDataset fromString(String s) =>
-      new JsonReader(s).readRootDataset();
+      new FastJsonReader(s).readRootDataset();
 
   static RootDataset fromFile(File file) => fromString(file.readAsStringSync());
 

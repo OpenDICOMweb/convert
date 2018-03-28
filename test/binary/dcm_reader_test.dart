@@ -8,7 +8,7 @@
 import 'package:core/server.dart';
 import 'package:test/test.dart';
 
-import 'package:convert/src/binary/tag/reader/tag_reader.dart';
+import 'package:convert/src/binary/tag/new_reader/tag_reader.dart';
 
 void main() {
   Server.initialize(name: 'dcm_reader_test', level: Level.info0);

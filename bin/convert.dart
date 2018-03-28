@@ -53,11 +53,13 @@ TagRootDataset convertFile(File file, {int reps = 1, bool fmiOnly = false}) {
   final log = new Logger('convertFile', Level.info)
     ..level = Level.warn1
     ..debug2('Reading: $file');
-  final bdRds = ByteReader.readFile(file);
+  final bList = file.readAsBytesSync();
+  final reader = new ByteReader(bList);
+  final bdRds = reader.readRootDataset();
   print('TS: ${bdRds.transferSyntax}');
   log
     ..debug('bRoot.isRoot: ${bdRds.isRoot}')
-    ..debug1(bdRds.pInfo.summary(bdRds));
+    ..debug1(reader.pInfo.summary(bdRds));
   if (bdRds == null) return null;
 
   final tRoot = DatasetConverter.fromBDRootDataset(bdRds);

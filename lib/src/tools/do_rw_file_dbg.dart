@@ -5,11 +5,12 @@
 // See the AUTHORS file for other contributors.
 
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/bytes/reader/bd_reader.dart';
-import 'package:convert/src/binary/bytes/writer/bd_writer.dart';
+import 'package:convert/src/binary/byte/new_reader/byte_reader.dart';
+import 'package:convert/src/binary/byte/new_writer/byte_writer.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
 /// Read a file then write it to a buffer.
@@ -18,7 +19,8 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
   final pad = ''.padRight(5);
-  final reader0 = new ByteReader.fromFile(f);
+  final Uint8List bList = f.readAsBytesSync();
+  final reader0 = new ByteReader(bList);
   final rds0 = reader0.readRootDataset();
   showRDS(rds0, reader0);
 
@@ -32,17 +34,17 @@ bool doRWFileDebug(File f, {bool throwOnError = false, bool fast = true}) {
 
   // Write the Root Dataset
   log.info('Writing $rds0');
-  BDWriter writer;
+  ByteWriter writer;
   if (fast) {
     // Just write bytes don't write the file
-    writer = new BDWriter(rds0);
+    writer = new ByteWriter(rds0);
   } else {
     final outPath = getTempFile(f.path, 'dcmout');
-    writer = new BDWriter.toPath(rds0, outPath);
+    writer = new ByteWriter.toPath(rds0, outPath);
   }
   final bytes1 = writer.writeRootDataset();
   log.debug('$pad    Encoded ${bytes1.lengthInBytes} bytes');
-  final reader1 = new ByteReader.fromBytes(bytes1);
+  final reader1 = ByteReader.fromBytes(bytes1);
   final rds1 = reader1.readRootDataset();
   showRDS(rds1, reader1);
 
@@ -89,6 +91,6 @@ Read ${bytes0.lengthInBytes} bytes
       TS: ${rds.transferSyntax}
   Pixels: $pdMsg
   $reader
-  ${rds.pInfo.summary(rds)}
+  ${reader.pInfo.summary(rds)}
 ''');
 }

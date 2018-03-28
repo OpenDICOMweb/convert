@@ -54,12 +54,11 @@ void main() {
 }
 
 void readFileTest(String path, {int reps = 1, bool fmiOnly = false}) {
-	final bytes = Bytes.fromPath(path);
+  final bytes = Bytes.fromPath(path);
   final timer = new Timer();
   for (var i = 0; i < reps; i++) {
-    ByteReader.readBytes(bytes, doLogging: false, showStats: true);
+    ByteReader.readBytes(bytes, doLogging: false);
   }
   timer.stop();
   print('readFileTest Time: ${timer.elapsed}');
-
 }

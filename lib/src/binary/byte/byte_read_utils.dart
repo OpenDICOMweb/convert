@@ -9,8 +9,8 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/bytes/reader/bd_reader.dart';
-import 'package:convert/src/binary/bytes/writer/bd_writer.dart';
+import 'package:convert/src/binary/byte/new_reader/byte_reader.dart';
+import 'package:convert/src/binary/byte/new_writer/byte_writer.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
@@ -31,27 +31,26 @@ bool byteReadWriteFileChecked(String path,
 
   final f = new File(fPath);
   try {
-    final reader0 = new ByteReader.fromFile(f, doLogging: doLogging);
+    final bList0 = f.readAsBytesSync();
+    final reader0 = new ByteReader(bList0, doLogging: doLogging);
     final rds0 = reader0.readRootDataset();
-    final bytes0 = reader0.rb.bytes;
+    final bytes0 = reader0.rb.buffer;
     log.info('$n:   length: ${bytes0.lengthInBytes}');
     final e = rds0[kPixelData];
     if (e == null) log.warn('$pad ** Pixel Data Element not present');
 
     log.debug('${rds0.summary}');
-      //..debug('${reader0.pInfo}');
+    //..debug('${reader0.pInfo}');
 
     // Write the Root Dataset
-    BDWriter writer;
+    ByteWriter writer;
     if (fast) {
       // Just write bytes not file
       log.debug('  Writing (${rds0.lengthInBytes} bytes');
-      writer = new BDWriter(rds0,
-          inputOffsets: reader0.offsets, doLogging: doLogging);
+      writer = new ByteWriter(rds0, doLogging: doLogging);
     } else {
       log.debug('  Writing (${rds0.lengthInBytes} bytes) to: $outPath');
-      writer = new BDWriter.toPath(rds0, outPath,
-          inputOffsets: reader0.offsets, doLogging: doLogging);
+      writer = new ByteWriter.toPath(rds0, outPath, doLogging: doLogging);
     }
     final bytes1 = writer.writeRootDataset();
 
@@ -62,11 +61,11 @@ bool byteReadWriteFileChecked(String path,
     if (fast) {
       // Just read bytes not file
       log.debug('  Reading (${bytes1.lengthInBytes} bytes');
-      reader1 = new ByteReader(new ReadBuffer(bytes1));
+      reader1 = new ByteReader.fromBytes(bytes1);
     } else {
-      log.debug(
-          '  Reading (${new File(outPath).lengthSync()} bytes) from: $outPath');
-      reader1 = new ByteReader.fromPath(outPath);
+      final f = new File(outPath);
+      log.debug('  Reading (${f.lengthSync()} bytes) from: $outPath');
+      reader1 = new ByteReader.fromFile(f);
     }
     final rds1 = reader1.readRootDataset();
 
@@ -86,7 +85,7 @@ bool byteReadWriteFileChecked(String path,
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       // Compare [ElementOffsets]s
-      if (reader0.offsets != writer.outputOffsets)
+      if (reader0.offsets != writer.offsets)
         log.warn('$pad ElementOffsets are different!');
     }
 
@@ -136,7 +135,7 @@ BDRootDataset readFileTimed(File file,
 
   RootDataset rds;
   timer.start();
-  rds = ByteReader.readBytes(bytes, path: path);
+  rds = ByteReader.readBytes(bytes);
 
   timer.stop();
   if (rds == null) {
@@ -159,7 +158,7 @@ BDRootDataset readFileTimed(File file,
 }
 
 BDRootDataset readFMI(Uint8List bytes, [String path = '']) =>
-    ByteReader.readTypedData(bytes, path: path);
+    ByteReader.readTypedData(bytes);
 
 Bytes writeTimed(BDRootDataset rds,
     {String path = '',
@@ -177,7 +176,7 @@ Bytes writeTimed(BDRootDataset rds,
         '    at: $timestamp ...');
 
   timer.start();
-  final bytes = BDWriter.writeBytes(rds, path: path);
+  final bytes = ByteWriter.writeBytes(rds);
   timer.stop();
   log.debug('  Elapsed time: ${timer.elapsed}');
   final msPerElement = (timer.elapsedMicroseconds ~/ total) ~/ 1000;
@@ -186,7 +185,7 @@ Bytes writeTimed(BDRootDataset rds,
 }
 
 Bytes writeFMI(BDRootDataset rds, [String path]) =>
-    BDWriter.writePath(rds, path);
+    ByteWriter.writePath(rds, path);
 
 Bytes writeRoot(BDRootDataset rds, {String path}) =>
-    BDWriter.writePath(rds, path);
+    ByteWriter.writePath(rds, path);

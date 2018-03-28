@@ -32,7 +32,7 @@ abstract class Converter {
   int _index;
 
   /// Creates a new Element from a tag, vrIndex and values.
-  Element makeElement<V>(Tag tag, Iterable<V> values, int vrIndex,
+  Element makeElement<V>(int code, Iterable<V> values, int vrIndex,
       [int vfLengthField]);
 
   /// Creates a new Element from an Element.
@@ -133,9 +133,9 @@ class TagConverter extends Converter {
 
   // TODO: Tag tag to int code
   @override
-  Element makeElement<V>(Tag tag, Iterable<V> values, int vrIndex,
+  Element makeElement<V>(int code, Iterable<V> values, int vrIndex,
           [int vfLengthField]) =>
-      TagElement.make(tag, values, vrIndex, vfLengthField);
+      TagElement.makeFromCode(code, values, vrIndex, vfLengthField);
 
   @override
   Element fromElement(Element e, int vrIndex) =>

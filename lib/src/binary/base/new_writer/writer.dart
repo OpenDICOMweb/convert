@@ -16,57 +16,29 @@ import 'dart:typed_data';
 import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/new_writer/subwriter.dart';
-import 'package:convert/src/binary/bytes/new_writer/bytes_subwriter.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
-import 'package:convert/src/utilities/encoding_parameters.dart';
-import 'package:convert/src/utilities/io_utils.dart';
 
 /// A [class] for writing a [BDRootDataset] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
 /// all LITTLE ENDIAN [TransferSyntax]es.
-class ByteWriter {
-  final RootDataset rds;
-  final String path;
-  final bool overwrite;
-  final EncodingParameters eParams;
-  final TransferSyntax outputTS;
-  final int minLength;
-  final ElementOffsets inputOffsets;
-  final bool reUseBD;
+abstract class Writer {
   final bool doLogging;
-  final bool showStats;
-  final EvrSubWriter _evrWriter;
-  IvrSubWriter _ivrWriter;
-  ElementOffsets outputOffsets;
+  int fmiEnd;
 
-  /// Creates a new [ByteWriter] where index = 0.
-  ByteWriter(this.rds,
-      {this.path = '',
-      this.eParams = EncodingParameters.kNoChange,
-      this.outputTS,
-      this.overwrite = false,
-      this.minLength = kDefaultWriteBufferLength,
-      this.inputOffsets,
-      this.reUseBD = true,
-      this.doLogging = false,
-      this.showStats = false})
-      : _evrWriter = (doLogging)
-            ? new LoggingByteEvrSubWriter(eParams, rds, inputOffsets)
-            : new ByteEvrSubWriter(eParams, rds);
+  /// Creates a new [Writer] where index = 0.
+  Writer({this.doLogging = false});
 
+  ElementOffsets get offsets => evrSubWriter.offsets;
+
+/*
   /// Writes the [BDRootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
-  factory ByteWriter.toFile(BDRootDataset ds, File file,
-      {EncodingParameters eParams: EncodingParameters.kNoChange,
-      TransferSyntax outputTS,
-      bool overwrite = false,
-      int minLength,
-      ElementOffsets inputOffsets,
-      bool reUseBD = false,
+  factory Writer.toFile(File file,
+
       bool doLogging = false,
       bool showStats = false}) {
     checkFile(file, overwrite: overwrite);
-    return new ByteWriter(ds,
+    return new Writer(ds,
         path: file.path,
         eParams: eParams,
         outputTS: outputTS,
@@ -81,7 +53,7 @@ class ByteWriter {
   /// Creates a new empty [File] from [path], writes the [BDRootDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  factory ByteWriter.toPath(BDRootDataset ds, String path,
+  factory Writer.toPath(BDRootDataset ds, String path,
       {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool overwrite = false,
@@ -91,7 +63,7 @@ class ByteWriter {
       bool doLogging = false,
       bool showStats = false}) {
     checkPath(path);
-    return new ByteWriter(ds,
+    return new Writer(ds,
         path: path,
         eParams: eParams,
         outputTS: outputTS,
@@ -102,45 +74,41 @@ class ByteWriter {
         doLogging: doLogging,
         showStats: showStats);
   }
+*/
 
+  EvrSubWriter get evrSubWriter;
+  IvrSubWriter get ivrSubWriter;
   Bytes write() => writeRootDataset();
-  Bytes writeFmi() => _evrWriter.writeFmi();
+  Bytes writeFmi() => evrSubWriter.writeFmi();
 
-  /// Writes a [BDRootDataset] to a [Uint8List], then returns it.
+
+  RootDataset get rds => evrSubWriter.rds;
+
+  /// Writes a [RootDataset] to a [Uint8List], then returns it.
   Bytes writeRootDataset() {
-    if (!_evrWriter.isFmiWritten) _evrWriter.writeFmi();
-    if (_evrWriter.rds.transferSyntax.isEvr) {
-      return _evrWriter.writeRootDataset();
-    } else {
-      _ivrWriter = (doLogging)
-          ? new LoggingByteIvrSubWriter.from(_evrWriter)
-          : new ByteIvrSubWriter.from(_evrWriter);
-      return _ivrWriter.writeRootDataset();
+    int fmiEnd;
+    if (!evrSubWriter.isFmiWritten) {
+      final bytes = evrSubWriter.writeFmi();
+      fmiEnd = bytes.length;
     }
+    Bytes bytes;
+    if (evrSubWriter.rds.transferSyntax.isEvr) {
+      bytes = evrSubWriter.writeRootDataset(fmiEnd);
+      print('${bytes.length} bytes writter');
+      print('${evrSubWriter.count} Evr Elements written');
+    } else {
+      bytes = ivrSubWriter.writeRootDataset(fmiEnd);
+      print('${bytes.length} bytes writter');
+      print('${evrSubWriter.count} Evr Elements written');
+      print('${ivrSubWriter.count} Ivr Elements written');
+    }
+    return bytes;
   }
-
+/*
   /// Writes the [BDRootDataset] to a [Uint8List], and returns the [Uint8List].
-  static Bytes writeBytes(BDRootDataset rds,
-      {String path = '',
-      EncodingParameters eParams: EncodingParameters.kNoChange,
-      TransferSyntax outputTS,
-      bool overwrite = false,
-      int minLength,
-      ElementOffsets inputOffsets,
-      bool reUseBD = false,
-      bool doLogging = true,
-      bool showStats = false}) {
+  static Bytes writeBytes({bool doLogging = true}) {
     checkRootDataset(rds);
-    final writer = new ByteWriter(rds,
-        path: path,
-        eParams: eParams,
-        outputTS: outputTS,
-        overwrite: overwrite,
-        minLength: minLength,
-        inputOffsets: inputOffsets,
-        reUseBD: reUseBD,
-        doLogging: doLogging,
-        showStats: showStats);
+    final writer = new Writer(doLogging: doLogging);
     return writer.writeRootDataset();
   }
 
@@ -193,4 +161,5 @@ class ByteWriter {
         doLogging: doLogging,
         showStats: showStats);
   }
+  */
 }

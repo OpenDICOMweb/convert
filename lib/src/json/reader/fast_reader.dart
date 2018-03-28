@@ -129,7 +129,7 @@ class FastJsonReader extends JsonReaderBase {
       Object value,
       int vrIndex,
       ) =>
-      TagElement.make(Tag.lookupByCode(code, vrIndex, value), value, vrIndex);
+      TagElement.makeFromCode(code, value, vrIndex);
 
   @override
   SQ readSequence(int code, Iterable entries, int vrIndex) {

@@ -10,8 +10,8 @@ import 'dart:io';
 import 'package:core/core.dart';
 import 'package:path/path.dart' as  path;
 
-import 'package:convert/src/binary/bytes/reader/bd_reader.dart';
-import 'package:convert/src/binary/bytes/writer/bd_writer.dart';
+import 'package:convert/src/binary/byte/new_reader/byte_reader.dart';
+import 'package:convert/src/binary/byte/new_writer/byte_writer.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
@@ -31,20 +31,21 @@ Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) asy
   final pad = ''.padRight(5);
 
   try {
-    final reader0 = new ByteReader.fromFile(f);
+    final bList = f.readAsBytesSync();
+    final reader0 = new ByteReader(bList);
     final rds0 = reader0.readRootDataset();
     //TODO: improve next two errors
     if (rds0 == null) {
       log.info0('Bad File: ${f.path}');
       return false;
     }
-    if (rds0.pInfo == null) throw 'Bad File - No ParseInfo: $f';
+    if (reader0.pInfo == null) throw 'Bad File - No ParseInfo: $f';
     //TODO: update reader and write to have method called bytes.
     final bytes0 = reader0.rb.asUint8List();
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');
-    if (rds0.pInfo != null) log.debug('$pad    ${rds0.pInfo.summary(rds0)}');
+    if (reader0.pInfo != null) log.debug('$pad    ${reader0.pInfo.summary(rds0)}');
 
     // TODO: move into dataset.warnings.
     final e = rds0[kPixelData];
@@ -55,13 +56,13 @@ $pad    TS: ${rds0.transferSyntax}''');
     }
 
     // Write the Root Dataset
-    BDWriter writer;
+    ByteWriter writer;
     if (fast) {
       // Just write bytes don't write the file
-      writer = new BDWriter(rds0);
+      writer = new ByteWriter(rds0);
     } else {
       final outPath = getTempFile(f.path, 'dcmout');
-      writer = new BDWriter.toPath(rds0, outPath);
+      writer = new ByteWriter.toPath(rds0, outPath);
     }
     final bd1 = writer.writeRootDataset();
     log.debug('$pad    Encoded ${bd1.lengthInBytes} bytes');

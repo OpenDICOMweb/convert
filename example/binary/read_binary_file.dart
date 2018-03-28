@@ -23,18 +23,15 @@ Future main() async {
       showBanner: true,
       showSdkBanner: true);
 
-  final doLogging = true;
   final inPath = cleanPath(k6684x0);
   final fLength = new File(inPath).lengthSync();
   stdout
     ..writeln('Reading($fLength bytes): $inPath')
     ..writeln('Reading(binary): $inPath');
 
-  final rds = (doLogging)
-      ? LoggingByteReader.readPath(inPath)
-      : ByteReader.readPath(inPath);
+  final rds = ByteReader.readPath(inPath, doLogging: true);
 
-  final length = rds.bytes.lengthInBytes;
+  final length = rds.lengthInBytes;
   print('File: $length bytes (${length ~/ 1024}K) read');
   print('RootDataset: ${rds.total} Elements');
 }

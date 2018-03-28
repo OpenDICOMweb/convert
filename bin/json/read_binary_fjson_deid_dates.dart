@@ -43,16 +43,16 @@ Future main() async {
   } else {
     stdout.writeln('  Length in bytes: ${bytes.lengthInBytes}');
   }
+  final reader = new ByteReader.fromBytes(bytes);
+  final bdRDS = reader.readRootDataset();
 
-  final bdRDS =
-      ByteReader.readBytes(bytes, path: fPath, doLogging: false, showStats: true);
   if (bdRDS == null) {
     log.warn('Invalid DICOM file: $fPath');
   } else {
-    if (bdRDS.pInfo != null) {
+    if (reader.pInfo != null) {
       final infoPath = '${path.withoutExtension(fPath)}.info';
       log.info('infoPath: $infoPath');
-      final sb = new StringBuffer('${bdRDS.pInfo.summary(bdRDS)}\n')
+      final sb = new StringBuffer('${reader.pInfo.summary(bdRDS)}\n')
         ..write('Bytes Dataset: ${bdRDS.summary}');
       new File(infoPath)..writeAsStringSync(sb.toString());
       log.debug(sb.toString());

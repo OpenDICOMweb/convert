@@ -6,59 +6,30 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/new_reader/logging_subreader.dart';
 import 'package:convert/src/binary/base/new_reader/subreader.dart';
-import 'package:convert/src/binary/tag/new_reader/logging_bytes_reader.dart';
+import 'package:convert/src/binary/tag/new_reader/logging_tag_reader.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 
 class TagEvrSubReader extends EvrSubReader with TagReaderMixin {
   @override
-  final BDRootDataset rds;
+  final TagRootDataset rds;
   @override
-  final ReadBuffer rb;
+  final bool doLogging;
 
-  TagEvrSubReader(DecodingParameters dParams,  RootDataset rds, this.rb)
-      : rds = rds,
-        super(dParams, rds);
-}
-
-class LoggingTagEvrSubReader extends LoggingEvrSubReader with TagReaderMixin {
-  @override
-  final BDRootDataset rds;
-  @override
-  final ReadBuffer rb;
-
-  LoggingTagEvrSubReader(DecodingParameters dParams, RootDataset rds, this.rb)
-      : rds = rds,
-        super(dParams, rds);
-
-  @override
-  SubReader get subreader => this;
+  TagEvrSubReader(Bytes bytes, DecodingParameters dParams, this.rds,
+      {this.doLogging = false})
+      : super(bytes, dParams, rds);
 }
 
 class TagIvrSubReader extends IvrSubReader with TagReaderMixin {
   @override
-  BDRootDataset rds;
+  TagRootDataset rds;
   @override
-  ReadBuffer rb;
+  final bool doLogging;
 
-  TagIvrSubReader.from(TagEvrSubReader subreader)
-      : rds = subreader.rds,
-        rb = subreader.rb,
-        super(subreader.dParams, subreader.rds);
-}
-
-class LoggingTagIvrSubReader extends LoggingIvrSubReader with TagReaderMixin {
-  @override
-  BDRootDataset rds;
-  @override
-  ReadBuffer rb;
-
-  LoggingTagIvrSubReader.from(TagEvrSubReader subreader)
-      : rds = subreader.rds,
-        rb = subreader.rb,
-        super(subreader.dParams, subreader.rds);
-
-  @override
-  SubReader get subreader => this;
+  TagIvrSubReader.from(TagEvrSubReader subReader,
+      {bool doLookupVRIndex = false})
+      : rds = subReader.rds,
+        doLogging = subReader.doLogging,
+        super(subReader.rb, subReader.dParams, subReader.rds, doLookupVRIndex);
 }

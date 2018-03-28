@@ -40,16 +40,17 @@ Future main() async {
     }
 
     final doLogging = system.level > Level.debug;
-    final rds =
-        ByteReader.readBytes(bytes, path: fPath, doLogging: doLogging, showStats: true);
+    final bList = new File(fPath).readAsBytesSync();
+    final reader = new ByteReader(bList);
+    final rds = ByteReader.readPath(fPath, doLogging: doLogging);
 
     if (rds == null) {
       log.warn('Invalid DICOM file: $fPath');
     } else {
-      if (rds.pInfo != null) {
+      if (reader.pInfo != null) {
         final infoPath = '${path.withoutExtension(fPath)}.info';
         log.info('infoPath: $infoPath');
-        final sb = new StringBuffer('${rds.pInfo.summary(rds)}\n')
+        final sb = new StringBuffer('${reader.pInfo.summary(rds)}\n')
           ..write('Bytes Dataset: ${rds.summary}');
         new File(infoPath)..writeAsStringSync(sb.toString());
         log.debug(sb.toString());

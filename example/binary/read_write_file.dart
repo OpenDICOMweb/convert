@@ -19,7 +19,7 @@ void main() async {
   final length = new File(inPath).lengthSync();
   stdout.writeln('Reading($length bytes): $inPath');
 
-  final rds = ByteReader.readPath(inPath, doLogging: false, showStats: true);
+  final rds = ByteReader.readPath(inPath, doLogging: true);
   if (rds == null) {
     log.warn('Invalid DICOM file: $inPath');
   } else {

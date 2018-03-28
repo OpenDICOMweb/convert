@@ -22,7 +22,7 @@ Future main() async {
   log.info('path: $inPath');
   stdout.writeln('Reading(byte): $inPath');
 
-  final rds = ByteReader.readPath(inPath, doLogging: false, showStats: true);
+  final rds = ByteReader.readPath(inPath, doLogging: false);
   if (rds == null) {
     log.warn('Invalid DICOM file: $inPath');
   } else {

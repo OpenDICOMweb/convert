@@ -8,10 +8,11 @@ export 'package:convert/src/binary/base/new_reader/logging_subreader.dart';
 export 'package:convert/src/binary/base/new_reader/subreader.dart';
 export 'package:convert/src/binary/base/new_writer/subwriter.dart';
 
-export 'package:convert/src/binary/bytes/new_reader/bytes_subreader.dart';
-export 'package:convert/src/binary/bytes/new_reader/logging_bytes_reader.dart';
-export 'package:convert/src/binary/bytes/new_writer/bytes_writer.dart';
-export 'package:convert/src/binary/bytes/byte_read_utils.dart';
+export 'package:convert/src/binary/byte/new_reader/byte_subreader.dart';
+export 'package:convert/src/binary/byte/new_reader/byte_reader.dart';
+export 'package:convert/src/binary/byte/new_reader/byte_reader_mixin.dart';
+export 'package:convert/src/binary/byte/new_writer/byte_writer.dart';
+export 'package:convert/src/binary/byte/byte_read_utils.dart';
 
 export 'package:convert/src/binary/compare_bytes.dart';
 export 'package:convert/src/binary/convert_dataset.dart';
@@ -20,7 +21,7 @@ export 'package:convert/src/binary/convert_dataset.dart';
 export 'package:convert/src/binary/convert_to_tag_dataset.dart';
 
 export 'package:convert/src/binary/tag/new_reader/tag_reader.dart';
-export 'package:convert/src/binary/tag/new_reader/tag_reader_mixin.dart';
+//export 'package:convert/src/binary/tag/new_reader/tag_reader_mixin.dart';
 export 'package:convert/src/binary/tag/new_writer/tag_writer.dart';
 
 export 'package:convert/src/utilities/decoding_parameters.dart';

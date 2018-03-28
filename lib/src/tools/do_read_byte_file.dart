@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/convert.dart';
+import 'package:convert/src/binary/byte/new_reader/byte_reader.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
@@ -41,8 +41,7 @@ Future<bool> doReadByteFile(File f,
     final bytes = readPath(cPath);
     if (bytes == null) return false;
     final doLogging = system.level > Level.debug;
-    final reader0 = new ByteReader.fromBytes(bytes, path: cPath, doLogging:
-    doLogging);
+    final reader0 = new ByteReader.fromBytes(bytes, doLogging: doLogging);
 
     rds0 = reader0.readRootDataset();
     if (rds0 == null) {
@@ -50,7 +49,7 @@ Future<bool> doReadByteFile(File f,
       return false;
     }
 
-    if (rds0.pInfo != null) log.debug('$pad    ${rds0.pInfo.summary(rds0)}');
+    if (reader0.pInfo != null) log.debug('$pad    ${reader0.pInfo.summary(rds0)}');
 
 // TODO: move into dataset.warnings.
     final e = rds0[kPixelData];

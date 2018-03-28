@@ -52,34 +52,33 @@ const String bar = 'C:/acr/odw/test_data/mweb/10 Patient IDs/04443352';
 const String bas = 'C:/acr/odw/test_data/mweb/100 MB Studies/1/S234611/15859368'
     '.fmt';
 //Urgent: bug with path20
+
+const String x1evr = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
+const String x2evr = 'C:/acr/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
+const String x3evr = 'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
+const String x4ivr = 'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/1636525D';
+const String x5ivr = 'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/1636525D ';
+
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.info, throwOnError: true);
 
 //  const fPath = 'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
-  const fPath = 'C:/acr/odw/test_data/6684/2017/5/12/16/0EE11F7A/0A0DDB1E/02AB88BC';
+  const fPath = x1evr;
   print('path: $fPath');
   print(' out: ${getTempFile(fPath, 'dcmout')}');
   final url = new Uri.file(fPath);
   stdout.writeln('Reading(byte): $url');
 
-/*
-  final bytes = readPath(fPath,);
-  if (bytes == null) {
-    log.error('"$fPath" either does not exist or is not a valid DICOM file');
-    return;
-  } else {
-    stdout.writeln('  Length in bytes: ${bytes.lengthInBytes}');
-  }
-*/
-
-  final rds = ByteReader.readPath(fPath, doLogging: false, showStats: true);
+  final bList = new File(fPath).readAsBytesSync();
+  final reader = new ByteReader(bList, doLogging: true);
+  final rds = reader.readRootDataset();
   if (rds == null) {
     log.warn('Invalid DICOM file: $fPath');
   } else {
-    if (rds.pInfo != null) {
+    if (reader.pInfo != null) {
       final infoPath = '${path.withoutExtension(fPath)}.info';
       log.info('infoPath: $infoPath');
-      final sb = new StringBuffer('${rds.pInfo.summary(rds)}\n')
+      final sb = new StringBuffer('${reader.pInfo.summary(rds)}\n')
         ..write('Bytes Dataset: ${rds.summary}');
       new File(infoPath)..writeAsStringSync(sb.toString());
       log.debug(sb.toString());

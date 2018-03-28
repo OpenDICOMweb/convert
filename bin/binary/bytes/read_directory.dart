@@ -4,11 +4,8 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the AUTHORS file for other contributors.
 
-import 'dart:io';
-
 import 'package:convert/convert.dart';
 import 'package:core/server.dart';
-import 'package:path/path.dart' as p;
 
 //import 'package:convert/data/test_directories.dart';
 
@@ -26,6 +23,7 @@ void main() {
   Server.initialize(
       name: 'read_write_file', level: Level.debug, throwOnError: true);
 
+/*
   /// *** Change directory path name here
   const path = dir6684_2017_5;
   final dir = new Directory(path);
@@ -34,7 +32,7 @@ void main() {
   print('List length: $fsEntityCount');
   log.debug('FSEntity count: $fsEntityCount');
 
-  final files = <String>[];
+  final files = fileListFromDirectory(dir6684_2017_5);
   for (var fse in fList) {
     if (fse is! File) continue;
     final path = fse.path;
@@ -44,9 +42,13 @@ void main() {
       files.add(fse.path);
     }
   }
-
+*/
+  const dir = dir6684_2017_5;
+  final files = fileListFromDirectory(dir);
   final timer = new Timer();
-  log.config('Reading ${files.length} files from ${dir.path}:');
-  new FileListReader(files, fmiOnly: false, throwOnError: throwOnError, printEvery: 1)..read;
+  log.config('Reading ${files.length} files from $dir:');
+  new FileListReader(files,
+      fmiOnly: false, throwOnError: throwOnError, printEvery: 1)
+    ..read;
   log.config('Elapsed time: ${timer.elapsed}');
 }

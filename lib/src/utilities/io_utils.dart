@@ -32,7 +32,7 @@ void checkRootDataset(Dataset dataset) {
 }
 
 /// Checks that [file] is not empty.
-void checkFile(File file, {bool overwrite = false}) {
+void checkFile(File file, {bool overWrite = false}) {
   if (file == null) throw new ArgumentError('null File');
   if (file.existsSync() && (file.lengthSync() == 0))
     throw new ArgumentError('$file has zero length');
@@ -264,3 +264,23 @@ bool _checkLenSync(File f, int min, int max) {
 
 Future<Uint8List> _readAsync(File f) async => await f.readAsBytes();
 Uint8List _readSync(File f) => f.readAsBytesSync();
+
+List<String> fileListFromDirectory(String dirPath) {
+  final dir = new Directory(dirPath);
+  final fList = dir.listSync(recursive: true);
+  final fsEntityCount = fList.length;
+  log
+    ..debug('List length: $fsEntityCount')
+    ..debug('FSEntity count: $fsEntityCount');
+
+  final files = <String>[];
+  for (var fse in fList) {
+    if (fse is! File) continue;
+    final ext = path.extension(fse.path);
+    if (ext == '.dcm' || ext == '') {
+      log.debug1('$fse');
+      files.add(fse.path);
+    }
+  }
+  return files;
+}

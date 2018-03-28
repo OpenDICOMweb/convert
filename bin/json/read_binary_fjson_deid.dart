@@ -64,15 +64,16 @@ Future main() async {
   }
 
   /// Read the Study as BD
-  final bdRds = ByteReader.readBytes(bytes,
-      path: fPath, doLogging: true, showStats: false);
+  final bList = new File(fPath).readAsBytesSync();
+  final reader = new ByteReader(bList);
+  final bdRds = ByteReader.readPath(fPath, doLogging: false);
   if (bdRds == null) {
     log.warn('Invalid DICOM file: $fPath');
   } else {
-    if (bdRds.pInfo != null) {
+    if (reader.pInfo != null) {
       final infoPath = '${path.withoutExtension(fPath)}.info';
       log.info('infoPath: $infoPath');
-      final sb = new StringBuffer('${bdRds.pInfo.summary(bdRds)}\n')
+      final sb = new StringBuffer('${reader.pInfo.summary(bdRds)}\n')
         ..write('Bytes Dataset: ${bdRds.summary}');
       new File(infoPath)..writeAsStringSync(sb.toString());
       log.debug(sb.toString());

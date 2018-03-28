@@ -79,7 +79,7 @@ class JsonReader extends JsonReaderBase {
       print('PDTag: ${dcm(code)} : $values');
       String name;
       if (vrIndex == kLOIndex) {
-        name = values[0];
+         name = values[0];
       } else if (vrIndex == kUNIndex) {
         name = ascii.decode(values);
       } else {
@@ -112,7 +112,11 @@ class JsonReader extends JsonReaderBase {
   }
 
   @override
-  Element readSimpleElement(int code, Object value, int vrIndex) =>
+  Element readSimpleElement(
+    int code,
+    Object value,
+    int vrIndex,
+  ) =>
       TagElement.makeFromCode(code, value, vrIndex);
 
   @override
@@ -124,7 +128,8 @@ class JsonReader extends JsonReaderBase {
       final items = new List<TagItem>(length);
       final sq = SQtag.make(tag, items, kSQIndex);
       // Add the empty Items
-      for (var i = 0; i < length; i++) items[i] = new TagItem.empty(cds, sq);
+      for (var i = 0; i < length; i++)
+        items[i] = new TagItem.empty(cds, sq);
       readItems(sq, entries);
       return sq;
     }

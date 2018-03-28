@@ -6,59 +6,38 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/new_reader/logging_subreader.dart';
 import 'package:convert/src/binary/base/new_reader/subreader.dart';
-import 'package:convert/src/binary/byte/new_reader/logging_byte_reader.dart';
+import 'package:convert/src/binary/byte/new_reader/byte_reader_mixin.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 
-class ByteEvrSubReader extends EvrSubReader with ByteReaderMixin {
+class ByteEvrSubReader extends EvrSubReader
+    with ByteReaderMixin, EvrByteReaderMixin {
   @override
   final BDRootDataset rds;
   @override
-  final ReadBuffer rb;
+  final bool doLogging;
 
-  ByteEvrSubReader(DecodingParameters dParams,  RootDataset rds, this.rb)
-      : rds = rds,
-        super(dParams, rds);
+  factory ByteEvrSubReader(Bytes bytes, DecodingParameters dParams,
+          {bool doLogging = false}) =>
+      new ByteEvrSubReader._(
+          bytes, dParams, new BDRootDataset.empty(), doLogging);
+
+  ByteEvrSubReader._(
+      Bytes bytes, DecodingParameters dParams, this.rds, this.doLogging)
+      : super(bytes, dParams, rds);
 }
 
-class LoggingByteEvrSubReader extends LoggingEvrSubReader with ByteReaderMixin {
-  @override
-  final BDRootDataset rds;
-  @override
-  final ReadBuffer rb;
-
-  LoggingByteEvrSubReader(DecodingParameters dParams, RootDataset rds, this.rb)
-      : rds = rds,
-        super(dParams, rds);
-
-  @override
-  SubReader get subreader => this;
-}
-
-class ByteIvrSubReader extends IvrSubReader with ByteReaderMixin {
+class ByteIvrSubReader extends IvrSubReader
+    with ByteReaderMixin, IvrByteReaderMixin {
   @override
   BDRootDataset rds;
   @override
-  ReadBuffer rb;
+  final bool doLogging;
 
-  ByteIvrSubReader.from(ByteEvrSubReader subreader)
-      : rds = subreader.rds,
-        rb = subreader.rb,
-        super(subreader.dParams, subreader.rds);
-}
-
-class LoggingByteIvrSubReader extends LoggingIvrSubReader with ByteReaderMixin {
-  @override
-  BDRootDataset rds;
-  @override
-  ReadBuffer rb;
-
-  LoggingByteIvrSubReader.from(ByteEvrSubReader subreader)
-      : rds = subreader.rds,
-        rb = subreader.rb,
-        super(subreader.dParams, subreader.rds);
-
-  @override
-  SubReader get subreader => this;
+  ByteIvrSubReader.from(ByteEvrSubReader evrSubReader,
+      {bool doLookupVRIndex = false})
+      : rds = evrSubReader.rds,
+        doLogging = evrSubReader.doLogging,
+        super(evrSubReader.rb, evrSubReader.dParams, evrSubReader.rds,
+            doLookupVRIndex);
 }

@@ -17,7 +17,9 @@ const String dir6684_2017_5 = 'C:/acr/odw/test_data/6684/2017/5';
 void main() {
   // readFile(path0);
 
- // readFiles(dir6684_2017_5);
+  const dir = dir6684_2017_5;
+  final files = fileListFromDirectory(dir);
+  readFiles(files);
 }
 
 void readFile(String path) {
