@@ -25,17 +25,18 @@ bool byteReadWriteFileChecked(String path,
     {int fileNumber, int width = 5, bool fast = true, bool doLogging = false}) {
   var success = true;
   final n = getPaddedInt(fileNumber, width);
-  final pad = ''.padRight(width);
+  final pad = ''.padRight(2);
   final fPath = cleanPath(path);
   log.info('$n: Reading: $fPath');
 
   final f = new File(fPath);
   try {
     final bList0 = f.readAsBytesSync();
+    if (doLogging) log.info('  File Length: ${bList0.length}');
     final reader0 = new ByteReader(bList0, doLogging: doLogging);
     final rds0 = reader0.readRootDataset();
     final bytes0 = reader0.rb.buffer;
-    log.info('$n:   length: ${bytes0.lengthInBytes}');
+    log.info('$n:   read ${bytes0.lengthInBytes} bytes');
     final e = rds0[kPixelData];
     if (e == null) log.warn('$pad ** Pixel Data Element not present');
 
@@ -46,7 +47,7 @@ bool byteReadWriteFileChecked(String path,
     ByteWriter writer;
     if (fast) {
       // Just write bytes not file
-      log.debug('  Writing (${rds0.lengthInBytes} bytes');
+      log.debug('  Writing ${rds0.lengthInBytes} bytes');
       writer = new ByteWriter(rds0, doLogging: doLogging);
     } else {
       log.debug('  Writing (${rds0.lengthInBytes} bytes) to: $outPath');
@@ -61,11 +62,11 @@ bool byteReadWriteFileChecked(String path,
     if (fast) {
       // Just read bytes not file
       log.debug('  Reading (${bytes1.lengthInBytes} bytes');
-      reader1 = new ByteReader.fromBytes(bytes1);
+      reader1 = new ByteReader.fromBytes(bytes1, doLogging: doLogging);
     } else {
       final f = new File(outPath);
       log.debug('  Reading (${f.lengthSync()} bytes) from: $outPath');
-      reader1 = new ByteReader.fromFile(f);
+      reader1 = new ByteReader.fromFile(f, doLogging: doLogging);
     }
     final rds1 = reader1.readRootDataset();
 

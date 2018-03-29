@@ -91,9 +91,9 @@ abstract class IvrSubWriter extends SubWriter {
   @override
   void _writeElement(Element e, [int vrIndex]) {
     if (doLogging) print(_startMsg(e));
-    print('vrIndex0: $vrIndex');
+//    print('vrIndex0: $vrIndex');
     vrIndex ??= e.vrIndex;
-    print('vrIndex1: $vrIndex');
+//    print('vrIndex1: $vrIndex');
     assert(e != null && !_isSpecialVR(vrIndex), 'Invalid VR: $vrIndex');
 
     if (_isIvrDefinedLengthVR(vrIndex)) {
@@ -195,9 +195,12 @@ abstract class SubWriter {
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].
   Bytes _writeRootDataset([int fmiEnd]) {
+   if (doLogging) _startDatasetMsg(wb.index, 'writeRootDataset', rds);
     _writeDataset(rds);
     final bytes = wb.subbytes(0, wb.wIndex);
-    rds.dsBytes = new RDSBytes(bytes, fmiEnd);
+    final dsBytes = new RDSBytes(bytes, fmiEnd);
+    rds.dsBytes = dsBytes;
+   if (doLogging) _endDatasetMsg(wb.index, 'writeRootDataset', dsBytes);
     return bytes;
   }
 
@@ -218,10 +221,13 @@ abstract class SubWriter {
   }
 
   /// Write one [Item].
-  void _writeItem(Item item) =>
-      (item.hasULength && !eParams.doConvertUndefinedLengths)
-          ? _writeUndefinedLengthItem(item)
-          : _writeDefinedLengthItem(item);
+  void _writeItem(Item item) {
+    if (doLogging) _startDatasetMsg(wb.index, 'writeItem', item);
+    (item.hasULength && !eParams.doConvertUndefinedLengths)
+        ? _writeUndefinedLengthItem(item)
+        : _writeDefinedLengthItem(item);
+    if (doLogging) _endDatasetMsg(wb.index, 'writeRootDataset', item.dsBytes);
+  }
 
   /// Writes a [Dataset] to the buffer.
   void _writeDefinedLengthItem(Item item) {
@@ -301,10 +307,13 @@ abstract class SubWriter {
   }
 
   /// Write a Sequence Element.
-  void _writeSequence(Element e, int vrIndex) =>
-      (e.hadULength && !eParams.doConvertUndefinedLengths)
-          ? _writeSQUndefinedLength(e, vrIndex)
-          : _writeSQDefinedLength(e, vrIndex);
+  void _writeSequence(Element sq, int vrIndex) {
+    if (doLogging) _startSQMsg(sq,  'writeSequence');
+    (sq.hadULength && !eParams.doConvertUndefinedLengths)
+        ? _writeSQUndefinedLength(sq, vrIndex)
+        : _writeSQDefinedLength(sq, vrIndex);
+    if (doLogging) _endSQMsg(wb.index,  'writeSequence');
+  }
 
   /// Write an EVR Sequence with _defined length_.
   // Note: A Sequence cannot have an _odd_ length.
@@ -393,6 +402,7 @@ abstract class SubWriter {
 
   void _writeExistingFmi({bool cleanPreamble = true}) {
     _writePrefix(rds, cleanPreamble: cleanPreamble);
+    if (doLogging) log.info('prefix written: end of Prefix: ${wb.index}');
     for (var e in rds.fmi.elements) {
       if (e.code > 0x00030000) break;
       _writeElement(e);
@@ -435,13 +445,34 @@ abstract class SubWriter {
     final len = (e.vfLengthField == kUndefinedLength)
         ? 'Undefined Length'
         : 'vfl: ${e.vfLength}';
-    return '>@W${wb.index - 6} $e : $len';
+    return '>@W${wb.index} $e : $len';
   }
 
   String _endMsg(Element e) {
     final eNumber = '$count'.padLeft(4, '0');
     return '<@W${wb.index} $eNumber: $e';
   }
+
+  void _startSQMsg(SQ sq, String name) {
+    final msg = '>@W${wb.index} $name $sq';
+    log.info(msg, 1);
+  }
+
+  void _endSQMsg(int eEnd, String name) {
+    final eNumber = '$count'.padLeft(4, '0');
+    final msg = '<@W$eEnd $eNumber:';
+    log.info(msg, -1);
+  }
+
+  void _startDatasetMsg(int eStart, String name, Dataset ds) {
+    log.info('>@W$eStart $name $ds', 1);
+  }
+
+  void _endDatasetMsg(int dsStart, String name, DSBytes dsBytes) {
+//    final eNumber = '$count'.padLeft(4, '0');
+    log.info('<@R$dsStart $name dsBytes: $dsBytes', -1);
+  }
+
 /* Flush if not used
   void writePrivateInformation(Uid uid, Bytes privateInfo) {
     wb.ascii(uid.asString);

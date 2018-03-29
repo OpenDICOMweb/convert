@@ -18,7 +18,6 @@ import 'package:core/core.dart';
 import 'package:convert/src/binary/base/new_writer/writer.dart';
 import 'package:convert/src/binary/base/new_writer/subwriter.dart';
 import 'package:convert/src/binary/byte/new_writer/byte_subwriter.dart';
-import 'package:convert/src/binary/logger/logging_byte_subwriter.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
@@ -61,9 +60,9 @@ class ByteWriter extends Writer {
   }
 
   @override
-  IvrSubWriter get ivrSubWriter => _ivrSubWriter ??= (doLogging)
-      ? new LoggingByteIvrSubWriter.from(evrSubWriter)
-      : new ByteIvrSubWriter.from(evrSubWriter);
+  IvrSubWriter get ivrSubWriter => _ivrSubWriter ??=
+
+       new ByteIvrSubWriter.from(evrSubWriter);
 
   IvrSubWriter _ivrSubWriter;
 

@@ -7,7 +7,7 @@
 import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/new_reader/subreader.dart';
-import 'package:convert/src/binary/logger/logging_tag_reader.dart';
+import 'package:convert/src/binary/tag/new_reader/tag_reader_mixin.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 
 class TagEvrSubReader extends EvrSubReader with TagReaderMixin {

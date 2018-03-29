@@ -29,26 +29,31 @@ abstract class Reader {
   Reader.fromPath(String path, {this.doLogging = false})
       : bytes = new File(path).readAsBytesSync();
 
+  // **** Interface
   EvrSubReader get evrSubReader;
+  IvrSubReader get ivrSubReader;
+  // **** End Interface
+
   ReadBuffer get rb => evrSubReader.rb;
   DecodingParameters get dParams => evrSubReader.dParams;
   BDRootDataset get rds => evrSubReader.rds;
   ElementOffsets get offsets => evrSubReader.offsets;
   ParseInfo get pInfo => evrSubReader.pInfo;
 
-  bool isFmiRead = false;
-  int readFmi(int eStart) => evrSubReader.readFmi();
-
-  IvrSubReader get ivrSubReader;
-
-  RootDataset readRootDataset([int fmiEnd]) {
-    if (!isFmiRead) fmiEnd ??= readFmi(0);
-    final rds = (evrSubReader.rds.transferSyntax.isEvr)
+  /// Reads a [RootDataset] from _this_. The FMI, if any, MUST already be read.
+  RootDataset readRootDataset() {
+    if (doLogging) log.info('Logging ...');
+    if (doLogging) log.debug('>R@${rb.index} readRootDataset  ${rb.length} bytes');
+    final fmiEnd = evrSubReader.readFmi();
+    final rds0 = (evrSubReader.rds.transferSyntax.isEvr)
         ? evrSubReader.readRootDataset(fmiEnd)
         : ivrSubReader.readRootDataset(fmiEnd);
-    print('${evrSubReader.count} Evr Elements read');
-    if (ivrSubReader != null) print('${ivrSubReader.count} Ivr Elements read');
-    return rds;
+    if (doLogging) {
+      log.debug('${evrSubReader.count} Evr Elements read');
+      if (ivrSubReader != null)
+        log.debug('${ivrSubReader.count} Ivr Elements read');
+    }
+    return rds0;
   }
 }
 /* TODO: later

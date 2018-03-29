@@ -40,8 +40,9 @@ class ByteIvrSubWriter extends IvrSubWriter {
       {this.outputTS, this.doLogging = false})
       : super(rds, eParams);
 
-  ByteIvrSubWriter.from(ByteEvrSubWriter subWriter,
-      {this.outputTS, this.doLogging = false})
+  ByteIvrSubWriter.from(ByteEvrSubWriter subWriter)
       : rds = subWriter.rds,
+        outputTS = subWriter.outputTS,
+        doLogging = subWriter.doLogging,
         super(subWriter.rds, subWriter.eParams);
 }

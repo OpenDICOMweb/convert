@@ -18,7 +18,6 @@ import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/new_writer/writer.dart';
 import 'package:convert/src/binary/base/new_writer/subwriter.dart';
-import 'package:convert/src/binary/logger/logging_tag_subwriter.dart';
 import 'package:convert/src/binary/tag/new_writer/tag_subwriter.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
 import 'package:convert/src/utilities/io_utils.dart';
@@ -35,10 +34,8 @@ class TagWriter extends Writer {
       {EncodingParameters eParams = EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false})
-      : evrSubWriter = (doLogging)
-            ? new LoggingTagEvrSubWriter(rds, eParams,
-                outputTS: outputTS, doLogging: doLogging)
-            : new TagEvrSubWriter(rds, eParams),
+      : evrSubWriter = new TagEvrSubWriter(rds, eParams,
+            outputTS: outputTS, doLogging: doLogging),
         super(doLogging: doLogging);
 
   /// Writes the [TagRootDataset] to a [Uint8List], and then writes the
@@ -65,9 +62,8 @@ class TagWriter extends Writer {
   }
 
   @override
-  IvrSubWriter get ivrSubWriter => _ivrSubWriter ??= (doLogging)
-      ? new LoggingTagIvrSubWriter.from(evrSubWriter)
-      : new TagIvrSubWriter.from(evrSubWriter);
+  IvrSubWriter get ivrSubWriter =>
+      _ivrSubWriter ??= new TagIvrSubWriter.from(evrSubWriter);
   IvrSubWriter _ivrSubWriter;
 
   /// Writes the [RootDataset] to a [Uint8List], and returns the [Uint8List].

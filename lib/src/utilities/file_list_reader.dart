@@ -45,7 +45,8 @@ class FileListReader {
       log.info('$i Reading: $path ');
 
       try {
-        success = byteReadWriteFileChecked(path, fileNumber: i);
+        success =
+            byteReadWriteFileChecked(path, fileNumber: i, doLogging: false);
         if (success == false) {
           failures.add('"$path "');
         } else {
@@ -58,6 +59,7 @@ class FileListReader {
           ..reset;
         badTransferSyntax.add(path);
       } catch (e) {
+        print('Caught: $e');
         log
           ..info0('$e\n  Fail: $path ')
           ..reset;

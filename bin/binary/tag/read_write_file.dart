@@ -15,13 +15,14 @@ import 'package:convert/convert.dart';
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
 void main() {
-  Server.initialize(name: 'read_write_file.dart', level: Level.info0);
+  Server.initialize(name: 'read_write_file.dart', level: Level.debug);
 
   // *** Modify this line to read/write a different file
   final path = path0;
 
-  log.info0('Reading: $path');
+  log.info('Reading: $path');
   final Uint8List bList = new File(path).readAsBytesSync();
+  log.info('  File Length: ${bList.length}');
   final reader0 = new TagReader(bList, doLogging: true);
   final tagDS0 = reader0.readRootDataset();
   final bytes0 = reader0.rb.asBytes();

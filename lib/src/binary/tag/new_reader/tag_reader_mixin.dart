@@ -6,7 +6,7 @@
 
 import 'package:core/core.dart';
 
-abstract class TagReaderMixin<V> {
+abstract class TagReaderMixin {
   RootDataset get rds;
   ReadBuffer get rb;
 

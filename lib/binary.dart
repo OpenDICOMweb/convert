@@ -4,7 +4,6 @@
 // Original author: Jim Philbin <jfphilbin@gmail.edu> - 
 // See the AUTHORS file for other contributors.
 
-export 'package:convert/src/binary/logger/logging_subreader.dart';
 export 'package:convert/src/binary/base/new_reader/subreader.dart';
 export 'package:convert/src/binary/base/new_writer/subwriter.dart';
 
@@ -21,7 +20,7 @@ export 'package:convert/src/binary/convert_dataset.dart';
 export 'package:convert/src/binary/convert_to_tag_dataset.dart';
 
 export 'package:convert/src/binary/tag/new_reader/tag_reader.dart';
-//export 'package:convert/src/binary/tag/new_reader/tag_reader_mixin.dart';
+export 'package:convert/src/binary/tag/new_reader/tag_reader_mixin.dart';
 export 'package:convert/src/binary/tag/new_writer/tag_writer.dart';
 
 export 'package:convert/src/utilities/decoding_parameters.dart';

@@ -19,14 +19,17 @@ const String k6684x0 =
     'C:/acr/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
 
 const String k6684x1 =
-    'c:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
+    'C:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
+
+const String k6684x4 =
+    'C:/odw/test_data/6684/2017/5/13';
 
 //Urgent: bug with path20
 Future main() async {
-  Server.initialize(name: 'ReadFile', level: Level.debug2, throwOnError: true);
+  Server.initialize(name: 'ReadFile', level: Level.info, throwOnError: true);
   // for (var i = 0; i < 1; i++) {
   for (var i = 0; i < testPaths2.length; i++) {
-    const fPath = k6684x0;
+    const fPath = k6684x4;
 
     print('$i: path: $fPath');
     print(' out: ${getTempFile(fPath, 'dcmout')}');
@@ -39,11 +42,10 @@ Future main() async {
       return;
     }
 
-    final doLogging = system.level > Level.debug;
+    const doLogging = false;
     final bList = new File(fPath).readAsBytesSync();
-    final reader = new ByteReader(bList);
-    final rds = ByteReader.readPath(fPath, doLogging: doLogging);
-
+    final reader = new ByteReader(bList, doLogging: doLogging);
+    final rds = reader.readRootDataset();
     if (rds == null) {
       log.warn('Invalid DICOM file: $fPath');
     } else {

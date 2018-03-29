@@ -57,13 +57,15 @@ const String x1evr = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
 const String x2evr = 'C:/acr/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
 const String x3evr = 'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
 const String x4ivr = 'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/1636525D';
-const String x5ivr = 'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/1636525D ';
+const String x5ivr = 'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/1636525D';
+const String x6evr = 'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
+const String x7 = 'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
 
 Future main() async {
-  Server.initialize(name: 'ReadFile', level: Level.info, throwOnError: true);
+  Server.initialize(name: 'ReadFile', level: Level.debug, throwOnError: true);
 
 //  const fPath = 'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
-  const fPath = x1evr;
+  const fPath = x7;
   print('path: $fPath');
   print(' out: ${getTempFile(fPath, 'dcmout')}');
   final url = new Uri.file(fPath);

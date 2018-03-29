@@ -14,7 +14,7 @@ import 'package:path/path.dart' as path;
 int getFieldWidth(int total) => '$total'.length;
 
 String getPaddedInt(int n, int width) =>
-    (n == null) ? '' : '${"$n".padLeft(width)}';
+    (n == null) ? '' : '${"$n".padLeft(width, '0')}';
 
 String cleanPath(String path) => path.replaceAll('\\', '/');
 
