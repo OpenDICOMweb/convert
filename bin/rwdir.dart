@@ -17,10 +17,13 @@ import 'package:core/server.dart';
 /// to a second buffer, and the does a byte by byte comparison of the two buffers.
 
 const String defaultDirectory = 'C:/odw/test_data/mweb';
+const String k6684 = 'C:/acr/odw/test_data/6684';
+const String k6688 = 'C:/acr/odw/test_data/6688';
+const String dir6684_2017_5 = 'C:/acr/odw/test_data/6684/2017/5/12/16/0EE11F7A';
 
 /// A program for doing read/write/read testing on DICOM files.
 void main(List<String> args) {
-  Server.initialize(name: 'rwdir', level: Level.error);
+  Server.initialize(name: 'rwdir', level: Level.warn);
 
   /// The processed arguments for this program.
   final jobArgs = new JobArgs(args);

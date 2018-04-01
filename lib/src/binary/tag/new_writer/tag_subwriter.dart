@@ -36,12 +36,14 @@ class TagIvrSubWriter extends IvrSubWriter {
 
   /// Creates a new [TagIvrSubWriter], which is decoder for Binary DICOM
   /// (application/dicom).
+/*
   TagIvrSubWriter(this.rds, EncodingParameters eParams,
       {this.outputTS, this.doLogging = false})
       : super(rds, eParams);
+*/
 
   TagIvrSubWriter.from(TagEvrSubWriter subWriter,
       {this.outputTS, this.doLogging = false})
       : rds = subWriter.rds,
-        super(subWriter.rds, subWriter.eParams);
+        super(subWriter.rds, subWriter.eParams, subWriter.wb);
 }

@@ -39,7 +39,7 @@ Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) asy
       log.info0('Bad File: ${f.path}');
       return false;
     }
-    if (reader0.pInfo == null) throw 'Bad File - No ParseInfo: $f';
+  //  if (reader0.pInfo == null) throw 'Bad File - No ParseInfo: $f';
     //TODO: update reader and write to have method called bytes.
     final bytes0 = reader0.rb.asUint8List();
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes

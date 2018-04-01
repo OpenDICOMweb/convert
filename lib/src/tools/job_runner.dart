@@ -46,7 +46,7 @@ JobReporter getJobReporter(int fileCount, String path, int interval) =>
 typedef Future<bool> DoFile(File f);
 
 class JobRunner {
-  static const int defaultInterval = 1;
+  static const int defaultInterval = 10;
   Directory directory;
   List files;
   DoFile doFile;
@@ -93,6 +93,7 @@ class JobRunner {
   }
 
   Future<String> runFile(File f, [int indent]) async {
+
     final path = cleanPath(f.path);
     bool success;
     try {
@@ -100,6 +101,7 @@ class JobRunner {
       if (!success)
       	failures.add(path);
     } catch (e) {
+      print('Caught: $e\n  on File: $f');
       if (throwOnError) rethrow;
     }
     return reporter.report(path, wasSuccessful: success);

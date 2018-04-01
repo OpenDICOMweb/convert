@@ -115,14 +115,14 @@ Future<int> walkDirectoryFiles(Directory dir, FileRunner f,
 
   var count = 0;
   var _level = level;
-  await for (FileSystemEntity e in eList) {
-    if (e is Directory) {
-      count += await walkDirectory(e, f, _level++);
-    } else if (e is File) {
-      await new Future(() => f(e, level));
+  await for (FileSystemEntity fse in eList) {
+    if (fse is Directory) {
+      count += await walkDirectory(fse, f, _level++);
+    } else if (fse is File) {
+      await new Future(() => f(fse, level));
       count++;
     } else {
-      stderr.write('Warning: $e is not a File or Directory');
+      stderr.write('Warning: $fse is not a File or Directory');
     }
   }
   return count;

@@ -24,7 +24,9 @@ abstract class EvrSubWriter extends SubWriter {
   @override
   final bool isEvr = true;
 
-  EvrSubWriter(Dataset cds, EncodingParameters eParams) : super(cds, eParams);
+  EvrSubWriter(Dataset cds, EncodingParameters eParams)
+      : super(cds, eParams, getWriteBuffer(
+      length: kMinWriteBufferLength, reUseBD: reUseWriteBuffer));
 
   /// Write an EVR [Element].
   @override
@@ -50,7 +52,6 @@ abstract class EvrSubWriter extends SubWriter {
   }
 
   /// Write an EVR Element with a short Value Length field.
-  @override
   void _writeShort(Element e, int vrIndex) {
     assert(e.vfLengthField != kUndefinedLength && wb.index.isEven);
     final vfLength = e.vfLength + (e.vfLength.isOdd ? 1 : 0);
@@ -85,15 +86,14 @@ abstract class IvrSubWriter extends SubWriter {
   @override
   final bool isEvr = false;
 
-  IvrSubWriter(Dataset cds, EncodingParameters eParams) : super(cds, eParams);
+  IvrSubWriter(Dataset cds, EncodingParameters eParams, WriteBuffer wb)
+      : super(cds, eParams, wb);
 
   /// Write an IVR [Element].
   @override
   void _writeElement(Element e, [int vrIndex]) {
     if (doLogging) print(_startMsg(e));
-//    print('vrIndex0: $vrIndex');
     vrIndex ??= e.vrIndex;
-//    print('vrIndex1: $vrIndex');
     assert(e != null && !_isSpecialVR(vrIndex), 'Invalid VR: $vrIndex');
 
     if (_isIvrDefinedLengthVR(vrIndex)) {
@@ -136,9 +136,7 @@ abstract class SubWriter {
   Dataset cds;
 
   /// Creates a new binary [SubWriter]
-  SubWriter(this.cds, this.eParams)
-      : wb = getWriteBuffer(
-            length: kMinWriteBufferLength, reUseBD: reUseWriteBuffer);
+  SubWriter(this.cds, this.eParams, this.wb);
 
   TransferSyntax get outputTS;
   bool get doLogging;
@@ -159,7 +157,7 @@ abstract class SubWriter {
 
   void _writeElement(Element e, [int vrIndex]);
 
-  void _writeShort(Element e, int vrIndex) => unsupportedError();
+ // void _writeShort(Element e, int vrIndex) => unsupportedError();
 
   void __writeLongHeader(Element e, int vrIndex, int vfLengthField);
   // **** End of Interface
@@ -194,13 +192,13 @@ abstract class SubWriter {
 
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].
-  Bytes _writeRootDataset([int fmiEnd]) {
-   if (doLogging) _startDatasetMsg(wb.index, 'writeRootDataset', rds);
+  Bytes writeRootDataset([int fmiEnd]) {
+    if (doLogging) _startDatasetMsg(wb.index, 'writeRootDataset', rds);
     _writeDataset(rds);
     final bytes = wb.subbytes(0, wb.wIndex);
     final dsBytes = new RDSBytes(bytes, fmiEnd);
     rds.dsBytes = dsBytes;
-   if (doLogging) _endDatasetMsg(wb.index, 'writeRootDataset', dsBytes);
+    if (doLogging) _endDatasetMsg(wb.index, 'writeRootDataset', dsBytes);
     return bytes;
   }
 
@@ -215,7 +213,7 @@ abstract class SubWriter {
     for (var item in items) {
       final parentDS = cds;
       cds = item;
-      writeItem(item);
+      _writeItem(item);
       cds = parentDS;
     }
   }
@@ -308,11 +306,16 @@ abstract class SubWriter {
 
   /// Write a Sequence Element.
   void _writeSequence(Element sq, int vrIndex) {
-    if (doLogging) _startSQMsg(sq,  'writeSequence');
-    (sq.hadULength && !eParams.doConvertUndefinedLengths)
-        ? _writeSQUndefinedLength(sq, vrIndex)
-        : _writeSQDefinedLength(sq, vrIndex);
-    if (doLogging) _endSQMsg(wb.index,  'writeSequence');
+    if (doLogging) _startSQMsg(sq, 'writeSequence');
+    if (sq.vfLengthField == 0) {
+      _writeLongDefinedLength(sq, vrIndex);
+    } else if
+    (sq.hadULength && !eParams.doConvertUndefinedLengths) {
+      _writeSQUndefinedLength(sq, vrIndex);
+    } else {
+      _writeSQDefinedLength(sq, vrIndex);
+    }
+    if (doLogging) _endSQMsg(wb.index, 'writeSequence');
   }
 
   /// Write an EVR Sequence with _defined length_.
@@ -324,7 +327,7 @@ abstract class SubWriter {
     _writeLongHeader(e, vrIndex, e.vfLength);
     // This if the offset where the vfLengthField will be written
     final vlfOffset = wb.wIndex - 4;
-    writeItems(e.items);
+    _writeItems(e.items);
     final vfOffset = isEvr ? 12 : 8;
     final vfLength = (wb.wIndex - eStart) - vfOffset;
     assert(vfLength.isEven && wb.wIndex.isEven);
@@ -338,7 +341,7 @@ abstract class SubWriter {
     assert(e is SQ && vrIndex == kSQIndex);
     assert(wb.index.isEven);
     _writeLongHeader(e, vrIndex, kUndefinedLength);
-    writeItems(e.items);
+    _writeItems(e.items);
     wb..writeUint32(kSequenceDelimitationItem32BitLE)..writeUint32(0);
     assert(wb.wIndex.isEven);
   }
@@ -381,7 +384,7 @@ abstract class SubWriter {
   /// media type, writes it to a [Uint8List], and returns that list.
   /// Writes File Meta Information (FMI) to the output.
   /// _Note_: FMI is always Explicit Little Endian
-  Bytes _writeFmi() {
+  Bytes writeFmi() {
     if (!rds.hasFmi) {
       if (!eParams.allowMissingFMI || !eParams.doAddMissingFMI) {
         log.error('Dataset $rds is missing FMI elements');
@@ -453,7 +456,7 @@ abstract class SubWriter {
     return '<@W${wb.index} $eNumber: $e';
   }
 
-  void _startSQMsg(SQ sq, String name) {
+  void _startSQMsg(Element sq, String name) {
     final msg = '>@W${wb.index} $name $sq';
     log.info(msg, 1);
   }
@@ -481,11 +484,12 @@ abstract class SubWriter {
 
   // **** External interface for debugging and monitoring
 
+/*
 // Urgent: decide on best way to handle this
 //  void writeElement(Element e) => _writeElement(e);
 
   Bytes writeRootDataset([int fmiEnd]) => _writeRootDataset(fmiEnd);
-  Bytes writeFmi() => _writeFmi();
+
   void writeExistingFmi({bool cleanPreamble = true}) =>
       _writeExistingFmi(cleanPreamble: cleanPreamble);
   Bytes writeOdwFmi() => _writeOdwFmi();
@@ -510,6 +514,7 @@ abstract class SubWriter {
   /// Write a non-Sequence Element (OB, OW, UN) that may have an undefined length
   void writeMaybeUndefinedLengthElement(Element e, [int vrIndex]) =>
       _writeMaybeUndefinedLength(e, vrIndex);
+*/
 
 /*
   /// Write a non-Sequence _undefined length_ Element.

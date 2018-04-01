@@ -31,14 +31,15 @@ void main(List<String> args) {
   /// The processed arguments for this program.
   // final jobArgs = new JobArgs(args);
 
-  final jobArgs = new JobArgs([dir6684_2017_5]);
+  final jobArgs = new JobArgs([k6684]);
 
   print('jobArgs: ${jobArgs.summary}');
 
   if (jobArgs.showHelp) showHelp(jobArgs);
 
   JobRunner.job(jobArgs, doReadByteFile,
-      interval: jobArgs.shortMsgEvery, level: jobArgs.baseLevel);
+      // interval: jobArgs.shortMsgEvery, level: jobArgs.baseLevel);
+  interval: 1000, level: jobArgs.baseLevel);
 }
 
 /// The help message

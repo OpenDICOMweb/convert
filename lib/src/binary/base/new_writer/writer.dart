@@ -86,7 +86,6 @@ abstract class Writer {
 
   /// Writes a [RootDataset] to a [Uint8List], then returns it.
   Bytes writeRootDataset() {
-    int fmiEnd;
     if (!evrSubWriter.isFmiWritten) {
       final bytes = evrSubWriter.writeFmi();
       fmiEnd = bytes.length;
@@ -98,7 +97,7 @@ abstract class Writer {
       print('${evrSubWriter.count} Evr Elements written');
     } else {
       bytes = ivrSubWriter.writeRootDataset(fmiEnd);
-      print('${bytes.length} bytes writter');
+      print('${bytes.length} bytes writer');
       print('${evrSubWriter.count} Evr Elements written');
       print('${ivrSubWriter.count} Ivr Elements written');
     }

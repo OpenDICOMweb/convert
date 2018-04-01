@@ -30,9 +30,7 @@ Uint8List readFileSync(File f) => f.readAsBytesSync();
 //Urgent make sure garbage is not being retained
 //Urgent Test async
 Future<bool> doReadByteFile(File f,
-    {bool fast = true,
-    bool isAsync = true,
-    bool showStats = true}) async {
+    {bool fast = true, bool isAsync = true, bool showStats = true}) async {
   final pad = ''.padRight(5);
   final cPath = cleanPath(f.path);
   RootDataset rds0;
@@ -48,8 +46,8 @@ Future<bool> doReadByteFile(File f,
       log.info0('Unreadable File: $cPath');
       return false;
     }
-
-    if (reader0.pInfo != null) log.debug('$pad    ${reader0.pInfo.summary(rds0)}');
+    if (reader0.pInfo != null)
+      log.debug('$pad    ${reader0.pInfo.summary(rds0)}');
 
 // TODO: move into dataset.warnings.
     final e = rds0[kPixelData];
@@ -59,7 +57,6 @@ Future<bool> doReadByteFile(File f,
       log.debug1('$pad  e: ${e.info}');
     }
     if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
-
   } on ShortFileError {
     log.warn('$pad ** Short File(${f.lengthSync()} bytes): $cPath');
     if (throwOnError) rethrow;
@@ -67,9 +64,12 @@ Future<bool> doReadByteFile(File f,
     log.error(e);
     return false;
   } catch (e) {
-    log.error(e);
+    log.error('Caught $e\n  on File: $f');
   }
-  if (rds0 != null) log.info1('$pad Success!');
-  log.debug('summary: ${rds0.summary}');
+  if (rds0 != null) {
+    log
+      ..info1('$pad Success!')
+      ..debug('summary: ${rds0.summary}');
+  }
   return true;
 }

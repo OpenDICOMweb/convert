@@ -28,16 +28,16 @@ class TagReader extends Reader {
       bool doLogging = false}) {
     final bytes = new Bytes.fromTypedData(bList);
     final rds = new TagRootDataset.empty();
-    return new TagReader._(bytes, dParams, doLogging, rds);
+    return new TagReader._(bytes, dParams, rds, doLogging: doLogging);
   }
 
   /// Creates a new [TagReader].
-  TagReader._(Bytes bytes, DecodingParameters dParams, bool doLogging,
-      TagRootDataset rds)
+  TagReader._(Bytes bytes, DecodingParameters dParams, TagRootDataset rds,
+      {bool doLogging: false})
       : evrSubReader = //(doLogging)
-           // ? new LoggingTagEvrSubReader(bytes, dParams, rds)
-             new TagEvrSubReader(bytes, dParams, rds),
-        super(bytes, doLogging: doLogging);
+            // ? new LoggingTagEvrSubReader(bytes, dParams, rds)
+            new TagEvrSubReader(bytes, dParams, rds, doLogging: doLogging),
+        super(bytes);
 
   /// Creates a new [TagReader], which is decoder for Binary
   /// DICOM (application/dicom).
@@ -45,13 +45,13 @@ class TagReader extends Reader {
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool doLogging = false}) {
     final rds = new TagRootDataset.empty();
-    return new TagReader._(bytes, dParams, doLogging, rds);
+    return new TagReader._(bytes, dParams, rds, doLogging: doLogging);
   }
 
   @override
   IvrSubReader get ivrSubReader => _ivrSubReader ??= //(doLogging)
-    //  ? new LoggingTagIvrSubReader.from(evrSubReader)
-       new TagIvrSubReader.from(evrSubReader);
+      //  ? new LoggingTagIvrSubReader.from(evrSubReader)
+      new TagIvrSubReader.from(evrSubReader);
   TagIvrSubReader _ivrSubReader;
 
   /// Reads the [TagRootDataset] from a [Uint8List].

@@ -22,8 +22,11 @@ import 'package:core/server.dart';
 
 const String defaultDirectory = 'C:/odw/test_data/sfd/MG';
 const String mWeb1000 = 'C:/odw/test_data/mweb/1000+';
+const String k6684 = 'C:/acr/odw/test_data/6684';
+const String k6688 = 'C:/acr/odw/test_data/6688';
+const String dir6684_2017_5 = 'C:/acr/odw/test_data/6684/2017/5/12/16/0EE11F7A';
 
-final List<String> defaultArgs = ['$mWeb1000'];
+final List<String> defaultArgs = ['$dir6684_2017_5'];
 
 /// A program for doing read/write/read testing on DICOM files.
 void main(List<String> args) {

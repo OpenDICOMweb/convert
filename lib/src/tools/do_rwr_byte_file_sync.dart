@@ -31,7 +31,7 @@ bool doRWRByteFileSync(File f, {bool fast = true, bool noisy = false}) {
       log.info0('Bad File: ${f.path}');
       return false;
     }
-    if (reader0.pInfo == null) throw 'Bad File - No ParseInfo: $f';
+//    if (reader0.pInfo == null) throw 'Bad File - No ParseInfo: $f';
     final bytes0 = rds0.dsBytes.bytes;
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'

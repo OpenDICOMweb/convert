@@ -58,20 +58,15 @@ abstract class EvrSubReader extends SubReader {
     int vlf;
     if (_isEvrShortVR(vrIndex)) {
       vlf = rb.readUint16();
-      return _readLongDefinedLength(code, eStart, vrIndex, 8, vlf);
+      return _readDefinedLength(code, eStart, vrIndex, 8, vlf);
     } else {
       rb.rSkip(2);
       vlf = rb.readUint32();
       return _readLong(code, eStart, vrIndex, 12, vlf);
     }
-/*
-    final e = (_isEvrShortVR(vrIndex))
-        ? _readShort(code, eStart, vrIndex)
-        : _readEvrLong(code, eStart, vrIndex);
-    return e;
-*/
   }
 
+/* Flush
   /// Read a Short EVR Element, i.e. one with a 16-bit Value Field Length field.
   ///
   /// Note: These Elements can not have an kUndefinedLength value.
@@ -92,6 +87,7 @@ abstract class EvrSubReader extends SubReader {
     final vlf = rb.readUint32();
     return _readLong(code, eStart, vrIndex, 12, vlf);
   }
+*/
 
   int _lookupEvrVRIndex(int code, int eStart, int vrCode) {
     final vrIndex = vrIndexFromCode(vrCode);
@@ -110,8 +106,7 @@ abstract class EvrSubReader extends SubReader {
   }
 
   void _nullVRIndex(int code, int eStart, int vrCode) {
-    log.warn('Null VR: vrCode(${hex16(vrCode)}, $vrCode) '
-        '${dcm(code)} start: $eStart');
+    log.warn('@$eStart ${dcm(code)} Null VR(${hex16(vrCode)}, $vrCode)');
   }
 
   void _invalidPrivateCreator(int code, int vrIndex) {
@@ -128,7 +123,7 @@ abstract class EvrSubReader extends SubReader {
     assert(rb.index == 0, 'Non-Zero Read Buffer Index');
     if (!_readPrefix(rb)) {
       rb.rIndex_ = 0;
-      log.up;
+      if (doLogging)  log.up;
       return -1;
     }
     assert(rb.index == 132, 'Non-Prefix start index: ${rb.index}');
@@ -222,15 +217,17 @@ abstract class IvrSubReader extends SubReader {
   }
   */
   Tag _lookupTag(int code, int eStart, [int vrIndex, Object token]) {
-    if (Tag.isPDCode(code)) {
+    // Urgent Fix
+    if (Tag.isPublicCode(code)) {
+      return PTag.lookupByCode(code);
+    } else if (Tag.isPDCode(code)) {
       // **** temporary
       return Tag.lookupByCode(code);
     } else if (Tag.isPCCode(code)) {
-      // **** temporary
       return Tag.lookupByCode(code);
     } else {
-      assert(Tag.isPrivateCode(code));
-      return PTag.lookupByCode(code);
+      print('code: ${dcm(code)}');
+      return Tag.lookupByCode(code);
     }
   }
 }
@@ -333,8 +330,7 @@ abstract class SubReader {
 
   RootDataset readRootDataset(int fmiEnd) {
     final rdsStart = rb.index;
-    final bufLength = rb.length;
-//    print('bufLength: $bufLength');
+    final bufLength = rb.rRemaining;
     if (doLogging)
       _startDatasetMsg(rdsStart, 'subReadRootDataset', 0, bufLength, rds);
     _readDatasetDefinedLength(rds, rdsStart, bufLength);
@@ -346,18 +342,15 @@ abstract class SubReader {
     return rds;
   }
 
-  /// Returns an [Item].
-  // rIndex is @ delimiterFvr
+  /// Reads and returns an [Item].
   Item readItem([SQ sq]) {
     assert(rb.rHasRemaining(8));
     final iStart = rb.rIndex;
 
     // read 32-bit kItem code and Item length field
     final delimiter = rb.readUint32();
-//    print('delimiter: ${dcm(delimiter)}');
     if (delimiter != kItem32BitLE) throw 'Missing Item Delimiter';
     final vlf = rb.readUint32();
-//    print('vlf: $vlf');
     if (doLogging) _startDatasetMsg(iStart, 'readItem', delimiter, vlf, cds);
     final item = _makeEmptyItem(cds);
     final parentDS = cds;
@@ -382,13 +375,12 @@ abstract class SubReader {
   void _readDatasetDefinedLength(Dataset ds, int dsStart, int vfl) {
     assert(vfl != kUndefinedLength);
     assert(dsStart == rb.rIndex);
-    final dsEnd = vfl;
+    final dsEnd = dsStart + vfl;
     while (rb.rIndex < dsEnd) {
       final e = _readElement();
       final ok = ds.tryAdd(e);
       if (!ok) log.warn('*** duplicate: $e');
     }
-    print('rb.index: ${rb.index}');
   }
 
   void _readDatasetUndefinedLength(Dataset ds, int dsStart) {
@@ -441,9 +433,7 @@ abstract class SubReader {
   /// Reads an returns an [Element] with a 32-bit Value Field. The
   /// [vfOffset] is 12 for EVR and 8 for IVR.
   Element _readLong(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
-    //  final vlf = rb.readUint32();
     assert(rb.index.isEven);
-  //  assert(vlf.isOdd && vlf != kUndefinedLength, 'Odd vlf: $vlf');
     if (vlf.isOdd && vlf != kUndefinedLength) log.error('Odd vlf: $vlf');
     final delimiter = rb.getUint32();
 
@@ -454,7 +444,7 @@ abstract class SubReader {
     } else if (vlf == kUndefinedLength) {
       return _readLongUndefinedLength(code, eStart, vrIndex, vfOffset, vlf);
     } else {
-      return _readLongDefinedLength(code, eStart, vrIndex, vfOffset, vlf);
+      return _readDefinedLength(code, eStart, vrIndex, vfOffset, vlf);
     }
   }
 
@@ -477,8 +467,8 @@ abstract class SubReader {
     }
     if (doLogging) _startSQMsg(code, eStart, vrIndex, vfOffset, vlf);
     final sq = (vlf == kUndefinedLength)
-        ? _readUSQ(code, eStart, vrIndex, vfOffset, vlf)
-        : _readDSQ(code, eStart, vrIndex, vfOffset, vlf);
+        ? _readUSQ(code, eStart, kSQIndex, vfOffset, vlf)
+        : _readDSQ(code, eStart, kSQIndex, vfOffset, vlf);
     _count++;
     if (doLogging) _endSQMsg(sq);
     return sq;
@@ -528,7 +518,8 @@ abstract class SubReader {
     assert(vrIndex != kSQIndex);
     VFFragments fragments;
     if (code == kPixelData) {
-      _readEncapsulatedPixelData(code, eStart, vrIndex, vlf);
+      fragments = _readEncapsulatedPixelData(code, eStart, vrIndex, vlf);
+      assert(fragments != null);
     } else {
       _findEndOfULengthVF();
     }
@@ -543,7 +534,7 @@ abstract class SubReader {
   }
 
   /// Return a defined length Element with a long Value Field
-  Element _readLongDefinedLength(
+  Element _readDefinedLength(
       int code, int eStart, int vrIndex, int vfOffset, int vlf) {
     if (doLogging) _startElementMsg(code, eStart, vrIndex, vlf);
     rb.rSkip(vlf);

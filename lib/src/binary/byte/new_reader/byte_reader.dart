@@ -36,7 +36,7 @@ class ByteReader extends Reader {
       : evrSubReader =
             //  ? new LoggingByteEvrSubReader(bytes, dParams)
             new ByteEvrSubReader(bytes, dParams, doLogging: doLogging),
-        super(bytes, doLogging: doLogging);
+        super(bytes);
 
   factory ByteReader.fromFile(File f,
       {DecodingParameters dParams = DecodingParameters.kNoChange,

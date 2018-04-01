@@ -17,17 +17,14 @@ import 'package:convert/src/utilities/parse_info.dart';
 /// (application/dicom).
 abstract class Reader {
   final Bytes bytes;
-  final bool doLogging;
   int fmiEnd;
 
   /// Creates a new [Reader].
-  Reader(this.bytes, {this.doLogging = false});
+  Reader(this.bytes);
 
-  Reader.fromFile(File f, {this.doLogging = false})
-      : bytes = f.readAsBytesSync();
+  Reader.fromFile(File f) : bytes = f.readAsBytesSync();
 
-  Reader.fromPath(String path, {this.doLogging = false})
-      : bytes = new File(path).readAsBytesSync();
+  Reader.fromPath(String path) : bytes = new File(path).readAsBytesSync();
 
   // **** Interface
   EvrSubReader get evrSubReader;
@@ -42,13 +39,16 @@ abstract class Reader {
 
   /// Reads a [RootDataset] from _this_. The FMI, if any, MUST already be read.
   RootDataset readRootDataset() {
-    if (doLogging) log.info('Logging ...');
-    if (doLogging) log.debug('>R@${rb.index} readRootDataset  ${rb.length} bytes');
+    if (evrSubReader.doLogging) {
+      log
+        ..debug('Logging ...')
+        ..debug('>R@${rb.index} readRootDataset  ${rb.length} bytes');
+    }
     final fmiEnd = evrSubReader.readFmi();
     final rds0 = (evrSubReader.rds.transferSyntax.isEvr)
         ? evrSubReader.readRootDataset(fmiEnd)
         : ivrSubReader.readRootDataset(fmiEnd);
-    if (doLogging) {
+    if (evrSubReader.doLogging) {
       log.debug('${evrSubReader.count} Evr Elements read');
       if (ivrSubReader != null)
         log.debug('${ivrSubReader.count} Ivr Elements read');
@@ -56,6 +56,7 @@ abstract class Reader {
     return rds0;
   }
 }
+
 /* TODO: later
   static Future<Uint8List> _readAsync(File file) async =>
       await file.readAsBytes();

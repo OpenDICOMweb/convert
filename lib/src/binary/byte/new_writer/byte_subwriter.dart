@@ -36,13 +36,15 @@ class ByteIvrSubWriter extends IvrSubWriter {
 
   /// Creates a new [ByteIvrSubWriter], which is decoder for Binary DICOM
   /// (application/dicom).
+/*
   ByteIvrSubWriter(this.rds, EncodingParameters eParams,
       {this.outputTS, this.doLogging = false})
-      : super(rds, eParams);
+      : super(rds, eParams, evr);
+*/
 
   ByteIvrSubWriter.from(ByteEvrSubWriter subWriter)
       : rds = subWriter.rds,
         outputTS = subWriter.outputTS,
         doLogging = subWriter.doLogging,
-        super(subWriter.rds, subWriter.eParams);
+        super(subWriter.rds, subWriter.eParams, subWriter.wb);
 }

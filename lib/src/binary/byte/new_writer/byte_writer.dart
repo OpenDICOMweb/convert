@@ -61,7 +61,6 @@ class ByteWriter extends Writer {
 
   @override
   IvrSubWriter get ivrSubWriter => _ivrSubWriter ??=
-
        new ByteIvrSubWriter.from(evrSubWriter);
 
   IvrSubWriter _ivrSubWriter;
