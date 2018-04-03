@@ -7,9 +7,9 @@
 export 'package:convert/binary.dart';
 export 'package:convert/json.dart';
 
-export 'package:convert/src/tools/job_args.dart';
-export 'package:convert/src/tools/job_reporter.dart';
-export 'package:convert/src/tools/job_runner.dart';
+export 'package:convert/src/tools/job/job_args.dart';
+export 'package:convert/src/tools/job/job_reporter.dart';
+export 'package:convert/src/tools/job/job_runner.dart';
 
 export 'package:convert/src/errors.dart';
 

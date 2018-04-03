@@ -108,7 +108,7 @@ class JobArgs {
     //TODO: need better name
     ..addOption('every',
         abbr: 'e',
-        defaultsTo: '10output',
+        defaultsTo: '100',
         callback: setShortInterval,
         help: 'print a progress message every n files processed"')
     // These next options are for the logger Level

@@ -12,6 +12,11 @@ import 'package:core/server.dart';
 
 import 'package:convert/data/test_files.dart';
 
+const String mweb0 = 'C:/odw/test_data/mweb/1000+/DIASTOLIX/DIASTOLIX/'
+    'CorCTALow  2.0  B25f 0-95%/IM-0004-0001.dcm';
+
+const String mweb1 = 'C:/odw/test_data/mweb/1000+/DIASTOLIX/DIASTOLIX/'
+    'CorCTALow  2.0  B25f 0-95%/IM-0004-0001.dcm';
 ///
 Future main() async {
   Server.initialize(
@@ -23,7 +28,7 @@ Future main() async {
       showBanner: true,
       showSdkBanner: true);
 
-  final inPath = cleanPath(k6684x0);
+  final inPath = cleanPath(mweb1);
   final fLength = new File(inPath).lengthSync();
   stdout
     ..writeln('Reading($fLength bytes): $inPath')

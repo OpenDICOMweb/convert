@@ -107,17 +107,19 @@ class JobReporter {
   //TODO: need a better name for this
   String report(String path, {bool wasSuccessful, bool force = false}) {
     _count++;
+    String msg;
     if (wasSuccessful) {
       _success++;
-      if (force || check) maybePrint(shortMsg(path));
+      msg = shortMsg(path);
+      msg =  (force || check) ? maybePrint(msg) : msg;
     } else if (!wasSuccessful && doReportFailure) {
       _failure++;
       failuresList.add(path);
       final n = '$_count'.padLeft(countWidth);
-      final msg = '$n: ** Failure $path';
-      return maybePrint(msg);
+       msg = '$n: ** Failure $path';
+      msg = maybePrint(msg);
     }
-    return '';
+    return msg;
   }
 
   String shortMsg(String path) {

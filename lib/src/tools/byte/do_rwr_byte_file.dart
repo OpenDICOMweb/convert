@@ -17,22 +17,23 @@ import 'package:convert/src/utilities/io_utils.dart';
 
 // ignore_for_file: only_throw_errors, avoid_catches_without_on_clauses
 
-Future<bool> doRWRByteFile(File f, {bool fast = true}) async {
+Future<bool> doRWRByteFile(File f,
+    {bool throwOnError = false, bool fast = true}) async {
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
   final pad = ''.padRight(5);
 
   try {
-    final bytes = f.readAsBytesSync();
-    final reader0 = new ByteReader(bytes);
+    final bList0 = f.readAsBytesSync();
+    final reader0 = new ByteReader(bList0);
     final rds0 = reader0.readRootDataset();
-    //TODO: improve next two errors
+
     if (rds0 == null) {
       log.info0('Bad File: ${f.path}');
       return false;
     }
-    if (reader0.pInfo == null) throw 'Bad File - No ParseInfo: $f';
-    final bytes0 = reader0.rb.asUint8List();
+
+    final bytes0 = reader0.bytesRead;
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');
@@ -80,8 +81,8 @@ $pad    TS: ${rds0.transferSyntax}''');
       // Just read bytes not file
       reader1 = new ByteReader.fromBytes(bytes1);
     } else {
-      final Uint8List bList = new File(outPath).readAsBytesSync();
-      reader1 = new ByteReader(bList);
+      final Uint8List bList1 = new File(outPath).readAsBytesSync();
+      reader1 = new ByteReader(bList1);
     }
     final rds1 = reader1.readRootDataset();
     //   BDRootDatasets rds1 = ByteWriter.readPath(outPath);
@@ -133,7 +134,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
-      final same = uint8ListEqual(bytes0, bytes1.buffer.asUint8List());
+      final same = bytesEqual(bytes0, bytes1);
       if (same == true) {
         log.debug('$pad Files bytes are identical.');
       } else {

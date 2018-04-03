@@ -20,26 +20,28 @@ import 'package:core/server.dart';
 // TODO: print out the version numbers of the different packages.
 //TODO: better doc
 
-const String defaultDirectory = 'C:/odw/test_data/sfd/MG';
-const String mWeb1000 = 'C:/odw/test_data/mweb/1000+';
-const String k6684 = 'C:/acr/odw/test_data/6684';
-const String k6688 = 'C:/acr/odw/test_data/6688';
-const String dir6684_2017_5 = 'C:/acr/odw/test_data/6684/2017/5/12/16/0EE11F7A';
-
-final List<String> defaultArgs = ['$dir6684_2017_5'];
+const String x1evr = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
+const String x2evr = 'C:/acr/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
+const String x3evr = 'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
+const String x4ivr = 'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/1636525D';
+const String x5ivr = 'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/1636525D';
+const String x6evr = 'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
+const String x7evr = 'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
+const String x8ivr = 'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/163652D2';
+const String x9evr = 'C:/acr/odw/test_data/6684/2017/5/12/16/4C810C83/FE74DC49/FF6BE1DE';
+const String x10evr = 'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/1636525D';
+const String x11ivr = 'C:/acr/odw/test_data/6684/2017/5/13/9/9F3A1E64/4B4AEBC7/F57DF821';
 
 /// A program for doing read/write/read testing on DICOM files.
 void main(List<String> args) {
   Server.initialize(name: 'read_write_file', level: Level.info);
 
-  final xArgs = (args.isEmpty) ? defaultArgs : args;
-
   /// The processed arguments for this program.
-  final jobArgs = new JobArgs(xArgs);
+  final jobArgs = new JobArgs(args ?? [x1evr]);
 
   if (jobArgs.showHelp) showHelp(jobArgs);
 
-  JobRunner.job(jobArgs, doRWFile,
+  JobRunner.pathList([x1evr], doRWFile,
       interval: jobArgs.shortMsgEvery,
       level: jobArgs.baseLevel,
       throwOnError: true);

@@ -10,6 +10,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
+import 'package:convert/src/binary/base/new_reader/reader.dart';
 import 'package:convert/src/binary/byte/new_reader/byte_reader.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/utilities/io_utils.dart';
@@ -27,10 +28,21 @@ Future<Uint8List> readFileAsync(File f) async {
 
 Uint8List readFileSync(File f) => f.readAsBytesSync();
 
+ByteReader decodeFileAsBE(File f, ByteReader reader,
+    {bool throwOnError = true,
+      bool fast = true,
+      bool isAsync = true,
+      bool showStats = true})  {
+
+}
+
 //Urgent make sure garbage is not being retained
 //Urgent Test async
-Future<bool> doReadByteFile(File f,
-    {bool fast = true, bool isAsync = true, bool showStats = true}) async {
+Future<bool> readFile(File f, Reader reader,
+    {bool throwOnError = true,
+    bool fast = true,
+    bool isAsync = true,
+    bool showStats = true}) async {
   final pad = ''.padRight(5);
   final cPath = cleanPath(f.path);
   RootDataset rds0;

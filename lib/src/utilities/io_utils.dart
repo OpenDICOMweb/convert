@@ -176,7 +176,7 @@ typedef Null RunFile(File f, [int count]);
 
 /// Walks a [List] of [String], [File], List<String>, or List<File>, and
 /// applies [runner] to each one asynchronously.
-Future<int> walkPathList(List paths, RunFile runner, [int level = 0]) async {
+Future<int> walkPathList(Iterable paths, RunFile runner, [int level = 0]) async {
   var count = 0;
   var _level = level;
   for (var entry in paths) {

@@ -81,7 +81,6 @@ abstract class Writer {
   Bytes write() => writeRootDataset();
   Bytes writeFmi() => evrSubWriter.writeFmi();
 
-
   RootDataset get rds => evrSubWriter.rds;
 
   /// Writes a [RootDataset] to a [Uint8List], then returns it.
@@ -93,13 +92,15 @@ abstract class Writer {
     Bytes bytes;
     if (evrSubWriter.rds.transferSyntax.isEvr) {
       bytes = evrSubWriter.writeRootDataset(fmiEnd);
-      print('${bytes.length} bytes writter');
-      print('${evrSubWriter.count} Evr Elements written');
+      log
+        ..debug('${bytes.length} bytes written')
+        ..debug('${evrSubWriter.count} Evr Elements written');
     } else {
       bytes = ivrSubWriter.writeRootDataset(fmiEnd);
-      print('${bytes.length} bytes writer');
-      print('${evrSubWriter.count} Evr Elements written');
-      print('${ivrSubWriter.count} Ivr Elements written');
+      log
+        ..debug('${bytes.length} bytes writen')
+        ..debug('${evrSubWriter.count} Evr Elements written')
+        ..debug('${ivrSubWriter.count} Ivr Elements written');
     }
     return bytes;
   }

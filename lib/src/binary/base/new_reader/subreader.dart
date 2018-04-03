@@ -55,6 +55,7 @@ abstract class EvrSubReader extends SubReader {
     final code = rb.readCode();
     final vrCode = rb.readUint16();
     final vrIndex = _lookupEvrVRIndex(code, eStart, vrCode);
+    print('vrIndex: $vrIndex');
     int vlf;
     if (_isEvrShortVR(vrIndex)) {
       vlf = rb.readUint16();

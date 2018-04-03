@@ -64,7 +64,7 @@ const String x8 = 'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/1636
 const String x9 = 'C:/acr/odw/test_data/6684/2017/5/12/16/4C810C83/FE74DC49/FF6BE1DE';
 const String x10evr = 'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/1636525D';
 const String x11ivr = 'C:/acr/odw/test_data/6684/2017/5/13/9/9F3A1E64/4B4AEBC7/F57DF821';
-
+const String mweb = 'C:/acr/odw/test_data/mweb/1000+/DIASTOLIX/DIASTOLIX/CorCTALow  2.0  B25f 0-95%/IM-0004-0001.dcm'
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.debug, throwOnError: true);
 

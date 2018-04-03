@@ -11,35 +11,33 @@ import 'package:core/server.dart';
 
 //import 'package:convert/data/test_directories.dart';
 
-//TODO: improve performance
-//TODO: On error write the log file to dir/output/name.log where name if path
-// - dir (i.e. remove the prefix dir and replace with dir/output.
-//TODO: create results.log with summary of run including errors.
-//TODO: if an error occurs rerun the file with debug setting and store
-//      output in filename.log
-// TODO: print out the version numbers of the different packages.
-//TODO: better doc
+/// _rwfile_ check convert for a single file.
+///
+/// It first reads and parshes a DICOM file into a buffer, writes it
+/// to a second buffer, and the does a byte by byte comparison of the two buffers.
 
-const String defaultDirectory = 'C:/odw/test_data/sfd/MG';
-const String mWeb1000 = 'C:/odw/test_data/mweb/1000+';
-const String k6684 = 'C:/acr/odw/test_data/6684';
-const String k6688 = 'C:/acr/odw/test_data/6688';
-const String dir6684_2017_5 = 'C:/acr/odw/test_data/6684/2017/5/12/16/0EE11F7A';
-
-final List<String> defaultArgs = ['$dir6684_2017_5'];
+const String x1evr = 'C:/odw/test_data/mweb/100 MB Studies/1/S234601/15859205';
+const String x2evr = 'C:/acr/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
+const String x3evr = 'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
+const String x4ivr = 'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/1636525D';
+const String x5ivr = 'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/1636525D';
+const String x6evr = 'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
+const String x7evr = 'C:/acr/odw/test_data/6684/2017/5/12/16/05223B30/05223B35/45804B79';
+const String x8ivr = 'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/163652D2';
+const String x9evr = 'C:/acr/odw/test_data/6684/2017/5/12/16/4C810C83/FE74DC49/FF6BE1DE';
+const String x10evr = 'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/1636525D';
+const String x11ivr = 'C:/acr/odw/test_data/6684/2017/5/13/9/9F3A1E64/4B4AEBC7/F57DF821';
 
 /// A program for doing read/write/read testing on DICOM files.
 void main(List<String> args) {
-  Server.initialize(name: 'read_write_file', level: Level.info);
-
-  final xArgs = (args.isEmpty) ? defaultArgs : args;
+  Server.initialize(name: 'rwfile', level: Level.debug, throwOnError: true);
 
   /// The processed arguments for this program.
-  final jobArgs = new JobArgs(xArgs);
+  final jobArgs = new JobArgs(args ?? [x1evr]);
 
   if (jobArgs.showHelp) showHelp(jobArgs);
 
-  JobRunner.job(jobArgs, doRWFile,
+  JobRunner.pathList([x1evr], doRWFile,
       interval: jobArgs.shortMsgEvery,
       level: jobArgs.baseLevel,
       throwOnError: true);

@@ -10,7 +10,7 @@ import 'dart:collection';
 class FileListReader extends IterableBase<String> {
   final Map<String, List<String>> fileMap;
 
-  FileListReader(this.fileMap);
+  FileListReader.fromMap(this.fileMap);
 
   @override
   FileListIterator get iterator => new FileListIterator(fileMap);

@@ -8,7 +8,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:core/core.dart';
-import 'package:path/path.dart' as  path;
 
 import 'package:convert/src/binary/byte/new_reader/byte_reader.dart';
 import 'package:convert/src/binary/byte/new_writer/byte_writer.dart';
@@ -18,34 +17,31 @@ import 'package:convert/src/utilities/io_utils.dart';
 // ignore_for_file: only_throw_errors, avoid_catches_without_on_clauses
 
 /// Read a file then write it to a buffer.
-Future<bool> doRWFile(File f, {bool throwOnError = false, bool fast = true}) async {
-  log.level = Level.error;
+Future<bool> doRWFile(File f,
+    {bool throwOnError = false, bool fast = true}) async {
 
-  final ext = path.extension(f.path).toLowerCase();
-  if (ext != '' && ext != '.dcm') {
-  	log.error('Unknown File Extension: "$ext"');
-  	return false;
-  }
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
   final pad = ''.padRight(5);
 
+  var same = true;
   try {
-    final bList = f.readAsBytesSync();
-    final reader0 = new ByteReader(bList);
+    final bList0 = f.readAsBytesSync();
+    final reader0 = new ByteReader(bList0);
     final rds0 = reader0.readRootDataset();
-    //TODO: improve next two errors
+
     if (rds0 == null) {
       log.info0('Bad File: ${f.path}');
       return false;
     }
-  //  if (reader0.pInfo == null) throw 'Bad File - No ParseInfo: $f';
+    //  if (reader0.pInfo == null) throw 'Bad File - No ParseInfo: $f';
     //TODO: update reader and write to have method called bytes.
-    final bytes0 = reader0.rb.asUint8List();
+    final bytes0 = reader0.bytesRead;
     log.debug('''$pad  Read ${bytes0.lengthInBytes} bytes
 $pad    DS0: ${rds0.info}'
 $pad    TS: ${rds0.transferSyntax}''');
-    if (reader0.pInfo != null) log.debug('$pad    ${reader0.pInfo.summary(rds0)}');
+    if (reader0.pInfo != null)
+      log.debug('$pad    ${reader0.pInfo.summary(rds0)}');
 
     // TODO: move into dataset.warnings.
     final e = rds0[kPixelData];
@@ -64,18 +60,16 @@ $pad    TS: ${rds0.transferSyntax}''');
       final outPath = getTempFile(f.path, 'dcmout');
       writer = new ByteWriter.toPath(rds0, outPath);
     }
-    final bd1 = writer.writeRootDataset();
-    log.debug('$pad    Encoded ${bd1.lengthInBytes} bytes');
+    final bytes1 = writer.writeRootDataset();
+    log.debug('$pad    Encoded ${bytes1.lengthInBytes} bytes');
 
     // Urgent Jim if file has dups then no test is done. Fix it.
-    var same = true;
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
-      same = uint8ListEqual(bytes0, bd1.buffer.asUint8List());
+      same = bytesEqual(bytes0, bytes1);
       if (same != true) log.warn('$pad Files bytes are different!');
     }
-    return same;
   } on ShortFileError {
     log.warn('$pad ** Short File(${f.lengthSync()} bytes): $f');
     rethrow;
@@ -84,4 +78,5 @@ $pad    TS: ${rds0.transferSyntax}''');
     if (throwOnError) rethrow;
     rethrow;
   }
+  return same;
 }

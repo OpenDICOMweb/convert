@@ -5,6 +5,7 @@
 // See the AUTHORS file for other contributors.
 
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
@@ -16,24 +17,37 @@ import 'package:convert/src/utilities/parse_info.dart';
 /// Creates a new [Reader], which is a decoder for Binary DICOM
 /// (application/dicom).
 abstract class Reader {
+  final File file;
   final Bytes bytes;
-  int fmiEnd;
+
+  int fmiEnd = -1;
 
   /// Creates a new [Reader].
-  Reader(this.bytes);
+  Reader(this.bytes) : file = null;
 
-  Reader.fromFile(File f) : bytes = f.readAsBytesSync();
+  Reader.fromUint8List(Uint8List list, Endian endian)
+      : file = null,
+        bytes = new Bytes.fromTypedData(list, endian);
 
-  Reader.fromPath(String path) : bytes = new File(path).readAsBytesSync();
+  Reader.fromFile(this.file,
+      {Endian endian = Endian.little, bool doAsync = false})
+      : bytes = Bytes.fromFile(file, endian: endian, doAsync: doAsync);
 
   // **** Interface
   EvrSubReader get evrSubReader;
   IvrSubReader get ivrSubReader;
   // **** End Interface
 
+  String get path => file.path;
   ReadBuffer get rb => evrSubReader.rb;
+  Bytes get input => rb.asBytes();
+
   DecodingParameters get dParams => evrSubReader.dParams;
-  BDRootDataset get rds => evrSubReader.rds;
+
+  BDRootDataset get rds => _rds ??= evrSubReader.rds;
+  RootDataset _rds;
+
+  Bytes get bytesRead => rb.asBytes(0, rb.index);
   ElementOffsets get offsets => evrSubReader.offsets;
   ParseInfo get pInfo => evrSubReader.pInfo;
 
@@ -48,16 +62,13 @@ abstract class Reader {
     final rds0 = (evrSubReader.rds.transferSyntax.isEvr)
         ? evrSubReader.readRootDataset(fmiEnd)
         : ivrSubReader.readRootDataset(fmiEnd);
+    log.debug('${bytesRead.length} bytes read');
     if (evrSubReader.doLogging) {
       log.debug('${evrSubReader.count} Evr Elements read');
-      if (ivrSubReader != null)
+      if (ivrSubReader != null) {
         log.debug('${ivrSubReader.count} Ivr Elements read');
+      }
     }
     return rds0;
   }
 }
-
-/* TODO: later
-  static Future<Uint8List> _readAsync(File file) async =>
-      await file.readAsBytes();
-*/
