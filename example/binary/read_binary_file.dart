@@ -14,8 +14,6 @@ import 'package:convert/data/test_files.dart';
 
 const String mweb0 = 'C:/odw/test_data/mweb/1000+/DIASTOLIX/DIASTOLIX/'
     'CorCTALow  2.0  B25f 0-95%/IM-0004-0001.dcm';
-
-//
 const String mweb1 = 'C:/odw/test_data/mweb/ASPERA/DICOM files only/'
     '22c82bd4-6926-46e1-b055-c6b788388014.dcm';
 const String mweb2 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/'
