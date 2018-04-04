@@ -33,6 +33,8 @@ ByteReader decodeFileAsBE(File f, ByteReader reader,
       bool fast = true,
       bool isAsync = true,
       bool showStats = true})  {
+ return readFile(f,  new ByteReader.fromFile(f));
+
 
 }
 

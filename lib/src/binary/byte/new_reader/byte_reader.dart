@@ -85,6 +85,7 @@ class ByteReader extends Reader {
       bool doLogging = false}) {
     checkFile(file);
     final Uint8List td = file.readAsBytesSync();
+    print('td: ${td.length}');
     return ByteReader.readTypedData(td,
         endian: endian, dParams: dParams, doLogging: doLogging);
   }
