@@ -34,10 +34,9 @@ Future main() async {
       minYear: 1901,
       maxYear: 2049,
       showBanner: true,
-      showSdkBanner: false
-  );
+      showSdkBanner: false);
 
-  final inPath = cleanPath(mweb0);
+  final inPath = cleanPath(mweb1);
   final file = new File(inPath);
   final fLength = file.lengthSync();
   stdout
@@ -47,9 +46,10 @@ Future main() async {
   RootDataset rds;
   try {
     rds = ByteReader.readPath(inPath, doLogging: true);
+  } on InvalidTransferSyntax catch (e) {
+    exit(-1);
   } catch (e) {
-    print(e);
-//    if (throwOnError) exit(-1);
+    log.error(e);
     if (throwOnError) rethrow;
   }
   final length = rds.lengthInBytes;
