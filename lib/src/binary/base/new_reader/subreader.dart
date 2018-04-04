@@ -56,10 +56,10 @@ abstract class EvrSubReader extends SubReader {
     final vrCode = rb.readUint16();
     final vrIndex = _lookupEvrVRIndex(code, eStart, vrCode);
     if (_isEvrShortVR(vrIndex)) {
-      return _readDefinedLength(code, eStart, vrIndex, 8, rb.readUint16());
+      return _readDefinedLength(code, eStart, vrIndex, 8, _getVlf16());
     } else {
       rb.rSkip(2);
-      return _readLong(code, eStart, vrIndex, 12, rb.readUint32());
+      return _readLong(code, eStart, vrIndex, 12, _getVlf32());
     }
   }
 
@@ -170,7 +170,7 @@ abstract class IvrSubReader extends SubReader {
     final code = rb.readCode();
     final tag = (doLookupVRIndex) ? _lookupTag(code, eStart) : null;
     final vrIndex = (tag == null) ? kUNIndex : tag.vrIndex;
-    final vlf = _getVlf();
+    final vlf = _getVlf32();
     return _readLong(code, eStart, vrIndex, 8, vlf);
   }
 
@@ -241,18 +241,6 @@ abstract class SubReader {
 
   /// Reads and returns the next [Element] in the [ReadBuffer].
   Element _readElement();
-
-  /// Reads the Value Field Length field and throws an error if it
-  /// is longer than [rb.remaining].
-  int _getVlf() {
-    final vlf = rb.readUint32();
-    if (vlf <= rb.length) {
-      log.error('Value Field Length($vlf) is longer than'
-          ' ReadBuffer length(${rb.length}');
-      throw new ShortFileError();
-    }
-    return vlf;
-  }
 
   /// Creates an RootDataset.
   // Note: Typically this is not implemented.
@@ -344,7 +332,7 @@ abstract class SubReader {
     // read 32-bit kItem code and Item length field
     final delimiter = rb.readUint32();
     if (delimiter != kItem32BitLE) throw 'Missing Item Delimiter';
-    final vlf = _getVlf();
+    final vlf = _getVlf32();
     final item = _makeEmptyItem(cds);
     final parentDS = cds;
     cds = item;
@@ -620,6 +608,28 @@ abstract class SubReader {
     _checkDelimiterLength(delimiter);
     final v = new VFFragments(fragments);
     return v;
+  }
+
+  /// Reads a 32-bit Value Field Length field and throws an error if it
+  /// is longer than [rb].remaining.
+  int _getVlf16() {
+    final vlf = rb.readUint16();
+    if (vlf > rb.remaining) _vlfError(vlf);
+    return vlf;
+  }
+
+  void _vlfError(int vlf) {
+    log.error('Value Field Length($vlf) is longer than'
+        ' ReadBuffer remaining(${rb.remaining})');
+    if (throwOnError) throw new ShortFileError();
+  }
+
+  /// Reads a 32-bit Value Field Length field and throws an error if it
+  /// is longer than [rb].remaining.
+  int _getVlf32() {
+    final vlf = rb.readUint32();
+    if (vlf > rb.length && vlf != kUndefinedLength) _vlfError(vlf);
+    return vlf;
   }
 
   bool _isSpecialVR(int vrIndex) =>

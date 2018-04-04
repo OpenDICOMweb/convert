@@ -36,7 +36,7 @@ Future main() async {
       showBanner: true,
       showSdkBanner: false);
 
-  final inPath = cleanPath(mweb3);
+  final inPath = cleanPath(mweb4);
   final file = new File(inPath);
   final fLength = file.lengthSync();
   stdout
