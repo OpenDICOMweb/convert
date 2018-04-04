@@ -36,7 +36,7 @@ Future main() async {
       showBanner: true,
       showSdkBanner: false);
 
-  final inPath = cleanPath(mweb1);
+  final inPath = cleanPath(mweb3);
   final file = new File(inPath);
   final fLength = file.lengthSync();
   stdout
@@ -46,7 +46,13 @@ Future main() async {
   RootDataset rds;
   try {
     rds = ByteReader.readPath(inPath, doLogging: true);
-  } on InvalidTransferSyntax catch (e) {
+  } on InvalidTransferSyntax {
+    exit(-1);
+  } on ShortFileError {
+    log.error('Short file error');
+    exit(-1);
+  } on RangeError catch(e){
+    log.error(e);
     exit(-1);
   } catch (e) {
     log.error(e);

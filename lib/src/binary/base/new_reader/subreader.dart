@@ -170,11 +170,7 @@ abstract class IvrSubReader extends SubReader {
     final code = rb.readCode();
     final tag = (doLookupVRIndex) ? _lookupTag(code, eStart) : null;
     final vrIndex = (tag == null) ? kUNIndex : tag.vrIndex;
-    final vlf = rb.readUint32();
-    assert(
-        vlf <= rb.length,
-        'Value Field Length($vlf) is longer than'
-        ' ReadBuffer length(${rb.length}');
+    final vlf = _getVlf();
     return _readLong(code, eStart, vrIndex, 8, vlf);
   }
 
@@ -245,6 +241,18 @@ abstract class SubReader {
 
   /// Reads and returns the next [Element] in the [ReadBuffer].
   Element _readElement();
+
+  /// Reads the Value Field Length field and throws an error if it
+  /// is longer than [rb.remaining].
+  int _getVlf() {
+    final vlf = rb.readUint32();
+    if (vlf <= rb.length) {
+      log.error('Value Field Length($vlf) is longer than'
+          ' ReadBuffer length(${rb.length}');
+      throw new ShortFileError();
+    }
+    return vlf;
+  }
 
   /// Creates an RootDataset.
   // Note: Typically this is not implemented.
@@ -336,14 +344,18 @@ abstract class SubReader {
     // read 32-bit kItem code and Item length field
     final delimiter = rb.readUint32();
     if (delimiter != kItem32BitLE) throw 'Missing Item Delimiter';
-    final vlf = rb.readUint32();
+    final vlf = _getVlf();
     final item = _makeEmptyItem(cds);
     final parentDS = cds;
     cds = item;
     if (doLogging) _startDatasetMsg(iStart, 'readItem', delimiter, vlf, cds);
-    (vlf == kUndefinedLength)
-        ? _readDatasetUndefinedLength(item, rb.index)
-        : _readDatasetDefinedLength(item, rb.index, vlf);
+
+    if (vlf == kUndefinedLength) {
+      _readDatasetUndefinedLength(item, rb.index);
+    } else {
+      if (vlf.isOdd) log.debug('Dataset with odd vfl($vlf)');
+      _readDatasetDefinedLength(item, rb.index, vlf);
+    }
 
     final bd = rb.subbytes(iStart, rb.rIndex);
     final dsBytes = new IDSBytes(bd);
@@ -359,9 +371,7 @@ abstract class SubReader {
 
   // **** This is one of the only two places Elements are added to the dataset.
   void _readDatasetDefinedLength(Dataset ds, int dsStart, int vfl) {
-    assert(vfl != kUndefinedLength);
-    if (vfl.isOdd) log.debug('Dataset with odd vfl($vfl)');
-    assert(dsStart == rb.rIndex);
+    assert(vfl != kUndefinedLength && dsStart == rb.rIndex);
     final dsEnd = dsStart + vfl;
     while (rb.rIndex < dsEnd) {
       final e = _readElement();
