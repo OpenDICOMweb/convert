@@ -69,8 +69,21 @@ abstract class EvrSubWriter extends SubWriter {
       ..writeUint16(vfLength);
   }
 
-  /// Write a Long EVR [Element], i.e. with 32-bit Value Field Length field.
   @override
+  void __writeLongDefinedLengthHeader(Element e, int vrIndex, int vfLength) {
+    assert(vfLength != kUndefinedLength);
+    assert(vfLength >= 0 && vfLength <= kMaxLongVF);
+    final vlf = (vfLength.isOdd) ? vfLength + 1 : vfLength;
+    __writeLongHeader(e, vrIndex, vlf);
+  }
+
+  @override
+  void __writeLongUndefinedLengthHeader(Element e, int vrIndex) {
+    assert(_isMaybeUndefinedLengthVR(vrIndex));
+    __writeLongHeader(e, vrIndex, kUndefinedLength);
+  }
+
+  /// Write a Long EVR [Element], i.e. with 32-bit Value Field Length field.
   void __writeLongHeader(Element e, int vrIndex, int vfLengthField) {
     assert(_isNotShortVR(vrIndex), 'vrIndex: $vrIndex');
     wb
@@ -117,11 +130,21 @@ abstract class IvrSubWriter extends SubWriter {
   ///
   /// _Note_: all IVR Headers have 32-bit Value Field Length field.
   @override
-  void __writeLongHeader(Element e, int _, int vfLengthField) {
-    assert(vfLengthField >= 0 && vfLengthField <= kMaxLongVF);
+  void __writeLongDefinedLengthHeader(Element e, int _, int vfLength) {
+    assert(vfLength >= 0 && vfLength <= kMaxLongVF);
+    final vlf = (vfLength.isOdd) ? vfLength + 1 : vfLength;
     wb
       ..writeCode(e.code)
-      ..writeUint32(vfLengthField);
+      ..writeUint32(vlf);
+  }
+
+  @override
+  void __writeLongUndefinedLengthHeader(Element e, int vrIndex) {
+    assert(e.vfLengthField == kUndefinedLength &&
+      _isMaybeUndefinedLengthVR(vrIndex));
+    wb
+      ..writeCode(e.code)
+      ..writeUint32(kUndefinedLength);
   }
 }
 
@@ -129,7 +152,7 @@ abstract class SubWriter {
   /// The [WriteBuffer] currently being written.
   WriteBuffer wb;
 
-  /// [Encoding arameters]
+  /// [Encoding Parameters]
   final EncodingParameters eParams;
 
   /// The current [Dataset].
@@ -159,7 +182,9 @@ abstract class SubWriter {
 
  // void _writeShort(Element e, int vrIndex) => unsupportedError();
 
-  void __writeLongHeader(Element e, int vrIndex, int vfLengthField);
+  void __writeLongDefinedLengthHeader(Element e, int vrIndex, int vfLengthField);
+  void __writeLongUndefinedLengthHeader(Element e, int vrIndex);
+
   // **** End of Interface
 
   /// Return's the current position in the [WriteBuffer].
@@ -278,7 +303,7 @@ abstract class SubWriter {
   /// and a _defined length_.
   void _writeLongDefinedLength(Element e, [int vrIndex]) {
     assert(e.vfLengthField != kUndefinedLength && wb.index.isEven);
-    _writeLongHeader(e, vrIndex, e.vfLength);
+    _writeLongDefinedLengthHeader(e, vrIndex);
     _writeValueField(e, vrIndex);
   }
 
@@ -294,7 +319,7 @@ abstract class SubWriter {
     assert(_isMaybeUndefinedLengthVR(vrIndex) &&
         e.vfLengthField == kUndefinedLength &&
         wb.index.isEven);
-    _writeLongHeader(e, vrIndex, kUndefinedLength);
+    __writeLongUndefinedLengthHeader(e, vrIndex);
     if (e.code == kPixelData) {
       _writeEncapsulatedPixelData(e);
     } else {
@@ -324,7 +349,7 @@ abstract class SubWriter {
     assert(e is SQ && vrIndex == kSQIndex);
     final eStart = wb.wIndex;
     assert(eStart.isEven);
-    _writeLongHeader(e, vrIndex, e.vfLength);
+    _writeLongDefinedLengthHeader(e, vrIndex);
     // This if the offset where the vfLengthField will be written
     final vlfOffset = wb.wIndex - 4;
     _writeItems(e.items);
@@ -340,14 +365,14 @@ abstract class SubWriter {
   void _writeSQUndefinedLength(SQ e, int vrIndex) {
     assert(e is SQ && vrIndex == kSQIndex);
     assert(wb.index.isEven);
-    _writeLongHeader(e, vrIndex, kUndefinedLength);
+    __writeLongUndefinedLengthHeader(e, vrIndex);
     _writeItems(e.items);
     wb..writeUint32(kSequenceDelimitationItem32BitLE)..writeUint32(0);
     assert(wb.wIndex.isEven);
   }
 
-  /// Write a Long Header with Value Length Field equal to [vfLengthField].
-  bool _writeLongHeader(Element e, int vrIndex, int vfLengthField) {
+  /// Write a Long Header with Value Length Field equal to [e].vfLength.
+  bool _writeLongDefinedLengthHeader(Element e, int vrIndex) {
     assert(e != null && wb.wIndex.isEven);
     final vfLength = e.vfLength;
     assert(vfLength != null);
@@ -355,7 +380,7 @@ abstract class SubWriter {
     final length = vfLength + (isOddLength ? 1 : 0);
     assert(length.isEven);
     assert(length >= 0 && length < kUndefinedLength, 'length: $length');
-    __writeLongHeader(e, vrIndex, vfLengthField);
+    __writeLongDefinedLengthHeader(e, vrIndex, length);
     assert(wb.index.isEven);
     return isOddLength;
   }
@@ -374,6 +399,7 @@ abstract class SubWriter {
       log.error('Padding a non-padded Element: $e');
       return invalidVFLength(e.vfBytes.length, -1);
     }
+    print('** writing pad char: $padChar');
     wb.writeUint8(padChar);
     assert(wb.wIndex.isEven);
   }

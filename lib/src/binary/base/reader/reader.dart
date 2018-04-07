@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/new_reader/subreader.dart';
+import 'package:convert/src/binary/base/reader/subreader.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 import 'package:convert/src/utilities/parse_info.dart';
@@ -18,31 +18,26 @@ import 'package:convert/src/utilities/parse_info.dart';
 /// (application/dicom).
 abstract class Reader {
   final File file;
-
-  /// The bytes in Little Endian order.
-  Bytes _bytes;
+  final Bytes bytes;
 
   int fmiEnd = -1;
-  bool success = false;
-  String status = 'Not Read';
 
   /// Creates a new [Reader].
-  Reader(this._bytes) : file = null;
+  Reader(this.bytes) : file = null;
 
   Reader.fromUint8List(Uint8List list, Endian endian)
       : file = null,
-        _bytes = new Bytes.fromTypedData(list, endian);
+        bytes = new Bytes.fromTypedData(list, endian);
 
   Reader.fromFile(this.file,
       {Endian endian = Endian.little, bool doAsync = false})
-      : _bytes = Bytes.fromFile(file, endian: endian, doAsync: doAsync);
+      : bytes = Bytes.fromFile(file, endian: endian, doAsync: doAsync);
 
   // **** Interface
   EvrSubReader get evrSubReader;
   IvrSubReader get ivrSubReader;
   // **** End Interface
 
-  Bytes get bytes => _bytes;
   String get path => file.path;
   ReadBuffer get rb => evrSubReader.rb;
   Bytes get input => rb.asBytes();
@@ -58,17 +53,15 @@ abstract class Reader {
 
   /// Reads a [RootDataset] from _this_. The FMI, if any, MUST already be read.
   RootDataset readRootDataset() {
-    status = 'Reading ...';
-    if (evrSubReader.doLogging)
-      log.debug('>R@${rb.index} readRootDataset  ${rb.length} bytes');
-
+    if (evrSubReader.doLogging) {
+      log
+        ..debug('Logging ...')
+        ..debug('>R@${rb.index} readRootDataset  ${rb.length} bytes');
+    }
     final fmiEnd = evrSubReader.readFmi();
-
-    final ts = evrSubReader.rds.transferSyntax;
-    final root = (ts.isEvr)
-        ? evrSubReader.readRootDataset(fmiEnd, ts)
-        : ivrSubReader.readRootDataset(fmiEnd, ts);
-
+    final rds0 = (evrSubReader.rds.transferSyntax.isEvr)
+        ? evrSubReader.readRootDataset(fmiEnd)
+        : ivrSubReader.readRootDataset(fmiEnd);
     log.debug('${bytesRead.length} bytes read');
     if (evrSubReader.doLogging) {
       log.debug('${evrSubReader.count} Evr Elements read');
@@ -76,13 +69,6 @@ abstract class Reader {
         log.debug('${ivrSubReader.count} Ivr Elements read');
       }
     }
-    if (rds == null) {
-      success = false;
-      status = 'Encountered errors';
-    } else {
-      success = true;
-      status = 'Finished reading successfully';
-    }
-    return root;
+    return rds0;
   }
 }

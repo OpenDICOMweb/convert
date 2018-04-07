@@ -9,16 +9,16 @@ import 'dart:io';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/byte/new_reader/byte_reader.dart';
-import 'package:convert/src/binary/byte/new_writer/byte_writer.dart';
+import 'package:convert/src/binary/byte/reader/byte_reader.dart';
+import 'package:convert/src/binary/byte/writer/byte_writer.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
 // ignore_for_file: only_throw_errors, avoid_catches_without_on_clauses
 
 /// Read a file then write it to a buffer.
-Future<bool> doRWFile(File f,
-    {bool throwOnError = false, bool fast = true}) async {
+Future<bool>  doRWFile(File f,
+    {bool throwOnError = true, bool fast = true}) async {
 
   //TODO: improve output
   //  var n = getPaddedInt(fileNumber, width);
@@ -27,7 +27,7 @@ Future<bool> doRWFile(File f,
   var same = true;
   try {
     final bList0 = f.readAsBytesSync();
-    final reader0 = new ByteReader(bList0);
+    final reader0 = new ByteReader(bList0, doLogging: true);
     final rds0 = reader0.readRootDataset();
 
     if (rds0 == null) {
@@ -67,7 +67,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
-      same = bytesEqual(bytes0, bytes1);
+      same = bytes0 == bytes1;
       if (same != true) log.warn('$pad Files bytes are different!');
     }
   } on ShortFileError {

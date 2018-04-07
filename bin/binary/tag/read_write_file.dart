@@ -25,9 +25,9 @@ void main() {
   log.info('  File Length: ${bList.length}');
   final reader0 = new TagReader(bList, doLogging: true);
   final tagDS0 = reader0.readRootDataset();
-  final bytes0 = reader0.rb.asBytes();
+  final a = reader0.rb.asBytes();
   log
-    ..debug('  Read ${bytes0.lengthInBytes} bytes')
+    ..debug('  Read ${a.lengthInBytes} bytes')
     ..info0('  DS0: $tagDS0');
 
   final bpd = tagDS0[kPixelData];
@@ -36,9 +36,9 @@ void main() {
 
   // Write a File
   final writer = new TagWriter.toPath(tagDS0, outPath);
-  final bytes1 = writer.writeRootDataset();
+  final b = writer.writeRootDataset();
   log
-    ..debug('  Wrote ${bytes1.length} bytes')
+    ..debug('  Wrote ${b.length} bytes')
     ..info0('Re-reading: $outPath');
   final Uint8List bList1 = new File(path).readAsBytesSync();
   final reader1 = new TagReader(bList1, doLogging: true);
@@ -71,7 +71,7 @@ void main() {
   }
 
   //   FileCompareResult out = compareFiles(fn.path, fnOut.path, log);
-  final same = bytesEqual(bytes0, bytes1);
+  final same = a == b;
   if (same == true) {
     log.info0('Files are identical.');
   } else {

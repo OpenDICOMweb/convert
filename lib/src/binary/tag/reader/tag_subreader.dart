@@ -6,8 +6,8 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/new_reader/subreader.dart';
-import 'package:convert/src/binary/tag/new_reader/tag_reader_mixin.dart';
+import 'package:convert/src/binary/base/reader/subreader.dart';
+import 'package:convert/src/binary/tag/reader/tag_reader_mixin.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 
 class TagEvrSubReader extends EvrSubReader with TagReaderMixin {
@@ -15,9 +15,11 @@ class TagEvrSubReader extends EvrSubReader with TagReaderMixin {
   final TagRootDataset rds;
   @override
   final bool doLogging;
+  @override
+  final bool doLookupVRIndex;
 
   TagEvrSubReader(Bytes bytes, DecodingParameters dParams, this.rds,
-      {this.doLogging = false})
+      {this.doLogging = false, this.doLookupVRIndex = true})
       : super(bytes, dParams, rds);
 }
 
@@ -26,10 +28,12 @@ class TagIvrSubReader extends IvrSubReader with TagReaderMixin {
   TagRootDataset rds;
   @override
   final bool doLogging;
+  @override
+  final bool doLookupVRIndex;
 
-  TagIvrSubReader.from(TagEvrSubReader subReader,
-      {bool doLookupVRIndex = false})
+  TagIvrSubReader.from(TagEvrSubReader subReader)
       : rds = subReader.rds,
         doLogging = subReader.doLogging,
-        super(subReader.rb, subReader.dParams, subReader.rds, doLookupVRIndex);
+        doLookupVRIndex = subReader.doLookupVRIndex,
+        super(subReader.rb, subReader.dParams, subReader.rds);
 }

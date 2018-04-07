@@ -6,8 +6,8 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/new_reader/subreader.dart';
-import 'package:convert/src/binary/byte/new_reader/byte_reader_mixin.dart';
+import 'package:convert/src/binary/base/reader/subreader.dart';
+import 'package:convert/src/binary/byte/reader/byte_reader_mixin.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 
 class ByteEvrSubReader extends EvrSubReader
@@ -16,14 +16,15 @@ class ByteEvrSubReader extends EvrSubReader
   final BDRootDataset rds;
   @override
   final bool doLogging;
-
+  @override
+  final bool doLookupVRIndex;
   factory ByteEvrSubReader(Bytes bytes, DecodingParameters dParams,
-          {bool doLogging = false}) =>
-      new ByteEvrSubReader._(
-          bytes, dParams, new BDRootDataset.empty(), doLogging);
+          {bool doLogging = false, bool doLookupVRIndex = true}) =>
+      new ByteEvrSubReader._(bytes, dParams, new BDRootDataset.empty(),
+          doLogging, doLookupVRIndex);
 
-  ByteEvrSubReader._(
-      Bytes bytes, DecodingParameters dParams, this.rds, this.doLogging)
+  ByteEvrSubReader._(Bytes bytes, DecodingParameters dParams, this.rds,
+      this.doLogging, this.doLookupVRIndex)
       : super(bytes, dParams, rds);
 }
 
@@ -33,11 +34,12 @@ class ByteIvrSubReader extends IvrSubReader
   BDRootDataset rds;
   @override
   final bool doLogging;
+  @override
+  final bool doLookupVRIndex;
 
-  ByteIvrSubReader.from(ByteEvrSubReader evrSubReader,
-      {bool doLookupVRIndex = false})
+  ByteIvrSubReader.from(ByteEvrSubReader evrSubReader)
       : rds = evrSubReader.rds,
         doLogging = evrSubReader.doLogging,
-        super(evrSubReader.rb, evrSubReader.dParams, evrSubReader.rds,
-            doLookupVRIndex);
+        doLookupVRIndex = evrSubReader.doLookupVRIndex,
+        super(evrSubReader.rb, evrSubReader.dParams, evrSubReader.rds);
 }

@@ -13,8 +13,8 @@ import 'package:core/server.dart';
 
 /// rwdir is a fast correctness checker for the convert package.
 ///
-/// It first reads and parshes a DICOM file into a buffer, writes it
-/// to a second buffer, and the does a byte by byte comparison of the two buffers.
+/// It first reads and parses a DICOM file into a buffer, then writes it
+/// to a second buffer, and finally does a byte by byte comparison of the two buffers.
 
 const String k6684 = 'C:/acr/odw/test_data/6684';
 const String k6688 = 'C:/acr/odw/test_data/6688';
@@ -23,7 +23,7 @@ const String defaultDirectory =
 
 /// A program for doing read/write/read testing on DICOM files.
 void main(List<String> args) {
-  Server.initialize(name: 'rwdir', level: Level.warn, throwOnError: true);
+  Server.initialize(name: 'rwdir', level: Level.debug, throwOnError: true);
 
   /// The processed arguments for this program.
   final jobArgs = new JobArgs(args ?? [defaultDirectory]);
@@ -32,7 +32,7 @@ void main(List<String> args) {
 
   JobRunner.job(jobArgs, doRWFile,
       interval: jobArgs.shortMsgEvery,
-      level: jobArgs.baseLevel,
+      level: log.level,
       throwOnError: true);
 }
 

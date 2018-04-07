@@ -12,6 +12,8 @@ import 'package:core/server.dart';
 
 import 'package:convert/data/test_files.dart';
 
+// ignore_for_file: avoid_catches_without_on_clauses
+
 const String mweb0 = 'C:/odw/test_data/mweb/1000+/DIASTOLIX/DIASTOLIX/'
     'CorCTALow  2.0  B25f 0-95%/IM-0004-0001.dcm';
 const String mweb1 = 'C:/odw/test_data/mweb/ASPERA/DICOM files only/'
@@ -22,6 +24,33 @@ const String mweb3 = 'C:/odw/test_data/sfd/CT/Patient_6_Lung_CA/'
     '1_DICOM_Original/IM000003.dcm';
 const String mweb4 = 'C:/odw/test_data/sfd/MG/Patient_38/'
     '1_DICOM_Original/IM000001.dcm';
+const String mweb5 = 'C:/odw/test_data/mweb/100 MB Studies/Brain026/'
+    'ST000000/SE000000/IM000000' ;
+const String mweb6 = 'C:/odw/test_data/sfd/CT/Patient_3_Cardiac_CTA/'
+    '1_DICOM_Original/IM000001.dcm';
+const String mweb7 = 'C:/odw/test_data/mweb/ASPERA/DICOM files only/'
+    '22c82bd4-6926-46e1-b055-c6b788388014.dcm';
+const String mweb8 = 'C:/odw/test_data/mweb/Different_SOP_Class_UIDs/'
+    'Anonymized.dcm';
+const String mweb9 = 'C:/odw/test_data/sfd/CT/Patient_6_Lung_CA/'
+    '1_DICOM_Original/IM000003.dcm';
+const String mweb10 = 'C:/odw/test_data/sfd/CT/Patient_7_Dural_Ectasia/'
+    '1_DICOM_Original/IM000001.dcm';
+const String mweb11 = 'C:/odw/test_data/sfd/CT/Patient_8_Non_ossifying_fibroma/'
+    '1_DICOM_Original/IM000004.dcm';
+const String mweb12 = 'C:/odw/test_data/sfd/CT/Patient_16_CT_Maxillofacial_'
+    '-_Wegners/1_DICOM_Original/IM000004.dcm';
+const String mweb13 = 'C:/odw/test_data/sfd/CT/PID_MINT9/1_DICOM_Original/'
+    'CT.2.16.840.1.114255.390617858.1794098916.10199.38535.dcm';
+const String mweb14 = 'C:/odw/test_data/sfd/MG/Patient_38/1_DICOM_Original/'
+    'IM000001.dcm';
+const String mweb15 = 'C:/acr/odw/test_data/sfd/MG/Patient_41/1_DICOM_Original/'
+    'IM000001.dcm';
+const String mweb16 = '';
+const String mweb17 = '';
+
+
+
 
 ///
 Future main() async {
@@ -34,7 +63,7 @@ Future main() async {
       showBanner: true,
       showSdkBanner: false);
 
-  final inPath = cleanPath(mweb4);
+  final inPath = cleanPath(mweb14);
   final file = new File(inPath);
   final fLength = file.lengthSync();
   stdout
@@ -42,16 +71,17 @@ Future main() async {
     ..writeln('Reading(binary): $inPath');
 
   RootDataset rds;
+  final toe = throwOnError;
   try {
     rds = ByteReader.readPath(inPath, doLogging: true);
   } on InvalidTransferSyntax {
-    exit(-1);
+    (toe) ? rethrow : exit(-1);
   } on ShortFileError {
     log.error('Short file error');
-    exit(-1);
+    (toe) ? rethrow : exit(-1);
   } on RangeError catch(e){
     log.error(e);
-    exit(-1);
+    (toe) ? rethrow : exit(-1);
   } catch (e) {
     log.error(e);
     if (throwOnError) rethrow;

@@ -59,10 +59,10 @@ void main() {
 }
 
 bool writeFileTest(File inFile, {int reps = 1, bool fmiOnly = false}) {
-	final uint8List = inFile.readAsBytesSync();
-  final rds0 = ByteReader.readBytes(uint8List);
-	final bytes = ByteWriter.writeBytes(rds0);
-  if (!bytesEqual(uint8List, bytes)) throw 'Error in DcmWrite';
+	final a = inFile.readAsBytesSync();
+  final rds0 = ByteReader.readBytes(a);
+	final b = ByteWriter.writeBytes(rds0);
+  if (a != b) throw 'Error in DcmWrite';
 
 	final timer = new Timer();
   for (var i = 0; i < reps; i++) {

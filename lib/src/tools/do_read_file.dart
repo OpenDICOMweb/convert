@@ -10,8 +10,8 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/new_reader/reader.dart';
-import 'package:convert/src/binary/byte/new_reader/byte_reader.dart';
+import 'package:convert/src/binary/base/reader/reader.dart';
+import 'package:convert/src/binary/byte/reader/byte_reader.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
@@ -30,38 +30,33 @@ Uint8List readFileSync(File f) => f.readAsBytesSync();
 
 ByteReader decodeFileAsBE(File f, ByteReader reader,
     {bool throwOnError = true,
-      bool fast = true,
-      bool isAsync = true,
-      bool showStats = true})  {
- return readFile(f,  new ByteReader.fromFile(f));
-
-
+    bool fast = true,
+    bool isAsync = true,
+    bool showStats = true}) {
+  final reader = new ByteReader.fromFile(f);
+  return readFile(f, reader);
 }
 
 //Urgent make sure garbage is not being retained
-//Urgent Test async
-Future<bool> readFile(File f, Reader reader,
+//Urgent add async
+Reader readFile(File f, Reader reader,
     {bool throwOnError = true,
     bool fast = true,
     bool isAsync = true,
-    bool showStats = true}) async {
+    bool showStats = true}) {
   final pad = ''.padRight(5);
   final cPath = cleanPath(f.path);
   RootDataset rds0;
 
   try {
     final bytes = readPath(cPath);
-    if (bytes == null) return false;
+    if (bytes == null) return reader;
     final doLogging = system.level > Level.debug;
     final reader0 = new ByteReader.fromBytes(bytes, doLogging: doLogging);
 
-    rds0 = reader0.readRootDataset();
-    if (rds0 == null) {
-      log.info0('Unreadable File: $cPath');
-      return false;
-    }
-    if (reader0.pInfo != null)
-      log.debug('$pad    ${reader0.pInfo.summary(rds0)}');
+    final rds0 = reader0.readRootDataset();
+    if (rds0 == null) return reader;
+
 
 // TODO: move into dataset.warnings.
     final e = rds0[kPixelData];
@@ -76,7 +71,7 @@ Future<bool> readFile(File f, Reader reader,
     if (throwOnError) rethrow;
   } on InvalidTransferSyntax catch (e) {
     log.error(e);
-    return false;
+    return reader;
   } catch (e) {
     log.error('Caught $e\n  on File: $f');
   }
@@ -85,5 +80,58 @@ Future<bool> readFile(File f, Reader reader,
       ..info1('$pad Success!')
       ..debug('summary: ${rds0.summary}');
   }
-  return true;
+  return reader;
+}
+
+Reader decodeUint8List(Uint8List list, Reader reader,
+    {bool throwOnError = true, bool fast = true, int width = 5}) {
+  final bytes = new Bytes.fromList(list);
+  return decodeBytes(bytes, reader,
+      throwOnError: throwOnError, fast: fast, width: width);
+}
+
+const int kMinLength = 256;
+
+Reader decodeBytes(Bytes input, Reader reader,
+    {bool throwOnError = true,
+      bool doLogging = true,
+    bool fast = true,
+    int width = 5}) {
+  final pad = ''.padRight(width);
+  RootDataset rds0;
+
+  if (input.length < kMinLength)
+    throw ShortFileError('length: ${input.length}');
+  try {
+    final reader0 = new ByteReader.fromBytes(input, doLogging: doLogging);
+
+    rds0 = reader0.readRootDataset();
+    if (rds0 == null) return reader;
+
+    if (reader0.pInfo != null)
+      log.debug('$pad    ${reader0.pInfo.summary(rds0)}');
+
+// TODO: move into dataset.warnings.
+    final e = rds0[kPixelData];
+    if (e == null) {
+      log.info1('$pad ** Pixel Data Element not present');
+    } else {
+      log.debug1('$pad  e: ${e.info}');
+    }
+
+  } on ShortFileError {
+    log.warn('$pad ** Short File(${input.length} bytes)');
+    if (throwOnError) rethrow;
+  } on InvalidTransferSyntax catch (e) {
+    log.error(e);
+    return reader;
+  } catch (e) {
+    log.error('Caught $e\n  on input $input');
+  }
+  if (rds0 != null) {
+    log
+      ..info1('$pad Success!')
+      ..debug('summary: ${rds0.summary}');
+  }
+  return reader;
 }

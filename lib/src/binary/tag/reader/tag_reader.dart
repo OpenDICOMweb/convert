@@ -9,9 +9,9 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/new_reader/reader.dart';
-import 'package:convert/src/binary/base/new_reader/subreader.dart';
-import 'package:convert/src/binary/tag/new_reader/tag_subreader.dart';
+import 'package:convert/src/binary/base/reader/reader.dart';
+import 'package:convert/src/binary/base/reader/subreader.dart';
+import 'package:convert/src/binary/tag/reader/tag_subreader.dart';
 import 'package:convert/src/utilities/decoding_parameters.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 

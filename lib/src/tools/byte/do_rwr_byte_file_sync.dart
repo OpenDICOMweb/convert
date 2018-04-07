@@ -8,8 +8,8 @@ import 'dart:io';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/byte/new_reader/byte_reader.dart';
-import 'package:convert/src/binary/byte/new_writer/byte_writer.dart';
+import 'package:convert/src/binary/byte/reader/byte_reader.dart';
+import 'package:convert/src/binary/byte/writer/byte_writer.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
@@ -147,7 +147,7 @@ $pad    TS: ${rds0.transferSyntax}''');
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {
       //  Compare the data byte for byte
-      final same = bytesEqual(bytes0, bytes1);
+      final same = bytes0 == bytes1;
       if (same == true) {
         log.debug('$pad Files bytes are identical.');
       } else {

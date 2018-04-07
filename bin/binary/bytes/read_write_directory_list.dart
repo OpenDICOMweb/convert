@@ -36,7 +36,7 @@ void main() {
   //TODO: add asyn argument and async I/O to handle multiple files at the same
   // time.
   /// *** Change directory path name here
-  const reportEveryNFiles = 1;
+  const reportEveryNFiles = 10;
   const path = dir6684_2017_5;
   final dir = new Directory(path);
 

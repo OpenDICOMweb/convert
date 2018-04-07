@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/byte/new_reader/byte_reader.dart';
+import 'package:convert/src/binary/byte/reader/byte_reader.dart';
 import 'package:convert/src/errors.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 

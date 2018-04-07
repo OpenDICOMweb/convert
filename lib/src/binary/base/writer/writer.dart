@@ -15,7 +15,7 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/new_writer/subwriter.dart';
+import 'package:convert/src/binary/base/writer/subwriter.dart';
 import 'package:convert/src/utilities/element_offsets.dart';
 
 /// A [class] for writing a [BDRootDataset] to a [Uint8List],

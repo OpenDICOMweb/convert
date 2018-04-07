@@ -27,9 +27,11 @@ const String k6684x4 =
 //Urgent: bug with path20
 Future main() async {
   Server.initialize(name: 'ReadFile', level: Level.info, throwOnError: true);
-  // for (var i = 0; i < 1; i++) {
-  for (var i = 0; i < testPaths2.length; i++) {
-    const fPath = k6684x4;
+
+  final paths = testPaths1;
+
+  for (var i = 0; i < paths.length; i++) {
+    final fPath = paths[i];
 
     print('$i: path: $fPath');
     print(' out: ${getTempFile(fPath, 'dcmout')}');
@@ -42,7 +44,7 @@ Future main() async {
       return;
     }
 
-    const doLogging = false;
+    const doLogging = true;
     final bList = new File(fPath).readAsBytesSync();
     final reader = new ByteReader(bList, doLogging: doLogging);
     final rds = reader.readRootDataset();

@@ -6,44 +6,45 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/new_writer/subwriter.dart';
+import 'package:convert/src/binary/base/writer/subwriter.dart';
 import 'package:convert/src/utilities/encoding_parameters.dart';
 
 /// An encoder for Binary DICOM (application/dicom).
-class TagEvrSubWriter extends EvrSubWriter {
+class ByteEvrSubWriter extends EvrSubWriter {
   @override
-  final TagRootDataset rds;
+  final BDRootDataset rds;
   @override
   final TransferSyntax outputTS;
   @override
   final bool doLogging;
 
-  /// Creates a new [TagEvrSubWriter], which is an encoder for Binary DICOM
+  /// Creates a new [ByteEvrSubWriter], which is an encoder for Binary DICOM
   /// (application/dicom).
-  TagEvrSubWriter(this.rds, EncodingParameters eParams,
+  ByteEvrSubWriter(this.rds, EncodingParameters eParams,
       {this.outputTS, this.doLogging = false})
       : super(rds, eParams);
 }
 
 /// An encoder for Binary DICOM (application/dicom).
-class TagIvrSubWriter extends IvrSubWriter {
+class ByteIvrSubWriter extends IvrSubWriter {
   @override
-  final TagRootDataset rds;
+  final BDRootDataset rds;
   @override
   final TransferSyntax outputTS;
   @override
   final bool doLogging;
 
-  /// Creates a new [TagIvrSubWriter], which is decoder for Binary DICOM
+  /// Creates a new [ByteIvrSubWriter], which is decoder for Binary DICOM
   /// (application/dicom).
 /*
-  TagIvrSubWriter(this.rds, EncodingParameters eParams,
+  ByteIvrSubWriter(this.rds, EncodingParameters eParams,
       {this.outputTS, this.doLogging = false})
-      : super(rds, eParams);
+      : super(rds, eParams, evr);
 */
 
-  TagIvrSubWriter.from(TagEvrSubWriter subWriter,
-      {this.outputTS, this.doLogging = false})
+  ByteIvrSubWriter.from(ByteEvrSubWriter subWriter)
       : rds = subWriter.rds,
+        outputTS = subWriter.outputTS,
+        doLogging = subWriter.doLogging,
         super(subWriter.rds, subWriter.eParams, subWriter.wb);
 }

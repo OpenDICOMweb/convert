@@ -21,7 +21,7 @@ const String dir6684_2017_5 = 'C:/acr/odw/test_data/6684/2017/5';
 
 void main() {
   Server.initialize(
-      name: 'read_write_file', level: Level.debug, throwOnError: true);
+      name: 'read_write_file', level: Level.info, throwOnError: true);
 
 /*
   /// *** Change directory path name here
@@ -48,7 +48,7 @@ void main() {
   final timer = new Timer();
   log.config('Reading ${files.length} files from $dir:');
   new FileListReader(files,
-      fmiOnly: false, throwOnError: throwOnError, printEvery: 1)
+      fmiOnly: false, throwOnError: throwOnError, printEvery: 100)
     ..read;
   log.config('Elapsed time: ${timer.elapsed}');
 }
