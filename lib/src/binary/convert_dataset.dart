@@ -86,7 +86,7 @@ class DatasetConverter {
     if (e.vrIndex > 30) throw 'bad e.vr: ${e.vrIndex}';
     return (e.tag == PTag.kPixelData)
         ? TagElement.pixelDataFrom(e, sourceRDS.transferSyntax, e.vrIndex)
-        : TagElement.from(e, e.vrIndex);
+        : TagElement.makeFromElement(e);
   }
 
 /*
@@ -94,7 +94,7 @@ class DatasetConverter {
     if (e.vrIndex > 30) throw 'bad e.vr: ${e.vrIndex}';
     return (e.tag == PTag.kPixelData)
         ? TagElement.pixelDataFrom(e, sourceRDS.transferSyntax, e.vrIndex)
-        : TagElement.from(e, e.vrIndex);
+        : TagElement.makeFromElement((e, e.vrIndex);
   }
 */
 

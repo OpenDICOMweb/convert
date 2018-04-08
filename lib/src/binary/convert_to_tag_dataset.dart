@@ -85,8 +85,8 @@ Element convertElement(Element e) {
 Element _convertSimpleElement(Element e) {
   if (e.vrIndex > 30) throw 'bad e.vr: ${e.vrIndex}';
   return (e.tag == PTag.kPixelData)
-      ? TagElement.pixelDataFrom(e, sourceRDS.transferSyntax, e.vrIndex)
-      : TagElement.from(e, e.vrIndex);
+      ? TagElement.pixelDataFrom(e, sourceRDS.transferSyntax)
+      : TagElement.makeFromElement(e);
 }
 
 /*

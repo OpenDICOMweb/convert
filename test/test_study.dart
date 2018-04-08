@@ -4,7 +4,9 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See /[package]/AUTHORS file for other contributors.
 
-import 'package:core/core.dart';
+// import 'package:core/core.dart';
+
+// ignore_for_file: Type_Annotate_public_APIs
 
 // Urgent Sharath:
 // please create test studies for tests

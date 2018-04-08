@@ -6,7 +6,7 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/utilities/dataset_by_group.dart';
+import 'package:convert/src/utilities/dataset_converter/dataset_by_group.dart';
 
 //typedef Element _ElementFrom(Element e);
 
@@ -139,7 +139,7 @@ class TagConverter extends Converter {
 
   @override
   Element fromElement(Element e, int vrIndex) =>
-      TagElement.from(e, vrIndex ?? e.vrIndex);
+      TagElement.makeFromElement(e, vrIndex ?? e.vrIndex);
 
   @override
   TagItem makeItem(Dataset parent, SQtag sq) => new TagItem.empty(parent, sq);

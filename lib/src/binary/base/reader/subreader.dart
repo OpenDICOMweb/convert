@@ -48,6 +48,8 @@ abstract class EvrSubReader extends SubReader {
   @override
   bool get isEvr => true;
 
+  ReadBuffer get rbLittleEndian => _rbLE;
+
   /// Returns _true_ if the VR has a 16-bit Value Field Length field.
   bool _isEvrShortVR(int vrIndex) =>
       vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
@@ -194,43 +196,10 @@ abstract class IvrSubReader extends SubReader {
       } else {
         tag = Tag.lookupByCode(code, vrIndex);
       }
-     if (tag != null) vrIndex = tag.vrIndex;
+      if (tag != null && (tag.vrIndex <= kVRNormalIndexMax))
+        vrIndex = tag.vrIndex;
     }
     return _readLong(code, eStart, vrIndex, 8, vlf);
-  }
-
-/*  Element _readIvrLong(int code, int eStart, int vrIndex, int vfOffset) {
-    final vlf = _rb.readUint32();
-    assert(vlf.isEven || vlf == kUndefinedLength, 'Odd vlf: $vlf');
-    if (vlf.isOdd) log.error('Odd vlf: $vlf');
-    final delimiter = _rb.getUint32();
-
-    Element e;
-    if (vrIndex == kSQIndex ||
-        delimiter == kItem32BitLE ||
-        delimiter == kSequenceDelimitationItem32BitLE) {
-      e = _readSequence(code, eStart, vrIndex, vfOffset, vlf);
-    } else if (vlf == kUndefinedLength) {
-      e = _readLongUndefinedLength(code, eStart, vrIndex, vfOffset, vlf);
-    } else {
-      e = _readLongDefinedLength(code, eStart, vrIndex, vfOffset, vlf);
-    }
-    return e;
-  }
-  */
-  Tag _lookupTag(int code, int eStart, [int vrIndex, Object token]) {
-    // Urgent Fix
-    if (Tag.isPublicCode(code)) {
-      return Tag.lookupByCode(code);
-    } else if (Tag.isPDCode(code)) {
-      // **** temporary
-      return Tag.lookupByCode(code);
-    } else if (Tag.isPCCode(code)) {
-      return Tag.lookupByCode(code);
-    } else {
-      print('Unknown code: ${dcm(code)}');
-      return Tag.lookupByCode(code);
-    }
   }
 }
 
@@ -288,7 +257,7 @@ abstract class SubReader {
 
   /// Returns a new [Element].
   // Note: Typically this may or may not be implemented.
-  Element makeFromValues<V>(int code, List<V> values, int vrIndex,
+  Element makeFromValues(int code, Iterable values, int vrIndex,
           [Bytes bytes]) =>
       unsupportedError();
 
@@ -297,8 +266,12 @@ abstract class SubReader {
       [int vfLengthField, TransferSyntax ts, VFFragments fragments]);
 
   /// Creates a new Sequence ([SQ]) [Element].
-  SQ makeSequence(int code, Dataset cds, List<Item> items, int vfOffset,
-      [int vfLengthField, Bytes bytes]);
+  SQ makeSequenceFromCode(int code, Dataset cds, Iterable items,
+      [int vfOffset, int vfLengthField, Bytes bytes]);
+
+  /// Creates a new Sequence ([SQ]) [Element].
+  SQ makeSequenceFromTag(Tag tag, Dataset cds, Iterable items,
+      [int vfOffset, int vfLengthField, Bytes bytes]);
 
   // **** Interface for Logging
 
@@ -465,7 +438,7 @@ abstract class SubReader {
         vlf == kUndefinedLength) {
       _rb.rSkip(4);
       final items = <Item>[_makeEmptyItem(cds)];
-      return makeSequence(
+      return makeSequenceFromCode(
           code, cds, items, vfOffset, kUndefinedLength, Bytes.kEmptyBytes);
     } else if (vlf == kUndefinedLength) {
       return _readLongUndefinedLength(code, eStart, vrIndex, vfOffset, vlf);
@@ -510,7 +483,7 @@ abstract class SubReader {
       items.add(item);
     }
     final bytes = _rb.subbytes(eStart, _rb.index);
-    return makeSequence(code, cds, items, vfOffset, vfl, bytes);
+    return makeSequenceFromCode(code, cds, items, vfOffset, vfl, bytes);
   }
 
   /// If the sequence delimiter is found at the current _read index_, reads the
@@ -529,7 +502,7 @@ abstract class SubReader {
     }
     if (sqEnd != _rb.index) log.warn('sqEnd($sqEnd) != rb.index(${_rb.index})');
     final bytes = _rb.subbytes(eStart, sqEnd);
-    return makeSequence(code, cds, items, vfOffset, vfl, bytes);
+    return makeSequenceFromCode(code, cds, items, vfOffset, vfl, bytes);
   }
 
   /// Reads an Element with a 32-bit Value Field Length Field [vlf]
@@ -757,6 +730,8 @@ abstract class SubReader {
     final eNumber = '$count'.padLeft(4, '0');
     log
       ..up
+      ..debug('<@R${_rb.index} $eNumber: ${dcm(e.code)}')
+      ..debug('<@R${_rb.index} $eNumber: ${e.tag}')
       ..debug('<@R${_rb.index} $eNumber: $e');
   }
 

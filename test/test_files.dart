@@ -6,6 +6,8 @@
 
 import 'package:core/core.dart';
 
+// ignore_for_file: Type_Annotate_public_APIs
+
 // Urgent Sharath:
 // please create test files for
 abstract class TestFileBase {
@@ -48,7 +50,9 @@ class EvrTestFile extends TestFileBase {
 }
 
 class JpegTestFile extends TestFileBase {
+  @override
   final TransferSyntax ts = TransferSyntax.kJpeg2000ImageCompression;
+  @override
   final String fPath;
 
   const JpegTestFile(int eCount, int sqCount, int privateCount,

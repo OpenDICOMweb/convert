@@ -6,7 +6,7 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/utilities/dataset_by_group.dart';
+import 'package:convert/src/utilities/dataset_converter/dataset_by_group.dart';
 
 // ignore_for_file: only_throw_errors
 
@@ -99,7 +99,7 @@ class DatasetConverterByGroup {
           } else {
             final tag = new IllegalPrivateTag(e.code, e.vrIndex);
             currentGroup.illegal
-                .add(TagElement.make(tag, e.values, e.vfLengthField));
+                .add(TagElement.makeFromTag(tag, e.values, e.vfLengthField));
           }
         } else if (tag is PCTag) {
           final sgNumber = tag.sgNumber;

@@ -245,7 +245,7 @@ abstract class SubReader {
 
   /// Returns a new [Element].
   // Note: Typically this may or may not be implemented.
-  Element makeFromValues<V>(int code, List<V> values, int vrIndex,
+  Element makeFromValues(int code, Iterable values, int vrIndex,
           [Bytes bytes]) =>
       unsupportedError();
 
@@ -254,7 +254,7 @@ abstract class SubReader {
       [int vfLengthField, TransferSyntax ts, VFFragments fragments]);
 
   /// Creates a new Sequence ([SQ]) [Element].
-  SQ makeSequence(int code, Dataset cds, List<Item> items, int vfOffset,
+  SQ makeSequenceFromCode(int code, Dataset cds, Iterable items, int vfOffset,
       [int vfLengthField, Bytes bytes]);
 
   // **** Interface for Logging
@@ -421,7 +421,7 @@ abstract class SubReader {
         vlf == kUndefinedLength) {
       rb.rSkip(4);
       final items = <Item>[_makeEmptyItem(cds)];
-      return makeSequence(
+      return makeSequenceFromCode(
           code, cds, items, vfOffset, kUndefinedLength, Bytes.kEmptyBytes);
     } else if (vlf == kUndefinedLength) {
       return _readLongUndefinedLength(code, eStart, vrIndex, vfOffset, vlf);
@@ -466,7 +466,7 @@ abstract class SubReader {
       items.add(item);
     }
     final bytes = rb.subbytes(eStart, rb.index);
-    return makeSequence(code, cds, items, vfOffset, vfl, bytes);
+    return makeSequenceFromCode(code, cds, items, vfOffset, vfl, bytes);
   }
 
   /// If the sequence delimiter is found at the current _read index_, reads the
@@ -485,7 +485,7 @@ abstract class SubReader {
     }
     if (sqEnd != rb.index) log.warn('sqEnd($sqEnd) != rb.index(${rb.index})');
     final bytes = rb.subbytes(eStart, sqEnd);
-    return makeSequence(code, cds, items, vfOffset, vfl, bytes);
+    return makeSequenceFromCode(code, cds, items, vfOffset, vfl, bytes);
   }
 
   /// Reads an Element with a 32-bit Value Field Length Field [vlf]

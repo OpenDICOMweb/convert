@@ -21,8 +21,7 @@ abstract class TagReaderMixin {
   Element makeFromBytes(int code, Bytes bytes, int vrIndex, int vfOffset) =>
       TagElement.makeFromBytes(code, bytes, vrIndex, vfOffset);
 
-  Element makeFromValues<V>(int code, List<V> values, int vrIndex,
-          [Bytes bd]) =>
+  Element makeFromValues(int code, List values, int vrIndex, [Bytes bd]) =>
       unsupportedError();
 
   Element makeFromList(int code, int vrIndex, Iterable values) =>
@@ -33,8 +32,14 @@ abstract class TagReaderMixin {
       TagElement.makePixelData(
           code, bytes, vrIndex, vfOffset, vfLengthField, ts, fragments);
 
+
   /// Returns a new Sequence ([SQ]).
-  SQ makeSequence(int code, Dataset parent, List<Item> items, int vfOffset,
-          [int vfLengthField, Bytes bytes]) =>
-      TagElement.makeSequence(code, parent, items, vfOffset, vfLengthField, bytes);
+  SQ makeSequenceFromCode(int code, Dataset parent, Iterable items,
+      [int vfOffset, int vfLengthField, Bytes bytes]) =>
+      TagElement.makeSequenceFromCode(code, parent, items, vfLengthField, bytes);
+
+  /// Returns a new Sequence ([SQ]).
+  SQ makeSequenceFromTag(Tag tag, Dataset parent, Iterable items,
+          [int vfOffset, int vfLengthField, Bytes bytes]) =>
+      TagElement.makeSequenceFromTag(tag, parent, items, vfLengthField, bytes);
 }

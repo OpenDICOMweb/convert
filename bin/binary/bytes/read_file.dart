@@ -82,13 +82,15 @@ const String x10evr =
     'C:/acr/odw/test_data/6684/2017/5/12/16/AF8741DF/AF8741E2/1636525D';
 const String x11ivr =
     'C:/acr/odw/test_data/6684/2017/5/13/9/9F3A1E64/4B4AEBC7/F57DF821';
-const String xx12 =
-    'C:/odw/test_data/mweb/100 MB Studies/Brain026/ST000000'
-    '/SE000000/IM000000' ;
-Future main() async {
-  Server.initialize(name: 'ReadFile', level: Level.debug, throwOnError: true);
+const String xx12 = 'C:/odw/test_data/mweb/100 MB Studies/Brain026/ST000000'
+    '/SE000000/IM000000';
+const String xx13 = 'C:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/'
+    'Sop/1.2.840.10008.5.1.4.1.1.481.2.dcm';
 
-  const fPath = xx12;
+Future main() async {
+  Server.initialize(name: 'ReadFile', level: Level.debug, throwOnError: false);
+
+  const fPath = xx13;
 
   print('path: $fPath');
   print(' out: ${getTempFile(fPath, 'dcmout')}');
@@ -96,7 +98,7 @@ Future main() async {
   stdout.writeln('Reading(byte): $url');
 
   final bList = new File(fPath).readAsBytesSync();
-  final reader = new ByteReader(bList, doLogging: false);
+  final reader = new ByteReader(bList, doLogging: true);
   final rds = reader.readRootDataset();
   log.debug('Validating RDS: $rds');
   final issues = validateRootDataset(rds);

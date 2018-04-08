@@ -12,7 +12,7 @@ import 'package:core/server.dart';
 import 'package:convert/convert.dart';
 import 'package:path/path.dart' as path;
 
-import 'package:convert/data/test_files.dart';
+import 'package:convert/data/test_files_temp.dart';
 import 'package:convert/src/utilities/io_utils.dart';
 
 const String k6684x0 =

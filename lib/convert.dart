@@ -13,9 +13,9 @@ export 'package:convert/src/tools/job/job_runner.dart';
 
 export 'package:convert/src/errors.dart';
 
-export 'package:convert/src/utilities/dataset_converter.dart';
-export 'package:convert/src/utilities/dataset_by_group.dart';
-export 'package:convert/src/utilities/dataset_converter_by_group.dart';
+export 'package:convert/src/utilities/dataset_converter/dataset_converter.dart';
+export 'package:convert/src/utilities/dataset_converter/dataset_by_group.dart';
+export 'package:convert/src/utilities/dataset_converter/dataset_converter_by_group.dart';
 export 'package:convert/src/utilities/decoding_parameters.dart';
 export 'package:convert/src/utilities/element_offsets.dart';
 export 'package:convert/src/utilities/encoding_parameters.dart';

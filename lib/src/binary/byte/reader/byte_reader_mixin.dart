@@ -17,6 +17,11 @@ abstract class ByteReaderMixin {
   Item makeItem(Dataset parent,
           [SQ sequence, Map<int, Element> eMap, Bytes bytes]) =>
       new BDItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
+
+  /// Returns a new Sequence ([SQ]).
+  SQ makeSequenceFromTag(Tag tag, Dataset parent, Iterable items, int vfOffset,
+      [int vfLengthField, Bytes bytes]) =>
+      unsupportedError();
 }
 
 abstract class EvrByteReaderMixin {
@@ -26,8 +31,7 @@ abstract class EvrByteReaderMixin {
   Element makeFromBytes(int code, Bytes bytes, int vrIndex, int vfOffset) =>
       EvrElement.makeFromBytes(code, bytes, vrIndex);
 
-  Element makeFromValues<V>(int code, List<V> values, int vrIndex,
-          [Bytes bd]) =>
+  Element makeFromValues(int code, Iterable values, int vrIndex, [Bytes bd]) =>
       unsupportedError();
 
   Element makeFromList(int code, int vrIndex, Iterable values) =>
@@ -38,7 +42,8 @@ abstract class EvrByteReaderMixin {
       EvrElement.makePixelData(code, bytes, vrIndex, ts, fragments);
 
   /// Returns a new Sequence ([SQ]).
-  SQ makeSequence(int code, Dataset parent, Iterable<Item> items, int vfOffset,
+  SQ makeSequenceFromCode(
+          int code, Dataset parent, Iterable items, int vfOffset,
           [int vfLengthField, Bytes bytes]) =>
       EvrElement.makeSequence(code, parent, items, bytes);
 }
@@ -50,8 +55,7 @@ abstract class IvrByteReaderMixin {
   Element makeFromBytes(int code, Bytes bytes, int vrIndex, int vfOffset) =>
       IvrElement.makeFromBytes(code, bytes, vrIndex);
 
-  Element makeFromValues<V>(int code, List<V> values, int vrIndex,
-          [Bytes bd]) =>
+  Element makeFromValues(int code, Iterable values, int vrIndex, [Bytes bd]) =>
       unsupportedError();
 
   Element makeFromList(int code, int vrIndex, Iterable values) =>
@@ -62,7 +66,13 @@ abstract class IvrByteReaderMixin {
       IvrElement.makePixelData(code, bytes, vrIndex, ts, fragments);
 
   /// Returns a new Sequence ([SQ]).
-  SQ makeSequence(int code, Dataset parent, Iterable<Item> items, int vfOffset,
+  SQ makeSequenceFromCode(
+          int code, Dataset parent, Iterable items, int vfOffset,
           [int vfLengthField, Bytes bytes]) =>
-      IvrElement.makeSequence(code, parent, items, bytes);
+      IvrElement.makeSequenceFromCode(code, parent, items, bytes);
+
+  /// Returns a new Sequence ([SQ]).
+  SQ makeSequenceFromTag(Tag tag, Dataset parent, Iterable items, int vfOffset,
+          [int vfLengthField, Bytes bytes]) =>
+      IvrElement.makeSequenceFromTag(tag, parent, items, bytes);
 }
