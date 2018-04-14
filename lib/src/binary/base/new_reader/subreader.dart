@@ -250,7 +250,7 @@ abstract class SubReader {
       unsupportedError();
 
   /// Returns a new Pixel Data [Element].
-  Element makePixelData(int code, Bytes bytes, int vrIndex, int vfOffset,
+  Element makePixelData(int code, Bytes bytes, int vrIndex,
       [int vfLengthField, TransferSyntax ts, VFFragments fragments]);
 
   /// Creates a new Sequence ([SQ]) [Element].
@@ -508,7 +508,7 @@ abstract class SubReader {
     final bytes = rb.subbytes(eStart, rb.index);
     final e = (code == kPixelData)
         ? makePixelData(
-            code, bytes, vrIndex, vfOffset, vlf, defaultTS, fragments)
+            code, bytes, vrIndex, vlf, defaultTS, fragments)
         : makeFromBytes(code, bytes, vrIndex, vfOffset);
     _count++;
     if (doLogging) endElementMsg(e);

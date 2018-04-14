@@ -262,7 +262,11 @@ abstract class SubReader {
       unsupportedError();
 
   /// Returns a new Pixel Data [Element].
-  Element makePixelData(int code, Bytes bytes, int vrIndex, int vfOffset,
+  Element makePixelDataFromBytes(int code, Bytes eBytes, int vrIndex,
+      [int vfLengthField, TransferSyntax ts, VFFragments fragments]);
+
+  /// Returns a new Pixel Data [Element].
+  Element makePixelData(int code, Bytes vfBytes, int vrIndex,
       [int vfLengthField, TransferSyntax ts, VFFragments fragments]);
 
   /// Creates a new Sequence ([SQ]) [Element].
@@ -522,11 +526,10 @@ abstract class SubReader {
     } else {
       _findEndOfULengthVF();
     }
-    final bytes = _rb.subbytes(eStart, _rb.index);
+    final eBytes = _rb.subbytes(eStart, _rb.index);
     final e = (code == kPixelData)
-        ? makePixelData(
-            code, bytes, vrIndex, vfOffset, vlf, defaultTS, fragments)
-        : makeFromBytes(code, bytes, vrIndex, vfOffset);
+        ? makePixelData(code, eBytes, vrIndex, vlf, defaultTS, fragments)
+        : makeFromBytes(code, eBytes, vrIndex, vfOffset);
     _count++;
     if (doLogging) _endElementMsg(e);
     return e;
@@ -537,10 +540,10 @@ abstract class SubReader {
       int code, int eStart, int vrIndex, int vfOffset, int vlf) {
     if (doLogging) _startElementMsg(code, eStart, vrIndex, vlf);
     _rb.rSkip(vlf);
-    final bytes = _rb.subbytes(eStart, _rb.index);
+    final eBytes = _rb.subbytes(eStart, _rb.index);
     final e = (code == kPixelData)
-        ? makePixelData(code, bytes, vrIndex, vfOffset)
-        : makeFromBytes(code, bytes, vrIndex, vfOffset);
+        ? makePixelData(code, eBytes, vrIndex, vfOffset)
+        : makeFromBytes(code, eBytes, vrIndex, vfOffset);
     _count++;
     if (doLogging) _endElementMsg(e);
     return e;
@@ -776,6 +779,36 @@ abstract class SubReader {
       ..debug('$count Elements read');
     if (rds[kPixelData] == null) log.info('** Pixel Data Element not present');
     if (rds.hasDuplicates) log.warn('** Duplicates Present in rds0');
+  }
+
+  // Urgent Jim test
+  void convertVRUNImageElements(RootDataset rds) {
+    final bitsAllocated = rds.bitsAllocated;
+    final e = rds.lookup(kPixelData);
+    if (e == null) return;
+
+    int vrIndex;
+    if (bitsAllocated == 8 && e.vrIndex != kOBIndex) {
+      vrIndex = kOBIndex;
+    } else if (bitsAllocated == 16) {
+      vrIndex = kOWIndex;
+    } else {
+      invalidElementError(
+          e, 'Invalided Pixel Data $e\n  bitAllocated = $bitsAllocated');
+    }
+    if (e.vrIndex == vrIndex) return;
+
+    VFFragments fragments;
+    if (e is UNPixelData) {
+      fragments = e.fragments;
+    } else if (e is OBPixelData) {
+      fragments = e.fragments;
+    } else if (e is OWPixelData) {
+      fragments = e.fragments;
+    }
+    final npd = makePixelDataFromBytes(e.code, e.vfBytes, e.vrIndex,
+        e.vfLengthField, rds.transferSyntax, fragments);
+    rds[kPixelData] = npd;
   }
 
   @override

@@ -4,7 +4,6 @@
 // Author: Jim Philbin <jfphilbin@gmail.edu>
 // See the AUTHORS file for other contributors.
 
-
 // Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
@@ -17,21 +16,26 @@ import 'dart:typed_data';
 
 import 'package:path/path.dart' as path;
 
-const List<String> stdDcmJsonExtensions = const <String>['.json', '.dcmjson', '.JSON'];
+const List<String> stdDcmJsonExtensions = const <String>[
+  '.json',
+  '.dcmjson',
+  '.JSON'
+];
 
 //TODO: what should default be?
 const int kSmallDcmJsonFileLimit = 376;
 
 Future<String> readDcmJsonPath(String fPath,
     [List<String> extensions = stdDcmJsonExtensions,
-      int sizeLimit = kSmallDcmJsonFileLimit]) async {
+    int sizeLimit = kSmallDcmJsonFileLimit]) async {
   final ext = path.extension(fPath);
   if (!extensions.contains(ext)) return null;
   final f = new File(fPath);
   return readDcmJsonFile(f, sizeLimit);
 }
 
-Future<String> readDcmJsonFile(File f, [int sizeLimit = kSmallDcmJsonFileLimit]) async {
+Future<String> readDcmJsonFile(File f,
+    [int sizeLimit = kSmallDcmJsonFileLimit]) async {
   String json;
   int length;
   if (f.existsSync()) {
@@ -49,7 +53,8 @@ Future<String> readDcmJsonFile(File f, [int sizeLimit = kSmallDcmJsonFileLimit])
 }
 
 Uint8List readJsonPathSync(String fPath,
-    [List<String> extensions = stdDcmJsonExtensions, int sizeLimit = kSmallDcmJsonFileLimit]) {
+    [List<String> extensions = stdDcmJsonExtensions,
+    int sizeLimit = kSmallDcmJsonFileLimit]) {
   final ext = path.extension(fPath);
   if (!extensions.contains(ext)) return null;
   final f = new File(fPath);
@@ -58,7 +63,8 @@ Uint8List readJsonPathSync(String fPath,
 
 Uint8List readJsonFileSync(File f, [int sizeLimit = kSmallDcmJsonFileLimit]) {
   Uint8List bytes;
-  if (!f.existsSync() && (f.lengthSync() <= kSmallDcmJsonFileLimit)) return null;
+  if (!f.existsSync() && (f.lengthSync() <= kSmallDcmJsonFileLimit))
+    return null;
   try {
     bytes = f.readAsBytesSync();
   } on FileSystemException {
@@ -66,5 +72,3 @@ Uint8List readJsonFileSync(File f, [int sizeLimit = kSmallDcmJsonFileLimit]) {
   }
   return (bytes.length > kSmallDcmJsonFileLimit) ? bytes : null;
 }
-
-

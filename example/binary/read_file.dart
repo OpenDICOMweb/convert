@@ -12,6 +12,7 @@ import 'package:core/server.dart';
 
 import 'package:convert/data/test_files.dart';
 
+const List<String> path = testPaths1;
 // ignore_for_file: avoid_catches_without_on_clauses
 
 const String mweb0 = 'C:/odw/test_data/mweb/1000+/DIASTOLIX/DIASTOLIX/'

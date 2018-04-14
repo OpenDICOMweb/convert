@@ -79,7 +79,8 @@ abstract class EvrSubWriter extends SubWriter {
 
   @override
   void __writeLongUndefinedLengthHeader(Element e, int vrIndex) {
-    assert(_isMaybeUndefinedLengthVR(vrIndex));
+    assert(_isMaybeUndefinedLengthVR(vrIndex) || vrIndex == kSQIndex,
+    '$e');
     __writeLongHeader(e, vrIndex, kUndefinedLength);
   }
 

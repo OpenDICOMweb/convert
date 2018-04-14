@@ -26,6 +26,18 @@ class ByteEvrSubReader extends EvrSubReader
   ByteEvrSubReader._(Bytes bytes, DecodingParameters dParams, this.rds,
       this.doLogging, this.doLookupVRIndex)
       : super(bytes, dParams, rds);
+
+  @override
+  Element makePixelData(int code, Bytes eBytes, int vrIndex,
+          [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
+      EvrElement.makePixelData(
+          code, eBytes, vrIndex, vfLengthField, ts, fragments);
+
+  @override
+  Element makePixelDataFromBytes(int code, Bytes eBytes, int vrIndex,
+          [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
+      EvrElement.makePixelData(
+          code, eBytes, vrIndex, vfLengthField, ts, fragments);
 }
 
 class ByteIvrSubReader extends IvrSubReader
@@ -42,4 +54,16 @@ class ByteIvrSubReader extends IvrSubReader
         doLogging = evrSubReader.doLogging,
         doLookupVRIndex = evrSubReader.doLookupVRIndex,
         super(evrSubReader.rb, evrSubReader.dParams, evrSubReader.rds);
+
+  @override
+  Element makePixelData(int code, Bytes vfBytes, int vrIndex,
+          [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
+      IvrElement.makePixelData(
+          code, vfBytes, vrIndex, vfLengthField, ts, fragments);
+
+  @override
+  Element makePixelDataFromBytes(int code, Bytes vfBytes, int vrIndex,
+          [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
+      IvrElement.makePixelData(
+          code, vfBytes, vrIndex, vfLengthField, ts, fragments);
 }

@@ -37,10 +37,6 @@ abstract class EvrByteReaderMixin {
   Element makeFromList(int code, int vrIndex, Iterable values) =>
       TagElement.makeFromCode(code, values, vrIndex);
 
-  Element makePixelData(int code, Bytes bytes, int vrIndex, int vfOffset,
-          [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
-      EvrElement.makePixelData(code, bytes, vrIndex, ts, fragments);
-
   /// Returns a new Sequence ([SQ]).
   SQ makeSequenceFromCode(
           int code, Dataset parent, Iterable items, int vfOffset,
@@ -60,10 +56,6 @@ abstract class IvrByteReaderMixin {
 
   Element makeFromList(int code, int vrIndex, Iterable values) =>
       TagElement.makeFromCode(code, values, vrIndex);
-
-  Element makePixelData(int code, Bytes bytes, int vrIndex, int vfOffset,
-          [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
-      IvrElement.makePixelData(code, bytes, vrIndex, ts, fragments);
 
   /// Returns a new Sequence ([SQ]).
   SQ makeSequenceFromCode(
