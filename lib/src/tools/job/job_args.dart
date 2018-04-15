@@ -87,7 +87,10 @@ class JobArgs {
   showHelp: $showHelp
   ''';
 
-  int parseInt(String s) => int.parse(s, onError: (s) => 100);
+  int parseInt(String s) {
+    final n = int.tryParse(s);
+    return (n == null) ? 100 : n;
+  }
 
   ArgParser getParser() => new ArgParser()
     ..addOption('logFile',
