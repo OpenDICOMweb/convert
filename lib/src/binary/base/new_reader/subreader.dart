@@ -13,9 +13,9 @@ import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/new_reader/no_logging_mixin.dart';
 import 'package:convert/src/errors.dart';
-import 'package:convert/src/utilities/decoding_parameters.dart';
-import 'package:convert/src/utilities/element_offsets.dart';
-import 'package:convert/src/utilities/parse_info.dart';
+import 'package:convert/src/decoding_parameters.dart';
+import 'package:convert/src/element_offsets.dart';
+import 'package:convert/src/parse_info.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters, only_throw_errors
 // ignore_for_file: avoid_catches_without_on_clauses
@@ -71,9 +71,6 @@ abstract class EvrSubReader extends SubReader with NoLoggingMixin {
   int _lookupEvrVRIndex(int code, int eStart, int vrCode) {
     final vrIndex = vrIndexFromCode(vrCode);
     if (vrIndex == null) {
-      final tag = Tag.lookupByCode(code, vrIndex);
-      print('Tag: $tag');
-      print('vrCode: ${hex16(vrCode)}');
       // TODO: this should throw
       _nullVRIndex(code, eStart, vrCode);
     } else if (_isSpecialVR(vrIndex)) {

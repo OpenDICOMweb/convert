@@ -10,7 +10,7 @@ import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/reader/subreader.dart';
 import 'package:convert/src/binary/tag/reader/tag_reader_mixin.dart';
-import 'package:convert/src/utilities/decoding_parameters.dart';
+import 'package:convert/src/decoding_parameters.dart';
 
 class TagEvrSubReader extends EvrSubReader with TagReaderMixin {
   @override
@@ -30,7 +30,6 @@ class TagEvrSubReader extends EvrSubReader with TagReaderMixin {
       TagElement.makePixelData(
           code, vfBytes, vrIndex, vfLengthField, ts, fragments);
 
-  @override
   Element makePixelDataFromBytes(int code, Bytes vfBytes, int vrIndex,
           [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
       TagElement.makePixelDataFromBytes(
@@ -57,7 +56,6 @@ class TagIvrSubReader extends IvrSubReader with TagReaderMixin {
       TagElement.makePixelData(
           code, bytes, vrIndex, vfLengthField, ts, fragments);
 
-  @override
   Element makePixelDataFromBytes(int code, Bytes vfBytes, int vrIndex,
           [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
       TagElement.makePixelDataFromBytes(

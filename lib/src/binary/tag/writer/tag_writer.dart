@@ -11,12 +11,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
+import 'package:io/io.dart';
 
 import 'package:convert/src/binary/base/writer/writer.dart';
 import 'package:convert/src/binary/base/writer/subwriter.dart';
 import 'package:convert/src/binary/tag/writer/tag_subwriter.dart';
-import 'package:convert/src/utilities/encoding_parameters.dart';
-import 'package:convert/src/utilities/io_utils.dart';
+import 'package:convert/src/encoding_parameters.dart';
 
 /// A [class] for writing a [TagRootDataset] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding

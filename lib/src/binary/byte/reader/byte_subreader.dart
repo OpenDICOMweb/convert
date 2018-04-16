@@ -10,7 +10,7 @@ import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/reader/subreader.dart';
 import 'package:convert/src/binary/byte/reader/byte_reader_mixin.dart';
-import 'package:convert/src/utilities/decoding_parameters.dart';
+import 'package:convert/src/decoding_parameters.dart';
 
 class ByteEvrSubReader extends EvrSubReader
     with ByteReaderMixin, EvrByteReaderMixin {
@@ -35,7 +35,6 @@ class ByteEvrSubReader extends EvrSubReader
       EvrElement.makePixelData(
           code, eBytes, vrIndex, vfLengthField, ts, fragments);
 
-  @override
   Element makePixelDataFromBytes(int code, Bytes eBytes, int vrIndex,
           [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
       EvrElement.makePixelData(
@@ -63,7 +62,6 @@ class ByteIvrSubReader extends IvrSubReader
       IvrElement.makePixelData(
           code, vfBytes, vrIndex, vfLengthField, ts, fragments);
 
-  @override
   Element makePixelDataFromBytes(int code, Bytes vfBytes, int vrIndex,
           [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
       IvrElement.makePixelData(

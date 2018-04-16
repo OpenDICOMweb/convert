@@ -25,8 +25,6 @@ class ElementOffsets {
     var ok = true;
 
     if (other is ElementOffsets) {
-      //    log.debug('ElementOffsets0 $length');
-      //    log.debug('ElementOffsets0 ${other.length}');
       if (length != other.length) {
         ok = false;
         log.debug('Length not equal: $length != ${other.length}');
@@ -34,8 +32,6 @@ class ElementOffsets {
       final len = (length > other.length) ? other.length : length;
 
       for (var i = 0; i < len; i++) {
-/*      	// print('$i: ${starts[i]} : ${other.starts[i]} '
-			            '${ends[i]} : ${other.ends[i]}');*/
         if (starts[i] != other.starts[i] || ends[i] != other.ends[i]) {
           final end = (len < i + 10) ? len : i + 10;
           for (var j = i; j < end; j++) {
@@ -48,8 +44,6 @@ class ElementOffsets {
           }
         }
       }
-
-      //    log.debug('ElementOffsets equal: $result');
       return ok;
     }
     return false;
@@ -69,14 +63,12 @@ class ElementOffsets {
 
   int get reserveSlot {
 	  final current = length;
-  	// print('reserving: $length');
   	add(-1, -1, null);
   	index++;
   	return current;
   }
 
   bool insertAt(int index, int start, int end, Element e) {
-    // print('insertAt: $index $e');
   	if (index >= starts.length) throw 'Invalid Insert at $index';
   	if (elements[index] != null) throw 'Invalid Insert at $index - '
 			  'element[$index] = ${elements[index]} which is not null : $e ';

@@ -27,8 +27,8 @@ export 'package:convert/src/binary/tag/reader/tag_reader.dart';
 export 'package:convert/src/binary/tag/reader/tag_reader_mixin.dart';
 export 'package:convert/src/binary/tag/writer/tag_writer.dart';
 
-export 'package:convert/src/utilities/decoding_parameters.dart';
-export 'package:convert/src/utilities/element_offsets.dart';
+export 'package:convert/src/decoding_parameters.dart';
+export 'package:convert/src/element_offsets.dart';
 
 
 

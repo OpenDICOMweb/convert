@@ -12,9 +12,9 @@ import 'dart:typed_data';
 import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/new_reader/subreader.dart';
-import 'package:convert/src/utilities/decoding_parameters.dart';
-import 'package:convert/src/utilities/element_offsets.dart';
-import 'package:convert/src/utilities/parse_info.dart';
+import 'package:convert/src/decoding_parameters.dart';
+import 'package:convert/src/element_offsets.dart';
+import 'package:convert/src/parse_info.dart';
 
 /// Creates a new [Reader], which is a decoder for Binary DICOM
 /// (application/dicom).

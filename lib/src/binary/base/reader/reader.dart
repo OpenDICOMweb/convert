@@ -12,9 +12,10 @@ import 'dart:typed_data';
 import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/reader/subreader.dart';
-import 'package:convert/src/utilities/decoding_parameters.dart';
-import 'package:convert/src/utilities/element_offsets.dart';
-import 'package:convert/src/utilities/parse_info.dart';
+import 'package:convert/src/decoding_parameters.dart';
+import 'package:convert/src/element_offsets.dart';
+import 'package:convert/src/errors.dart';
+import 'package:convert/src/parse_info.dart';
 
 /// Creates a new [Reader], which is a decoder for Binary DICOM
 /// (application/dicom).
@@ -60,18 +61,37 @@ abstract class Reader {
         ..debug('Logging ...')
         ..debug('>R@${rb.index} readRootDataset  ${rb.length} bytes');
     }
-    final fmiEnd = evrSubReader.readFmi();
-    final rds0 = (evrSubReader.rds.transferSyntax.isEvr)
-        ? evrSubReader.readRootDataset(fmiEnd)
-        : ivrSubReader.readRootDataset(fmiEnd);
-    log.debug('${bytesRead.length} bytes read');
+
+    try {
+      final fmiEnd = evrSubReader.readFmi();
+      final ts = evrSubReader.rds.transferSyntax;
+      _rds = (ts.isEvr)
+          ? evrSubReader.readRootDataset(fmiEnd, ts)
+          : ivrSubReader.readRootDataset(fmiEnd, ts);
+    } on EndOfDataError catch (e) {
+      print(e);
+      if (throwOnError) rethrow;
+      return _rds = null;
+    } on InvalidTransferSyntax catch (e) {
+      print(e);
+      if (throwOnError) rethrow;
+      return _rds = null;
+    } on DataAfterPixelDataError catch (e) {
+      print(e);
+      return _rds;
+      // ignore: avoid_catches_without_on_clauses
+    } catch (e) {
+      print(e);
+      if (throwOnError) rethrow;
+      return _rds = null;
+    }
+    log.debug('Bytes read: ${bytesRead.length} ');
     if (evrSubReader.doLogging) {
-      log.debug('${evrSubReader.count} Evr Elements read');
-      if (ivrSubReader != null) {
-        log.debug('${ivrSubReader.count} Ivr Elements read');
+      log.debug('Evr Elements: ${evrSubReader.count} ');
+      if (ivrSubReader != null && ivrSubReader.count != 0) {
+        log.debug('Ivr Elements: ${ivrSubReader.count} ');
       }
     }
-    return rds0;
+    return _rds;
   }
 }
-

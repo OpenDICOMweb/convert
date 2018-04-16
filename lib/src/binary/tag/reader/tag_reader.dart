@@ -1,4 +1,4 @@
-//  Copyright (c) 2016, 2017, 2018, 
+//  Copyright (c) 2016, 2017, 2018,
 //  Poplar Hill Informatics and the American College of Radiology
 //  All rights reserved.
 //  Use of this source code is governed by the open source license
@@ -10,12 +10,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
+import 'package:io/io.dart';
 
 import 'package:convert/src/binary/base/reader/reader.dart';
 import 'package:convert/src/binary/base/reader/subreader.dart';
 import 'package:convert/src/binary/tag/reader/tag_subreader.dart';
-import 'package:convert/src/utilities/decoding_parameters.dart';
-import 'package:convert/src/utilities/io_utils.dart';
+import 'package:convert/src/decoding_parameters.dart';
 
 /// Creates a new [TagReader], which is a decoder for Binary DICOM
 /// (application/dicom).
@@ -48,6 +48,21 @@ class TagReader extends Reader {
       bool doLogging = false}) {
     final rds = new TagRootDataset.empty();
     return new TagReader._(bytes, dParams, rds, doLogging: doLogging);
+  }
+
+  factory TagReader.fromFile(File f,
+      {DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool doLogging = false}) {
+    final bList = f.readAsBytesSync();
+    return new TagReader.fromBytes(bList,
+        dParams: dParams, doLogging: doLogging);
+  }
+
+  factory TagReader.fromPath(String path,
+      {DecodingParameters dParams = DecodingParameters.kNoChange,
+      bool doLogging = false}) {
+    final f = new File(path);
+    return TagReader.fromFile(f, dParams: dParams, doLogging: doLogging);
   }
 
   @override

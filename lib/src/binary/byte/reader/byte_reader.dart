@@ -10,12 +10,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
+import 'package:io/io.dart';
 
 import 'package:convert/src/binary/base/reader/reader.dart';
 import 'package:convert/src/binary/base/reader/subreader.dart';
 import 'package:convert/src/binary/byte/reader/byte_subreader.dart';
-import 'package:convert/src/utilities/decoding_parameters.dart';
-import 'package:convert/src/utilities/io_utils.dart';
+import 'package:convert/src/decoding_parameters.dart';
 
 /// Creates a new [ByteReader], which is a decoder for Binary DICOM
 /// (application/dicom).
@@ -43,8 +43,9 @@ class ByteReader extends Reader {
   factory ByteReader.fromFile(File f,
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool doLogging = false}) {
-    final bList = f.readAsBytesSync();
-    return new ByteReader.fromBytes(bList,
+    final Uint8List bList = f.readAsBytesSync();
+    final bytes = new Bytes.fromTypedData(bList);
+    return new ByteReader.fromBytes(bytes,
         dParams: dParams, doLogging: doLogging);
   }
 
@@ -52,7 +53,7 @@ class ByteReader extends Reader {
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool doLogging = false}) {
     final f = new File(path);
-    return ByteReader.fromFile(f, dParams: dParams, doLogging: doLogging);
+    return new ByteReader.fromFile(f, dParams: dParams, doLogging: doLogging);
   }
 
   @override
@@ -87,7 +88,6 @@ class ByteReader extends Reader {
       bool doLogging = false}) {
     checkFile(file);
     final Uint8List td = file.readAsBytesSync();
-    print('td: ${td.length}');
     return ByteReader.readTypedData(td,
         endian: endian, dParams: dParams, doLogging: doLogging);
   }

@@ -22,7 +22,16 @@ class ShortFileError extends Error {
   ShortFileError([this.msg = '']);
 
   @override
-  String toString() => '**** ShortFileError in $msg';
+  String toString() => '**** ShortFileError: $msg';
+}
+
+class DataAfterPixelDataError extends Error {
+  String msg;
+
+  DataAfterPixelDataError([this.msg = '']);
+
+  @override
+  String toString() => '**** DataAfterPixelDataError: $msg';
 }
 
 

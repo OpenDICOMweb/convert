@@ -10,11 +10,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
+import 'package:io/io.dart';
 
 import 'package:convert/src/binary/byte/reader/byte_reader.dart';
 import 'package:convert/src/binary/byte/writer/byte_writer.dart';
 import 'package:convert/src/errors.dart';
-import 'package:convert/src/utilities/io_utils.dart';
 
 // ignore_for_file: avoid_catches_without_on_clauses
 
@@ -74,16 +74,14 @@ bool byteReadWriteFileChecked(String path,
 
     if (rds0.hasDuplicates) log.warn('$pad  ** Duplicates Present in rds0');
 
-/*
-    if (rds0.pInfo != rds1.pInfo) {
+    if (reader0.pInfo != reader1.pInfo) {
       log
         ..warn('$pad ** ParseInfo is Different!')
-    //    ..debug1('$pad rds0: ${rds0.pInfo.summary(rds0)}')
-    //    ..debug1('$pad rds1: ${rds1.pInfo.summary(rds1)}')
+        ..debug1('$pad rds0: ${reader0.pInfo.summary(rds0)}')
+        ..debug1('$pad rds1: ${reader1.pInfo.summary(rds1)}')
         ..debug2(rds0.format(new Formatter(maxDepth: -1)))
         ..debug2(rds1.format(new Formatter(maxDepth: -1)));
     }
-*/
 
     // If duplicates are present the [ElementOffsets]s will not be equal.
     if (!rds0.hasDuplicates) {

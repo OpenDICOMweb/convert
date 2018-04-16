@@ -11,8 +11,8 @@ import 'dart:typed_data';
 import 'package:core/core.dart';
 
 import 'package:convert/src/binary/base/padding_chars.dart';
-import 'package:convert/src/utilities/element_offsets.dart';
-import 'package:convert/src/utilities/encoding_parameters.dart';
+import 'package:convert/src/element_offsets.dart';
+import 'package:convert/src/encoding_parameters.dart';
 
 //Urgent Jim: add to EvrULength at appropriate places
 
@@ -402,7 +402,7 @@ abstract class SubWriter {
       log.error('Padding a non-padded Element: $e');
       return invalidVFLength(e.vfBytes.length, -1);
     }
-    print('** writing pad char: $padChar');
+    if (doLogging) log.debug('** writing pad char: $padChar');
     wb.writeUint8(padChar);
     assert(wb.wIndex.isEven);
   }
