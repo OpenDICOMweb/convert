@@ -360,7 +360,9 @@ abstract class SubReader {
     _readDatasetDefinedLength(rds, rdsStart, length);
     final rdsLength = _rb.rIndex - fmiEnd;
     final rdsBytes = _rb.asBytes(fmiEnd, rdsLength);
+    print('rdsBytes: $rdsBytes');
     final dsBytes = new RDSBytes(rdsBytes, fmiEnd);
+    print('dsBytes: $dsBytes');
     rds.dsBytes = dsBytes;
     if (doLogging) _endReadRootDataset(rds, dsBytes);
     return rds;

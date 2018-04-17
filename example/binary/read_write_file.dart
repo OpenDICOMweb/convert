@@ -33,23 +33,32 @@ void main() async {
   Server.initialize(name: 'ReadWriteFile', level: Level.debug, throwOnError:
   true);
 
-  final inPath = cleanPath(xx3);
+  final inPath = cleanPath(xx2);
 
   log.info('path: $inPath');
   final length = new File(inPath).lengthSync();
   stdout.writeln('Reading($length bytes): $inPath');
 
-  final rds = ByteReader.readPath(inPath, doLogging: true);
-  if (rds == null) {
+  final rds0 = ByteReader.readPath(inPath, doLogging: true);
+  if (rds0 == null) {
     log.warn('Invalid DICOM file: $inPath');
   } else {
-    log.info('${rds.summary}');
+    log.info('${rds0.summary}');
   }
 
-  final outPath = getVNAPath(rds, 'bin/output', 'dcm');
-  final out = ByteWriter.writePath(rds, outPath);
+  log.info('DSBytes: ${rds0.dsBytes}');
+
+  final outPath = getVNAPath(rds0, 'bin/output/', 'dcm');
+  final out = ByteWriter.writePath(rds0, outPath, doLogging: true);
   log
     ..info('outPath: $outPath')
     ..info('Output length: ${out.length}(${out.length ~/ 1024}K)')
     ..info('done');
+
+  final rds1 = ByteReader.readPath(outPath, doLogging: true);
+  if (rds1 == null) {
+    log.warn('Invalid DICOM file: $outPath');
+  } else {
+    log.info('${rds1.summary}');
+  }
 }

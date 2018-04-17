@@ -65,25 +65,25 @@ abstract class Reader {
     try {
       final fmiEnd = evrSubReader.readFmi();
       final ts = evrSubReader.rds.transferSyntax;
-      _rds = (ts.isEvr)
+      (ts.isEvr)
           ? evrSubReader.readRootDataset(fmiEnd, ts)
           : ivrSubReader.readRootDataset(fmiEnd, ts);
     } on EndOfDataError catch (e) {
       print(e);
       if (throwOnError) rethrow;
-      return _rds = null;
+      return rds;
     } on InvalidTransferSyntax catch (e) {
       print(e);
       if (throwOnError) rethrow;
-      return _rds = null;
+      return rds;
     } on DataAfterPixelDataError catch (e) {
       print(e);
-      return _rds;
+      return rds;
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       print(e);
       if (throwOnError) rethrow;
-      return _rds = null;
+      return rds;
     }
     log.debug('Bytes read: ${bytesRead.length} ');
     if (evrSubReader.doLogging) {
@@ -92,6 +92,6 @@ abstract class Reader {
         log.debug('Ivr Elements: ${ivrSubReader.count} ');
       }
     }
-    return _rds;
+    return rds;
   }
 }

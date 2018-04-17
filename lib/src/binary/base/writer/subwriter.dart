@@ -257,21 +257,21 @@ abstract class SubWriter {
 
   /// Writes a [Dataset] to the buffer.
   void _writeDefinedLengthItem(Item item) {
-    wb..writeUint32(kItem32BitLE)..writeUint32(item.vfLength);
+    wb..writeCode(kItem)..writeUint32(item.vfLength);
     _writeDataset(item);
   }
 
   void _writeUndefinedLengthItem(Item item) {
-    wb..writeUint32(kItem32BitLE)..writeUint32(kUndefinedLength);
+    wb..writeCode(kItem)..writeUint32(kUndefinedLength);
     _writeDataset(item);
-    wb..writeUint32(kItemDelimitationItem32BitLE)..writeUint32(0);
+    wb..writeCode(kItemDelimitationItem)..writeUint32(0);
   }
 
   void _writeEncapsulatedPixelData(IntBase e) {
     assert(e.vfLengthField == kUndefinedLength);
     for (final fragment in e.fragments.fragments) {
       wb
-        ..writeUint32(kItem32BitLE)
+        ..writeCode(kItem)
         ..writeUint32(fragment.lengthInBytes)
         ..writeUint8List(fragment);
 
@@ -328,7 +328,7 @@ abstract class SubWriter {
     } else {
       _writeValueField(e, vrIndex);
     }
-    wb..writeUint32(kSequenceDelimitationItem32BitLE)..writeUint32(0);
+    wb..writeCode(kSequenceDelimitationItem)..writeUint32(0);
     assert(wb.wIndex.isEven);
   }
 
@@ -370,7 +370,7 @@ abstract class SubWriter {
     assert(wb.index.isEven);
     __writeLongUndefinedLengthHeader(e, vrIndex);
     _writeItems(e.items);
-    wb..writeUint32(kSequenceDelimitationItem32BitLE)..writeUint32(0);
+    wb..writeCode(kSequenceDelimitationItem)..writeUint32(0);
     assert(wb.wIndex.isEven);
   }
 
