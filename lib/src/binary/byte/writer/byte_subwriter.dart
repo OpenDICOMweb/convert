@@ -16,23 +16,19 @@ class ByteEvrSubWriter extends EvrSubWriter {
   @override
   final BDRootDataset rds;
   @override
-  final TransferSyntax outputTS;
-  @override
   final bool doLogging;
 
   /// Creates a new [ByteEvrSubWriter], which is an encoder for Binary DICOM
   /// (application/dicom).
   ByteEvrSubWriter(this.rds, EncodingParameters eParams,
-      {this.outputTS, this.doLogging = false})
-      : super(rds, eParams);
+      {TransferSyntax outputTS, this.doLogging = false})
+      : super(rds, eParams, outputTS);
 }
 
 /// An encoder for Binary DICOM (application/dicom).
 class ByteIvrSubWriter extends IvrSubWriter {
   @override
   final BDRootDataset rds;
-  @override
-  final TransferSyntax outputTS;
   @override
   final bool doLogging;
 
@@ -46,7 +42,6 @@ class ByteIvrSubWriter extends IvrSubWriter {
 
   ByteIvrSubWriter.from(ByteEvrSubWriter subWriter)
       : rds = subWriter.rds,
-        outputTS = subWriter.outputTS,
         doLogging = subWriter.doLogging,
-        super(subWriter.rds, subWriter.eParams, subWriter.wb);
+        super.from(subWriter);
 }

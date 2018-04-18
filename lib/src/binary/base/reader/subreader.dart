@@ -35,45 +35,7 @@ import 'package:convert/src/parse_info.dart';
 
 typedef Element LongElementReader(int code, int eStart, int vrIndex, int vlf);
 
-/*
-abstract class LESubReader extends EvrSubReader {
-  /// The [Bytes] being read by _this_.
-  @override
-  final Bytes bytes;
-  // This field is only used when a EVR Big Endian file is being read.
-  // If it is null a EVR Little Endian encoding is being read.
-  ReadBuffer _rbLE;
-
-  LESubReader(this.bytes, DecodingParameters dParams, Dataset cds)
-      : super(new ReadBuffer(bytes), dParams, cds);
-
-  LESubReader(Uint8List bList, DecodingParameters dParams, Dataset cds)
-      : super(new ReadBuffer);
-}
-*/
-
-/*
-abstract class BESubReader extends EvrSubReader {
-  /// The [Bytes] being read by _this_.
-  @override
-  final Bytes bytes;
-  // This field is only used when a EVR Big Endian file is being read.
-  // If it is null a EVR Little Endian encoding is being read.
-  ReadBuffer _rbLE;
-
-
-  BESubReader(this.bytes, DecodingParameters dParams, Dataset cds)
-      : super(new ReadBuffer(bytes), dParams, cds);
-
-
-}
-*/
-
 abstract class EvrSubReader extends SubReader {
-  // This field is only used when a EVR Big Endian file is being read.
-  // If it is null a EVR Little Endian encoding is being read.
-  ReadBuffer _rbLE;
-
   EvrSubReader(Bytes bytes, DecodingParameters dParams, Dataset cds)
       : super(new ReadBuffer(bytes), dParams, cds);
 
@@ -81,20 +43,25 @@ abstract class EvrSubReader extends SubReader {
   @override
   bool get isEvr => true;
 
-  ReadBuffer get rbLittleEndian => _rbLE;
-
   /// Returns _true_ if the VR has a 16-bit Value Field Length field.
   bool _isEvrShortVR(int vrIndex) =>
       vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
 
-  RootDataset readRootDataset(int fmiEnd, [TransferSyntax ts]) {
-    assert(fmiEnd == _rb.index);
-    if (ts == TransferSyntax.kExplicitVRBigEndian) {
-      _rbLE = _rb;
-      _rb = new ReadBuffer.from(_rb, rb.index, rb.length, Endian.big);
+  void readRootDataset(int fmiEnd) {
+    assert(fmiEnd == _rb.index, 'fmiEnd: $fmiEnd rb.index: $_rb.index');
+    final ts = rds.transferSyntax;
+    if (ts == TransferSyntax.kExplicitVRBigEndian)
+      _rb.buffer.endian = Endian.big;
+    _readRootDataset(fmiEnd);
+    if (doLogging) {
+      final fmiCount = rds.fmi.length;
+      final eCount = rds.elements.length;
+      log
+        ..debug('Fmi Elements: $fmiCount')
+        ..debug('Evr Elements: $eCount')
+        ..debug('Total:        ${fmiCount + eCount}')
+        ..debug('Bytes read:   ${_rb.index} ');
     }
-    // TODO: fmiEnd and rdsStart should be the same - change to 2 args
-    return _readRootDataset(fmiEnd);
   }
 
   /// For EVR Datasets, all Elements are read by this method.
@@ -141,13 +108,13 @@ abstract class EvrSubReader extends SubReader {
   /// Reads File Meta Information (FMI) and returns a Map<int, Element>
   /// if any [Fmi] [Element]s were present; otherwise, returns null.
   int readFmi() {
-    if (doLogging) log.debug('>@${_rb.index} Reading FMI:', 1);
+    if (doLogging) log.debug('>@R${_rb.index} Reading FMI:', 1);
     if (_rb.rIndex != 0) throw new InvalidReadBufferIndex(_rb);
-    assert(_rb.index == 0, 'Non-Zero Read Buffer Index');
-    if (!_readPrefix(_rb)) {
+
+    if (!_readPrefix()) {
       _rb.rIndex_ = 0;
       if (doLogging) log.up;
-      return -1;
+      return 0;
     }
     assert(_rb.index == 132, 'Non-Prefix start index: ${_rb.index}');
     if (doLogging) log.down;
@@ -165,7 +132,7 @@ abstract class EvrSubReader extends SubReader {
     }
 
     final ts = rds.transferSyntax;
-    if (doLogging) log.debug('TS: $ts', -1);
+    if (doLogging) log.debug('TS: $ts');
 
     if (!system.isSupportedTransferSyntax(ts.asString)) {
       log.up;
@@ -176,23 +143,23 @@ abstract class EvrSubReader extends SubReader {
       return invalidTransferSyntax(ts, dParams.targetTS);
     }
 
-    if (doLogging) log.debug('<R@${_rb.index} FinishedReading FMI:', -1);
+    if (doLogging) log..up..debug('<R@${_rb.index} FinishedReading FMI:');
     return _rb.index;
   }
 
   /// Reads the Preamble (128 bytes) and Prefix ('DICM') of a PS3.10 DICOM File Format.
   /// Returns true if a valid Preamble and Prefix where read.
-  bool _readPrefix(ReadBuffer rb) {
-    if (rb.index != 0) return false;
-    return _isDcmPrefixPresent(rb);
-  }
-
   /// Read as 32-bit integer. This is faster
-  bool _isDcmPrefixPresent(ReadBuffer rb) {
-    rb.rSkip(128);
-    final prefix = rb.readUint32();
+  bool _readPrefix() {
+    _rb.buffer.endian = Endian.little;
+    if (_rb.index != 0) return false;
+       _rb.rSkip(128);
+    final prefix = _rb.readUint32();
     if (prefix == kDcmPrefix) return true;
-    log.warn('No DICOM Prefix present');
+    _rb.reset;
+    final preamble = _rb.readUint8List(128);
+    final prefix1 = _rb.readUint8List(4);
+    log.warn('No DICOM Prefix present:\n  $preamble\n  $prefix1');
     return false;
   }
 }
@@ -208,8 +175,19 @@ abstract class IvrSubReader extends SubReader {
   @override
   Bytes get bytes => _rb.buffer;
 
-  RootDataset readRootDataset(int fmiEnd, [TransferSyntax ts]) =>
-      _readRootDataset(fmiEnd);
+  void readRootDataset(int fmiEnd, [TransferSyntax ts]) {
+    assert(fmiEnd == _rb.index, 'fmiEnd: $fmiEnd != rb.index: ${_rb.index}');
+    _readRootDataset(fmiEnd);
+    if (doLogging) {
+      final fmiCount = rds.fmi.length;
+      final eCount = rds.elements.length;
+      log
+        ..debug('Fmi Elements: $fmiCount')
+        ..debug('Ivr Elements: $eCount')
+        ..debug('Total:        ${fmiCount + eCount}')
+        ..debug('Bytes read:   ${_rb.index} ');
+    }
+  }
 
   @override
   Element _readElement() {
@@ -259,6 +237,8 @@ abstract class SubReader {
   SubReader(this._rb, this.dParams, this.cds);
 
   ReadBuffer get rb => _rb;
+  Endian get endian => _rb.buffer.endian;
+
   // **** Interface for Evr and Ivr ****
   bool get isEvr;
   RootDataset get rds;
@@ -357,13 +337,30 @@ abstract class SubReader {
     final rdsStart = fmiEnd;
     final length = rb.remaining;
     if (doLogging) _startReadRootDataset(rdsStart, length);
-    _readDatasetDefinedLength(rds, rdsStart, length);
-    final rdsLength = _rb.rIndex - fmiEnd;
-    final rdsBytes = _rb.asBytes(fmiEnd, rdsLength);
-    print('rdsBytes: $rdsBytes');
-    final dsBytes = new RDSBytes(rdsBytes, fmiEnd);
-    print('dsBytes: $dsBytes');
-    rds.dsBytes = dsBytes;
+    DSBytes dsBytes;
+    try {
+      _readDatasetDefinedLength(rds, rdsStart, length);
+    } on EndOfDataError catch (e) {
+      log.error(e);
+      //  if (throwOnError) rethrow;
+    } on InvalidTransferSyntax catch (e) {
+      log.error(e);
+      //  if (throwOnError) rethrow;
+    } on DataAfterPixelDataError catch (e) {
+      log.warn(e);
+      // ignore: avoid_catches_without_on_clauses
+    } catch (e) {
+      log.error(e);
+      if (throwOnError) rethrow;
+    } finally {
+      final rdsLength = _rb.rIndex - fmiEnd;
+      final rdsBytes = _rb.asBytes(0, rdsLength);
+      print('$rdsBytes');
+      dsBytes = new RDSBytes(rdsBytes, fmiEnd);
+      print('$dsBytes');
+      rds.dsBytes = dsBytes;
+    }
+
     if (doLogging) _endReadRootDataset(rds, dsBytes);
     return rds;
   }
@@ -786,8 +783,7 @@ abstract class SubReader {
     final eNumber = '$count'.padLeft(4, '0');
     log
       ..up
-//      ..debug('|@R${_rb.index} ${e.tag}')
-      ..debug('<@R${_rb.index} $eNumber: $e');
+      ..debug('<@R${_rb.index} #$eNumber: $e');
   }
 
   void _startSQMsg(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
@@ -801,7 +797,7 @@ abstract class SubReader {
 
   void _endSQMsg(SQ e) {
     final eNumber = '$count'.padLeft(4, '0');
-    final msg = '<@R${_rb.index} $eNumber: $e';
+    final msg = '<@R${_rb.index} #$eNumber: $e';
     log.debug(msg);
   }
 
@@ -810,18 +806,18 @@ abstract class SubReader {
     final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vfl: $vlf';
     final dLimit = (delimiter == 0) ? 'No Delimiter' : dcm(delimiter);
     log
-      ..debug('>@R$eStart $name $dLimit $len $ds', 1)
+      ..debug('>@R$eStart $name $dLimit $len $ds')
       ..down;
   }
 
   void _endDatasetMsg(int dsStart, String name, DSBytes dsBytes, Dataset ds) {
     log
       ..up
-      ..debug('<@R$dsStart $name $dsBytes: $ds', -1);
+      ..debug('<@R$dsStart $name $dsBytes: $ds');
   }
 
   void _startReadRootDataset(int rdsStart, int length) => log
-    ..debug('>@${_rb.index} subReadRootDataset length($length) $rds')
+    ..debug('>@R${_rb.index} subReadRootDataset length($length) $rds')
     ..down;
 
   void _endReadRootDataset(RootDataset rds, RDSBytes dsBytes) {
@@ -831,7 +827,7 @@ abstract class SubReader {
     if (rds[kPixelData] == null)
       log.info('| ** Pixel Data Element not present');
     if (rds.hasDuplicates) log.warn('| ** Duplicates Present in rds0');
-    log.debug('<@${_rb.index} subReadRootDataset $dsBytes $rds');
+    log.debug('<@R${_rb.index} subReadRootDataset $dsBytes $rds');
   }
 
   // Urgent Jim test

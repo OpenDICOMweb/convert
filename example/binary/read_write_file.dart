@@ -7,11 +7,11 @@
 //  See the AUTHORS file for other contributors.
 
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:convert/convert.dart';
 import 'package:core/server.dart';
 import 'package:io/io.dart';
-
 
 const String xx3 =
     'C:/acr/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
@@ -25,15 +25,13 @@ const String xx0 = 'C:/acr/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX'
 const String xxx =
     'C:/acr/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
 
-
 const List<String> files = const <String>[xx0, xx1, xx2, xx3, xxx];
 
-
 void main() async {
-  Server.initialize(name: 'ReadWriteFile', level: Level.debug, throwOnError:
-  true);
+  Server.initialize(
+      name: 'ReadWriteFile', level: Level.debug, throwOnError: false);
 
-  final inPath = cleanPath(xx2);
+  final inPath = cleanPath(xx0);
 
   log.info('path: $inPath');
   final length = new File(inPath).lengthSync();
@@ -46,19 +44,24 @@ void main() async {
     log.info('${rds0.summary}');
   }
 
-  log.info('DSBytes: ${rds0.dsBytes}');
+  log.info('${rds0.dsBytes}');
 
   final outPath = getVNAPath(rds0, 'bin/output/', 'dcm');
-  final out = ByteWriter.writePath(rds0, outPath, doLogging: true);
+  final outBytes = ByteWriter.writeBytes(rds0, doLogging: true);
   log
     ..info('outPath: $outPath')
-    ..info('Output length: ${out.length}(${out.length ~/ 1024}K)')
+    ..info('Output length: ${outBytes.length}(${outBytes.length ~/ 1024}K)')
+    ..info(outBytes.asUint8List(0, 200))
     ..info('done');
 
-  final rds1 = ByteReader.readPath(outPath, doLogging: true);
+  outBytes.endian = Endian.little;
+  final rds1 = ByteReader.readBytes(outBytes, doLogging: true);
   if (rds1 == null) {
     log.warn('Invalid DICOM file: $outPath');
   } else {
     log.info('${rds1.summary}');
   }
+
+  final result = (rds0 == rds1) ? 'Success' : 'Failure';
+  print(result);
 }

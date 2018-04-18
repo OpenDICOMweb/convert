@@ -75,28 +75,30 @@ abstract class Writer {
   EvrSubWriter get evrSubWriter;
   IvrSubWriter get ivrSubWriter;
   Bytes write() => writeRootDataset();
-  Bytes writeFmi() => evrSubWriter.writeFmi();
+  int writeFmi() => evrSubWriter.writeFmi();
 
   RootDataset get rds => evrSubWriter.rds;
 
   /// Writes a [RootDataset] to a [Uint8List], then returns it.
   Bytes writeRootDataset() {
-    if (!evrSubWriter.isFmiWritten) {
-      final bytes = evrSubWriter.writeFmi();
-      fmiEnd = bytes.length;
-    }
+    int fmiEnd;
+    if (!evrSubWriter.isFmiWritten) fmiEnd = evrSubWriter.writeFmi();
+
     Bytes bytes;
-    if (evrSubWriter.rds.transferSyntax.isEvr) {
-      bytes = evrSubWriter.writeRootDataset(fmiEnd);
-      log
-        ..debug('${bytes.length} bytes written')
-        ..debug('${evrSubWriter.count} Evr Elements written');
+    final ts = evrSubWriter.rds.transferSyntax;
+    if (ts.isEvr) {
+      bytes = evrSubWriter.writeRootDataset(fmiEnd, ts);
+      if (doLogging)
+        log
+          ..debug('${bytes.length} bytes written')
+          ..debug('${evrSubWriter.count} Evr Elements written');
     } else {
-      bytes = ivrSubWriter.writeRootDataset(fmiEnd);
-      log
-        ..debug('${bytes.length} bytes writen')
-        ..debug('${evrSubWriter.count} Evr Elements written')
-        ..debug('${ivrSubWriter.count} Ivr Elements written');
+      bytes = ivrSubWriter.writeRootDataset(fmiEnd, ts);
+      if (doLogging)
+        log
+          ..debug('${bytes.length} bytes writen')
+          ..debug('${evrSubWriter.count} Evr Elements written')
+          ..debug('${ivrSubWriter.count} Ivr Elements written');
     }
     return bytes;
   }

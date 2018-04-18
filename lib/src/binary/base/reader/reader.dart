@@ -62,36 +62,24 @@ abstract class Reader {
         ..debug('>R@${rb.index} readRootDataset  ${rb.length} bytes');
     }
 
+    int fmiEnd;
     try {
-      final fmiEnd = evrSubReader.readFmi();
-      final ts = evrSubReader.rds.transferSyntax;
-      (ts.isEvr)
-          ? evrSubReader.readRootDataset(fmiEnd, ts)
-          : ivrSubReader.readRootDataset(fmiEnd, ts);
-    } on EndOfDataError catch (e) {
-      print(e);
+       fmiEnd = evrSubReader.readFmi();
+    } on EndOfDataError catch(e){
+      log.warn(e);
+    } on ShortFileError catch(e) {
+      log.warn(e);
+      // ignore: Avoid_catches_without_on_clauses
+    } catch(e) {
+      log.error(e);
       if (throwOnError) rethrow;
-      return rds;
-    } on InvalidTransferSyntax catch (e) {
-      print(e);
-      if (throwOnError) rethrow;
-      return rds;
-    } on DataAfterPixelDataError catch (e) {
-      print(e);
-      return rds;
-      // ignore: avoid_catches_without_on_clauses
-    } catch (e) {
-      print(e);
-      if (throwOnError) rethrow;
-      return rds;
     }
-    log.debug('Bytes read: ${bytesRead.length} ');
-    if (evrSubReader.doLogging) {
-      log.debug('Evr Elements: ${evrSubReader.count} ');
-      if (ivrSubReader != null && ivrSubReader.count != 0) {
-        log.debug('Ivr Elements: ${ivrSubReader.count} ');
-      }
-    }
-    return rds;
+
+    _rds = evrSubReader.rds;
+    final ts = _rds.transferSyntax;
+    (ts.isEvr)
+        ? evrSubReader.readRootDataset(fmiEnd)
+        : ivrSubReader.readRootDataset(fmiEnd);
+    return _rds;
   }
 }

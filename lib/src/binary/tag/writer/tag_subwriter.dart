@@ -1,4 +1,4 @@
-//  Copyright (c) 2016, 2017, 2018, 
+//  Copyright (c) 2016, 2017, 2018,
 //  Poplar Hill Informatics and the American College of Radiology
 //  All rights reserved.
 //  Use of this source code is governed by the open source license
@@ -16,23 +16,19 @@ class TagEvrSubWriter extends EvrSubWriter {
   @override
   final TagRootDataset rds;
   @override
-  final TransferSyntax outputTS;
-  @override
   final bool doLogging;
 
   /// Creates a new [TagEvrSubWriter], which is an encoder for Binary DICOM
   /// (application/dicom).
   TagEvrSubWriter(this.rds, EncodingParameters eParams,
-      {this.outputTS, this.doLogging = false})
-      : super(rds, eParams);
+      {TransferSyntax outputTS, this.doLogging = false})
+      : super(rds, eParams, outputTS);
 }
 
 /// An encoder for Binary DICOM (application/dicom).
 class TagIvrSubWriter extends IvrSubWriter {
   @override
   final TagRootDataset rds;
-  @override
-  final TransferSyntax outputTS;
   @override
   final bool doLogging;
 
@@ -44,8 +40,7 @@ class TagIvrSubWriter extends IvrSubWriter {
       : super(rds, eParams);
 */
 
-  TagIvrSubWriter.from(TagEvrSubWriter subWriter,
-      {this.outputTS, this.doLogging = false})
+  TagIvrSubWriter.from(TagEvrSubWriter subWriter, {this.doLogging = false})
       : rds = subWriter.rds,
-        super(subWriter.rds, subWriter.eParams, subWriter.wb);
+        super.from(subWriter);
 }
