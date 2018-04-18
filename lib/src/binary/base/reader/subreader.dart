@@ -355,9 +355,9 @@ abstract class SubReader {
     } finally {
       final rdsLength = _rb.rIndex - fmiEnd;
       final rdsBytes = _rb.asBytes(0, rdsLength);
-      print('$rdsBytes');
+      log.debug('$rdsBytes');
       dsBytes = new RDSBytes(rdsBytes, fmiEnd);
-      print('$dsBytes');
+      log.debug('$dsBytes');
       rds.dsBytes = dsBytes;
     }
 

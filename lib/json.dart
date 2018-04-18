@@ -9,6 +9,7 @@
 export 'package:convert/src/json/reader/fast_reader.dart';
 export 'package:convert/src/json/reader/fast_reader_utils.dart';
 export 'package:convert/src/json/reader/json_reader.dart';
+export 'package:convert/src/json/reader/json_reader_base.dart';
 
 export 'package:convert/src/json/writer/fast_writer.dart';
 export 'package:convert/src/json/writer/json_writer.dart';

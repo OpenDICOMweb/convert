@@ -11,20 +11,21 @@ export 'package:convert/src/binary/base/reader/subreader.dart';
 export 'package:convert/src/binary/base/writer/subwriter.dart';
 export 'package:convert/src/binary/base/writer/writer.dart';
 
-export 'package:convert/src/binary/byte/reader/byte_subreader.dart';
 export 'package:convert/src/binary/byte/reader/byte_reader.dart';
 export 'package:convert/src/binary/byte/reader/byte_reader_mixin.dart';
+export 'package:convert/src/binary/byte/reader/byte_subreader.dart';
+export 'package:convert/src/binary/byte/writer/byte_subwriter.dart';
 export 'package:convert/src/binary/byte/writer/byte_writer.dart';
-export 'package:convert/src/binary/byte/byte_read_utils.dart';
+export 'package:convert/src/binary/byte/reader/byte_read_utils.dart';
 
-export 'package:convert/src/binary/compare_bytes.dart';
-export 'package:convert/src/binary/convert_dataset.dart';
 export 'package:convert/src/binary/compare_bytes.dart';
 export 'package:convert/src/binary/convert_dataset.dart';
 export 'package:convert/src/binary/convert_to_tag_dataset.dart';
 
 export 'package:convert/src/binary/tag/reader/tag_reader.dart';
 export 'package:convert/src/binary/tag/reader/tag_reader_mixin.dart';
+export 'package:convert/src/binary/tag/reader/tag_subreader.dart';
+export 'package:convert/src/binary/tag/writer/tag_subwriter.dart';
 export 'package:convert/src/binary/tag/writer/tag_writer.dart';
 
 export 'package:convert/src/decoding_parameters.dart';
