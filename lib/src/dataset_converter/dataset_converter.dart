@@ -18,6 +18,7 @@ import 'package:convert/src/dataset_converter/dataset_by_group.dart';
 //typedef Item _ItemMaker(Dataset parent, SQ sq);
 
 abstract class Converter {
+  // **** Interface
   RootDataset get sRds;
 
   RootDataset get tRds;
@@ -43,71 +44,105 @@ abstract class Converter {
   SQ makeSequence(Dataset parent, Tag tag, int nItems, [int vfLengthField]);
 
   Dataset makeItem(Dataset parent, SQtag sq);
+  // End of Interface
 
-  RootDataset convert() {
+  RootDataset convert(RootDataset sRootDS, RootDataset tRootDS) {
     _index = 0;
-    currentTDS = tRds;
-    _convertFmi(sRds);
-    log.debug(tRds.fmi);
-    convertDataset(sRds);
-    log.debug('< @$_index  $tRds', -1);
-    return tRds;
+    currentTDS = tRootDS;
+    _convertFmi(sRootDS, tRootDS);
+    log.debug(tRootDS.fmi);
+    convertRootDataset(sRootDS, tRootDS);
+    log.debug('< @$_index  $tRootDS', -1);
+    return tRootDS;
   }
 
   // Does not handle SQ or Private
-  void _convertFmi(RootDataset sRds) {
+  void _convertFmi(RootDataset sRds, RootDataset tRds) {
     for (var e in sRds.fmi.elements) {
       final vrIndex = (doConvertUN) ? e.tag.vrIndex : e.vrIndex;
       tRds.fmi.add(fromElement(e, vrIndex));
     }
   }
 
-  void convertDataset(Dataset ds) => ds.elements.forEach(convertElement);
+  void convertRootDataset(RootDataset sRootDS, RootDataset tRootDS) =>
+      convertDataset(sRootDS, tRootDS);
 
-  void convertElement(Element e) {
-    _index++;
-    log.debug('> @$_index convert: $e', 1);
-    if (e is SQ) {
-      convertSequence(e);
+  Element convertElement(Element eSource) {
+    log.debug('> @$_index convert: $eSource', 1);
+    Element eTarget;
+    if (eSource is SQ) {
+      eTarget = convertSequence(eSource);
     } else {
-      final vrIndex = (doConvertUN) ? e.tag.vrIndex : e.vrIndex;
-      final eNew = fromElement(e, vrIndex);
-      log.debug('| @$_index eNew: $eNew');
-      currentTDS.add(eNew);
-      if (eNew.tag.isPrivate) pRds.add(eNew);
+      eTarget = convertSimpleElement(eSource);
     }
-    log.debug('< @$_index convert: $e', -1);
+    _index++;
+    log.debug('< @$_index convert: $eSource', -1);
+    return eTarget;
   }
 
-  void convertSQPrivate(Element e) {
-    pRds.add(e);
-    convertElement(e);
+  Element convertSimpleElement(Element e) {
+    var vrIndex = e.vrIndex;
+    final tagVRIndex = e.tag.vrIndex;
+    // Handle UN Elements specially
+    if (e.vrIndex == kUNIndex && doConvertUN) {
+      vrIndex = (tagVRIndex > kVRNormalIndexMax)
+                ? convertSpecialVR(e)
+                : tagVRIndex;
+    } else if (vrIndex != tagVRIndex) {
+       invalidElementError(e);
+    }
+    final eNew = fromElement(e, vrIndex);
+    log.debug('| @$_index eNew: $eNew');
+    currentTDS.add(eNew);
+    if (eNew.tag.isPrivate) pRds.add(eNew);
+    return eNew;
   }
 
-  void convertSequence(SQ sSQ) {
+  // Note: if vr is a special then other Elements from
+  // the source Dataset must be examined to determine the
+  // correct VR for these VRs.
+  int convertSpecialVR(Element e) {
+    if (e.code == kPixelData) {
+
+    }
+    // Fix: temp
+    return kUNIndex;
+  }
+
+  SQ convertSequence(SQ sSQ) {
     final tSQ =
         makeSequence(currentTDS, sSQ.tag, sSQ.items.length, sSQ.vfLengthField);
-    currentTDS.add(fromElement(tSQ, sSQ.vrIndex));
+    // currentTDS.add(tSQ);
     // pRds.push(tSQ);
     convertItems(sSQ, tSQ);
     // pRds.pop(tSQ);
+    return tSQ;
   }
 
   void convertItems(SQ sSQ, SQ tSQ) {
     final sParentDS = currentSDS;
     final tParentDS = currentTDS;
 
-    for (var sItem in sSQ.items) {
-      log.debug('> @$_index $sItem', 1);
-      currentSDS = sItem;
+    for (var i = 0; i < sSQ.items.length; i++) {
+      currentSDS = sSQ.items[i];
+      log.debug('> @$_index $currentSDS[$i]', 1);
       currentTDS = makeItem(tParentDS, tSQ);
-      convertDataset(sItem);
-      log.debug('< @$_index $sItem', -1);
+      convertDataset(currentSDS, currentTDS);
+      tSQ.items[i] = currentTDS;
+      log.debug('< @$_index $currentSDS[$i]', -1);
     }
     currentSDS = sParentDS;
     currentTDS = tParentDS;
     if (tSQ.tag.isPrivate) pRds.add(tSQ);
-    currentTDS.add(fromElement(tSQ, sSQ.vrIndex));
+    currentTDS.add(tSQ);
+  }
+
+  void convertDataset(Dataset sds, Dataset tds) {
+    currentSDS = sds;
+    currentTDS = tds;
+    for (var e in sds.elements) {
+      tds.add(convertElement(e));
+    }
   }
 }
 

@@ -54,9 +54,9 @@ class DatasetConverterByGroup {
     tIndex += rTds.fmi.length;
   }
 
-  void findInRootDataset() => findInDataset(0);
+  void findInRootDataset() => findInDataset(0, null);
 
-  void findInDataset(int dsNumber) {
+  void findInDataset(int dsNumber, Dataset sqParent) {
     GroupBase currentGroup;
     PrivateSubgroup currentSubgroup;
     var currentGNumber = 0;
@@ -74,8 +74,8 @@ class DatasetConverterByGroup {
         if (currentGNumber > 0) log.up;
         currentGNumber = gNumber;
         currentGroup = (gNumber.isEven)
-            ? new PublicGroup(gNumber)
-            : new PrivateGroup(gNumber);
+            ? new PublicGroup(e, sqParent)
+            : new PrivateGroup(e);
 
         if (currentTds is DatasetByGroup ) {
           currentTds.addGroup(currentGroup);
@@ -95,19 +95,11 @@ class DatasetConverterByGroup {
         if (tag.elt < 10) {
           currentSGNumber == 0;
           log.debug1('00 $e');
-          if (tag is GroupLengthPrivateTag) {
-            final tag = new GroupLengthPrivateTag(e.code, e.vrIndex);
-            currentGroup.gLength = new GLtag(tag, e.values);
-          } else {
-            final tag = new IllegalPrivateTag(e.code, e.vrIndex);
-            currentGroup.illegal
-                .add(TagElement.makeFromTag(tag, e.values, e.vfLengthField));
-          }
         } else if (tag is PCTag) {
           final sgNumber = tag.sgNumber;
           log.debug1('${hex8(sgNumber)} $e');
           if (currentSGNumber == 0) currentSGNumber = sgNumber;
-          final sg = new PrivateSubgroup(currentGroup, sgNumber, e);
+          final sg = new PrivateSubgroup(currentGroup, sgNumber);
           currentSubgroup = sg;
           currentGroup.subgroups[sgNumber] = sg;
         } else if (tag is PDTag) {
@@ -121,14 +113,14 @@ class DatasetConverterByGroup {
             if (sg == null) {
               log.warn('Subgroup $sg with no creator');
               final creator = PCevr.makeEmptyPrivateCreator(e.code, e.vrIndex);
-              sg = new PrivateSubgroup(currentGroup, sgNumber, creator);
+              sg = new PrivateSubgroup(currentGroup, sgNumber);
               currentGroup.subgroups[sgNumber] = sg;
             }
             currentSubgroup = sg;
             currentSGNumber = sgNumber;
 
           } else {
-            currentSubgroup.addPD(e);
+            currentSubgroup.addData(e, sqParent);
           }
           log.debug1(e);
 
@@ -136,7 +128,7 @@ class DatasetConverterByGroup {
             assert(
                 currentGroup is PrivateGroup && e.isPrivate && tag.isPrivate);
             final thisGNumber = currentGNumber;
-            final privateSQ = findGroupsInSequence(e);
+            final privateSQ = findGroupsInSequence(e, sqParent);
             currentGNumber = thisGNumber;
             currentSubgroup.members[sgNumber] = privateSQ;
           }
@@ -149,9 +141,9 @@ class DatasetConverterByGroup {
           tIndex++;
           assert(currentGroup is PublicGroup && e.isPublic && tag.isPublic);
           final thisGNumber = currentGNumber;
-          final publicSQ = findGroupsInSequence(e);
+          final publicSQ = findGroupsInSequence(e, sqParent);
           currentGNumber = thisGNumber;
-          currentGroup.add(publicSQ);
+          currentGroup.add(publicSQ, sqParent);
         }
       } else {
         throw 'Not Public or Private: $e';
@@ -160,7 +152,7 @@ class DatasetConverterByGroup {
     log.up;
   }
 
-  SQ findGroupsInSequence(SQ sq) {
+  SQ findGroupsInSequence(SQ sq, Dataset sqParent) {
     log.down;
     final psq = SQtag.from(sq);
     final parentSds = currentSds;
@@ -175,7 +167,7 @@ class DatasetConverterByGroup {
       log
         ..debug1('DS: $i')
         ..down;
-      findInDataset(i);
+      findInDataset(i, sqParent);
       log
         ..debug3('$currentTds')
         ..up;

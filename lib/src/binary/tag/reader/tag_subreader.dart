@@ -1,4 +1,4 @@
-//  Copyright (c) 2016, 2017, 2018, 
+//  Copyright (c) 2016, 2017, 2018,
 //  Poplar Hill Informatics and the American College of Radiology
 //  All rights reserved.
 //  Use of this source code is governed by the open source license
@@ -23,17 +23,6 @@ class TagEvrSubReader extends EvrSubReader with TagReaderMixin {
   TagEvrSubReader(Bytes eBytes, DecodingParameters dParams, this.rds,
       {this.doLogging = false, this.doLookupVRIndex = true})
       : super(eBytes, dParams, rds);
-
-  @override
-  Element makePixelData(int code, Bytes vfBytes, int vrIndex,
-          [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
-      TagElement.makePixelData(
-          code, vfBytes, vrIndex, vfLengthField, ts, fragments);
-
-  Element makePixelDataFromBytes(int code, Bytes vfBytes, int vrIndex,
-          [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
-      TagElement.makePixelDataFromBytes(
-          code, vfBytes, vrIndex, vfLengthField, ts, fragments);
 }
 
 class TagIvrSubReader extends IvrSubReader with TagReaderMixin {
@@ -49,15 +38,4 @@ class TagIvrSubReader extends IvrSubReader with TagReaderMixin {
         doLogging = subReader.doLogging,
         doLookupVRIndex = subReader.doLookupVRIndex,
         super(subReader.rb, subReader.dParams, subReader.rds);
-
-  @override
-  Element makePixelData(int code, Bytes vfBytes, int vrIndex,
-          [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
-      TagElement.makePixelData(
-          code, bytes, vrIndex, vfLengthField, ts, fragments);
-
-  Element makePixelDataFromBytes(int code, Bytes vfBytes, int vrIndex,
-          [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
-      TagElement.makePixelDataFromBytes(
-          code, bytes, vrIndex, vfLengthField, ts, fragments);
 }

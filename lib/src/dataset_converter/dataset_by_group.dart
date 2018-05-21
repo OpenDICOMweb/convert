@@ -30,7 +30,7 @@ abstract class DatasetByGroup {
   void add(Element e) {
     final gNumber = e.group;
     if (gNumber.isOdd) hasPrivate = true;
-    groups[e.group].add(e);
+    groups.putIfAbsent(gNumber, () => new PrivateGroup(e));
   }
 
   void addGroup(GroupBase group) => groups[group.gNumber] = group;

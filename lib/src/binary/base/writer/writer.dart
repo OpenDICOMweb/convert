@@ -41,7 +41,7 @@ abstract class Writer {
         overwrite: overwrite,
         minLength: minLength,
         inputOffsets: inputOffsets,
-        reUseBD: reUseBD,
+        reUseByte: reUseByte,
         doLogging: doLogging,
         showStats: showStats);
   }
@@ -55,7 +55,7 @@ abstract class Writer {
       bool overwrite = false,
       int minLength,
       ElementOffsets inputOffsets,
-      bool reUseBD = false,
+      bool reUseByte = false,
       bool doLogging = false,
       bool showStats = false}) {
     checkPath(path);
@@ -66,7 +66,7 @@ abstract class Writer {
         overwrite: overwrite,
         minLength: minLength,
         inputOffsets: inputOffsets,
-        reUseBD: reUseBD,
+        reUseByte: reUseByte,
         doLogging: doLogging,
         showStats: showStats);
   }
@@ -118,7 +118,7 @@ abstract class Writer {
       bool overwrite = false,
       int minLength,
       ElementOffsets inputOffsets,
-      bool reUseBD = false,
+      bool reUseByte = false,
       bool doLogging = true,
       bool showStats = false}) {
     checkFile(file, overwrite: overwrite);
@@ -129,7 +129,7 @@ abstract class Writer {
         overwrite: overwrite,
         minLength: minLength,
         inputOffsets: inputOffsets,
-        reUseBD: reUseBD,
+        reUseByte: reUseByte,
         doLogging: doLogging,
         showStats: showStats);
     file.writeAsBytesSync(bytes.asUint8List());
@@ -145,7 +145,7 @@ abstract class Writer {
       bool overwrite = false,
       int minLength,
       ElementOffsets inputOffsets,
-      bool reUseBD = false,
+      bool reUseByte = false,
       bool doLogging = true,
       bool showStats = false}) {
     checkPath(path);
@@ -155,7 +155,7 @@ abstract class Writer {
         overwrite: overwrite,
         minLength: minLength,
         inputOffsets: inputOffsets,
-        reUseBD: reUseBD,
+        reUseByte: reUseByte,
         doLogging: doLogging,
         showStats: showStats);
   }

@@ -14,4 +14,5 @@ export 'package:convert/src/json/reader/json_reader_base.dart';
 export 'package:convert/src/json/writer/fast_writer.dart';
 export 'package:convert/src/json/writer/json_writer.dart';
 export 'package:convert/src/json/writer/json_writer_base.dart';
+export 'package:convert/src/json/writer/write_readable.dart';
 

@@ -12,6 +12,7 @@ import 'package:core/core.dart';
 
 import 'package:convert/src/json/writer/json_writer_base.dart';
 
+/// Writes a JSON file that is readable
 class FastJsonWriter extends JsonWriterBase {
   FastJsonWriter(RootDataset rds, String path,
       {int bulkdataThreshold = 1024,

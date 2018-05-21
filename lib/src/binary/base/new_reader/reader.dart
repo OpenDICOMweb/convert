@@ -33,7 +33,7 @@ abstract class Reader {
 
   Reader.fromUint8List(Uint8List list, Endian endian)
       : file = null,
-        _bytes = new Bytes.fromTypedData(list, endian);
+        _bytes = new Bytes.typedDataView(list, endian);
 
   Reader.fromFile(this.file,
       {Endian endian = Endian.little, bool doAsync = false})

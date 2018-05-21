@@ -172,21 +172,21 @@ ATtag _readAT(Tag tag, int vrIndex, Iterable vf) {
 
 UStag _readUS(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kUSIndex);
-  if (vf is List<int>) return UStag.make(tag, vf);
+  if (vf is List<int>) return UStag.make(tag, vf, null);
 
   final bulkdata = _getIntBulkdata(tag, vf);
   return (bulkdata != null)
-      ? UStag.make(tag, bulkdata)
+      ? UStag.make(tag, bulkdata, null)
       : invalidValueField('', vf);
 }
 
 ULtag _readUL(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kULIndex);
-  if (vf is List<int>) return ULtag.make(tag, vf);
+  if (vf is List<int>) return ULtag.make(tag, vf, null);
 
   final bulkdata = _getIntBulkdata(tag, vf);
   return (bulkdata != null)
-      ? ULtag.make(tag, bulkdata)
+      ? ULtag.make(tag, bulkdata, null)
       : invalidValueField('', vf);
 }
 
@@ -220,42 +220,43 @@ FDtag _readFD(Tag tag, int vrIndex, Iterable vf) {
 
 AEtag _readAE(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kAEIndex);
-  return (vf is List<String>) ? AEtag.make(tag, vf) : invalidValueField('', vf);
+  return (vf is List<String>) ? AEtag.make(tag, vf, null) : invalidValueField
+    ('', vf);
 }
 
 CStag _readCS(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kCSIndex && tag.vrIndex == kCSIndex);
-  if (vf is List<String>) return CStag.make(tag, vf);
+  if (vf is List<String>) return CStag.make(tag, vf, null);
   assert(vf is List<String>);
-  return CStag.make(tag, vf);
+  return CStag.make(tag, vf, null);
 }
 
 SHtag _readSH(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kSHIndex && tag.vrIndex == kSHIndex);
-  if (vf is List<String>) return SHtag.make(tag, vf);
+  if (vf is List<String>) return SHtag.make(tag, vf, null);
   assert(vf is List<String>);
-  return SHtag.make(tag, vf);
+  return SHtag.make(tag, vf, null);
 }
 
 LOtag _readLO(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kLOIndex && tag.vrIndex == kLOIndex);
-  if (vf is List<String>) return LOtag.make(tag, vf);
+  if (vf is List<String>) return LOtag.make(tag, vf, null);
   assert(vf is List<String>);
-  return LOtag.make(tag, vf);
+  return LOtag.make(tag, vf, null);
 }
 
 UCtag _readUC(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kUCIndex && tag.vrIndex == kUCIndex);
-  if (vf is List<String>) return UCtag.make(tag, vf);
+  if (vf is List<String>) return UCtag.make(tag, vf, null);
   assert(vf is List<String>);
-  return UCtag.make(tag, vf);
+  return UCtag.make(tag, vf, null);
 }
 
 STtag _readST(Tag tag, int vrIndex, Iterable vf) {
   if (vf is List<String>) {
     assert(vrIndex == kSTIndex && tag.vrIndex == kSTIndex);
     if (vf.length > 1) log.error('Invalid AS Value Field: $vf');
-    return STtag.make(tag, vf);
+    return STtag.make(tag, vf, null);
   }
   return invalidValuesError(vf);
 }
@@ -264,10 +265,10 @@ LTtag _readLT(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kLTIndex && tag.vrIndex == kLTIndex);
   if (vf is List<String>) {
     if (vf.length > 1) log.error('Invalid AS Value Field: $vf');
-    return LTtag.make(tag, vf);
+    return LTtag.make(tag, vf, null);
   }
   assert(vf is List<String>);
-  return LTtag.make(tag, vf);
+  return LTtag.make(tag, vf, null);
 }
 
 UTtag _readUT(Tag tag, int vrIndex, Iterable vf) {
@@ -277,16 +278,16 @@ UTtag _readUT(Tag tag, int vrIndex, Iterable vf) {
   } else {
     log.error('Invalid AS Value Field: $vf');
   }
-  return UTtag.make(tag, vf);
+  return UTtag.make(tag, vf, null);
 }
 
 URtag _readUR(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kURIndex && tag.vrIndex == kURIndex);
   if (vf is List<String>) {
     if (vf.length > 1) log.error('Invalid AS Value Field: $vf');
-    return URtag.make(tag, vf);
+    return URtag.make(tag, vf, null);
   }
-  return URtag.make(tag, vf);
+  return URtag.make(tag, vf, null);
 }
 
 AStag _readAS(Tag tag, int vrIndex, Iterable vf) {
@@ -294,56 +295,56 @@ AStag _readAS(Tag tag, int vrIndex, Iterable vf) {
   if (vf is List<String>) {
     if (vf.length > 1 || vf[0].length != 4)
       log.error('Invalid AS Value Field: $vf');
-    return AStag.make(tag, vf);
+    return AStag.make(tag, vf, null);
   }
-  return AStag.make(tag, vf);
+  return AStag.make(tag, vf, null);
 }
 
 DAtag _readDA(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kDAIndex && tag.vrIndex == kDAIndex);
-  if (vf is List<String>) return DAtag.make(tag, vf);
+  if (vf is List<String>) return DAtag.make(tag, vf, null);
   assert(vf is List<String>);
-  return DAtag.make(tag, vf);
+  return DAtag.make(tag, vf, null);
 }
 
 DTtag _readDT(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kDTIndex && tag.vrIndex == kDTIndex);
-  if (vf is List<String>) return DTtag.make(tag, vf);
+  if (vf is List<String>) return DTtag.make(tag, vf, null);
   assert(vf is List<String>);
-  return DTtag.make(tag, vf);
+  return DTtag.make(tag, vf, null);
 }
 
 TMtag _readTM(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kTMIndex && tag.vrIndex == kTMIndex);
-  if (vf is List<String>) return TMtag.make(tag, vf);
+  if (vf is List<String>) return TMtag.make(tag, vf, null);
   assert(vf is List<String>);
-  return TMtag.make(tag, vf);
+  return TMtag.make(tag, vf, null);
 }
 
 IStag _readIS(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kISIndex && tag.vrIndex == kISIndex);
-  if (vf is List<String>) return IStag.make(tag, vf);
+  if (vf is List<String>) return IStag.make(tag, vf, null);
   assert(vf is List<String>);
-  return IStag.make(tag, vf);
+  return IStag.make(tag, vf, null);
 }
 
 DStag _readDS(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kDSIndex && tag.vrIndex == kDSIndex);
-  if (vf is List<String>) return DStag.make(tag, vf);
+  if (vf is List<String>) return DStag.make(tag, vf, null);
   assert(vf is List<String>);
-  return DStag.make(tag, vf);
+  return DStag.make(tag, vf, null);
 }
 
 UItag _readUI(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kUIIndex && tag.vrIndex == kUIIndex);
-  if (vf is List<String>) return UItag.make(tag, vf);
+  if (vf is List<String>) return UItag.make(tag, vf, null);
   assert(vf is List<String>);
-  return UItag.make(tag, vf);
+  return UItag.make(tag, vf, null);
 }
 
 PNtag _readPN(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kPNIndex && tag.vrIndex == kPNIndex);
-  if (vf is List<String>) return PNtag.make(tag, vf);
+  if (vf is List<String>) return PNtag.make(tag, vf, null);
   assert(vf is List<String>);
-  return PNtag.make(tag, vf);
+  return PNtag.make(tag, vf, null);
 }
