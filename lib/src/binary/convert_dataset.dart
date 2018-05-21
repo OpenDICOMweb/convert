@@ -49,46 +49,46 @@ class DatasetConverter {
     return targetRDS;
   }
 
-  void _convertFmi(RootDataset sRDS, RootDataset tRDS) {
+  void _convertFmi(RootDataset sRds, RootDataset tRds) {
     log
       ..debug('  count: $nElements')
-      ..debug('  rootBDS FMI: ${sRDS.fmi.length}')
-      ..debug('  rootTDS FMI: ${tRDS.fmi.length}');
-    if (targetRDS.fmi.isNotEmpty) throw 'bad targetRDS: $tRDS';
-    for (var e in sRDS.fmi.elements) {
-      final te = convertElement(e);
-      tRDS.fmi[te.code] = te;
+      ..debug('  rootBDS FMI: ${sRds.fmi.length}')
+      ..debug('  rootTDS FMI: ${tRds.fmi.length}');
+    if (targetRDS.fmi.isNotEmpty) throw 'bad targetRDS: $tRds';
+    for (var e in sRds.fmi.elements) {
+      final te = convertElement(sRds, e);
+      tRds.fmi[te.code] = te;
       if (te == null) throw 'null TE';
     }
     log.debug('  count: $nElements');
   }
 
-  void _convertRootDataset(RootDataset sRds, RootDataset tRDS) {
+  void _convertRootDataset(RootDataset sRds, RootDataset tRds) {
     log.debug('  count: $nElements');
-    if (tRDS.isNotEmpty) throw 'bad rootTds: $tRDS';
+    if (tRds.isNotEmpty) throw 'bad rootTds: $tRds';
     for (var e in sRds.elements) {
-      final te = convertElement(e);
-      tRDS.add(te);
+      final te = convertElement(sRds, e);
+      tRds.add(te);
       if (te == null) throw 'null TE';
     }
   }
 
   Map<String, Element> pcElements = <String, Element>{};
 
-  Element convertElement(Element e) {
+  Element convertElement(Dataset ds, Element e) {
     _warnVRIndex(e);
-    final te = (e is SQ) ? convertSQ(e) : _convertSimpleElement(e);
+    final te = (e is SQ) ? convertSQ(e) : _convertSimpleElement(ds, e);
     if (e.code != te.code)
       _error(e.code, 'Elements codes not equal: ${e.code}, ${te.code}');
     nElements++;
     return te;
   }
 
-  Element _convertSimpleElement(Element e) {
+  Element _convertSimpleElement(Dataset ds, Element e) {
     if (e.vrIndex > 30) throw 'bad e.vr: ${e.vrIndex}';
     return (e.tag == PTag.kPixelData)
         ? TagElement.pixelDataFrom(e, sourceRDS.transferSyntax, e.vrIndex)
-        : TagElement.makeFromElement(e);
+        : TagElement.makeFromElement(ds, e);
   }
 
 /*
@@ -122,13 +122,13 @@ class DatasetConverter {
     final parentTDS = currentTDS;
     for (var i = 0; i < sq.items.length; i++) {
       currentSDS = sq.items.elementAt(i);
-      currentTDS = new TagItem.empty(parentTDS, sq, currentSDS.dsBytes.bytes);
+      currentTDS = new TagItem.empty(parentTDS, sq);
       convertItem(currentSDS, currentTDS);
       tItems[i] = currentTDS;
     }
     currentSDS = parentSDS;
     currentTDS = parentTDS;
-    final tagSQ = new SQtag(sq.tag, parentTDS, tItems, sq.length);
+    final tagSQ = new SQtag(parentTDS, sq.tag, tItems, sq.length);
 
     for (var item in tItems) item.sequence = tagSQ;
     return tagSQ;
@@ -164,7 +164,7 @@ class DatasetConverter {
   }
 */
 
-  void _warnVRIndex(Element e) {
+  void _warnVRIndex(Element e, [Issues issues, int targetVR]) {
     final vrIndex = e.vrIndex;
     final tag = e.tag;
     if (vrIndex == e.tag.vrIndex) return;
@@ -178,7 +178,7 @@ class DatasetConverter {
     if (isSpecialVRIndex(vrIndex)) _error(e.code, 'Non-Normal VR: $vrIndex');
 
     if (isSpecialVRIndex(tag.vrIndex)) {
-      if (!vrByIndex[tag.vrIndex].isValidIndex(vrIndex))
+      if (!vrByIndex[tag.vrIndex].isValidIndex(vrIndex, issues, targetVR))
         _warn(e.code, 'Invalid VR Index ($vrIndex) for $tag');
     }
   }
@@ -195,7 +195,7 @@ class DatasetConverter {
     log.error(s);
   }
 
-  static TagRootDataset fromBDRootDataset(BDRootDataset rds,
+  static TagRootDataset fromByteRootDataset(ByteRootDataset rds,
                                           {bool keepFmi = true}) =>
     new DatasetConverter(rds).convert(keepFmi: keepFmi);
 

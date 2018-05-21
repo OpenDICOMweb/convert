@@ -30,14 +30,14 @@ import 'package:convert/src/parse_info.dart';
 //    the Value Field Length (vfLength) of a non-Sequence Element.
 //    The read index rIndex is left at the end of the Element Delimiter.
 //
-// 3. [_finishReadElement] is only called from [readEvrElement] and
-//    [readIvrElement].
+// 3. [_finishReadElement] is only called from [readByteElement] and
+//    [readByteElement].
 
 typedef Element LongElementReader(int code, int eStart, int vrIndex, int vlf);
 
 abstract class EvrSubReader extends SubReader {
   EvrSubReader(Bytes bytes, DecodingParameters dParams, Dataset cds)
-      : super(new ReadBuffer(bytes), dParams, cds);
+      : super(new DicomReadBuffer(bytes), dParams, cds);
 
   /// Returns _true_ if reading an Explicit VR Little Endian file.
   @override
@@ -67,7 +67,7 @@ abstract class EvrSubReader extends SubReader {
   /// For EVR Datasets, all Elements are read by this method.
   @override
   Element _readElement() {
-    final eStart = _rb.rIndex;
+    final eStart = _rb.index;
     final code = _rb.readCode();
     final vrCode = _rb.readVRCode();
     final vrIndex = _lookupEvrVRIndex(code, eStart, vrCode);
@@ -109,10 +109,10 @@ abstract class EvrSubReader extends SubReader {
   /// if any [Fmi] [Element]s were present; otherwise, returns null.
   int readFmi() {
     if (doLogging) log.debug('>@R${_rb.index} Reading FMI:', 1);
-    if (_rb.rIndex != 0) throw new InvalidReadBufferIndex(_rb);
+    if (_rb.index != 0) return invalidReadBufferIndex(_rb, _rb.index);
 
     if (!_readPrefix()) {
-      _rb.rIndex_ = 0;
+      _rb.rIndex = 0;
       if (doLogging) log.up;
       return 0;
     }
@@ -128,13 +128,13 @@ abstract class EvrSubReader extends SubReader {
     if (!_rb.rHasRemaining(dParams.shortFileThreshold - _rb.index)) {
       if (doLogging) log.up;
       throw new EndOfDataError(
-          '_readFmi', 'index: ${_rb.index} bdLength: ${_rb.lengthInBytes}');
+          '_readFmi', 'index: ${_rb.index} bdLength: ${_rb.length}');
     }
 
     final ts = rds.transferSyntax;
     if (doLogging) log.debug('TS: $ts');
 
-    if (!system.isSupportedTransferSyntax(ts.asString)) {
+    if (!global.isSupportedTransferSyntax(ts.asString)) {
       log.up;
       return invalidTransferSyntax(ts);
     }
@@ -143,7 +143,10 @@ abstract class EvrSubReader extends SubReader {
       return invalidTransferSyntax(ts, dParams.targetTS);
     }
 
-    if (doLogging) log..up..debug('<R@${_rb.index} FinishedReading FMI:');
+    if (doLogging)
+      log
+        ..up
+        ..debug('<R@${_rb.index} FinishedReading FMI:');
     return _rb.index;
   }
 
@@ -153,7 +156,7 @@ abstract class EvrSubReader extends SubReader {
   bool _readPrefix() {
     _rb.buffer.endian = Endian.little;
     if (_rb.index != 0) return false;
-       _rb.rSkip(128);
+    _rb.rSkip(128);
     final prefix = _rb.readUint32();
     if (prefix == kDcmPrefix) return true;
     _rb.reset;
@@ -165,7 +168,7 @@ abstract class EvrSubReader extends SubReader {
 }
 
 abstract class IvrSubReader extends SubReader {
-  IvrSubReader(ReadBuffer rb, DecodingParameters dParams, Dataset cds)
+  IvrSubReader(DicomReadBuffer rb, DecodingParameters dParams, Dataset cds)
       : super(rb, dParams, cds);
 
   @override
@@ -200,7 +203,7 @@ abstract class IvrSubReader extends SubReader {
     if (doLookupVRIndex) {
       var token = '';
       if (Tag.isPCCode(code)) {
-        token = _rb.buffer.getUtf8(_rb.index, vlf);
+        token = _rb.readUtf8(vlf);
         tag = Tag.lookupByCode(code, vrIndex, token);
       } else {
         tag = Tag.lookupByCode(code, vrIndex);
@@ -225,8 +228,8 @@ abstract class IvrSubReader extends SubReader {
 /// 3. All VFReaders allow the Value Field to be empty.  In which case they
 ///   return the empty [List] [].
 abstract class SubReader {
-  /// The [ReadBuffer] being read.
-  ReadBuffer _rb;
+  /// The [DicomReadBuffer] being read.
+  DicomReadBuffer _rb;
 
   /// Decoding parameters
   final DecodingParameters dParams;
@@ -236,7 +239,7 @@ abstract class SubReader {
 
   SubReader(this._rb, this.dParams, this.cds);
 
-  ReadBuffer get rb => _rb;
+  DicomReadBuffer get rb => _rb;
   Endian get endian => _rb.buffer.endian;
 
   // **** Interface for Evr and Ivr ****
@@ -247,7 +250,7 @@ abstract class SubReader {
 
   Bytes get bytes => _rb.buffer;
 
-  /// Reads and returns the next [Element] in the [ReadBuffer].
+  /// Reads and returns the next [Element] in the [DicomReadBuffer].
   Element _readElement();
 
   /// Creates an RootDataset.
@@ -265,11 +268,11 @@ abstract class SubReader {
 //  Element makeFromIndex(int code, int eStart, int eEnd, int vfl, int vrIndex);
 
   /// Creates an Element from [Bytes].
-  Element makeFromBytes(int code, Bytes bytes, int vrIndex, int vfOffset);
+  ByteElement makeFromBytes(int code, Bytes bytes, int vrIndex, int vfOffset);
 
   /// Returns a new [Element].
   // Note: Typically this may or may not be implemented.
-  Element makeFromValues(int code, Iterable values, int vrIndex,
+  ByteElement makeFromValues(int code, Iterable values, int vrIndex,
           [Bytes bytes]) =>
       unsupportedError();
 
@@ -319,8 +322,7 @@ abstract class SubReader {
 
   bool get isReadable => _rb.isReadable;
 
-  Uint8List get rootBytes =>
-      _rb.asUint8List(_rb.offsetInBytes, _rb.lengthInBytes);
+  Uint8List get rootBytes => _rb.asUint8List(_rb.offset, _rb.length);
 
   String get info => '$runtimeType: rds: ${rds.info}, cds: ${cds.info}';
 
@@ -353,8 +355,8 @@ abstract class SubReader {
       log.error(e);
       if (throwOnError) rethrow;
     } finally {
-      final rdsLength = _rb.rIndex - fmiEnd;
-      final rdsBytes = _rb.asBytes(0, rdsLength);
+      final rdsLength = _rb.index - fmiEnd;
+      final rdsBytes = _rb.view(0, rdsLength);
       log.debug('$rdsBytes');
       dsBytes = new RDSBytes(rdsBytes, fmiEnd);
       log.debug('$dsBytes');
@@ -368,7 +370,7 @@ abstract class SubReader {
   /// Reads and returns an [Item].
   Item _readItem([SQ sq]) {
     assert(_rb.rHasRemaining(8));
-    final iStart = _rb.rIndex;
+    final iStart = _rb.index;
 
     // read 32-bit kItem code and Item length field
     final delimiter = _rb.readCode();
@@ -386,7 +388,7 @@ abstract class SubReader {
       _readDatasetDefinedLength(item, _rb.index, vlf);
     }
 
-    final bd = _rb.subbytes(iStart, _rb.rIndex);
+    final bd = _rb.sublist(iStart, _rb.index);
     final dsBytes = new IDSBytes(bd);
     item.dsBytes = dsBytes;
     cds = parentDS;
@@ -400,9 +402,9 @@ abstract class SubReader {
 
   // **** This is one of the only two places Elements are added to the dataset.
   void _readDatasetDefinedLength(Dataset ds, int dsStart, int vfl) {
-    assert(vfl != kUndefinedLength && dsStart == _rb.rIndex);
+    assert(vfl != kUndefinedLength && dsStart == _rb.index);
     final dsEnd = dsStart + vfl;
-    while (_rb.rIndex < dsEnd) {
+    while (_rb.index < dsEnd) {
       final e = _readElement();
       final ok = ds.tryAdd(e);
       if (!ok) log.warn('*** duplicate: $e');
@@ -498,7 +500,7 @@ abstract class SubReader {
       int code, int eStart, int vrIndex, int vfOffset, int vlf) {
     if (doLogging) _startElementMsg(code, eStart, vrIndex, vlf);
     _rb.rSkip(vlf);
-    final eBytes = _rb.subbytes(eStart, _rb.index);
+    final eBytes = _rb.sublist(eStart, _rb.index);
     final e = (code == kPixelData)
         ? _makePixelData(code, eBytes, vrIndex, vfOffset)
         : makeFromBytes(code, eBytes, vrIndex, vfOffset);
@@ -542,7 +544,7 @@ abstract class SubReader {
       final item = _readItem();
       items.add(item);
     }
-    final bytes = _rb.subbytes(eStart, _rb.index);
+    final bytes = _rb.sublist(eStart, _rb.index);
     return makeSequenceFromCode(code, cds, items, vfOffset, vfl, bytes);
   }
 
@@ -560,7 +562,7 @@ abstract class SubReader {
       items.add(item);
     }
     if (sqEnd != _rb.index) log.warn('sqEnd($sqEnd) != rb.index(${_rb.index})');
-    final bytes = _rb.subbytes(eStart, sqEnd);
+    final bytes = _rb.sublist(eStart, sqEnd);
     return makeSequenceFromCode(code, cds, items, vfOffset, vfl, bytes);
   }
 
@@ -585,7 +587,7 @@ abstract class SubReader {
     } else {
       _findEndOfULengthVF();
     }
-    final eBytes = _rb.subbytes(eStart, _rb.index);
+    final eBytes = _rb.sublist(eStart, _rb.index);
     final e = (code == kPixelData)
         ? _makePixelData(code, eBytes, vrIndex, vlf, defaultTS, fragments)
         : makeFromBytes(code, eBytes, vrIndex, vfOffset);
@@ -630,7 +632,7 @@ abstract class SubReader {
       final vlf = _rb.readUint32();
       assert(vlf != kUndefinedLength, 'Invalid length: ${dcm(vlf)}');
 
-      final startOfVF = _rb.rIndex;
+      final startOfVF = _rb.index;
       final endOfVF = _rb.rSkip(vlf);
       fragments.add(_rb.asUint8List(startOfVF, endOfVF - startOfVF));
       delimiter = _rb.readCode();
@@ -663,7 +665,7 @@ abstract class SubReader {
 
   void _vlfError(int vlf) {
     log.error('Value Field Length($vlf) is longer than'
-        ' ReadBuffer remaining(${_rb.remaining})');
+        ' DicomReadBuffer remaining(${_rb.remaining})');
     if (throwOnError) throw new ShortFileError();
   }
 
@@ -842,8 +844,8 @@ abstract class SubReader {
     } else if (bitsAllocated == 16) {
       vrIndex = kOWIndex;
     } else {
-      invalidElementError(
-          e, 'Invalided Pixel Data $e\n  bitAllocated = $bitsAllocated');
+      invalidElement(
+          'Invalided Pixel Data $e\n  bitAllocated = $bitsAllocated', e);
     }
     if (e.vrIndex == vrIndex) return;
 
@@ -864,12 +866,16 @@ abstract class SubReader {
   String toString() => '$runtimeType: rds: $rds, cds: $cds';
 }
 
-class InvalidReadBufferIndex extends Error {
+class InvalidDicomReadBufferIndex extends Error {
   final ReadBuffer _rb;
   final int index;
 
-  InvalidReadBufferIndex(this._rb, [int index]) : index = index ?? _rb.index;
+  InvalidDicomReadBufferIndex(this._rb, [int index])
+      : index = index ?? _rb.index;
 
   @override
   String toString() => 'InvalidReadBufferIndex($index): $_rb';
 }
+
+Null invalidReadBufferIndex(DicomReadBuffer rb, int index) =>
+    throw new InvalidDicomReadBufferIndex(rb, index);

@@ -67,7 +67,7 @@ abstract class EvrSubWriter extends SubWriter {
   void _writeShortHeader(Element e, int vrIndex, int vfLength) {
     assert(_isEvrShortVR(vrIndex));
     _wb
-      ..writeCode(e.code)
+      ..writeCode(e.code, 8 + vfLength)
       ..writeUint16(e.vrCode)
       ..writeUint16(vfLength);
   }
@@ -90,7 +90,7 @@ abstract class EvrSubWriter extends SubWriter {
   void __writeLongHeader(Element e, int vrIndex, int vfLengthField) {
     assert(_isNotShortVR(vrIndex), 'vrIndex: $vrIndex');
     _wb
-      ..writeCode(e.code)
+      ..writeCode(e.code, 12 + e.vfLength)
       ..writeUint16(e.vrCode)
       ..writeUint16(0)
       ..writeUint32(vfLengthField);
@@ -117,8 +117,7 @@ abstract class EvrSubWriter extends SubWriter {
     } else {
       if (eParams.doAddMissingFMI) {
         _writeOdwFmi();
-      } else
-      if (!eParams.allowMissingFMI) {
+      } else if (!eParams.allowMissingFMI) {
         log.warn('Dataset $rds is missing FMI elements');
         return 0;
       }
@@ -148,7 +147,7 @@ abstract class EvrSubWriter extends SubWriter {
   /// beginning of the encoding.
   bool _writePreambleAndPrefix(RootDataset rds, {bool cleanPreamble = true}) {
     if (rds is! RootDataset) log.error('Not rds');
-    final v =  (rds.prefix == kEmptyBytes || eParams.doCleanPreamble)
+    final v = (rds.prefix == kEmptyBytes || eParams.doCleanPreamble)
         ? _writeEmptyPreambleAndPrefix()
         : _writeExistingPreambleAndPrefix();
     if (doLogging) log.info('|@W${_wb.index} Preamble and Prefix written');
@@ -174,14 +173,13 @@ abstract class EvrSubWriter extends SubWriter {
   }
 }
 
-
 /// A class that writes IVR Elements.
 abstract class IvrSubWriter extends SubWriter {
   @override
   final bool isEvr = false;
 
 /*
-  IvrSubWriter(Dataset cds, EncodingParameters eParams, WriteBuffer wb)
+  IvrSubWriter(Dataset cds, EncodingParameters eParams, DicomWriteBuffer wb)
       : super(cds, eParams, wb);
 */
 
@@ -220,16 +218,16 @@ abstract class IvrSubWriter extends SubWriter {
     assert(vfLength >= 0 && vfLength <= kMaxLongVF);
     final vlf = (vfLength.isOdd) ? vfLength + 1 : vfLength;
     _wb
-      ..writeCode(e.code)
+      ..writeCode(e.code, 12 + vlf)
       ..writeUint32(vlf);
   }
 
   @override
   void __writeLongUndefinedLengthHeader(Element e, int vrIndex) {
     assert(e.vfLengthField == kUndefinedLength, '${e.vfLengthField}');
-     assert(_isMaybeUndefinedLengthVR(vrIndex), 'vrIndex: $vrIndex');
+    assert(_isMaybeUndefinedLengthVR(vrIndex), 'vrIndex: $vrIndex');
     _wb
-      ..writeCode(e.code)
+      ..writeCode(e.code, 12 + e.vfLength)
       ..writeUint32(kUndefinedLength);
   }
 }
@@ -244,8 +242,8 @@ abstract class SubWriter {
   /// The [TransferSyntax] to be written.
   final TransferSyntax outputTS;
 
-  /// The [WriteBuffer] currently being written.
-  WriteBuffer _wb;
+  /// The [DicomWriteBuffer] currently being written.
+  DicomWriteBuffer _wb;
 
   /// Creates a new binary [SubWriter]
   SubWriter(this.cds, this.eParams, this.outputTS, int length)
@@ -258,12 +256,12 @@ abstract class SubWriter {
         cds = subWriter.cds,
         outputTS = subWriter.outputTS;
 
-  WriteBuffer get wb => _wb;
+  DicomWriteBuffer get wb => _wb;
 
   bool get doLogging;
 
-  /// Returns a [Bytes] view of the current [WriteBuffer].
-  Bytes get output => _wb.asBytes();
+  /// Returns a [Bytes] view of the current [DicomWriteBuffer].
+  Bytes get output => _wb.view();
 
   /// The number of [Element]s written so far.
   int get count => _count;
@@ -286,7 +284,7 @@ abstract class SubWriter {
 
   // **** End of Interface
 
-  /// Return's the current position in the [WriteBuffer].
+  /// Return's the current position in the [DicomWriteBuffer].
   int get wIndex => _wb.wIndex;
 
   /// The [TransferSyntax] of output.
@@ -321,7 +319,7 @@ abstract class SubWriter {
     if (doLogging) _startRootDatasetMsg(dsStart, rds, ts);
     _wb.buffer.endian = (ts.isBigEndian) ? Endian.big : Endian.little;
     _writeDataset(rds);
-    final bytes = _wb.subbytes(0, _wb.wIndex);
+    final bytes = _wb.sublist(0, _wb.wIndex);
     final dsBytes = new RDSBytes(bytes, fmiEnd);
     rds.dsBytes = dsBytes;
     if (doLogging) _endRootDatasetMsg(dsStart, dsBytes);
@@ -357,7 +355,7 @@ abstract class SubWriter {
   /// Writes a [Dataset] to the buffer.
   void _writeDefinedLengthItem(Item item) {
     _wb
-      ..writeCode(kItem)
+      ..writeCode(kItem, item.length)
       ..writeUint32(item.vfLength);
     _writeDataset(item);
   }
@@ -368,7 +366,7 @@ abstract class SubWriter {
       ..writeUint32(kUndefinedLength);
     _writeDataset(item);
     _wb
-      ..writeCode(kItemDelimitationItem)
+      ..writeCode(kItemDelimitationItem32BitLE)
       ..writeUint32(0);
   }
 
@@ -376,7 +374,7 @@ abstract class SubWriter {
     assert(e.vfLengthField == kUndefinedLength);
     for (final fragment in e.fragments.fragments) {
       _wb
-        ..writeCode(kItem)
+        ..writeCode(kItem, 12 + e.vfLength)
         ..writeUint32(fragment.lengthInBytes)
         ..writeUint8List(fragment);
 
@@ -508,7 +506,7 @@ abstract class SubWriter {
     final padChar = paddingChar(vrIndex);
     if (padChar.isNegative) {
       log.error('Padding a non-padded Element: $e');
-      return invalidVFLength(e.vfBytes.length, -1);
+      invalidValueField('vfLength(${e.vfLength}) is odd integer', e.vfBytes);
     }
     if (doLogging) log.debug2('** writing pad char: $padChar');
     _wb.writeUint8(padChar);
@@ -655,7 +653,7 @@ abstract class SubWriter {
   static TransferSyntax getOutputTS(RootDataset rds, TransferSyntax outputTS) {
     if (outputTS == null) {
       return (rds.transferSyntax == null)
-          ? system.defaultTransferSyntax
+          ? global.defaultTransferSyntax
           : rds.transferSyntax;
     } else {
       return outputTS;
@@ -673,19 +671,19 @@ const int kDefaultWriteBufferLength = k1MB; //200 * k1MB;
 
 bool reUseWriteBuffer = true;
 
-/// A reusable  [WriteBuffer] is stored here.
-WriteBuffer _reUseBuffer;
+/// A reusable  [DicomWriteBuffer] is stored here.
+DicomWriteBuffer _reUseBuffer;
 
-WriteBuffer getWriteBuffer([int length]) {
+DicomWriteBuffer getWriteBuffer([int length]) {
   length ??= kDefaultWriteBufferLength;
   if (!reUseWriteBuffer || _reUseBuffer == null)
     return _reUseBuffer = new WriteBuffer(length);
 
-  if (length > _reUseBuffer.lengthInBytes) {
+  if (length > _reUseBuffer.length) {
     _reUseBuffer = new WriteBuffer(length + 1024);
     log.warn('**** DcmSubWriterBase creating new Reuse BD of Size: '
-        '${_reUseBuffer.lengthInBytes}');
+        '${_reUseBuffer.length}');
   }
-  _reUseBuffer.reset;
+  _reUseBuffer.reset();
   return _reUseBuffer;
 }

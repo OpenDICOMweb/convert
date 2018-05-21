@@ -28,9 +28,11 @@ abstract class Reader {
   /// Creates a new [Reader].
   Reader(this.bytes) : file = null;
 
-  Reader.fromUint8List(Uint8List list, Endian endian)
+  Reader.fromUint8List(Uint8List list, [int offset = 0, int length, Endian
+  endian])
       : file = null,
-        bytes = new Bytes.fromTypedData(list, endian);
+        bytes = new Bytes.typedDataView(list, offset,
+      length ?? list.length, endian ?? Endian.host);
 
   Reader.fromFile(this.file,
       {Endian endian = Endian.little, bool doAsync = false})
@@ -43,14 +45,14 @@ abstract class Reader {
 
   String get path => file.path;
   ReadBuffer get rb => evrSubReader.rb;
-  Bytes get input => rb.asBytes();
+  Bytes get input => rb.view();
 
   DecodingParameters get dParams => evrSubReader.dParams;
 
-  BDRootDataset get rds => _rds ??= evrSubReader.rds;
+  ByteRootDataset get rds => _rds ??= evrSubReader.rds;
   RootDataset _rds;
 
-  Bytes get bytesRead => rb.asBytes(0, rb.index);
+  Bytes get bytesRead => rb.view(0, rb.index);
   ElementOffsets get offsets => evrSubReader.offsets;
   ParseInfo get pInfo => evrSubReader.pInfo;
 

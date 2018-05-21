@@ -52,9 +52,9 @@ OBtag _readOB(Tag tag, int vrIndex, Object vf) {
   if (vf is List) {
     values = vf;
   } else {
-    return invalidValuesError(vf);
+    return badValues(vf);
   }
-  return OBtag.make(tag, values);
+  return OBtag.fromValues(tag, values);
 }
 
 OWtag _readOW(Tag tag, int vrIndex, Iterable vf) {
@@ -62,14 +62,14 @@ OWtag _readOW(Tag tag, int vrIndex, Iterable vf) {
   final String key = vf.elementAt(0);
   final String value = vf.elementAt(1);
   if (key == 'InlineBinary')
-    return OWtag.make(tag, base64.decode(value).buffer.asUint8List());
+    return OWtag.fromBytes(tag, Bytes.fromBase64(value));
 
   if (key == 'BulkDataURI') {
     final uri = new Uri.dataFromString(value);
-    return OWtag.make(tag, new IntBulkdataRef(tag.code, uri));
+    return new OWtag(tag, new IntBulkdataRef(tag.code, uri));
   }
 
-  return invalidValuesError(vf);
+  return badValues(vf);
 }
 
 UNtag _readUN(Tag tag, int vrIndex, Iterable vf) {
@@ -86,7 +86,7 @@ UNtag _readUN(Tag tag, int vrIndex, Iterable vf) {
       final uri = new Uri.dataFromString(value);
       values = new IntBulkdataRef(tag.code, uri);
     } else {
-      return invalidValuesError(vf);
+      return badValues(vf);
     }
   }
   return UNtag.make(tag, values);
@@ -100,7 +100,7 @@ OLtag _readOL(Tag tag, int vrIndex, Iterable vf) {
     return OLtag.fromUint8List(tag, base64.decode(value).buffer.asUint8List());
   if (key == 'BulkDataURI')
     return OLtag.make(tag, new FloatBulkdataRef(tag.code, Uri.parse(value)));
-  return invalidValuesError(vf);
+  return badValues(vf);
 }
 
 OFtag _readOF(Tag tag, int vrIndex, Iterable vf) {
@@ -113,7 +113,7 @@ OFtag _readOF(Tag tag, int vrIndex, Iterable vf) {
   if (key == 'BulkDataURI')
     return OFtag.make(tag, new FloatBulkdataRef(tag.code, Uri.parse(value)));
 
-  return invalidValuesError(vf);
+  return badValues(vf);
 }
 
 ODtag _readOD(Tag tag, int vrIndex, Iterable vf) {
@@ -124,7 +124,7 @@ ODtag _readOD(Tag tag, int vrIndex, Iterable vf) {
     return ODtag.fromUint8List(tag, base64.decode(value).buffer.asUint8List());
   if (key == 'BulkDataURI')
     return ODtag.make(tag, new FloatBulkdataRef(tag.code, Uri.parse(value)));
-  return invalidValuesError(vf);
+  return badValues(vf);
 }
 
 IntBulkdataRef _getIntBulkdata(Tag tag, Iterable vf) {
@@ -251,20 +251,20 @@ UCtag _readUC(Tag tag, int vrIndex, Iterable vf) {
   return UCtag.make(tag, vf);
 }
 
-STtag _readST(Tag tag, int vrIndex, Iterable vf) {
+STtag _readST(Tag tag, int vrIndex, Iterable<String> vf) {
   if (vf is List<String>) {
     assert(vrIndex == kSTIndex && tag.vrIndex == kSTIndex);
     if (vf.length > 1) log.error('Invalid AS Value Field: $vf');
-    return STtag.make(tag, vf);
+    return new STtag(tag, vf);
   }
-  return invalidValuesError(vf);
+  return badValues(vf);
 }
 
-LTtag _readLT(Tag tag, int vrIndex, Iterable vf) {
+LTtag _readLT(Tag tag, int vrIndex, Iterable<String> vf) {
   assert(vrIndex == kLTIndex && tag.vrIndex == kLTIndex);
   if (vf is List<String>) {
     if (vf.length > 1) log.error('Invalid AS Value Field: $vf');
-    return LTtag.make(tag, vf);
+    return new LTtag(tag, vf);
   }
   assert(vf is List<String>);
   return LTtag.make(tag, vf);

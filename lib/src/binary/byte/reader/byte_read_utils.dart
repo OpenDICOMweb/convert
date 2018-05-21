@@ -38,7 +38,7 @@ bool byteReadWriteFileChecked(String path,
     final reader0 = new ByteReader(bList0, doLogging: doLogging);
     final rds0 = reader0.readRootDataset();
     final bytes0 = reader0.rb.buffer;
-    log.info('$n:   read ${bytes0.lengthInBytes} bytes');
+    log.info('$n:   read ${bytes0.length} bytes');
     final e = rds0[kPixelData];
     if (e == null) log.warn('$pad ** Pixel Data Element not present');
 
@@ -49,21 +49,21 @@ bool byteReadWriteFileChecked(String path,
     ByteWriter writer;
     if (fast) {
       // Just write bytes not file
-      log.debug('  Writing ${rds0.lengthInBytes} bytes');
+      log.debug('  Writing ${rds0.length} bytes');
       writer = new ByteWriter(rds0, doLogging: doLogging);
     } else {
-      log.debug('  Writing (${rds0.lengthInBytes} bytes) to: $outPath');
+      log.debug('  Writing (${rds0.length} bytes) to: $outPath');
       writer = new ByteWriter.toPath(rds0, outPath, doLogging: doLogging);
     }
     final bytes1 = writer.writeRootDataset();
 
-    log.debug('  Bytes written: offset(${bytes1.offsetInBytes}) '
-        'length(${bytes1.lengthInBytes})\n');
+    log.debug('  Bytes written: offset(${bytes1.offset}) '
+        'length(${bytes1.length})\n');
 
     ByteReader reader1;
     if (fast) {
       // Just read bytes not file
-      log.debug('  Reading (${bytes1.lengthInBytes} bytes');
+      log.debug('  Reading (${bytes1.length} bytes');
       reader1 = new ByteReader.fromBytes(bytes1, doLogging: doLogging);
     } else {
       final f = new File(outPath);
@@ -118,7 +118,7 @@ bool byteReadWriteFileChecked(String path,
   return success;
 }
 
-BDRootDataset readFileTimed(File file,
+ByteRootDataset readFileTimed(File file,
     {bool fmiOnly = false,
     TransferSyntax targetTS,
     Level level = Level.warn,
@@ -158,10 +158,10 @@ BDRootDataset readFileTimed(File file,
   }
 }
 
-BDRootDataset readFMI(Uint8List bytes, [String path = '']) =>
+ByteRootDataset readFMI(Uint8List bytes, [String path = '']) =>
     ByteReader.readTypedData(bytes);
 
-Bytes writeTimed(BDRootDataset rds,
+Bytes writeTimed(ByteRootDataset rds,
     {String path = '',
     bool fast = true,
     bool fmiOnly = false,
@@ -185,8 +185,8 @@ Bytes writeTimed(BDRootDataset rds,
   return bytes;
 }
 
-Bytes writeFMI(BDRootDataset rds, [String path]) =>
+Bytes writeFMI(ByteRootDataset rds, [String path]) =>
     ByteWriter.writePath(rds, path);
 
-Bytes writeRoot(BDRootDataset rds, {String path}) =>
+Bytes writeRoot(ByteRootDataset rds, {String path}) =>
     ByteWriter.writePath(rds, path);

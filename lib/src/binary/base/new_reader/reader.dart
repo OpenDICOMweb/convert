@@ -51,7 +51,7 @@ abstract class Reader {
 
   DecodingParameters get dParams => evrSubReader.dParams;
 
-  BDRootDataset get rds => _rds ??= evrSubReader.rds;
+  ByteRootDataset get rds => _rds ??= evrSubReader.rds;
   RootDataset _rds;
 
   Bytes get bytesRead => rb.asBytes(0, rb.index);

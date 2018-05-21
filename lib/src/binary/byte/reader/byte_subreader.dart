@@ -15,14 +15,14 @@ import 'package:convert/src/decoding_parameters.dart';
 class ByteEvrSubReader extends EvrSubReader
     with ByteReaderMixin, EvrByteReaderMixin {
   @override
-  final BDRootDataset rds;
+  final ByteRootDataset rds;
   @override
   final bool doLogging;
   @override
   final bool doLookupVRIndex;
   factory ByteEvrSubReader(Bytes bytes, DecodingParameters dParams,
           {bool doLogging = false, bool doLookupVRIndex = true}) =>
-      new ByteEvrSubReader._(bytes, dParams, new BDRootDataset.empty(),
+      new ByteEvrSubReader._(bytes, dParams, new ByteRootDataset.empty(),
           doLogging, doLookupVRIndex);
 
   ByteEvrSubReader._(Bytes bytes, DecodingParameters dParams, this.rds,
@@ -30,21 +30,20 @@ class ByteEvrSubReader extends EvrSubReader
       : super(bytes, dParams, rds);
 
   @override
-  Element makePixelData(int code, Bytes eBytes, int vrIndex,
+  ByteElement makeFromBytes(int code, Bytes eBytes, int vrIndex,
           [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
-      EvrElement.makePixelData(
-          code, eBytes, vrIndex, vfLengthField, ts, fragments);
+      ByteElement.makeFromBytes(eBytes, cds, vfLengthField, ts, fragments);
 
-  Element makePixelDataFromBytes(int code, Bytes eBytes, int vrIndex,
+  ByteElement makePixelDataFromBytes(int code, Bytes eBytes, int vrIndex,
           [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
-      EvrElement.makePixelData(
+      ByteElement.makePixelData(
           code, eBytes, vrIndex, vfLengthField, ts, fragments);
 }
 
 class ByteIvrSubReader extends IvrSubReader
     with ByteReaderMixin, IvrByteReaderMixin {
   @override
-  BDRootDataset rds;
+  ByteRootDataset rds;
   @override
   final bool doLogging;
   @override
@@ -59,11 +58,11 @@ class ByteIvrSubReader extends IvrSubReader
   @override
   Element makePixelData(int code, Bytes vfBytes, int vrIndex,
           [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
-      IvrElement.makePixelData(
-          code, vfBytes, vrIndex, vfLengthField, ts, fragments);
+      ByteElement.makePixelData(
+          code, vfBytes, vrIndex, vfLengthField, ts, fragments, true);
 
   Element makePixelDataFromBytes(int code, Bytes vfBytes, int vrIndex,
           [int vfLengthField, TransferSyntax ts, VFFragments fragments]) =>
-      IvrElement.makePixelData(
+      ByteElement.makePixelData(
           code, vfBytes, vrIndex, vfLengthField, ts, fragments);
 }

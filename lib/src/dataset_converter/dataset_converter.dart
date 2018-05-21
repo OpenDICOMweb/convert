@@ -154,7 +154,7 @@ class TagConverter extends Converter {
 
 /* Urgent Jim Finish
 class ProfiledDataset extends TagRootDataset {
-  BDRootDataset original;
+  ByteRootDataset original;
 
   ProfiledDataset(this.original, {bool replaceAllUids = true})
       : super.from(original);

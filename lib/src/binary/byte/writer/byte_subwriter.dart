@@ -14,7 +14,7 @@ import 'package:convert/src/encoding_parameters.dart';
 /// An encoder for Binary DICOM (application/dicom).
 class ByteEvrSubWriter extends EvrSubWriter {
   @override
-  final BDRootDataset rds;
+  final ByteRootDataset rds;
   @override
   final bool doLogging;
 
@@ -28,7 +28,7 @@ class ByteEvrSubWriter extends EvrSubWriter {
 /// An encoder for Binary DICOM (application/dicom).
 class ByteIvrSubWriter extends IvrSubWriter {
   @override
-  final BDRootDataset rds;
+  final ByteRootDataset rds;
   @override
   final bool doLogging;
 

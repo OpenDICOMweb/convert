@@ -50,7 +50,7 @@ class ElementOffsets {
   }
 
   @override
-  int get hashCode => system.hasher.nList(elements);
+  int get hashCode => global.hasher.nList(elements);
 
   int get length => elements.length;
 

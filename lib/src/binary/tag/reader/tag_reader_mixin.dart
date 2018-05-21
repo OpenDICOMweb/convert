@@ -14,11 +14,11 @@ abstract class TagReaderMixin {
 
   RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
           Bytes bytes, int fmiEnd) =>
-      new BDRootDataset(fmi, eMap, path, bytes, fmiEnd);
+      new ByteRootDataset(fmi, eMap, path, bytes, fmiEnd);
 
   Item makeItem(Dataset parent,
           [SQ sequence, Map<int, Element> eMap, Bytes bytes]) =>
-      new BDItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
+      new ByteItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
 
   Element makeFromBytes(int code, Bytes bytes, int vrIndex, int vfOffset) =>
       TagElement.makeFromBytes(code, bytes, vrIndex, vfOffset);

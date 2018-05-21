@@ -224,7 +224,7 @@ class ParseInfo {
 
   //TODO: implement hashCode if we keep equals
   @override
-  int get hashCode => system.hasher(this);
+  int get hashCode => global.hasher(this);
 
   int get nDatasets => nItems + 1;
   int get nDefinedItems => nDefinedLengthDatasets - 1;

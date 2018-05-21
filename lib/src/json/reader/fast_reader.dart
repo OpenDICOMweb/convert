@@ -140,7 +140,7 @@ class FastJsonReader extends JsonReaderBase {
         (tag.vrIndex == kSQIndex || tag.vrIndex == kUNIndex)) {
       final length = entries.length;
       final items = new List<TagItem>(length);
-      final sq = SQtag.make(tag, items, kSQIndex);
+      final sq = SQtag.make(tag, items, kSQIndex, cds);
       // Add the empty Items
       for (var i = 0; i < length; i++)
         items[i] = new TagItem.empty(cds, sq);

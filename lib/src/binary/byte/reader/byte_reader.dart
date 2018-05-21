@@ -1,4 +1,4 @@
-//  Copyright (c) 2016, 2017, 2018, 
+//  Copyright (c) 2016, 2017, 2018,
 //  Poplar Hill Informatics and the American College of Radiology
 //  All rights reserved.
 //  Use of this source code is governed by the open source license
@@ -28,7 +28,7 @@ class ByteReader extends Reader {
   factory ByteReader(Uint8List bList,
           {DecodingParameters dParams = DecodingParameters.kNoChange,
           bool doLogging = false}) =>
-      new ByteReader.fromBytes(new Bytes.fromTypedData(bList),
+      new ByteReader.fromBytes(new Bytes.typedDataView(bList),
           dParams: dParams, doLogging: doLogging);
 
   /// Creates a new [ByteReader].
@@ -44,7 +44,7 @@ class ByteReader extends Reader {
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool doLogging = false}) {
     final Uint8List bList = f.readAsBytesSync();
-    final bytes = new Bytes.fromTypedData(bList);
+    final bytes = new Bytes.typedDataView(bList);
     return new ByteReader.fromBytes(bytes,
         dParams: dParams, doLogging: doLogging);
   }
@@ -76,7 +76,8 @@ class ByteReader extends Reader {
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool doLogging = false}) {
     assert(td is Uint8List || td is ByteData);
-    final bytes = new Bytes.fromTypedData(td, endian);
+    final bytes =
+        new Bytes.typedDataView(td, td.offsetInBytes, td.lengthInBytes, endian);
     return ByteReader.readBytes(bytes, dParams: dParams, doLogging: doLogging);
   }
 

@@ -14,7 +14,7 @@ import 'package:core/core.dart';
 import 'package:convert/src/binary/base/writer/subwriter.dart';
 import 'package:convert/src/element_offsets.dart';
 
-/// A [class] for writing a [BDRootDataset] to a [Uint8List],
+/// A [class] for writing a [ByteRootDataset] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
 /// all LITTLE ENDIAN [TransferSyntax]es.
 abstract class Writer {
@@ -27,7 +27,7 @@ abstract class Writer {
   ElementOffsets get offsets => evrSubWriter.offsets;
 
 /*
-  /// Writes the [BDRootDataset] to a [Uint8List], and then writes the
+  /// Writes the [ByteRootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
   factory Writer.toFile(File file,
 
@@ -46,10 +46,10 @@ abstract class Writer {
         showStats: showStats);
   }
 
-  /// Creates a new empty [File] from [path], writes the [BDRootDataset]
+  /// Creates a new empty [File] from [path], writes the [ByteRootDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  factory Writer.toPath(BDRootDataset ds, String path,
+  factory Writer.toPath(ByteRootDataset ds, String path,
       {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool overwrite = false,
@@ -103,16 +103,16 @@ abstract class Writer {
     return bytes;
   }
 /*
-  /// Writes the [BDRootDataset] to a [Uint8List], and returns the [Uint8List].
+  /// Writes the [ByteRootDataset] to a [Uint8List], and returns the [Uint8List].
   static Bytes writeBytes({bool doLogging = true}) {
     checkRootDataset(rds);
     final writer = new Writer(doLogging: doLogging);
     return writer.writeRootDataset();
   }
 
-  /// Writes the [BDRootDataset] to a [Uint8List], and then writes the
+  /// Writes the [ByteRootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
-  static Bytes writeFile(BDRootDataset ds, File file,
+  static Bytes writeFile(ByteRootDataset ds, File file,
       {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool overwrite = false,
@@ -136,10 +136,10 @@ abstract class Writer {
     return bytes;
   }
 
-  /// Creates a new empty [File] from [path], writes the [BDRootDataset]
+  /// Creates a new empty [File] from [path], writes the [ByteRootDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  static Bytes writePath(BDRootDataset ds, String path,
+  static Bytes writePath(ByteRootDataset ds, String path,
       {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool overwrite = false,

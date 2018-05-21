@@ -17,7 +17,7 @@ import 'package:convert/src/binary/base/writer/subwriter.dart';
 import 'package:convert/src/binary/byte/writer/byte_subwriter.dart';
 import 'package:convert/src/encoding_parameters.dart';
 
-/// A [class] for writing a [BDRootDataset] to a [Uint8List],
+/// A [class] for writing a [ByteRootDataset] to a [Uint8List],
 /// and then possibly writing it to a [File]. Supports encoding
 /// all LITTLE ENDIAN [TransferSyntax]es.
 class ByteWriter extends Writer {
@@ -25,16 +25,16 @@ class ByteWriter extends Writer {
   final EvrSubWriter evrSubWriter;
 
   /// Creates a new [ByteWriter] where index = 0.
-  ByteWriter(BDRootDataset rds,
+  ByteWriter(ByteRootDataset rds,
       {EncodingParameters eParams = EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false})
       : evrSubWriter = new ByteEvrSubWriter(rds, eParams,
             outputTS: outputTS, doLogging: doLogging);
 
-  /// Writes the [BDRootDataset] to a [Uint8List], and then writes the
+  /// Writes the [ByteRootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
-  factory ByteWriter.toFile(BDRootDataset rds, File file,
+  factory ByteWriter.toFile(ByteRootDataset rds, File file,
       {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false}) {
@@ -43,10 +43,10 @@ class ByteWriter extends Writer {
         eParams: eParams, outputTS: outputTS, doLogging: doLogging);
   }
 
-  /// Creates a new empty [File] from [path], writes the [BDRootDataset]
+  /// Creates a new empty [File] from [path], writes the [ByteRootDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  factory ByteWriter.toPath(BDRootDataset rds, String path,
+  factory ByteWriter.toPath(ByteRootDataset rds, String path,
       {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false}) {
@@ -61,8 +61,8 @@ class ByteWriter extends Writer {
 
   IvrSubWriter _ivrSubWriter;
 
-  /// Writes the [BDRootDataset] to a [Uint8List], and returns the [Uint8List].
-  static Bytes writeBytes(BDRootDataset rds,
+  /// Writes the [ByteRootDataset] to a [Uint8List], and returns the [Uint8List].
+  static Bytes writeBytes(ByteRootDataset rds,
       {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false}) {
@@ -72,9 +72,9 @@ class ByteWriter extends Writer {
     return writer.writeRootDataset();
   }
 
-  /// Writes the [BDRootDataset] to a [Uint8List], and then writes the
+  /// Writes the [ByteRootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
-  static Bytes writeFile(BDRootDataset rds, File file,
+  static Bytes writeFile(ByteRootDataset rds, File file,
       {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false}) {
@@ -85,10 +85,10 @@ class ByteWriter extends Writer {
     return bytes;
   }
 
-  /// Creates a new empty [File] from [path], writes the [BDRootDataset]
+  /// Creates a new empty [File] from [path], writes the [ByteRootDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
-  static Bytes writePath(BDRootDataset ds, String path,
+  static Bytes writePath(ByteRootDataset ds, String path,
       {EncodingParameters eParams: EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false}) {

@@ -12,7 +12,7 @@ import 'package:core/core.dart';
 
 /// TODO DOC
 bool bytesEqual1(Bytes bytes0, Bytes bytes1) {
-  if (bytes0.lengthInBytes != bytes1.lengthInBytes)
+  if (bytes0.length != bytes1.length)
     return compareUnequalLengths(bytes0, bytes1);
 
   for (var i = 0; i < bytes0.length; i++) {
@@ -30,8 +30,8 @@ bool bytesEqual1(Bytes bytes0, Bytes bytes1) {
 
 /* TODO: compare with element/byte_element_mixin
 bool bytesEqual(Uint8List b0, Uint8List b1) {
-  final length = b0.lengthInBytes;
-  if (length != b1.lengthInBytes) return compareUnequalLengths(b0, b1);
+  final length = b0.length;
+  if (length != b1.length) return compareUnequalLengths(b0, b1);
   final bd0 = b0.buffer.asBytes();
   final bd1 = b1.buffer.asBytes();
 
@@ -54,9 +54,9 @@ bool bytesEqual(Uint8List b0, Uint8List b1) {
 */
 
 bool compareUnequalLengths(Bytes bytes0, Bytes bytes1) {
-  final length = (bytes0.lengthInBytes < bytes1.lengthInBytes)
-      ? bytes0.lengthInBytes
-      : bytes1.lengthInBytes;
+  final length = (bytes0.length < bytes1.length)
+      ? bytes0.length
+      : bytes1.length;
   for (var i = 0; i < length; i++) {
     if (bytes0[i] != bytes1[i]) {
       log
@@ -98,8 +98,8 @@ void printLine(int line, Bytes bytes0, Bytes bytes1, [int pos]) {
   final v1 = bytes1.getUint32(line);
   final dcm0 = dcm(v0);
   final dcm1 = dcm(v1);
-  final dec0 = toDec32(v0);
-  final dec1 = toDec32(v1);
+  final dec0 = dec32(v0);
+  final dec1 = dec32(v1);
   final s0 = toStr(bytes0, line);
   final s1 = toStr(bytes1, line);
   if (pos != null) {

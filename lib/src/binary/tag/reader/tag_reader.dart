@@ -86,7 +86,7 @@ class TagReader extends Reader {
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool doLogging = false}) {
     assert(td is Uint8List || td is ByteData);
-    final bytes = new Bytes.fromTypedData(td, endian);
+    final bytes = new Bytes.typedDataView(td,0, td.lengthInBytes, endian);
     return TagReader.readBytes(bytes, dParams: dParams, doLogging: doLogging);
   }
 

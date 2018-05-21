@@ -88,7 +88,7 @@ Element _convertSimpleElement(Element e) {
   if (e.vrIndex > 30) throw 'bad e.vr: ${e.vrIndex}';
   return (e.tag == PTag.kPixelData)
       ? TagElement.pixelDataFrom(e, sourceRDS.transferSyntax)
-      : TagElement.makeFromElement(e);
+      : TagElement.makeFromElement(sourceRDS, e);
 }
 
 /*
@@ -122,13 +122,13 @@ SQ convertSQ(SQ sq) {
   final parentTDS = currentTDS;
   for (var i = 0; i < sq.items.length; i++) {
     currentSDS = sq.items.elementAt(i);
-    currentTDS = new TagItem.empty(parentTDS, sq, currentSDS.dsBytes.bytes);
+    currentTDS = new TagItem.empty(parentTDS, sq);
     convertItem(currentSDS, currentTDS);
     tItems[i] = currentTDS;
   }
   currentSDS = parentSDS;
   currentTDS = parentTDS;
-  final tagSQ = new SQtag(sq.tag, parentTDS, tItems, sq.length);
+  final tagSQ = new SQtag(parentTDS, sq.tag,  tItems, sq.length);
 
   for (var item in tItems) item.sequence = tagSQ;
   return tagSQ;
