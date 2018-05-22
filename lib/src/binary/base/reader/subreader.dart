@@ -174,9 +174,9 @@ abstract class IvrSubReader extends SubReader {
   @override
   bool get isEvr => false;
 
-  /// The [Bytes] being read by _this_.
+  /// The [DicomBytes] being read by _this_.
   @override
-  Bytes get bytes => _rb.buffer;
+  DicomBytes get bytes => _rb.buffer;
 
   void readRootDataset(int fmiEnd, [TransferSyntax ts]) {
     assert(fmiEnd == _rb.index, 'fmiEnd: $fmiEnd != rb.index: ${_rb.index}');
@@ -248,60 +248,43 @@ abstract class SubReader {
   bool get doLogging;
   bool get doLookupVRIndex;
 
-  Bytes get bytes => _rb.buffer;
+  DicomBytes get bytes => _rb.buffer;
 
+  // ---- Interface ----
   /// Reads and returns the next [Element] in the [DicomReadBuffer].
   Element _readElement();
 
-  /// Creates an RootDataset.
-  // Note: Typically this is not implemented.
-  RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
-          Bytes bd, int fmiEnd) =>
-      unimplementedError();
-
   /// Creates an Item.
   Item makeItem(Dataset parent,
-      [SQ sequence, Map<int, Element> eMap, Bytes bd]);
+      [SQ sequence, Map<int, Element> eMap, DicomBytes bd]);
 
-  /// Creates an Element from [Bytes].
-// TODO: maybe in future to lift the dependency on bytes
-//  Element makeFromIndex(int code, int eStart, int eEnd, int vfl, int vrIndex);
+  /// Creates an Element from [DicomBytes].
+  Element makeFromBytes(DicomBytes bytes);
 
-  /// Creates an Element from [Bytes].
-  ByteElement makeFromBytes(int code, Bytes bytes, int vrIndex, int vfOffset);
+  /// Creates an Element from [DicomBytes].
+  Element makeMaybeUndefinedFromBytes(DicomBytes bytes,
+      [int vfLengthField, TransferSyntax ts, VFFragments fragments]);
+
+  /// Create an SQ Element.
+  Element makeSQFromBytes(Dataset parent,
+      [Iterable<Item> items, DicomBytes bytes]);
 
   /// Returns a new [Element].
   // Note: Typically this may or may not be implemented.
-  ByteElement makeFromValues(int code, Iterable values, int vrIndex,
-          [Bytes bytes]) =>
+  Element makeFromValues(int code, Iterable values, int vrIndex) =>
       unsupportedError();
 
-/*
-  /// Returns a new Pixel Data [Element].
-  Element makePixelDataFromBytes(int code, Bytes eBytes, int vrIndex,
-      [int vfLengthField, TransferSyntax ts, VFFragments fragments]);
-*/
-
-  bool _afterPixelData = false;
-
-  /// Returns a new Pixel Data [Element].
-  Element _makePixelData(int code, Bytes bytes, int vrIndex,
-      [int vfLengthField, TransferSyntax ts, VFFragments fragments]) {
-    _afterPixelData = true;
-    return makePixelData(code, bytes, vrIndex, vfLengthField, ts, fragments);
-  }
-
-  /// Returns a new Pixel Data [Element].
-  Element makePixelData(int code, Bytes vfBytes, int vrIndex,
-      [int vfLengthField, TransferSyntax ts, VFFragments fragments]);
+  /// Returns a new [Element] of type SQ, OB, OW, or UN.
+  //  Designed to be overridden in TagElement.
+  Element makeMaybeUndefinedFromValues(
+          int code, Iterable values, int vrIndex) =>
+      unsupportedError();
 
   /// Creates a new Sequence ([SQ]) [Element].
-  SQ makeSequenceFromCode(int code, Dataset cds, Iterable items,
-      [int vfOffset, int vfLengthField, Bytes bytes]);
-
-  /// Creates a new Sequence ([SQ]) [Element].
-  SQ makeSequenceFromTag(Tag tag, Dataset cds, Iterable items,
-      [int vfOffset, int vfLengthField, Bytes bytes]);
+  //  Designed to be overridden in TagElement.
+  SQ makeSequenceFromTag(Dataset parent, Tag tag, Iterable items,
+          [int vfOffset, int vfLengthField, DicomBytes bytes]) =>
+      unsupportedError();
 
   // **** Interface for Logging
 
@@ -486,8 +469,8 @@ abstract class SubReader {
         vlf == kUndefinedLength) {
       _rb.rSkip(4);
       final items = <Item>[_makeEmptyItem(cds)];
-      return makeSequenceFromCode(
-          code, cds, items, vfOffset, kUndefinedLength, Bytes.kEmptyBytes);
+      final bytes = _rb.view(eStart, _rb.index - eStart);
+      return makeSQFromBytes(cds, items, bytes);
     } else if (vlf == kUndefinedLength) {
       return _readUndefinedLength(code, eStart, vrIndex, vfOffset, vlf);
     } else {
@@ -501,9 +484,52 @@ abstract class SubReader {
     if (doLogging) _startElementMsg(code, eStart, vrIndex, vlf);
     _rb.rSkip(vlf);
     final eBytes = _rb.sublist(eStart, _rb.index);
+    final e =
+        (code == kPixelData) ? _makePixelData(eBytes) : makeFromBytes(eBytes);
+    _count++;
+    if (doLogging) _endElementMsg(e);
+    return e;
+  }
+
+  DicomBytes _makeFromBytes(int code, int eStart, int vrIndex) =>
+      (isEvr)
+      ? new EvrBytes.from(_rb.buffer, eStart, vrIndex, _rb.index)
+      : new IvrBytes.from(_rb.buffer, eStart, _rb.index);
+
+  bool _afterPixelData = false;
+
+  /// Returns a new Pixel Data [Element].
+  Element _makePixelData(DicomBytes bytes,
+      [int vfLengthField, TransferSyntax ts, VFFragments fragments]) {
+    _afterPixelData = true;
+    return makeMaybeUndefinedFromBytes(bytes, vfLengthField, ts, fragments);
+  }
+
+  /// Reads an Element with a 32-bit Value Field Length Field [vlf]
+  /// containing [kUndefinedLength] (which is not a Sequence ([SQ]}).
+  ///
+  /// Only three non-Sequence [Element]s can have Value Field Length
+  /// Field [vlf] containing [kUndefinedLength] OB, OW, and UN.
+  ///
+  /// _Note_: Undefined Length Elements always have a long (32-bit) VF.
+  Element _readUndefinedLength(
+      int code, int eStart, int vrIndex, int vfOffset, int vlf) {
+    if (doLogging) _startElementMsg(code, eStart, vrIndex, vlf);
+    assert(vlf == kUndefinedLength &&
+        _isMaybeUndefinedLengthVR(vrIndex) &&
+        vrIndex != kSQIndex);
+
+    VFFragments fragments;
+    if (code == kPixelData) {
+      fragments = _readEncapsulatedPixelData(code, eStart, vrIndex, vlf);
+      assert(fragments != null);
+    } else {
+      _findEndOfULengthVF();
+    }
+    final eBytes = _rb.sublist(eStart, _rb.index);
     final e = (code == kPixelData)
-        ? _makePixelData(code, eBytes, vrIndex, vfOffset)
-        : makeFromBytes(code, eBytes, vrIndex, vfOffset);
+        ? _makePixelData(eBytes, vlf, defaultTS, fragments)
+        : makeFromBytes(eBytes);
     _count++;
     if (doLogging) _endElementMsg(e);
     return e;
@@ -545,7 +571,7 @@ abstract class SubReader {
       items.add(item);
     }
     final bytes = _rb.sublist(eStart, _rb.index);
-    return makeSequenceFromCode(code, cds, items, vfOffset, vfl, bytes);
+    return makeSQFromBytes(cds, items, bytes);
   }
 
   /// If the sequence delimiter is found at the current _read index_, reads the
@@ -563,37 +589,7 @@ abstract class SubReader {
     }
     if (sqEnd != _rb.index) log.warn('sqEnd($sqEnd) != rb.index(${_rb.index})');
     final bytes = _rb.sublist(eStart, sqEnd);
-    return makeSequenceFromCode(code, cds, items, vfOffset, vfl, bytes);
-  }
-
-  /// Reads an Element with a 32-bit Value Field Length Field [vlf]
-  /// containing [kUndefinedLength] (which is not a Sequence ([SQ]}).
-  ///
-  /// Only three non-Sequence [Element]s can have Value Field Length
-  /// Field [vlf] containing [kUndefinedLength] OB, OW, and UN.
-  ///
-  /// _Note_: Undefined Length Elements always have a long (32-bit) VF.
-  Element _readUndefinedLength(
-      int code, int eStart, int vrIndex, int vfOffset, int vlf) {
-    if (doLogging) _startElementMsg(code, eStart, vrIndex, vlf);
-    assert(vlf == kUndefinedLength &&
-        _isMaybeUndefinedLengthVR(vrIndex) &&
-        vrIndex != kSQIndex);
-
-    VFFragments fragments;
-    if (code == kPixelData) {
-      fragments = _readEncapsulatedPixelData(code, eStart, vrIndex, vlf);
-      assert(fragments != null);
-    } else {
-      _findEndOfULengthVF();
-    }
-    final eBytes = _rb.sublist(eStart, _rb.index);
-    final e = (code == kPixelData)
-        ? _makePixelData(code, eBytes, vrIndex, vlf, defaultTS, fragments)
-        : makeFromBytes(code, eBytes, vrIndex, vfOffset);
-    _count++;
-    if (doLogging) _endElementMsg(e);
-    return e;
+    return makeSQFromBytes(cds, items, bytes);
   }
 
   /// Returns [VFFragments] for a [kPixelData] Element.
@@ -832,8 +828,9 @@ abstract class SubReader {
     log.debug('<@R${_rb.index} subReadRootDataset $dsBytes $rds');
   }
 
+/*
   // Urgent Jim test
-  void convertVRUNImageElements(RootDataset rds) {
+  void convertVRUNImageElements(RootDataset rds, int vfOffset) {
     final bitsAllocated = rds.bitsAllocated;
     final e = rds.lookup(kPixelData);
     if (e == null) return;
@@ -857,10 +854,12 @@ abstract class SubReader {
     } else if (e is OWPixelData) {
       fragments = e.fragments;
     }
-    final npd = _makePixelData(e.code, e.vfBytes, e.vrIndex, e.vfLengthField,
-        rds.transferSyntax, fragments);
+    final vfOffset = (e.isEvr)
+    final npd = _makePixelData(e.code, e.vfBytes, e.vrIndex, e.vfOffset,
+        e.vfLengthField, rds.transferSyntax, fragments);
     rds[kPixelData] = npd;
   }
+*/
 
   @override
   String toString() => '$runtimeType: rds: $rds, cds: $cds';

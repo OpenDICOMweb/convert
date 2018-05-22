@@ -370,7 +370,7 @@ abstract class SubWriter {
       ..writeUint32(0);
   }
 
-  void _writeEncapsulatedPixelData(IntBase e) {
+  void _writeEncapsulatedPixelData(BytePixelData e) {
     assert(e.vfLengthField == kUndefinedLength);
     for (final fragment in e.fragments.fragments) {
       _wb
@@ -426,8 +426,9 @@ abstract class SubWriter {
         e.vfLengthField == kUndefinedLength &&
         _wb.index.isEven);
     __writeLongUndefinedLengthHeader(e, vrIndex);
-    if (e.code == kPixelData) {
-      _writeEncapsulatedPixelData(e);
+    if (e is BytePixelData) {
+      assert(e.code == kPixelData);
+      _writeEncapsulatedPixelData(e as BytePixelData);
     } else {
       _writeValueField(e, vrIndex);
     }
@@ -676,14 +677,14 @@ DicomWriteBuffer _reUseBuffer;
 
 DicomWriteBuffer getWriteBuffer([int length]) {
   length ??= kDefaultWriteBufferLength;
-  if (!reUseWriteBuffer || _reUseBuffer == null)
-    return _reUseBuffer = new WriteBuffer(length);
-
-  if (length > _reUseBuffer.length) {
+  if (!reUseWriteBuffer || _reUseBuffer == null) {
+    _reUseBuffer = new WriteBuffer(length);
+  } else if (length > _reUseBuffer.length) {
     _reUseBuffer = new WriteBuffer(length + 1024);
     log.warn('**** DcmSubWriterBase creating new Reuse BD of Size: '
         '${_reUseBuffer.length}');
+  } else {
+    _reUseBuffer.reset;
   }
-  _reUseBuffer.reset();
   return _reUseBuffer;
 }

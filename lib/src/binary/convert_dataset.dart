@@ -87,8 +87,8 @@ class DatasetConverter {
   Element _convertSimpleElement(Dataset ds, Element e) {
     if (e.vrIndex > 30) throw 'bad e.vr: ${e.vrIndex}';
     return (e.tag == PTag.kPixelData)
-        ? TagElement.pixelDataFrom(e, sourceRDS.transferSyntax, e.vrIndex)
-        : TagElement.makeFromElement(ds, e);
+        ? TagElement.makeFromElement(ds, e, e.vrIndex)
+        : TagElement.makeFromElement(ds, e, e.vrIndex);
   }
 
 /*
@@ -178,7 +178,7 @@ class DatasetConverter {
     if (isSpecialVRIndex(vrIndex)) _error(e.code, 'Non-Normal VR: $vrIndex');
 
     if (isSpecialVRIndex(tag.vrIndex)) {
-      if (!vrByIndex[tag.vrIndex].isValidIndex(vrIndex, issues, targetVR))
+      if (!VR.isValidIndex(vrIndex, issues, targetVR))
         _warn(e.code, 'Invalid VR Index ($vrIndex) for $tag');
     }
   }

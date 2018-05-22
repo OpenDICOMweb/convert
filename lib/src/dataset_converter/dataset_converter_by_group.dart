@@ -112,7 +112,7 @@ class DatasetConverterByGroup {
             var sg = currentGroup[sgNumber];
             if (sg == null) {
               log.warn('Subgroup $sg with no creator');
-              final creator = PCevr.makeEmptyPrivateCreator(e.code, e.vrIndex);
+              final creator = PCtag.makeEmptyPrivateCreator(e.code, e.vrIndex);
               sg = new PrivateSubgroup(currentGroup, sgNumber);
               currentGroup.subgroups[sgNumber] = sg;
             }
@@ -128,7 +128,7 @@ class DatasetConverterByGroup {
             assert(
                 currentGroup is PrivateGroup && e.isPrivate && tag.isPrivate);
             final thisGNumber = currentGNumber;
-            final privateSQ = findGroupsInSequence(e, sqParent);
+            final privateSQ = findGroupsInSequence(sqParent, e);
             currentGNumber = thisGNumber;
             currentSubgroup.members[sgNumber] = privateSQ;
           }
@@ -141,7 +141,7 @@ class DatasetConverterByGroup {
           tIndex++;
           assert(currentGroup is PublicGroup && e.isPublic && tag.isPublic);
           final thisGNumber = currentGNumber;
-          final publicSQ = findGroupsInSequence(e, sqParent);
+          final publicSQ = findGroupsInSequence(sqParent, e);
           currentGNumber = thisGNumber;
           currentGroup.add(publicSQ, sqParent);
         }
@@ -152,9 +152,9 @@ class DatasetConverterByGroup {
     log.up;
   }
 
-  SQ findGroupsInSequence(SQ sq, Dataset sqParent) {
+  SQ findGroupsInSequence(Dataset sqParent, SQ sq) {
     log.down;
-    final psq = SQtag.from(sq);
+    final psq = SQtag.from(sqParent, sq);
     final parentSds = currentSds;
     final parentTds = currentTds;
 

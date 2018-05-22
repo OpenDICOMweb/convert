@@ -87,7 +87,7 @@ Element convertElement(Element e) {
 Element _convertSimpleElement(Element e) {
   if (e.vrIndex > 30) throw 'bad e.vr: ${e.vrIndex}';
   return (e.tag == PTag.kPixelData)
-      ? TagElement.pixelDataFrom(e, sourceRDS.transferSyntax)
+      ? TagElement.makeFromElement(sourceRDS, e)
       : TagElement.makeFromElement(sourceRDS, e);
 }
 
@@ -166,17 +166,15 @@ void _warnVRIndex(Element e) {
   final vrIndex = e.vrIndex;
   final tag = e.tag;
   if (vrIndex == e.tag.vrIndex) return;
-//  log.debug('* vrIndex: $vrIndex tag.vrIndex: ${tag.vrIndex} $tag');
-
   _warn(e.code, 'e.vr(${e.vrId}) is NOT ${tag.vrIndex}');
-  if (vrIndex == kUNIndex && isNormalVRIndex(tag.vrIndex)) {
+  if (vrIndex == kUNIndex && isNormalVRIndex(tag.vrIndex))
     _warn(e.code, 'e.vr of ${e.vrId} was NOT changed to ${tag.vr.id}');
-    //  vrIndex = tag.vrIndex;
-  }
+
   if (isSpecialVRIndex(vrIndex)) _error(e.code, 'Non-Normal VR: $vrIndex');
 
-  if (isSpecialVRIndex(tag.vrIndex)) {
-    if (!vrByIndex[tag.vrIndex].isValidIndex(vrIndex))
+  final targetVR = tag.vrIndex;
+  if (isSpecialVRIndex(targetVR)) {
+    if (!VR.isValidIndex(targetVR, null, vrIndex))
       _warn(e.code, 'Invalid VR Index ($vrIndex) for $tag');
   }
 }

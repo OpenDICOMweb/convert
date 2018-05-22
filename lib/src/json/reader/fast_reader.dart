@@ -1,4 +1,4 @@
-//  Copyright (c) 2016, 2017, 2018, 
+//  Copyright (c) 2016, 2017, 2018,
 //  Poplar Hill Informatics and the American College of Radiology
 //  All rights reserved.
 //  Use of this source code is governed by the open source license
@@ -50,7 +50,6 @@ class FastJsonReader extends JsonReaderBase {
     for (var i = 0; i < itemList.length; i++)
       readItem(sq, sq.items.elementAt(i), itemList.elementAt(i));
   }
-
 
   @override
   Item readItem(SQ sequence, Item item, Iterable entries) {
@@ -116,7 +115,7 @@ class FastJsonReader extends JsonReaderBase {
 
   Object readValueField(List vField) {
     print('vField: $vField');
-    if (vField.length <2) return vField;
+    if (vField.length < 2) return vField;
     final Object key = vField[0];
     final Object value = vField[1];
     if (key == 'InlineBinary') return base64.decode(value);
@@ -124,30 +123,25 @@ class FastJsonReader extends JsonReaderBase {
     return vField;
   }
 
+  @override
+  Element readSimpleElement(int code, Iterable values, int vrIndex,
+          [Dataset ds]) =>
+      TagElement.makeFromValues(code, values, vrIndex, ds);
 
   @override
-  Element readSimpleElement(
-      int code,
-      Object value,
-      int vrIndex,
-      ) =>
-      TagElement.makeFromCode(code, value, vrIndex);
-
-  @override
-  SQ readSequence(int code, Iterable entries, int vrIndex) {
+  SQ readSequence(int code, Iterable entries, int vrIndex, [Dataset ds]) {
     final tag = Tag.lookupByCode(code, vrIndex);
     if (vrIndex == kSQIndex &&
         (tag.vrIndex == kSQIndex || tag.vrIndex == kUNIndex)) {
       final length = entries.length;
       final items = new List<TagItem>(length);
-      final sq = SQtag.make(tag, items, kSQIndex, cds);
+      final sq = SQtag.fromValues(tag, items, kSQIndex, cds);
       // Add the empty Items
-      for (var i = 0; i < length; i++)
-        items[i] = new TagItem.empty(cds, sq);
+      for (var i = 0; i < length; i++) items[i] = new TagItem.empty(cds, sq);
       readItems(sq, entries);
       return sq;
     }
-    return invalidSequenceElement(entries);
+    return badSequenceElement(entries);
   }
 
   static RootDataset fromString(String s) =>

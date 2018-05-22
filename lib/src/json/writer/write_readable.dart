@@ -115,13 +115,13 @@ class ReadableJsonWriter extends JsonWriterBase {
   static String _writeDates(Element e) {
     if (e is DA)
       return (e.values.length == 1) ? '${e.date}' : '[${e.dates.join(', ')}]';
-    return invalidElementError(e);
+    return badStringElement(e);
   }
 
   static String _writeTimes(Element e) {
     if (e is TM)
       return (e.values.length == 1) ? '${e.time}' : '[${e.times.join(', ')}]';
-    return invalidElementError(e);
+    return badStringElement(e);
   }
 
   static String _writeDateTimes(Element e) {
@@ -129,7 +129,7 @@ class ReadableJsonWriter extends JsonWriterBase {
       return (e.values.length == 1)
           ? '${e.dateTime}'
           : '[${e.dateTimes.join(', ')}]';
-    return invalidElementError(e);
+    return badStringElement(e);
   }
 
   static String _writeText(Element e) => '"${e.value}"';
@@ -147,7 +147,7 @@ class ReadableJsonWriter extends JsonWriterBase {
         ..writeAll(sList, ', ')
         ..write(']');
     } else {
-      invalidElementError(e, 'Not a StringBase Element');
+      badStringElement(e);
     }
     return sb.toString();
   }

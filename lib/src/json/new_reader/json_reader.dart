@@ -118,24 +118,25 @@ class JsonReader extends JsonReaderBase {
     int code,
     Object value,
     int vrIndex,
+    [Dataset ds]
   ) =>
-      TagElement.makeFromCode(code, value, vrIndex);
+      TagElement.makeFromValues(code, value, vrIndex, ds);
 
   @override
-  SQ readSequence(int code, Iterable entries, int vrIndex) {
+  SQ readSequence(int code, Iterable entries, int vrIndex, [Dataset ds]) {
     final tag = Tag.lookupByCode(code, vrIndex);
     if (vrIndex == kSQIndex &&
         (tag.vrIndex == kSQIndex || tag.vrIndex == kUNIndex)) {
       final length = entries.length;
       final items = new List<TagItem>(length);
-      final sq = SQtag.make(tag, items, kSQIndex);
+      final sq = SQtag.fromValues(tag, items, kSQIndex, ds);
       // Add the empty Items
       for (var i = 0; i < length; i++)
         items[i] = new TagItem.empty(cds, sq);
       readItems(sq, entries);
       return sq;
     }
-    return invalidSequenceElement(entries);
+    return badVRIndex(vrIndex, null, kSQIndex, tag);
   }
 
   static RootDataset fromString(String s) =>

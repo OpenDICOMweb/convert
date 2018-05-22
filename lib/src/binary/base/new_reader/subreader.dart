@@ -40,10 +40,10 @@ typedef Element LongElementReader(int code, int eStart, int vrIndex, int vlf);
 abstract class EvrSubReader extends SubReader with NoLoggingMixin {
   /// The [Bytes] being read by _this_.
   @override
-  final Bytes bytes;
+  final DicomBytes bytes;
 
   EvrSubReader(this.bytes, DecodingParameters dParams, Dataset cds)
-      : super(new ReadBuffer(bytes), dParams, cds);
+      : super(new DicomReadBuffer(bytes), dParams, cds);
 
   /// Returns _true_ if reading an Explicit VR Little Endian file.
   @override
@@ -101,7 +101,7 @@ abstract class EvrSubReader extends SubReader with NoLoggingMixin {
     if (rb.index != 0) throw new InvalidReadBufferIndex(rb);
     assert(rb.index == 0, 'Non-Zero Read Buffer Index');
     if (!_readPrefix(rb)) {
-      rb.index_ = 0;
+      rb.rIndex = 0;
       if (doLogging) log.up;
       return -1;
     }
@@ -206,7 +206,7 @@ abstract class IvrSubReader extends SubReader  with NoLoggingMixin {
 ///   return the empty [List] [].
 abstract class SubReader {
   /// The [ReadBuffer] being read.
-  final ReadBuffer rb;
+  final DicomReadBuffer rb;
 
   /// Decoding parameters
   final DecodingParameters dParams;
@@ -290,12 +290,12 @@ abstract class SubReader {
 
   RootDataset readRootDataset(int fmiEnd, TransferSyntax ts) {
     final rdsStart = rb.index;
-    final length = rb.rRemaining;
+    final length = rb.remaining;
 
     if (doLogging) startReadRootDataset(rdsStart, length);
     _readDatasetDefinedLength(rds, rdsStart, length);
     final rdsLength = rb.index - fmiEnd;
-    final rdsBytes = rb.asBytes(fmiEnd, rdsLength);
+    final rdsBytes = rb.view(fmiEnd, rdsLength);
     final dsBytes = new RDSBytes(rdsBytes, fmiEnd);
     rds.dsBytes = dsBytes;
     if (doLogging) endReadRootDataset(rds, dsBytes);
@@ -411,7 +411,7 @@ abstract class SubReader {
         log.debug('** reading ${dcm(code)} vrIndex($vrIndex) vlf: $vlf');
         return _readSequence(code, eStart, vrIndex, vfOffset, vlf);
       } catch (e) {
-        rb.index = index;
+        rb.rIndex = index;
         return (vlf == kUndefinedLength)
             ? _readLongUndefinedLength(code, eStart, vrIndex, vfOffset, vlf)
             : _readDefinedLength(code, eStart, vrIndex, vfOffset, vlf);

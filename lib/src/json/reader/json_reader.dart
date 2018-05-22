@@ -1,4 +1,4 @@
-//  Copyright (c) 2016, 2017, 2018, 
+//  Copyright (c) 2016, 2017, 2018,
 //  Poplar Hill Informatics and the American College of Radiology
 //  All rights reserved.
 //  Use of this source code is governed by the open source license
@@ -114,23 +114,24 @@ class JsonReader extends JsonReaderBase {
   }
 
   @override
-  Element readSimpleElement(int code, Object value, int vrIndex) =>
-      TagElement.makeFromCode(code, value, vrIndex);
+  Element readSimpleElement(int code, Iterable values, int vrIndex,
+          [Dataset ds]) =>
+      TagElement.makeFromValues(code, values, vrIndex, ds);
 
   @override
-  SQ readSequence(int code, Iterable entries, int vrIndex) {
+  SQ readSequence(int code, Iterable entries, int vrIndex, [Dataset ds]) {
     final tag = Tag.lookupByCode(code, vrIndex);
     if (vrIndex == kSQIndex &&
         (tag.vrIndex == kSQIndex || tag.vrIndex == kUNIndex)) {
       final length = entries.length;
       final items = new List<TagItem>(length);
-      final sq = SQtag.make(tag, items, kSQIndex);
+      final sq = SQtag.fromValues(tag, items, kSQIndex, ds);
       // Add the empty Items
       for (var i = 0; i < length; i++) items[i] = new TagItem.empty(cds, sq);
       readItems(sq, entries);
       return sq;
     }
-    return invalidSequenceElement(entries);
+    return badSequenceElement(entries);
   }
 
   static RootDataset fromString(String s) =>

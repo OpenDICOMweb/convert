@@ -23,11 +23,11 @@ abstract class Converter {
 
   RootDataset get tRds;
 
-  Dataset get currentSDS;
-  set currentSDS(Dataset ds);
+  Dataset get currentSds;
+  set currentSds(Dataset ds);
 
-  Dataset get currentTDS;
-  set currentTDS(Dataset ds);
+  Dataset get currentTds;
+  set currentTds(Dataset ds);
 
   RootDatasetByGroup get pRds;
 
@@ -48,7 +48,7 @@ abstract class Converter {
 
   RootDataset convert(RootDataset sRootDS, RootDataset tRootDS) {
     _index = 0;
-    currentTDS = tRootDS;
+    currentTds = tRootDS;
     _convertFmi(sRootDS, tRootDS);
     log.debug(tRootDS.fmi);
     convertRootDataset(sRootDS, tRootDS);
@@ -85,15 +85,14 @@ abstract class Converter {
     final tagVRIndex = e.tag.vrIndex;
     // Handle UN Elements specially
     if (e.vrIndex == kUNIndex && doConvertUN) {
-      vrIndex = (tagVRIndex > kVRNormalIndexMax)
-                ? convertSpecialVR(e)
-                : tagVRIndex;
+      vrIndex =
+          (tagVRIndex > kVRNormalIndexMax) ? convertSpecialVR(e) : tagVRIndex;
     } else if (vrIndex != tagVRIndex) {
-       invalidElementError(e);
+      invalidElement('vrIndex($vrIndex) != tagVRIndex($tagVRIndex)', e);
     }
     final eNew = fromElement(e, vrIndex);
     log.debug('| @$_index eNew: $eNew');
-    currentTDS.add(eNew);
+    currentTds.add(eNew);
     if (eNew.tag.isPrivate) pRds.add(eNew);
     return eNew;
   }
@@ -102,16 +101,14 @@ abstract class Converter {
   // the source Dataset must be examined to determine the
   // correct VR for these VRs.
   int convertSpecialVR(Element e) {
-    if (e.code == kPixelData) {
-
-    }
+    if (e.code == kPixelData) {}
     // Fix: temp
     return kUNIndex;
   }
 
   SQ convertSequence(SQ sSQ) {
     final tSQ =
-        makeSequence(currentTDS, sSQ.tag, sSQ.items.length, sSQ.vfLengthField);
+        makeSequence(currentTds, sSQ.tag, sSQ.items.length, sSQ.vfLengthField);
     // currentTDS.add(tSQ);
     // pRds.push(tSQ);
     convertItems(sSQ, tSQ);
@@ -120,26 +117,28 @@ abstract class Converter {
   }
 
   void convertItems(SQ sSQ, SQ tSQ) {
-    final sParentDS = currentSDS;
-    final tParentDS = currentTDS;
+    final sParentDS = currentSds;
+    final tParentDS = currentTds;
 
-    for (var i = 0; i < sSQ.items.length; i++) {
-      currentSDS = sSQ.items[i];
-      log.debug('> @$_index $currentSDS[$i]', 1);
-      currentTDS = makeItem(tParentDS, tSQ);
-      convertDataset(currentSDS, currentTDS);
-      tSQ.items[i] = currentTDS;
-      log.debug('< @$_index $currentSDS[$i]', -1);
+    final sItems = sSQ.items.toList(growable: false);
+    final tItems = new List<Item>(sItems.length);
+    for (var i = 0; i < sItems.length; i++) {
+      currentSds = sItems[i];
+      log.debug('> @$_index $currentSds[$i]', 1);
+      currentTds = makeItem(tParentDS, tSQ);
+      convertDataset(currentSds, currentTds);
+      tItems[i] = currentTds;
+      log.debug('< @$_index $currentSds[$i]', -1);
     }
-    currentSDS = sParentDS;
-    currentTDS = tParentDS;
+    currentSds = sParentDS;
+    currentTds = tParentDS;
     if (tSQ.tag.isPrivate) pRds.add(tSQ);
-    currentTDS.add(tSQ);
+    currentTds.add(tSQ);
   }
 
   void convertDataset(Dataset sds, Dataset tds) {
-    currentSDS = sds;
-    currentTDS = tds;
+    currentSds = sds;
+    currentTds = tds;
     for (var e in sds.elements) {
       tds.add(convertElement(e));
     }
@@ -152,9 +151,9 @@ class TagConverter extends Converter {
   @override
   final TagRootDataset tRds;
   @override
-  Dataset currentSDS;
+  Dataset currentSds;
   @override
-  Dataset currentTDS;
+  Dataset currentTds;
   @override
   RootDatasetByGroup pRds;
   @override
@@ -172,11 +171,12 @@ class TagConverter extends Converter {
   @override
   Element makeElement<V>(int code, Iterable<V> values, int vrIndex,
           [int vfLengthField]) =>
-      TagElement.makeFromCode(code, values, vrIndex, vfLengthField);
+      TagElement.makeFromValues(
+          code, values, vrIndex, currentSds, vfLengthField);
 
   @override
   Element fromElement(Element e, int vrIndex) =>
-      TagElement.makeFromElement(e, vrIndex ?? e.vrIndex);
+      TagElement.makeFromElement(currentSds, e, vrIndex ?? e.vrIndex);
 
   @override
   TagItem makeItem(Dataset parent, SQtag sq) => new TagItem.empty(parent, sq);
@@ -184,7 +184,7 @@ class TagConverter extends Converter {
   @override
   SQtag makeSequence(Dataset parent, Tag tag, int nItems,
           [int vfLengthField]) =>
-      new SQtag(tag, parent, new List<TagItem>(nItems), vfLengthField);
+      new SQtag(parent, tag, new List<TagItem>(nItems), vfLengthField);
 }
 
 /* Urgent Jim Finish

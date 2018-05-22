@@ -21,12 +21,12 @@ void main() {
       log.debug('''
 iterations: $iterations
   index: ${wb.wIndex}
-  length: ${wb.lengthInBytes}
+  length: ${wb.length}
   maxLength: ${wb.limit}
 ''');
 
       expect(wb.index == 0, true);
-      expect(wb.lengthInBytes == startSize, true);
+      expect(wb.length == startSize, true);
       for (var i = 0; i <= iterations - 1; i++) {
         final v = i % 127;
         wb.writeInt8(v);

@@ -1,4 +1,4 @@
-//  Copyright (c) 2016, 2017, 2018, 
+//  Copyright (c) 2016, 2017, 2018,
 //  Poplar Hill Informatics and the American College of Radiology
 //  All rights reserved.
 //  Use of this source code is governed by the open source license
@@ -27,8 +27,10 @@ abstract class JsonReaderBase {
 
   void readItem(SQ sequence, Item item, Iterable entries);
 
-  SQ readSequence(int code, Iterable entries, int vrIndex);
-  Element readSimpleElement(int code, Object value, int vrIndex);
+  SQ readSequence(int code, Iterable entries, int vrIndex, [Dataset ds]);
+
+  Element readSimpleElement(int code, Iterable values, int vrIndex,
+      [Dataset ds]);
 //  Element readEntry(Object entry);
 
   // **** End Interface
@@ -40,7 +42,7 @@ abstract class JsonReaderBase {
       readItem(sq, sq.items.elementAt(i), itemList.elementAt(i).entries);
   }
 
-  Element readElement(int code, Object values, int vrIndex) {
+  Element readElement(int code, Object values, int vrIndex, [Dataset ds]) {
     final tag = Tag.lookupByCode(code, vrIndex);
     if (tag.vrIndex != vrIndex) {
       log.warn('vrIndex($vrIndex) != tag.vrIndex(${tag.vrIndex}');
@@ -48,7 +50,7 @@ abstract class JsonReaderBase {
     if (vrIndex == kSQIndex) {
       return readSequence(code, values, vrIndex);
     } else {
-      return readSimpleElement(code, values, vrIndex);
+      return readSimpleElement(code, values, vrIndex, ds);
     }
   }
 }

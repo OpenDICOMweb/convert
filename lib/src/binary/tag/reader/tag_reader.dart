@@ -28,7 +28,7 @@ class TagReader extends Reader {
   factory TagReader(Uint8List bList,
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool doLogging = false}) {
-    final bytes = new Bytes.fromTypedData(bList);
+    final bytes = new Bytes.typedDataView(bList);
     final rds = new TagRootDataset.empty();
     return new TagReader._(bytes, dParams, rds, doLogging: doLogging);
   }

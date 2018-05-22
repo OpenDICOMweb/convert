@@ -1,4 +1,4 @@
-//  Copyright (c) 2016, 2017, 2018, 
+//  Copyright (c) 2016, 2017, 2018,
 //  Poplar Hill Informatics and the American College of Radiology
 //  All rights reserved.
 //  Use of this source code is governed by the open source license
@@ -23,16 +23,17 @@ class JsonWriter extends JsonWriterBase {
             includeFmi: includeFmi,
             tabSize: tabSize);
 
-  JsonWriter.empty({String path = '',
-                     int bulkdataThreshold = 1024,
-                     bool separateBulkdata = false,
-                     bool includeFmi = true,
-                     int tabSize = 2})
+  JsonWriter.empty(
+      {String path = '',
+      int bulkdataThreshold = 1024,
+      bool separateBulkdata = false,
+      bool includeFmi = true,
+      int tabSize = 2})
       : super(null, path,
-                  bulkdataThreshold: bulkdataThreshold,
-                  separateBulkdata: separateBulkdata,
-                  includeFmi: includeFmi,
-                  tabSize: tabSize);
+            bulkdataThreshold: bulkdataThreshold,
+            separateBulkdata: separateBulkdata,
+            includeFmi: includeFmi,
+            tabSize: tabSize);
 
   @override
   String writeRootDataset() {
@@ -85,11 +86,11 @@ class JsonWriter extends JsonWriterBase {
     _writeStrings, _writeText, _writeText,
 
     // EVR Short
-    _writeStrings, _writeStrings, _writeInt,     _writeStrings,
+    _writeStrings, _writeStrings, _writeInt, _writeStrings,
     _writeStrings, _writeStrings, _writeStrings, _writeFloat,
-    _writeFloat,   _writeStrings, _writeStrings, _writeText,
-    _writeStrings, _writeStrings, _writeInt,     _writeInt,
-    _writeText,    _writeStrings, _writeStrings, _writeInt,
+    _writeFloat, _writeStrings, _writeStrings, _writeText,
+    _writeStrings, _writeStrings, _writeInt, _writeInt,
+    _writeText, _writeStrings, _writeStrings, _writeInt,
     _writeInt // no reformat
   ];
 
@@ -121,7 +122,7 @@ class JsonWriter extends JsonWriterBase {
         ..writeAll(sList, ', ')
         ..write(']');
     } else {
-      invalidElementError(e, 'Not a StringBase Element');
+      badStringElement(e);
     }
   }
 }
