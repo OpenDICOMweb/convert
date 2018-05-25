@@ -41,7 +41,7 @@ class ReadableJsonWriter extends JsonWriterBase {
   @override
   void writeSimpleElement(Element e, String separator) {
     if (e is UI) {
-      final List<Uid> uids = e.uids;
+      final uids = e.uids;
       if (uids.length == 1) {
         final uid = uids[0];
         if (uid.isWellKnown) {

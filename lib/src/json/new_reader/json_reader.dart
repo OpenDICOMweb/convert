@@ -1,4 +1,4 @@
-//  Copyright (c) 2016, 2017, 2018, 
+//  Copyright (c) 2016, 2017, 2018,
 //  Poplar Hill Informatics and the American College of Radiology
 //  All rights reserved.
 //  Use of this source code is governed by the open source license
@@ -81,7 +81,7 @@ class JsonReader extends JsonReaderBase {
       print('PDTag: ${dcm(code)} : $values');
       String name;
       if (vrIndex == kLOIndex) {
-         name = values[0];
+        name = values[0];
       } else if (vrIndex == kUNIndex) {
         name = ascii.decode(values);
       } else {
@@ -114,13 +114,9 @@ class JsonReader extends JsonReaderBase {
   }
 
   @override
-  Element readSimpleElement(
-    int code,
-    Object value,
-    int vrIndex,
-    [Dataset ds]
-  ) =>
-      TagElement.makeFromValues(code, value, vrIndex, ds);
+  Element readSimpleElement(int code, int vrIndex, Object value,
+          [Dataset ds]) =>
+      TagElement.makeFromValues(code, vrIndex, value, ds);
 
   @override
   SQ readSequence(int code, Iterable entries, int vrIndex, [Dataset ds]) {
@@ -131,8 +127,7 @@ class JsonReader extends JsonReaderBase {
       final items = new List<TagItem>(length);
       final sq = SQtag.fromValues(tag, items, kSQIndex, ds);
       // Add the empty Items
-      for (var i = 0; i < length; i++)
-        items[i] = new TagItem.empty(cds, sq);
+      for (var i = 0; i < length; i++) items[i] = new TagItem.empty(cds, sq);
       readItems(sq, entries);
       return sq;
     }

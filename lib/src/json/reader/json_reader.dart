@@ -114,9 +114,9 @@ class JsonReader extends JsonReaderBase {
   }
 
   @override
-  Element readSimpleElement(int code, Iterable values, int vrIndex,
+  Element readSimpleElement(int code, int vrIndex, Iterable values,
           [Dataset ds]) =>
-      TagElement.makeFromValues(code, values, vrIndex, ds);
+      TagElement.makeFromValues(code, vrIndex, values, ds);
 
   @override
   SQ readSequence(int code, Iterable entries, int vrIndex, [Dataset ds]) {

@@ -329,9 +329,9 @@ TMtag _readTM(Tag tag, int vrIndex, Iterable vf) {
 
 IStag _readIS(Tag tag, int vrIndex, Iterable vf) {
   assert(vrIndex == kISIndex && tag.vrIndex == kISIndex);
-  if (vf is List<String>) return IStag.fromValues(tag, vf, null);
+  if (vf is List<String>) return IStag.fromValues(tag, vf);
   assert(vf is List<String>);
-  return IStag.fromValues(tag, vf, null);
+  return IStag.fromValues(tag, vf);
 }
 
 DStag _readDS(Tag tag, int vrIndex, Iterable vf) {

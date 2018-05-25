@@ -78,8 +78,7 @@ abstract class Reader {
     }
 
     _rds = evrSubReader.rds;
-    final ts = _rds.transferSyntax;
-    (ts.isEvr)
+    (evrSubReader.ts.isEvr)
         ? evrSubReader.readRootDataset(fmiEnd)
         : ivrSubReader.readRootDataset(fmiEnd);
     return _rds;

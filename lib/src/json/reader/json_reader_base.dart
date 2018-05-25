@@ -29,9 +29,8 @@ abstract class JsonReaderBase {
 
   SQ readSequence(int code, Iterable entries, int vrIndex, [Dataset ds]);
 
-  Element readSimpleElement(int code, Iterable values, int vrIndex,
+  Element readSimpleElement(int code, int vrIndex, Iterable values,
       [Dataset ds]);
-//  Element readEntry(Object entry);
 
   // **** End Interface
 
@@ -50,7 +49,7 @@ abstract class JsonReaderBase {
     if (vrIndex == kSQIndex) {
       return readSequence(code, values, vrIndex);
     } else {
-      return readSimpleElement(code, values, vrIndex, ds);
+      return readSimpleElement(code, vrIndex, values, ds);
     }
   }
 }

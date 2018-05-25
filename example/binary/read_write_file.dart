@@ -22,16 +22,16 @@ const String xx1 = 'C:/acr/odw/test_data/mweb/ASPERA/DICOM files only'
 const String xx0 = 'C:/acr/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX'
     '/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)'
     '/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm';
-const String xxx =
+const String xx4 =
     'C:/acr/odw/test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
 
-const List<String> files = const <String>[xx0, xx1, xx2, xx3, xxx];
+const List<String> files = const <String>[xx0, xx1, xx2, xx3, xx4];
 
 void main() async {
   Server.initialize(
       name: 'ReadWriteFile', level: Level.debug, throwOnError: false);
 
-  final inPath = cleanPath(xx0);
+  final inPath = cleanPath(xx4);
 
   log.info('path: $inPath');
   final length = new File(inPath).lengthSync();
@@ -49,10 +49,11 @@ void main() async {
   final outPath = getVNAPath(rds0, 'bin/output/', 'dcm');
   final outBytes = ByteWriter.writeBytes(rds0, doLogging: true);
   log
-    ..info('outPath: $outPath')
-    ..info('Output length: ${outBytes.length}(${outBytes.length ~/ 1024}K)')
-    ..info(outBytes.asUint8List(0, 200))
-    ..info('done');
+    ..up
+    ..info('| Out Path: $outPath')
+    ..info('| Output length: ${outBytes.length}(${outBytes.length ~/ 1024}K)')
+    ..info('| ${outBytes.asUint8List(132, 32)}')
+    ..info('| Done');
 
   outBytes.endian = Endian.little;
   final rds1 = ByteReader.readBytes(outBytes, doLogging: true);

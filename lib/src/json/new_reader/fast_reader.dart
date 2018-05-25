@@ -57,7 +57,7 @@ class FastJsonReader extends JsonReaderBase {
     cds = item;
     for (var entry in entries) {
       final e = readEntry(entry);
-      print('e: $e');
+//      print('e: $e');
       cds.add(e);
     }
     cds = parentDS;
@@ -124,9 +124,9 @@ class FastJsonReader extends JsonReaderBase {
   }
 
   @override
-  Element readSimpleElement(int code, Object value, int vrIndex,
+  Element readSimpleElement(int code, int vrIndex,  Object value,
           [Dataset ds]) =>
-      TagElement.makeFromValues(code, value, vrIndex, ds);
+      TagElement.makeFromValues(code, vrIndex,  value, ds);
 
   @override
   SQ readSequence(int code, Iterable entries, int vrIndex, [Dataset ds]) {

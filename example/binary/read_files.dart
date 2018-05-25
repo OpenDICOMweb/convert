@@ -58,7 +58,7 @@ const List<String> files = const <String>[
 
 //Urgent: bug with path20
 Future main() async {
-  Server.initialize(name: 'ReadFiles', level: Level.debug1, throwOnError: true);
+  Server.initialize(name: 'ReadFiles', level: Level.debug, throwOnError: true);
 
   for (var i = 0; i < files.length; i++) {
     final fPath = files[i];

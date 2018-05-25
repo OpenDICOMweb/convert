@@ -50,6 +50,7 @@ abstract class EvrSubWriter extends SubWriter {
     } else {
       throw new ArgumentError('Invalid VRIndex($vrIndex): $e');
     }
+
     _count++;
     if (doLogging) _endElementMsg(start, e);
   }
@@ -66,9 +67,11 @@ abstract class EvrSubWriter extends SubWriter {
 
   void _writeShortHeader(Element e, int vrIndex, int vfLength) {
     assert(_isEvrShortVR(vrIndex));
+    final vrCode = e.vrCode;
     _wb
       ..writeCode(e.code, 8 + vfLength)
-      ..writeUint16(e.vrCode)
+      ..writeUint8(vrCode >> 8)
+      ..writeUint8(vrCode & 0xFF)
       ..writeUint16(vfLength);
   }
 
@@ -89,9 +92,11 @@ abstract class EvrSubWriter extends SubWriter {
   /// Write a Long EVR [Element], i.e. with 32-bit Value Field Length field.
   void __writeLongHeader(Element e, int vrIndex, int vfLengthField) {
     assert(_isNotShortVR(vrIndex), 'vrIndex: $vrIndex');
+    final vrCode = e.vrCode;
     _wb
       ..writeCode(e.code, 12 + e.vfLength)
-      ..writeUint16(e.vrCode)
+      ..writeUint8(vrCode >> 8)
+      ..writeUint8(vrCode & 0xFF)
       ..writeUint16(0)
       ..writeUint32(vfLengthField);
   }
@@ -105,6 +110,9 @@ abstract class EvrSubWriter extends SubWriter {
   int writeFmi() {
     if (doLogging)
       log
+        ..debug('>@${_wb.index} Writing Root Dataset')
+        ..debug('|@${_wb.index} ${rds.transferSyntax}')
+        ..down
         ..debug('>@W${_wb.index} Writing ${rds.fmi.length} FMI Elements ...')
         ..down;
 
@@ -123,10 +131,12 @@ abstract class EvrSubWriter extends SubWriter {
       }
     }
 
-    if (doLogging)
+    if (doLogging) {
       log
         ..up
-        ..debug('<W@${_wb.index} FinishedWriting FMI: $count Elements written');
+        ..debug('<W@${_wb.index} FinishedWriting FMI: $count Elements written')
+        ..up;
+    }
     return _wb.wIndex;
   }
 
@@ -178,11 +188,6 @@ abstract class IvrSubWriter extends SubWriter {
   @override
   final bool isEvr = false;
 
-/*
-  IvrSubWriter(Dataset cds, EncodingParameters eParams, DicomWriteBuffer wb)
-      : super(cds, eParams, wb);
-*/
-
   IvrSubWriter.from(EvrSubWriter subWriter) : super.from(subWriter);
 
   /// Write an IVR [Element].
@@ -193,15 +198,16 @@ abstract class IvrSubWriter extends SubWriter {
     vrIndex ??= e.vrIndex;
     assert(e != null && !_isSpecialVR(vrIndex), 'Invalid VR: $vrIndex');
 
-    if (_isIvrDefinedLengthVR(vrIndex)) {
-      _writeLongDefinedLength(e, vrIndex);
-    } else if (_isSequenceVR(vrIndex)) {
+    if (e is SQ || _isSequenceVR(vrIndex)) {
       _writeSequence(e, vrIndex);
+    } else if (_isIvrDefinedLengthVR(vrIndex)) {
+      _writeLongDefinedLength(e, vrIndex);
     } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
       _writeMaybeUndefinedLength(e, vrIndex);
     } else {
       throw new ArgumentError('Invalid VR($vrIndex): $e');
     }
+
     if (doLogging) _endElementMsg(start, e);
     _count++;
   }
@@ -284,7 +290,7 @@ abstract class SubWriter {
 
   // **** End of Interface
 
-  /// Return's the current position in the [DicomWriteBuffer].
+  /// Return's the current position in _this_.
   int get wIndex => _wb.wIndex;
 
   /// The [TransferSyntax] of output.
@@ -366,7 +372,7 @@ abstract class SubWriter {
       ..writeUint32(kUndefinedLength);
     _writeDataset(item);
     _wb
-      ..writeCode(kItemDelimitationItem32BitLE)
+      ..writeCode(kItemDelimitationItem)
       ..writeUint32(0);
   }
 
@@ -440,7 +446,8 @@ abstract class SubWriter {
 
   /// Write a Sequence Element.
   void _writeSequence(Element sq, int vrIndex) {
-    // if (doLogging) _startSQMsg(sq, 'writeSequence');
+    final start = _wb.index;
+    if (doLogging) _startSQMsg(start, sq);
     if (sq.vfLengthField == 0) {
       _writeLongDefinedLength(sq, vrIndex);
     } else if (sq.hadULength && !eParams.doConvertUndefinedLengths) {
@@ -448,13 +455,13 @@ abstract class SubWriter {
     } else {
       _writeSQDefinedLength(sq, vrIndex);
     }
-    //  if (doLogging) _endSQMsg(_wb.index, 'writeSequence');
+    if (doLogging) _endSQMsg(start);
   }
 
   /// Write an EVR Sequence with _defined length_.
   // Note: A Sequence cannot have an _odd_ length.
   void _writeSQDefinedLength(SQ e, int vrIndex) {
-    assert(e is SQ && vrIndex == kSQIndex);
+    assert(e is SQ && (vrIndex == kSQIndex || vrIndex == kUNIndex), '$e');
     final eStart = _wb.wIndex;
     assert(eStart.isEven);
     _writeLongDefinedLengthHeader(e, vrIndex);
@@ -471,7 +478,7 @@ abstract class SubWriter {
   /// Write an EVR Sequence with _defined length_.
   // Note: A Sequence cannot have an _odd_ length.
   void _writeSQUndefinedLength(SQ e, int vrIndex) {
-    assert(e is SQ && vrIndex == kSQIndex);
+    assert(e is SQ);
     assert(_wb.index.isEven);
     __writeLongUndefinedLengthHeader(e, vrIndex);
     _writeItems(e.items);
@@ -523,9 +530,12 @@ abstract class SubWriter {
   }
 
   void _startElementMsg(int start, Element e) {
-    final vlf = _vlfString(e.vfLengthField);
+    final vfl = e.vfLength;
+    final vlf = e.vfLengthField;
+    final len =
+        (vlf == kUndefinedLength) ? 'Undefined Length ($vfl)' : 'vfl($vfl)';
     log
-      ..debug('>@W$start $e : $vlf')
+      ..debug('>@W$start ${e.runtimeType} $e : $len')
       ..down;
   }
 
@@ -539,7 +549,7 @@ abstract class SubWriter {
   }
 
   void _startSQMsg(int start, Element sq) {
-    final msg = '>@W$start $sq';
+    final msg = '>@W$start ${sq.runtimeType} $sq';
     log
       ..debug(msg)
       ..down;
@@ -570,14 +580,15 @@ abstract class SubWriter {
       ..debug('<@W$end writeItem: $range $dsBytes');
   }
 
-  String _getEndian(TransferSyntax ts) =>
-      (ts.endian == Endian.big) ? 'Endian.big' : 'Endian.little';
+  String get endianness => (_wb.endian == Endian.little) ? 'Little' : 'Big';
 
-  void _startRootDatasetMsg(int start, RootDataset ds, TransferSyntax ts) => log
-    ..debug('Logging (${ts.endian})...')
-    ..debug('little.endian: ${_wb.endian == Endian.little}')
-    ..debug('>@W$start write $ds ${_wb.length} bytes')
-    ..down;
+  void _startRootDatasetMsg(int start, RootDataset ds, TransferSyntax ts) {
+    log
+      ..debug('| Logging ($endianness Endian)...')
+      ..down
+      ..debug('>@W$start write $ds ${_wb.length} bytes')
+      ..down;
+  }
 
   void _endRootDatasetMsg(int start, DSBytes dsBytes) {
     final eNumber = '$count'.padLeft(4, '0');
@@ -585,10 +596,11 @@ abstract class SubWriter {
     final range = _range(start, end);
     log
       ..up
-      ..debug('| little.endian: ${_wb.endian == Endian.little}')
-      ..debug('<@W$end writeRootDataset: $range $dsBytes'
-          '\n       #$eNumber Elements written'
-          '\n       ${_wb.buffer}');
+      ..debug('| $endianness Endian')
+      ..debug('| $dsBytes')
+      ..debug('| ${_wb.buffer}')
+      ..debug('| $eNumber Elements written')
+      ..debug('<@W$end writeRootDataset: $range');
   }
 
 /* Flush if not used
@@ -678,9 +690,9 @@ DicomWriteBuffer _reUseBuffer;
 DicomWriteBuffer getWriteBuffer([int length]) {
   length ??= kDefaultWriteBufferLength;
   if (!reUseWriteBuffer || _reUseBuffer == null) {
-    _reUseBuffer = new WriteBuffer(length);
+    _reUseBuffer = new DicomWriteBuffer(length);
   } else if (length > _reUseBuffer.length) {
-    _reUseBuffer = new WriteBuffer(length + 1024);
+    _reUseBuffer = new DicomWriteBuffer(length + 1024);
     log.warn('**** DcmSubWriterBase creating new Reuse BD of Size: '
         '${_reUseBuffer.length}');
   } else {

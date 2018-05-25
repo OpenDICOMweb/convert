@@ -21,8 +21,9 @@ class ByteEvrSubReader extends EvrSubReader with ByteReaderMixin {
   final bool doLookupVRIndex;
   factory ByteEvrSubReader(Bytes bytes, DecodingParameters dParams,
           {bool doLogging = false, bool doLookupVRIndex = true}) =>
-      new ByteEvrSubReader._(bytes, dParams, new ByteRootDataset.empty(),
-          doLogging, doLookupVRIndex);
+    new ByteEvrSubReader._(
+        bytes, dParams, new ByteRootDataset.empty(), doLogging,
+        doLookupVRIndex);
 
   ByteEvrSubReader._(Bytes bytes, DecodingParameters dParams, this.rds,
       this.doLogging, this.doLookupVRIndex)

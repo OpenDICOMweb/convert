@@ -71,7 +71,7 @@ const List<String> files = const <String>[
 
 void main() async {
   Server.initialize(
-      name: 'ReadWriteFiles', level: Level.debug1, throwOnError: false);
+      name: 'ReadWriteFiles', level: Level.debug, throwOnError: false);
 
   for (var i = 0; i < files.length; i++) {
     final inPath = cleanPath(files[i]);
@@ -89,14 +89,14 @@ void main() async {
     log.info('${rds0.dsBytes}');
 
     final outPath = getVNAPath(rds0, 'bin/output/', 'dcm');
-    final outBytes = ByteWriter.writeBytes(rds0, doLogging: true);
+    final outBytes = ByteWriter.writeBytes(rds0, doLogging: false);
     log
       ..info('outPath: $outPath')
       ..info('Output length: ${outBytes.length}(${outBytes.length ~/ 1024}K)')
       ..info('done');
 
     outBytes.endian = Endian.little;
-    final rds1 = ByteReader.readBytes(outBytes, doLogging: true);
+    final rds1 = ByteReader.readBytes(outBytes, doLogging: false);
     if (rds1 == null) {
       log.warn('Invalid DICOM file: $outPath');
     } else {

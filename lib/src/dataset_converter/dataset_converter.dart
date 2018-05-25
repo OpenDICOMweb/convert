@@ -171,12 +171,11 @@ class TagConverter extends Converter {
   @override
   Element makeElement<V>(int code, Iterable<V> values, int vrIndex,
           [int vfLengthField]) =>
-      TagElement.makeFromValues(
-          code, values, vrIndex, currentSds, vfLengthField);
+      TagElement.makeFromValues(code, vrIndex, values.toList(), currentSds);
 
   @override
   Element fromElement(Element e, int vrIndex) =>
-      TagElement.makeFromElement(currentSds, e, vrIndex ?? e.vrIndex);
+      TagElement.makeFromValues(e.code, e.vrIndex, e.values, currentSds);
 
   @override
   TagItem makeItem(Dataset parent, SQtag sq) => new TagItem.empty(parent, sq);

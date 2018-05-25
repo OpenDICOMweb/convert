@@ -14,38 +14,40 @@ abstract class TagReaderMixin {
   ReadBuffer get rb;
 
   RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
-          Bytes bytes, int fmiEnd) =>
+          DicomBytes bytes, int fmiEnd) =>
       new ByteRootDataset(fmi, eMap, path, bytes, fmiEnd);
 
   Item makeItem(Dataset parent,
-          [SQ sequence, Map<int, Element> eMap, Bytes bytes]) =>
+          [SQ sequence, Map<int, Element> eMap, DicomBytes bytes]) =>
       new ByteItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
 
-  Element makeFromBytes(DicomBytes bytes) =>
-      TagElement.makeFromBytes(bytes, cds);
+  Element makeFromDicomBytes(DicomBytes bytes, Dataset ds, {bool isEvr}) =>
+      TagElement.makeFromDicomBytes(bytes, ds, isEvr: isEvr);
 
-  Element makeMaybeUndefinedFromBytes(DicomBytes bytes,
-          [int vfLengthField, TransferSyntax ts, VFFragments _]) =>
-      TagElement.makeMaybeUndefinedFromBytes(
-          bytes, cds, vfLengthField, ts);
+  Element makeMaybeUndefinedFromDicomBytes(DicomBytes bytes, Dataset ds,
+          [TransferSyntax ts]) =>
+      TagElement.makeMaybeUndefinedFromDicomBytes(bytes, ds);
 
-  Element makeSQFromBytes(Dataset parent,
-                                 [Iterable<Item> items, DicomBytes bytes]) {
-    final tag = lookupTagByCode(cds, bytes.code, bytes.vrIndex);
-    return SQtag.fromBytes(parent, items, bytes, tag);
-  }
+  Element makeSQFromDicomBytes(Dataset parent,
+          [Iterable<Item> items, DicomBytes bytes]) =>
+      TagElement.makeSQFromDicomBytes(parent, items, bytes);
 
-  Element makeFromValues(int code, Iterable vList, int vrIndex) =>
-  TagElement.makeFromValues(code, vList, vrIndex, cds);
+  Element makePixelDataFromDicomBytes(DicomBytes bytes,
+          [TransferSyntax ts, VFFragments fragments]) =>
+      TagElement.makePixelDataFromDicomBytes(bytes, cds, ts);
 
-  /// Returns a new Sequence ([SQ]).
+  Element makeFromValues<V>(int code, int vrIndex, List<V> vList) =>
+      TagElement.makeFromValues(code, vrIndex, vList, cds);
+
+/*  /// Returns a new Sequence ([SQ]).
   SQ makeSequenceFromCode(Dataset parent, int code, Iterable items,
-          [int vfOffset, int vfLengthField, Bytes bytes]) =>
+          [int vfOffset, int vfLengthField, DicomBytes bytes]) =>
       TagElement.makeSequenceFromCode(
           parent, code, items, vfLengthField, bytes);
 
   /// Returns a new Sequence ([SQ]).
   SQ makeSequenceFromTag(Dataset parent, Tag tag, Iterable items,
-          [int vfOffset, int vfLengthField, Bytes bytes]) =>
+          [int vfOffset, int vfLengthField, DicomBytes bytes]) =>
       TagElement.makeSequenceFromTag(parent, tag, items, vfLengthField, bytes);
+  */
 }

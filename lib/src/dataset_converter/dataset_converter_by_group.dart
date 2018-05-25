@@ -48,8 +48,7 @@ class DatasetConverterByGroup {
 
   // Does not handle SQ or Private
   void _findFmi() {
-    for (var e in rSds.fmi.elements)
-      if (e.isPrivate) rTds.fmi[e.code] = e;
+    for (var e in rSds.fmi.elements) if (e.isPrivate) rTds.fmi[e.code] = e;
     sIndex += rSds.fmi.length;
     tIndex += rTds.fmi.length;
   }
@@ -70,14 +69,14 @@ class DatasetConverterByGroup {
       sIndex++;
       if (gNumber < currentGNumber) throw 'Error: e';
       if (gNumber > currentGNumber) {
- //       assert(e is! SQ, '$e');
+        //       assert(e is! SQ, '$e');
         if (currentGNumber > 0) log.up;
         currentGNumber = gNumber;
         currentGroup = (gNumber.isEven)
             ? new PublicGroup(e, sqParent)
             : new PrivateGroup(e);
 
-        if (currentTds is DatasetByGroup ) {
+        if (currentTds is DatasetByGroup) {
           currentTds.addGroup(currentGroup);
         } else if (currentTds is RootDatasetByGroup) {
           currentTds.addGroup(currentGroup);
@@ -118,7 +117,6 @@ class DatasetConverterByGroup {
             }
             currentSubgroup = sg;
             currentSGNumber = sgNumber;
-
           } else {
             currentSubgroup.addData(e, sqParent);
           }
@@ -160,7 +158,7 @@ class DatasetConverterByGroup {
 
     for (var i = 0; i < sq.items.length; i++) {
       final ItemByGroup sItem = sq.items.elementAt(i);
-      currentSds =  sItem;
+      currentSds = sItem;
       final ItemByGroup cItem = currentTds;
       final tItem = new ItemByGroup(cItem);
       currentTds = tItem;

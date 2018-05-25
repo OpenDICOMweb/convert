@@ -186,7 +186,7 @@ abstract class IvrSubReader extends SubReader  with NoLoggingMixin {
     } else if (Tag.isPCCode(code)) {
       return Tag.lookupByCode(code);
     } else {
-      print('Unknown code: ${dcm(code)}');
+      log.error('Unknown code: ${dcm(code)}');
       return Tag.lookupByCode(code);
     }
   }

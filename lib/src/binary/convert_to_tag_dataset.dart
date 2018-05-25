@@ -86,19 +86,8 @@ Element convertElement(Element e) {
 
 Element _convertSimpleElement(Element e) {
   if (e.vrIndex > 30) throw 'bad e.vr: ${e.vrIndex}';
-  return (e.tag == PTag.kPixelData)
-      ? TagElement.makeFromElement(sourceRDS, e)
-      : TagElement.makeFromElement(sourceRDS, e);
+  return  TagElement.makeFromValues(e.code, e.vrIndex, e.values, sourceRDS);
 }
-
-/*
-Element _convertMaybeUndefinedElement(Element e) {
-  if (e.vrIndex > 30) throw 'bad e.vr: ${e.vrIndex}';
-  return (e.tag == PTag.kPixelData)
-      ? TagElement.pixelDataFrom(e, sourceRDS.transferSyntax, e.vrIndex)
-      : TagElement.from(e, e.vrIndex);
-}
-*/
 
 const int kDefaultCount = 5;
 

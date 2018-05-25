@@ -86,9 +86,7 @@ class DatasetConverter {
 
   Element _convertSimpleElement(Dataset ds, Element e) {
     if (e.vrIndex > 30) throw 'bad e.vr: ${e.vrIndex}';
-    return (e.tag == PTag.kPixelData)
-        ? TagElement.makeFromElement(ds, e, e.vrIndex)
-        : TagElement.makeFromElement(ds, e, e.vrIndex);
+    return  TagElement.makeFromValues(e.code, e.vrIndex, e.values, ds);
   }
 
 /*
