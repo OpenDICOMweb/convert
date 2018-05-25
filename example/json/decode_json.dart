@@ -14,7 +14,7 @@ import 'package:core/core.dart';
 void main(List<String> args) {
   // ArgParser parser = getArgParser();
 
-  final inFile = new File('C:/odw/sdk/encode/example/json/example.json');
+  final inFile = new File('C:/acr/odw/sdk/convert/example/json/example.json');
   final s = inFile.readAsStringSync();
   final Map code = json.decode(s);
   print('json array(${code.length}');
@@ -29,7 +29,7 @@ void main(List<String> args) {
  const encoder = const JsonEncoder.withIndent('  ');
  final pretty = encoder.convert(code);
 
-  new File('C:/odw/sdk/encode/example/json/output.json')
+  new File('C:/odw/sdk/convert/example/json/output.json')
   ..writeAsStringSync(pretty);
 }
 
