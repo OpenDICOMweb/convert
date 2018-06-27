@@ -269,17 +269,17 @@ abstract class SubReader {
       [SQ sequence, Map<int, Element> eMap, DicomBytes bd]);
 
   /// Creates an Element from [DicomBytes].
-  Element makeFromDicomBytes(DicomBytes bytes, Dataset ds, {bool isEvr});
+  Element makeFromBytes(DicomBytes bytes, Dataset ds, {bool isEvr});
 
   /// Creates an Element from [DicomBytes].
-  Element makeMaybeUndefinedFromDicomBytes(DicomBytes bytes, Dataset ds);
+  Element makeMaybeUndefinedFromBytes(DicomBytes bytes, Dataset ds);
 
   /// Creates an Element from [DicomBytes].
-  Element makePixelDataFromDicomBytes(DicomBytes bytes,
+  Element makePixelDataFromBytes(DicomBytes bytes,
       [TransferSyntax ts, VFFragments fragments]);
 
   /// Create an SQ Element.
-  Element makeSQFromDicomBytes(Dataset parent,
+  Element makeSQFromBytes(Dataset parent,
       [Iterable<Item> items, DicomBytes bytes]);
 
   /// Returns a new [Element].
@@ -487,7 +487,7 @@ abstract class SubReader {
       _rb.rSkip(4);
       final items = <Item>[_makeEmptyItem(cds)];
       final bytes = _rb.view(eStart, _rb.index - eStart);
-      return makeSQFromDicomBytes(cds, items, bytes);
+      return makeSQFromBytes(cds, items, bytes);
     } else if (vlf == kUndefinedLength) {
       return _readUndefinedLength(code, eStart, vrIndex, vfOffset, vlf);
     } else {
@@ -512,7 +512,7 @@ abstract class SubReader {
 
   Element _makeFromBytes(int code, int start, int vrIndex, int vfOffset) {
     final dBytes = _makeDicomBytes(start, vfOffset);
-    return makeFromDicomBytes(dBytes, cds, isEvr: isEvr);
+    return makeFromBytes(dBytes, cds, isEvr: isEvr);
   }
 
   DicomBytes _makeDicomBytes(int start, int vfOffset) {
@@ -537,7 +537,7 @@ abstract class SubReader {
       [TransferSyntax ts, VFFragments fragments]) {
     _afterPixelData = true;
     final dBytes = _makeLongDicomBytes(start);
-    return makePixelDataFromDicomBytes(dBytes, ts, fragments);
+    return makePixelDataFromBytes(dBytes, ts, fragments);
   }
 
   /// Reads an Element with a 32-bit Value Field Length Field [vlf]
@@ -606,7 +606,7 @@ abstract class SubReader {
       items.add(item);
     }
     final dBytes = _makeLongDicomBytes(eStart);
-    return makeSQFromDicomBytes(cds, items, dBytes);
+    return makeSQFromBytes(cds, items, dBytes);
   }
 
   /// If the sequence delimiter is found at the current _read index_, reads the
@@ -624,7 +624,7 @@ abstract class SubReader {
     }
     if (sqEnd != _rb.index) log.warn('sqEnd($sqEnd) != rb.index(${_rb.index})');
     final dBytes = _makeLongDicomBytes(eStart);
-    return makeSQFromDicomBytes(cds, items, dBytes);
+    return makeSQFromBytes(cds, items, dBytes);
   }
 
   /// Returns [VFFragments] for a [kPixelData] Element.

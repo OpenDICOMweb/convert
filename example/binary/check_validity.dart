@@ -52,26 +52,16 @@ Future main() async {
   }
   final length = rds.lengthInBytes;
   print('File: "$inPath" $length bytes (${length ~/ 1024}K) read');
-  print('RootDataset: ${rds.total} Elements');
+  print('ByteRootDataset: ${rds.total} Elements');
 
   var issues = new Issues('dataset: $rds');
-  var map = rds.map((e) {
-    print('$e');
-    e.check(issues);
-  });
-  print('$map');
-  print('Issues: \n$issues');
+  var map = rds.map((e) => e.check(issues)).toList(growable: false);
+  print('Issues0: \n$issues');
 
   final tagRds = new TagRootDataset.from(rds);
   print('TagRootDataset: ${tagRds.total} Elements');
+
   issues = new Issues('dataset: $tagRds');
-  map = rds.map((e) {
-    print('$e');
-    e.check(issues);
-  });
-  final iList = <Issues>[];
-  for(var i in map) {
-    if (i != null) iList.add(i);
-  }
-  print('Issues: \n$iList');
+  map = rds.map((e) => e.check(issues)).toList(growable: false);
+  print('Issues1: \n$issues');
 }

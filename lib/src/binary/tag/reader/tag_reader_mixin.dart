@@ -21,20 +21,20 @@ abstract class TagReaderMixin {
           [SQ sequence, Map<int, Element> eMap, DicomBytes bytes]) =>
       new ByteItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
 
-  Element makeFromDicomBytes(DicomBytes bytes, Dataset ds, {bool isEvr}) =>
-      TagElement.makeFromDicomBytes(bytes, ds, isEvr: isEvr);
+  Element makeFromBytes(DicomBytes bytes, Dataset ds, {bool isEvr}) =>
+      TagElement.makeFromBytes(bytes, ds, isEvr: isEvr);
 
-  Element makeMaybeUndefinedFromDicomBytes(DicomBytes bytes, Dataset ds,
+  Element makeMaybeUndefinedFromBytes(DicomBytes bytes, Dataset ds,
           [TransferSyntax ts]) =>
-      TagElement.makeMaybeUndefinedFromDicomBytes(bytes, ds);
+      TagElement.makeMaybeUndefinedFromBytes(bytes, ds);
 
-  Element makeSQFromDicomBytes(Dataset parent,
+  Element makeSQFromBytes(Dataset parent,
           [Iterable<Item> items, DicomBytes bytes]) =>
-      TagElement.makeSQFromDicomBytes(parent, items, bytes);
+      TagElement.makeSQFromBytes(parent, items, bytes);
 
-  Element makePixelDataFromDicomBytes(DicomBytes bytes,
+  Element makePixelDataFromBytes(DicomBytes bytes,
           [TransferSyntax ts, VFFragments fragments]) =>
-      TagElement.makePixelDataFromDicomBytes(bytes, cds, ts);
+      TagElement.makePixelDataFromBytes(bytes, cds, ts);
 
   Element makeFromValues<V>(int code, int vrIndex, List<V> vList) =>
       TagElement.makeFromValues(code, vrIndex, vList, cds);
