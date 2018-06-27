@@ -178,7 +178,7 @@ abstract class IvrSubReader extends SubReader  with NoLoggingMixin {
 
   Tag _lookupTag(int code, int eStart, [int vrIndex, Object token]) {
     // Urgent Fix
-    if (Tag.isPublicCode(code)) {
+    if (isPublicCode(code)) {
       return Tag.lookupByCode(code);
     } else if (Tag.isPDCode(code)) {
       // **** temporary

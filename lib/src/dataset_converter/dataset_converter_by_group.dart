@@ -111,7 +111,7 @@ class DatasetConverterByGroup {
             var sg = currentGroup[sgNumber];
             if (sg == null) {
               log.warn('Subgroup $sg with no creator');
-              final creator = PCtag.makeEmptyPrivateCreator(e.code, e.vrIndex);
+//           final creator = PCtag.makeEmptyPrivateCreator(e.code, e.vrIndex);
               sg = new PrivateSubgroup(currentGroup, sgNumber);
               currentGroup.subgroups[sgNumber] = sg;
             }

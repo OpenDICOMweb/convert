@@ -183,7 +183,7 @@ class TagConverter extends Converter {
   @override
   SQtag makeSequence(Dataset parent, Tag tag, int nItems,
           [int vfLengthField]) =>
-      new SQtag(parent, tag, new List<TagItem>(nItems), vfLengthField);
+      new SQtag(parent, tag, new List<TagItem>(nItems));
 }
 
 /* Urgent Jim Finish

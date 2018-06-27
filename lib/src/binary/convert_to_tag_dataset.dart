@@ -117,7 +117,7 @@ SQ convertSQ(SQ sq) {
   }
   currentSDS = parentSDS;
   currentTDS = parentTDS;
-  final tagSQ = new SQtag(parentTDS, sq.tag,  tItems, sq.length);
+  final tagSQ = new SQtag(parentTDS, sq.tag,  tItems);
 
   for (var item in tItems) item.sequence = tagSQ;
   return tagSQ;

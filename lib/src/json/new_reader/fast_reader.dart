@@ -76,7 +76,7 @@ class FastJsonReader extends JsonReaderBase {
     var csg = 0;
     PCTag cPCTag;
     print('${dcm(code)} vr($vrIndex) : $values');
-    if (Tag.isPublicCode(code)) {
+    if (isPublicCode(code)) {
       print('PTag: ${dcm(code)} : $values');
       tag = PTag.lookupByCode(code, vrIndex);
     } else if (Tag.isPDCode(code)) {

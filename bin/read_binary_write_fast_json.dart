@@ -11,15 +11,15 @@ import 'package:convert/convert.dart';
 import 'package:core/server.dart';
 import 'package:io/io.dart';
 
-const String xx0 = 'C:/acr/odw/test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX'
+const String xx0 = 'C:/odw_test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX'
     '/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)'
     '/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm';
-const String xx1 = 'C:/acr/odw/test_data/mweb/ASPERA/DICOM files only'
+const String xx1 = 'C:/odw_test_data/mweb/ASPERA/DICOM files only'
     '/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm';
-const String xx2 = 'C:/acr/odw/test_data/mweb/Different_SOP_Class_UIDs'
+const String xx2 = 'C:/odw_test_data/mweb/Different_SOP_Class_UIDs'
     '/Anonymized1.2.840.10008.3.1.2.5.5.dcm';
 const String xx3 =
-    'C:/acr/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
+    'C:/odw_test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
 
 
 

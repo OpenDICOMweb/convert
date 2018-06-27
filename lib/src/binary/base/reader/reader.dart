@@ -49,7 +49,7 @@ abstract class Reader {
 
   DecodingParameters get dParams => evrSubReader.dParams;
 
-  ByteRootDataset get rds => _rds ??= evrSubReader.rds;
+  RootDataset get rds => _rds ??= evrSubReader.rds;
   RootDataset _rds;
 
   Bytes get bytesRead => rb.view(0, rb.index);
@@ -64,7 +64,7 @@ abstract class Reader {
         ..debug('>R@${rb.index} readRootDataset  ${rb.length} bytes');
     }
 
-    int fmiEnd;
+    var fmiEnd = 0;
     try {
        fmiEnd = evrSubReader.readFmi();
     } on EndOfDataError catch(e){

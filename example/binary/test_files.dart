@@ -1,65 +1,71 @@
 // Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
 // Use of this source code is governed by the open source license
 // that can be found in the LICENSE file.
-// Original author: Jim Philbin <jfphilbin@gmail.edu> -
-// See the   AUTHORS file for other contributors.
+// Original author: Jim Philbin <jfphilbin@gmail.edu> - 
+// See the AUTHORS file for other contributors.
 
-import 'dart:async';
-import 'dart:io';
-import 'dart:typed_data';
+// Explicit VR Little Endian
+const String x0 = 'C:/odw_test_data/mweb/Different_SOP_Class_UIDs'
+    '/Anonymized1.2.840.10008.3.1.2.5.5.dcm';
 
-import 'package:convert/convert.dart';
-import 'package:core/server.dart';
-import 'package:path/path.dart' as path;
+// Explicit VR JPEG 2000
+const String x1 =
+    'C:/odw_test_data/6684/2017/5/12/21/E5C692DB/A108D14E/A619BCE3';
 
-const String bePath =
-    'C:/odw_test_data/mweb/ASPERA/DICOM files only'
+// Implicit VR
+const String x2 = 'C:/odw_test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX'
+    '/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)'
+    '/A Aorta w-c  3.0  B20f  0-95%/IM-0001-0020.dcm';
+
+// Explicit VR Big Endian
+const String x3 =
+    'C:/odw_test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
+
+// Explicit VR Big Endian
+const String x4 = 'C:/odw_test_data/mweb/ASPERA/DICOM files only'
     '/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm';
 
-//Urgent: bug with path20
-Future main() async {
-  Server.initialize(name: 'ReadFile', level: Level.debug3, throwOnError: true);
+// Explicit VR Little Endian with Private Tag codes and group length
+const String x5 =
+    'C:/odw_test_data/mweb/100 MB Studies/1/S234601/15859205';
 
-  const fPath = bePath;
+const String x6 =
+    'C:/odw_test_data/sfd/MR/PID_BREASTMR/1_DICOM_Original/EFC524F2.dcm';
 
-  print('path: $fPath');
-  print(' out: ${getTempFile(fPath, 'dcmout')}');
-  final url = new Uri.file(fPath);
-  stdout.writeln('Reading(byte): $url');
+const String dcmDir = 'C:/odw_test_data/sfd/MG/DICOMDIR';
 
-  final reader = new ByteReader.fromPath(fPath, doLogging: true);
-  final rds = reader.readRootDataset();
+const String evrULength =
+    'c:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
 
-  if (rds == null) {
-    log.warn('Invalid DICOM file: $fPath');
-  } else if (reader.pInfo != null) {
-    final infoPath = '${path.withoutExtension(fPath)}.info';
-    log.info('infoPath: $infoPath');
-    final sb = new StringBuffer('${reader.pInfo.summary(rds)}\n')
-      ..write('Bytes Dataset: ${rds.summary}');
-    new File(infoPath)..writeAsStringSync(sb.toString());
-    log.debug(sb.toString());
+const String x7 =
+    'C:/odw_test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop'
+    '/1.2.840.10008.5.1.4.1.1.88.67.dcm ';
 
-    final z = new Formatter.withIndenter(-1, Prefixer.basic);
-    final fmtPath = '${path.withoutExtension(fPath)}.fmt';
-    log.info('fmtPath: $fmtPath');
-    final fmtOut = rds.format(z);
-    new File(fmtPath)..writeAsStringSync(sb.toString());
-    log.debug(fmtOut);
+// Defined and Undefined datasets
+const String evrXLarge =
+    'C:/odw_test_data/mweb/100 MB Studies/1/S234611/15859368';
 
-//        print(rds.format(z));
-  } else {
-    print('${rds.summary}');
-  }
-}
+const String evrOWPixels = 'C:/odw_test_data/IM-0001-0001.dcm';
 
-Future<Uint8List> readFileAsync(File file) async => await file.readAsBytes();
+const String ivrClean = 'C:/odw_test_data/sfd/MR/PID_BREASTMR/'
+    '1_DICOM_Original/EFC524F2.dcm';
 
-String getTempFile(String infile, String extension) {
-  final name = path.basenameWithoutExtension(infile);
-  final dir = Directory.systemTemp.path;
-  return '$dir/$name.$extension';
-}
+const String ivrCleanMR = 'C:/odw_test_data/mweb/100 MB Studies/MRStudy/'
+    '1.2.840.113619.2.5.1762583153.215519.978957063.99.dcm';
+
+const String evrDataAfterPixels =
+    'C:/odw_test_data/mweb/100 MB Studies/1/S234601/15859205';
+
+const String ivrWithGroupLengths =
+    'C:/odw_test_data/mweb/100 MB Studies/MRStudy'
+    '/1.2.840.113619.2.5.1762583153.215519.978957063.101.dcm';
+
+const String bar = 'C:/odw_test_data/mweb/10 Patient IDs/04443352';
+
+const List<String> files = const <String>[
+  x0, x1, x2, x3, x4, x5, x6, x7, dcmDir, evrXLarge, evrOWPixels,
+  ivrClean, ivrCleanMR, evrDataAfterPixels, ivrWithGroupLengths, bar
+];
 
 const String x00 = 'c:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/'
     '1.2.392.200036.9123.100.12.11.3.dcm';
@@ -127,3 +133,5 @@ const List<String> badFiles = const <String>[
 //  x16, Big E
   x17
 ];
+
+

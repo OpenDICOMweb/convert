@@ -38,16 +38,4 @@ abstract class TagReaderMixin {
 
   Element makeFromValues<V>(int code, int vrIndex, List<V> vList) =>
       TagElement.makeFromValues(code, vrIndex, vList, cds);
-
-/*  /// Returns a new Sequence ([SQ]).
-  SQ makeSequenceFromCode(Dataset parent, int code, Iterable items,
-          [int vfOffset, int vfLengthField, DicomBytes bytes]) =>
-      TagElement.makeSequenceFromCode(
-          parent, code, items, vfLengthField, bytes);
-
-  /// Returns a new Sequence ([SQ]).
-  SQ makeSequenceFromTag(Dataset parent, Tag tag, Iterable items,
-          [int vfOffset, int vfLengthField, DicomBytes bytes]) =>
-      TagElement.makeSequenceFromTag(parent, tag, items, vfLengthField, bytes);
-  */
 }

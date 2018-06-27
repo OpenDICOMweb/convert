@@ -61,7 +61,7 @@ OWtag _readOW(Tag tag, int vrIndex, Iterable vf) {
   final String key = vf.elementAt(0);
   final String value = vf.elementAt(1);
   if (key == 'InlineBinary')
-    return OWtag.fromBytes(Bytes.fromBase64(value), tag);
+    return OWtag.fromBytes(tag, Bytes.fromBase64(value));
 
   if (key == 'BulkDataURI') {
     final uri = new Uri.dataFromString(value);
@@ -96,7 +96,7 @@ OLtag _readOL(Tag tag, int vrIndex, Iterable vf) {
   final String key = vf.elementAt(0);
   final String value = vf.elementAt(1);
   if (key == 'InlineBinary')
-    return OLtag.fromBytes(Bytes.fromBase64(value), tag);
+    return OLtag.fromBytes(tag, Bytes.fromBase64(value));
   if (key == 'BulkDataURI') {
     final bd = new FloatBulkdataRef(tag.code, Uri.parse(value));
     return OLtag.bulkdata(tag, bd.uri);
@@ -109,7 +109,7 @@ OFtag _readOF(Tag tag, int vrIndex, Iterable vf) {
   final String key = vf.elementAt(0);
   final String value = vf.elementAt(1);
   if (key == 'InlineBinary')
-    return OFtag.fromBytes(Bytes.fromBase64(value), tag);
+    return OFtag.fromBytes(tag, Bytes.fromBase64(value));
 
   if (key == 'BulkDataURI')
     return OFtag.fromValues(
@@ -123,7 +123,7 @@ ODtag _readOD(Tag tag, int vrIndex, Iterable vf) {
   final String key = vf.elementAt(0);
   final String value = vf.elementAt(1);
   if (key == 'InlineBinary')
-    return ODtag.fromBytes(Bytes.fromBase64(value), tag);
+    return ODtag.fromBytes(tag, Bytes.fromBase64(value));
   if (key == 'BulkDataURI')
     return ODtag.fromValues(
         tag, new FloatBulkdataRef(tag.code, Uri.parse(value)));

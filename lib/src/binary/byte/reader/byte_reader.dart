@@ -56,6 +56,7 @@ class ByteReader extends Reader {
     return new ByteReader.fromFile(f, dParams: dParams, doLogging: doLogging);
   }
 
+  /// Returns a new [ByteIvrSubReader], which is created lazily on demand.
   @override
   ByteIvrSubReader get ivrSubReader =>
       _ivrSubReader ??= new ByteIvrSubReader.from(evrSubReader);

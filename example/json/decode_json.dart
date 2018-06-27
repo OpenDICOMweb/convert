@@ -14,7 +14,7 @@ import 'package:core/core.dart';
 void main(List<String> args) {
   // ArgParser parser = getArgParser();
 
-  final inFile = new File('C:/acr/odw/sdk/convert/example/json/example.json');
+  final inFile = new File('C:/odw_test_data/sdk/convert/example/json/example.json');
   final s = inFile.readAsStringSync();
   final Map code = json.decode(s);
   print('json array(${code.length}');

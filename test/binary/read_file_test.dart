@@ -6,15 +6,14 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 
-import 'package:core/server.dart';
+import 'package:core/server.dart' hide group;
 import 'package:test/test.dart';
 
 import 'package:convert/binary.dart';
 
 void main() {
   Server.initialize(name: 'dcm_reader_test', level: Level.info0);
-  const path0 = 'C:/odw/sdk/test_tools/test_data/TransferUIDs'
-      '/1.2.840.10008.1.2.5.dcm';
+  const path0 = 'C:/odw_test_data/TransferUIDs/1.2.840.10008.1.2.5.dcm';
 
   group('Simple binary read', () {
     test('Read file', () {

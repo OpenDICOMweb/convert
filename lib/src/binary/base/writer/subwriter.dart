@@ -376,7 +376,31 @@ abstract class SubWriter {
       ..writeUint32(0);
   }
 
-  void _writeEncapsulatedPixelData(BytePixelData e) {
+  /// Writes Encapsulated Pixel Data without Fragments
+  void _writeEncapsulatedPixelData(PixelData e) {
+    assert(e.vfLengthField == kUndefinedLength);
+    final offsets = e.offsets;
+    final bulkdata = e.bulkdata;
+    if (e.frames is CompressedFrameList) {
+      _wb
+        ..writeCode(kItem, 8 +  e.frames.length)
+        ..writeUint32(e.offsets.lengthInBytes)
+        ..writeUint32List(offsets)
+        ..writeCode(kItem, bulkdata.lengthInBytes)
+        ..writeUint32(bulkdata.lengthInBytes)
+        ..writeUint8List(bulkdata);
+    } /*else {
+      _wb
+        ..writeCode(kItem, 8 + frames.lengthInBytes)
+        ..writeUint32(0)
+        ..writeCode(kItem, frames.bulkdata.lengthInBytes)
+        ..writeUint32(frames.bulkdata.lengthInBytes)
+        ..writeUint8List(frames.bulkdata);
+    }
+*/
+  }
+
+  void _writeFragments(BytePixelData e) {
     assert(e.vfLengthField == kUndefinedLength);
     for (final fragment in e.fragments.fragments) {
       _wb
@@ -432,9 +456,12 @@ abstract class SubWriter {
         e.vfLengthField == kUndefinedLength &&
         _wb.index.isEven);
     __writeLongUndefinedLengthHeader(e, vrIndex);
-    if (e is BytePixelData) {
-      assert(e.code == kPixelData);
-      _writeEncapsulatedPixelData(e as BytePixelData);
+    if (e.code == kPixelData) {
+      if (e is BytePixelData) {
+        _writeFragments(e);
+      } else {
+        _writeEncapsulatedPixelData(e);
+      }
     } else {
       _writeValueField(e, vrIndex);
     }

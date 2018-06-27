@@ -5,7 +5,6 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -35,6 +34,10 @@ import 'package:convert/src/parse_info.dart';
 
 typedef Element LongElementReader(int code, int eStart, int vrIndex, int vlf);
 
+// TODO:
+//   1. convert all if (doLogging) log.... to log....
+//   2. make any error and warnings conditional
+
 abstract class EvrSubReader extends SubReader {
   EvrSubReader(Bytes bytes, DecodingParameters dParams, Dataset cds)
       : super(new DicomReadBuffer(bytes), dParams, cds);
@@ -59,7 +62,8 @@ abstract class EvrSubReader extends SubReader {
         ..debug('TS: $ts')
         ..debug('Fmi Elements: $fmiCount')
         ..debug('Evr Elements: $eCount')
-        ..debug('Total:        ${fmiCount + eCount}')
+        ..debug('Total:        ${rds.total}')
+        ..debug('Duplicates:   ${rds.duplicates.length}')
         ..debug('Bytes read:   ${_rb.index} ');
     }
   }
@@ -81,13 +85,11 @@ abstract class EvrSubReader extends SubReader {
 
   int _lookupEvrVRIndex(int code, int eStart, int vrCode) {
     final vrIndex = vrIndexFromCode(vrCode);
-
     if (vrIndex == null) {
       // TODO: this should throw
       _nullVRIndex(code, eStart, vrCode);
     } else if (_isSpecialVR(vrIndex)) {
-      log.warn('** Changing (${hex32(code)}) with Special VR '
-          '${vrIdFromIndex(vrIndex)}) to VR.kUN');
+      _changingVR(code, vrIndex);
       return kUNIndex;
     } else if (Tag.isPCCode(code) &&
         (vrIndex != kLOIndex && vrIndex != kUNIndex)) {
@@ -96,9 +98,12 @@ abstract class EvrSubReader extends SubReader {
     return vrIndex;
   }
 
-  void _nullVRIndex(int code, int eStart, int vrCode) {
-    log.warn('** @$eStart ${dcm(code)} Null VR(${hex16(vrCode)}, $vrCode)');
-  }
+  void _nullVRIndex(int code, int eStart, int vrCode) =>
+      log.warn('** @$eStart ${dcm(code)} Null VR(${hex16(vrCode)}, $vrCode)');
+
+  void _changingVR(int code, int vrIndex) =>
+      log.warn('** Changing (${hex32(code)}) with Special VR '
+          '${vrIdFromIndex(vrIndex)}) to VR.kUN');
 
   void _invalidPrivateCreator(int code, int vrIndex) {
     assert(Tag.isPCCode(code) && (vrIndex != kLOIndex && vrIndex != kUNIndex));
@@ -148,7 +153,6 @@ abstract class EvrSubReader extends SubReader {
         ..debug('<R@${_rb.index} FinishedReading FMI:')
         ..up
         ..debug('| TS: $ts');
-    ;
     return _rb.index;
   }
 
@@ -162,12 +166,13 @@ abstract class EvrSubReader extends SubReader {
     final prefix = _rb.readUint32();
     if (prefix == kDcmPrefix) return true;
     _rb.reset;
-    final preamble = _rb.readUint8List(128);
-    final prefix1 = _rb.readUint8List(4);
-    log.warn('No DICOM Prefix present:\n  $preamble\n  $prefix1');
+    _noDcmPrefixPresent(_rb.readUint8List(128), _rb.readUint8List(4));
     return false;
   }
 }
+
+void _noDcmPrefixPresent(Uint8List preamble, Uint8List prefix) =>
+    log.warn('No DICOM Prefix present:\n  $preamble\n  $prefix');
 
 abstract class IvrSubReader extends SubReader {
   IvrSubReader(DicomReadBuffer rb, DecodingParameters dParams, Dataset cds)
@@ -190,7 +195,8 @@ abstract class IvrSubReader extends SubReader {
         ..debug('TS: $ts')
         ..debug('Fmi Elements: $fmiCount')
         ..debug('Ivr Elements: $eCount')
-        ..debug('Total:        ${fmiCount + eCount}')
+        ..debug('Total:        ${rds.total}')
+        ..debug('Duplicates:   ${rds.duplicates.length}')
         ..debug('Bytes read:   ${_rb.index} ');
     }
   }
@@ -204,13 +210,8 @@ abstract class IvrSubReader extends SubReader {
     var vrIndex = kUNIndex;
     Tag tag;
     if (doLookupVRIndex) {
-      var token = '';
-      if (Tag.isPCCode(code)) {
-        token = _rb.getUtf8(vlf);
-        log.debug('token: "$token"');
-      }
+      final token = (Tag.isPCCode(code)) ? _rb.getUtf8(vlf).trim() : '';
       tag = Tag.lookupByCode(code, vrIndex, token);
-
       if (tag != null && (tag.vrIndex <= kVRNormalIndexMax))
         vrIndex = tag.vrIndex;
     }
@@ -259,6 +260,7 @@ abstract class SubReader {
 
   TransferSyntax get ts => _ts;
 
+  //Urgent Jim: cleanup interface
   /// Reads and returns the next [Element] in the [DicomReadBuffer].
   Element _readElement();
 
@@ -395,22 +397,27 @@ abstract class SubReader {
   // **** This is one of the only two places Elements are added to the dataset.
   void _readDatasetDefinedLength(Dataset ds, int dsStart, int vfl) {
     assert(vfl != kUndefinedLength && dsStart == _rb.index);
+    ds.start = _rb.index;
     final dsEnd = dsStart + vfl;
-    while (_rb.index < dsEnd) {
-      final e = _readElement();
-      final ok = ds.tryAdd(e);
-      if (!ok) log.warn('*** duplicate: $e');
+    while (_rb.index < dsEnd) _readDataset(ds);
+    ds.end = _rb.index;
+    assert(vfl == ds.end - ds.start);
+  }
+
+  void _readDataset(Dataset ds) {
+    final e = _readElement();
+    final ok = ds.tryAdd(e);
+    if (!ok) {
+      log.warn('** duplicate: $e');
+      cds.history.duplicates.add(e);
     }
   }
 
   void _readDatasetUndefinedLength(Dataset ds, int dsStart) {
-    while (!_isItemDelimiter()) {
-      // Elements are always read into the current dataset.
-      // **** This is the only place they are added to the dataset.
-      final e = _readElement();
-      final ok = ds.tryAdd(e);
-      if (!ok) log.warn('*** duplicate: $e');
-    }
+    assert(dsStart == _rb.index);
+    ds.start = _rb.index;
+    while (!_isItemDelimiter()) _readDataset(ds);
+    ds.end = _rb.index;
   }
 
   /// If the item delimiter _kItemDelimitationItem_, reads and checks the
@@ -517,6 +524,7 @@ abstract class SubReader {
             : new EvrLongBytes.view(_rb.buffer, start, end, endian);
   }
 
+  /// Returns
   DicomBytes _makeLongDicomBytes(int start) => (!isEvr)
       ? new IvrBytes.view(_rb.buffer, start, _rb.index)
       : new EvrLongBytes.view(_rb.buffer, start, _rb.index, endian);
@@ -861,7 +869,8 @@ abstract class SubReader {
     if (rds.hasDuplicates) log.warn('| ** Duplicates Present in rds0');
     log
       ..debug('<@R${_rb.index} subReadRootDataset $dsBytes $rds')
-      ..up;
+      ..up
+      ..debug('<@R${_rb.index} readRootDataset ${rds.total}');
   }
 
 /*
