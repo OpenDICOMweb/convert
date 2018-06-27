@@ -69,6 +69,9 @@ Future main() async {
     print('$e');
     e.check(issues);
   });
-  print('$map');
-  print('Issues: \n$issues');
+  final iList = <Issues>[];
+  for(var i in map) {
+    if (i != null) iList.add(i);
+  }
+  print('Issues: \n$iList');
 }
