@@ -14,7 +14,7 @@ void main() {
   Server.initialize(
       name: 'dcm_reader_test', level: Level.debug, throwOnError: true);
 
-  const path0 = 'C:/odw_test_data/TransferUIDs/1.2.840.10008.1.2.5.dcm';
+  const path0 = 'C:/odw_test_data/mweb/TransferUIDs/1.2.840.10008.1.2.5.dcm';
 
   group('description', () {
     test('instance', () {
