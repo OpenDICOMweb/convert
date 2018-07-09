@@ -14,12 +14,12 @@ void main() {
   Server.initialize(
       name: 'dcm_reader_test', level: Level.debug, throwOnError: false);
 
-  const path0 = 'C:/odw_test_data/mweb/TransferUIDs/1.2.840.10008.1.2.5.dcm';
+//  const path0 = 'C:/odw_test_data/mweb/TransferUIDs/1.2.840.10008.1.2.5.dcm';
   const path1 = 'C:/odw_test_data/mweb/10 Patient IDs/2a5bef0f-e4d2-4680-bd24-f42d902d6741.dcm';
 
   group('description', () {
     test('instance', () {
-      final rds = ByteReader.readPath(path0);
+      final rds = ByteReader.readPath(path1);
       log.debug('${rds.info}');
       final entity = activeStudies.entityFromRootDataset(rds);
       log.debug('${entity.info}');
