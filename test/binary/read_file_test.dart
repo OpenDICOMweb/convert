@@ -5,22 +5,20 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
+import 'package:convert/convert.dart';
 import 'package:core/server.dart' hide group;
 import 'package:test/test.dart';
 
-import 'package:convert/binary.dart';
+const String path0 = 'C:/odw_test_data/mweb/TransferUIDs/1.2.840.10008.1.2.5.dcm';
 
 void main() {
-  Server.initialize(name: 'dcm_reader_test', level: Level.info0);
-  const path0 = 'C:/odw_test_data/mweb/TransferUIDs/1.2.840.10008.1.2.5.dcm';
+  Server.initialize(name: 'ByteReader Test', level: Level.debug);
 
-  group('Simple binary read', () {
-    test('Read file', () {
+    test('ByteReader Read file', () {
       final rds = ByteReader.readPath(path0);
       log.debug('${rds.info}');
       final entity = activeStudies.entityFromRootDataset(rds);
       log.debug('${entity.info}');
     });
-  });
 }
