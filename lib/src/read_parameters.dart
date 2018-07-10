@@ -1,32 +1,30 @@
-// Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
-// Use of this source code is governed by the open source license
-// that can be found in the LICENSE file.
-// Author: Jim Philbin <jfphilbin@gmail.edu>
-// See /[package]/AUTHORS file for other contributors.
+//  Copyright (c) 2016, 2017, 2018,
+//  Poplar Hill Informatics and the American College of Radiology
+//  All rights reserved.
+//  Use of this source code is governed by the open source license
+//  that can be found in the odw/LICENSE file.
+//  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
+//  See the AUTHORS file for other contributors.
 
 //Urgent: finish
 ///
 class ReaderParameters {
-  /// If [true] duplicate [Element]s are allowed; if [false] either an
-  /// [Error] will be thrown (if [throwOnError] is [true]; otherwise, the
-  /// the [Element] with the more precise [VR] will be stored and the other
+  /// If true duplicate Elements are allowed; if false either an
+  /// [Error] will be thrown (if [throwOnError] is true; otherwise, the
+  /// the Element with the more precise VR will be stored and the other
   /// discarded.
   final bool allowDuplicates;
 
-  /// If [true] any duplicate characters will be removed.
+  /// If true any duplicate characters will be removed.
   final bool removeDuplicates;
 
-  /// If [true] the Reader will de-identify the [Dataset] before returning it.
+  /// If true the Reader will de-identify the Dataset before returning it.
   final bool deIdentify;
 
-  /// If [true] no warning or errors will be generated for
+  /// If true no warning or errors will be generated for
   /// bad padding characters.
   final bool allowBadPaddingChars;
 
-  /// If [false] no [Issue] checking will NOT be done, and the following
-  /// flags will be ignored: [checkIssuesWhileDecoding],
-  /// [checkIssuesAfterDecoding], [checkIssuesOnAccess], and
-  /// [checkIssuesOnCreation].
   final bool checkIssues;
   final bool checkIssuesWhileDecoding;
   final bool checkIssuesAfterDecoding;
@@ -51,7 +49,7 @@ class ReaderParameters {
     this.shortFileThreshold
 });
 
-  static const normal = const ReaderParameters(
+  static const ReaderParameters normal = const ReaderParameters(
     deIdentify: false,
     allowDuplicates: true,
       removeDuplicates: false,

@@ -1,38 +1,30 @@
 # TODO: figure out why "convert" doesn't work for name.
-name: dcm_convert
-version: 0.6.1
+name: convert
+version: 0.7.0
 description: A package for encoding/decoding DICOM binary, json, ...
 author: Jim Philbin <jfphilbin@gmail.com>
 
 homepage: https://github.com/OpenDICOMweb/convert
 
 environment:
-  sdk: ^1.24.2
+  sdk: '>=1.24.2 <2.1.0'
 
 dependencies:
+  args: any
   core:
     path: C:/odw/sdk/core
-    version: ^0.6.3
-  logger:
-    path: C:/odw/sdk/logger
-    version: ^0.6.1
-  subject:
-    path: C:/odw/sdk/subject
-    version: ^0.6.1
-  system:
-    path: C:/odw/sdk/system
-    version: ^0.6.3
-  tag:
-    path: C:/odw/sdk/tag
-    version: ^0.6.3
-  uid:
-    path: C:/odw/sdk/uid
-    version: ^0.6.3
-
+    version: ^0.7.2
+  io:
+    path: C:/odw/sdk/io
+    version: ^0.7.0
 
 dev_dependencies:
   benchmark_harness: ^1.0.4
-  grinder: ^0.8.0
-  test:  ^0.12.0
+  grinder: ^0.8.0+2
+  test:  ^0.12.24
+  test_tools:
+    path: C:/odw/test_tools
+    version: ^0.7.0
+
 
 

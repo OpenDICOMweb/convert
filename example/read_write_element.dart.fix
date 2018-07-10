@@ -1,0 +1,48 @@
+// Copyright (c) 2016, Open DICOMweb Project. All rights reserved.
+// Use of this source code is governed by the open source license
+// that can be found in the LICENSE file.
+// Author: Jim Philbin <jfphilbin@gmail.edu> -
+// See the AUTHORS file for other contributors.
+
+import 'dart:typed_data';
+
+import 'package:core/core.dart';
+import 'package:convert/convert.dart';
+//
+/// Logger
+Logger log = new Logger('read_write_element');
+
+/// Simple [Element] test
+void main(List<String> args) {
+  final sh = new SHtag(PTag.kReceivingApplicationEntityTitle, ['foo bar']);
+  elementTest(sh, <String>['abc', 'def']);
+}
+
+/// Test
+bool elementTest(Element e0, List values) {
+
+  final e1 = e0.copy;
+  log.debug('e0: ${e0.info}, e1: ${e1.info}');
+  final e2 = e0.update(values);
+  log.debug('e1: ${e0.info}, e2: ${e1.info}');
+  if (e0 != e1) return false;
+  if (e1 != e2) return false;
+
+  // Write the element
+  final bd = new ByteData(4096);
+  final writer = new BDWriter(new ByteRootDataset.empty(bd));
+  writer.xWritePublicElement(e1);
+  final wIndex = writer.wIndex;
+
+  // Read the element
+  final rds1 = new TagRootDataset();
+  final reader = new ByteReader.fromList(writer.bytes, rds1);
+  final e3 = reader.xReadPublicElement();
+  final rIndex = reader.rIndex;
+  log.debug('wIndex: $wIndex, rIndex: $rIndex');
+  if (wIndex != rIndex) return false;
+
+  log.debug('e0: $e3, e3: $e3');
+  if (e0 != e3) return false;
+  return true;
+}
