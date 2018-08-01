@@ -10,9 +10,9 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/padding_chars.dart';
-import 'package:convert/src/element_offsets.dart';
-import 'package:convert/src/encoding_parameters.dart';
+import 'package:converter/src/binary/base/padding_chars.dart';
+import 'package:converter/src/element_offsets.dart';
+import 'package:converter/src/encoding_parameters.dart';
 
 //Urgent Jim: add to EvrULength at appropriate places
 

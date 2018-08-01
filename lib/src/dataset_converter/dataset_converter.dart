@@ -8,7 +8,7 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/dataset_converter/dataset_by_group.dart';
+import 'package:converter/src/dataset_converter/dataset_by_group.dart';
 
 //typedef Element _ElementFrom(Element e);
 

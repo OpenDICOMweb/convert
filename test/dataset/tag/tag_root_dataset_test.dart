@@ -7,8 +7,7 @@
 import 'dart:io';
 
 import 'package:core/server.dart' hide group;
-import 'package:convert/convert.dart';
-import 'package:io/io.dart';
+import 'package:converter/converter.dart';
 import 'package:test/test.dart';
 
 String inRoot0 = 'C:/odw_test_data/sfd/CR';
@@ -26,46 +25,48 @@ String outRoot3 = 'test/output/root3';
 void main() {
   Server.initialize(name: 'dataset/tag_root_dataset_test', level: Level.info0);
   // Get the files in the directory
-  final files = Filename.listFromDirectory(inRoot5);
-  stdout.writeln('File count: ${files.length}');
+  final files = getFilesFromDirectory(inRoot5, '.dcm');
+  stdout.writeln('File count: ${files.length}\n');
 
   // Read, parse, and print a summary of each file.
-
   group('Data set', () {
     test('Create a data set object from map', () {
-      for (var fn in files) {
-        if (fn.isDicom) {
-          log.debug('Reading file: $fn');
-          TagRootDataset rds;
-          rds = TagReader.readFile(fn.file);
-          log.debug('File name ${fn.base} with Transfer Syntax UID: ${rds
-              .fmi[0x00020010].value}');
-
-          expect(() => rds.fmi[0x00020010], isNotNull);
-          expect(() => rds.fmi[0x00020010].values, isNotNull);
-
-          expect(() => rds[0x00143012], isNotNull);
-          expect(() => rds[0x00143012].values, isNotNull);
-
-          expect(() => rds[0x00143073], isNotNull);
-          expect(() => rds[0x00143073].values, isNotNull);
-          expect(() => rds[0x00143073].values.elementAt(0), isNotNull);
-
-          expect(() => rds[0x00280008], isNotNull);
-          expect(() => rds[0x00280008].values, isNotNull);
-
-          log
-            ..debug('         Pixel Data: '
-                '${rds[0x7FE00010]?.values?.elementAt(0)}')
-            ..debug('          Number of Frames: '
-                '${rds[0x00280008]?.values?.elementAt(0)}')
-            ..debug('          Number of frames integrated: '
-                '${rds[0x00143012]?.values?.elementAt(0)}')
-            ..debug('          Number of Frames Used for Integration: '
-                '${rds[0x00143073]?.values?.elementAt(0)}');
-        } else {
-          log.debug('Skipping ... $fn');
+      for (var file in files) {
+        log.debug('Reading file: $file');
+        TagRootDataset rds;
+        final bList = file.readAsBytesSync();
+        rds = TagReader(bList).readRootDataset();
+        if (rds == null) {
+          log.debug('Error: Skipping ... $file');
+          continue;
         }
+        log
+          ..debug('rds: $rds')
+          ..debug('File name ${file.path} with Transfer Syntax UID: '
+              '${rds.fmi[0x00020010].value}');
+
+        expect(() => rds.fmi[0x00020010], isNotNull);
+        expect(() => rds.fmi[0x00020010].values, isNotNull);
+
+        expect(() => rds[0x00143012], isNotNull);
+        expect(() => rds[0x00143012].values, isNotNull);
+
+        expect(() => rds[0x00143073], isNotNull);
+        expect(() => rds[0x00143073].values, isNotNull);
+        expect(() => rds[0x00143073].values.elementAt(0), isNotNull);
+
+        expect(() => rds[0x00280008], isNotNull);
+        expect(() => rds[0x00280008].values, isNotNull);
+
+        log
+          ..debug('         Pixel Data: '
+              '${rds[0x7FE00010]?.values?.elementAt(0)}')
+          ..debug('          Number of Frames: '
+              '${rds[0x00280008]?.values?.elementAt(0)}')
+          ..debug('          Number of frames integrated: '
+              '${rds[0x00143012]?.values?.elementAt(0)}')
+          ..debug('          Number of Frames Used for Integration: '
+              '${rds[0x00143073]?.values?.elementAt(0)}');
       }
     });
   });

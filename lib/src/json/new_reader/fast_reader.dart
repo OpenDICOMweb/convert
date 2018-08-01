@@ -5,13 +5,12 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:core/core.dart' hide Indenter;
-import 'package:convert/src/json/reader/json_reader_base.dart';
+import 'package:converter/src/json/reader/json_reader_base.dart';
 
 // ignore_for_file: only_throw_errors
 
@@ -146,8 +145,4 @@ class FastJsonReader extends JsonReaderBase {
 
   static RootDataset fromString(String s) =>
       new FastJsonReader(s).readRootDataset();
-
-  static RootDataset fromFile(File file) => fromString(file.readAsStringSync());
-
-  static RootDataset fromPath(String path) => fromFile(new File(path));
 }

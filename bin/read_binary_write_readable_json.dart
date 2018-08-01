@@ -7,9 +7,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:convert/convert.dart';
+import 'package:converter/converter.dart';
 import 'package:core/server.dart';
-import 'package:io/io.dart';
 
 const String xx0 = 'C:/odw_test_data/mweb/1000+/TRAGICOMIX/TRAGICOMIX'
     '/Thorax 1CTA_THORACIC_AORTA_GATED (Adult)'
@@ -46,7 +45,7 @@ Future main() async {
       getOutputPath(inPath, dir: 'bin/output', base: base, ext: 'rjson');
   log.info('outPath: $outPath');
   final out =
-      new ReadableJsonWriter(rds, outPath, separateBulkdata: true, tabSize: 2)
+      ReadableJsonWriter(rds, outPath, separateBulkdata: true, tabSize: 2)
           .write();
   log.info('Output length: ${out.length}(${out.length ~/ 1024}K)');
   new File(outPath).writeAsStringSync(out);

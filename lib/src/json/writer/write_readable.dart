@@ -5,12 +5,12 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'dart:convert';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/json/writer/json_writer_base.dart';
+import 'package:converter/src/json/writer/json_writer_base.dart';
 
 class ReadableJsonWriter extends JsonWriterBase {
   ReadableJsonWriter(RootDataset rds, String path,
@@ -61,11 +61,15 @@ class ReadableJsonWriter extends JsonWriterBase {
       ? sb.writeln('[${elementId(e)} []]$separator')
       : sb.writeln('[${elementId(e)}]$separator');
 
+/*
   String elementId(Element e) => '${e.hex} ${e.vrId}, ${e.keyword}';
 
   @override
-  void writeBulkdata(Element e, String separator, BulkdataUri url) =>
-      sb.writeln('[${elementId(e)} Bulkdata "$url"]]$separator');
+  BulkdataUri writeBulkdata(Element e, String separator, BulkdataUri url) {
+    sb.writeln('[${elementId(e)} Bulkdata "$url"]]$separator');
+    return url;
+  }
+*/
 
   @override
   void writeSQ(SQ e, String separator) {

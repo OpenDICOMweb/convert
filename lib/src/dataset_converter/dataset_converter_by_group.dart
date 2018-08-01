@@ -8,7 +8,7 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/dataset_converter/dataset_by_group.dart';
+import 'package:converter/src/dataset_converter/dataset_by_group.dart';
 
 // ignore_for_file: only_throw_errors
 

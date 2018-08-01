@@ -8,8 +8,8 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/writer/subwriter.dart';
-import 'package:convert/src/encoding_parameters.dart';
+import 'package:converter/src/binary/base/writer/subwriter.dart';
+import 'package:converter/src/encoding_parameters.dart';
 
 /// An encoder for Binary DICOM (application/dicom).
 class ByteEvrSubWriter extends EvrSubWriter {

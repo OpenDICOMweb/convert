@@ -6,13 +6,13 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 
-export 'package:convert/src/json/reader/fast_reader.dart';
-export 'package:convert/src/json/reader/fast_reader_utils.dart';
-export 'package:convert/src/json/reader/json_reader.dart';
-export 'package:convert/src/json/reader/json_reader_base.dart';
+export 'package:converter/src/json/reader/fast_reader.dart';
+export 'package:converter/src/json/reader/fast_reader_utils.dart';
+export 'package:converter/src/json/reader/json_reader.dart';
+export 'package:converter/src/json/reader/json_reader_base.dart';
 
-export 'package:convert/src/json/writer/fast_writer.dart';
-export 'package:convert/src/json/writer/json_writer.dart';
-export 'package:convert/src/json/writer/json_writer_base.dart';
-export 'package:convert/src/json/writer/write_readable.dart';
+export 'package:converter/src/json/writer/fast_writer.dart';
+export 'package:converter/src/json/writer/json_writer.dart';
+export 'package:converter/src/json/writer/json_writer_base.dart';
+export 'package:converter/src/json/writer/write_readable.dart';
 

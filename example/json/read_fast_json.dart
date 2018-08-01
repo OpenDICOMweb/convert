@@ -5,15 +5,14 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'dart:async';
 import 'dart:io';
 //
-import 'package:convert/convert.dart';
+import 'package:converter/converter.dart';
 import 'package:core/server.dart';
-import 'package:io/io.dart';
 
-//import 'package:convert/data/test_files.dart';
+//import 'package:converter/data/test_files.dart';
 
 const String k6684x0 = 'C:/odw_test_data/sdk/convert/bin/output/'
     '1.2.840.113745.101000.1061000.41090.4218.18582671-'
@@ -28,7 +27,9 @@ Future main() async {
   log.info('path: $inPath');
   stdout.writeln('Reading(byte): $inPath');
 
-  final rds = FastJsonReader.fromPath(inPath);
+
+  final s = new File(inPath).readAsStringSync();
+  final rds = JsonReader(s).rds;
   if (rds == null) {
     log.error('"$inPath" either does not exist or is not a valid DICOM file');
     return;

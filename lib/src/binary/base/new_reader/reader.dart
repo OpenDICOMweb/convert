@@ -5,23 +5,20 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
-import 'dart:io';
+//
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/new_reader/subreader.dart';
-import 'package:convert/src/decoding_parameters.dart';
-import 'package:convert/src/element_offsets.dart';
-import 'package:convert/src/parse_info.dart';
+import 'package:converter/src/binary/base/new_reader/subreader.dart';
+import 'package:converter/src/decoding_parameters.dart';
+import 'package:converter/src/element_offsets.dart';
+import 'package:converter/src/parse_info.dart';
 
 /// Creates a new [Reader], which is a decoder for Binary DICOM
 /// (application/dicom).
 abstract class Reader {
-  final File file;
-
-  /// The bytes in Little Endian order.
+  /// The bytes being read.
   Bytes _bytes;
 
   int fmiEnd = -1;
@@ -29,17 +26,12 @@ abstract class Reader {
   String status = 'Not Read';
 
   /// Creates a new [Reader].
-  Reader(this._bytes) : file = null;
+  Reader(this._bytes);
 
   Reader.fromUint8List(Uint8List list,
       [int offset = 0, int length, Endian endian])
-      : file = null,
-        _bytes = new Bytes.typedDataView(
+      : _bytes = new Bytes.typedDataView(
             list, offset, length ?? list.length, endian ?? Endian.host);
-
-  Reader.fromFile(this.file,
-      {Endian endian = Endian.little, bool doAsync = false})
-      : _bytes = Bytes.fromFile(file, endian: endian, doAsync: doAsync);
 
   // **** Interface
   EvrSubReader get evrSubReader;
@@ -47,7 +39,6 @@ abstract class Reader {
   // **** End Interface
 
   Bytes get bytes => _bytes;
-  String get path => file.path;
   ReadBuffer get rb => evrSubReader.rb;
   Bytes get input => rb.view();
 

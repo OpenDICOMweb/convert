@@ -10,12 +10,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
-import 'package:io/io.dart';
 
-import 'package:convert/src/binary/base/reader/reader.dart';
-import 'package:convert/src/binary/base/reader/subreader.dart';
-import 'package:convert/src/binary/byte/reader/byte_subreader.dart';
-import 'package:convert/src/decoding_parameters.dart';
+import 'package:converter/src/binary/base/reader/reader.dart';
+import 'package:converter/src/binary/base/reader/subreader.dart';
+import 'package:converter/src/binary/byte/reader/byte_subreader.dart';
+import 'package:converter/src/decoding_parameters.dart';
 
 /// Creates a new [ByteReader], which is a decoder for Binary DICOM
 /// (application/dicom).

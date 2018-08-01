@@ -10,11 +10,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
-import 'package:io/io.dart';
 
-import 'package:convert/src/binary/byte/reader/byte_reader.dart';
-import 'package:convert/src/binary/byte/writer/byte_writer.dart';
-import 'package:convert/src/errors.dart';
+import 'package:converter/src/binary/byte/reader/byte_reader.dart';
+import 'package:converter/src/binary/byte/writer/byte_writer.dart';
+import 'package:converter/src/errors.dart';
 
 // ignore_for_file: avoid_catches_without_on_clauses
 
@@ -53,7 +52,7 @@ bool byteReadWriteFileChecked(String path,
       writer = new ByteWriter(rds0, doLogging: doLogging);
     } else {
       log.debug('  Writing (${rds0.length} bytes) to: $outPath');
-      writer = new ByteWriter.toPath(rds0, outPath, doLogging: doLogging);
+      writer = new ByteWriter(rds0, doLogging: doLogging);
     }
     final bytes1 = writer.writeRootDataset();
 
@@ -186,7 +185,7 @@ Bytes writeTimed(ByteRootDataset rds,
 }
 
 Bytes writeFMI(ByteRootDataset rds, [String path]) =>
-    ByteWriter.writePath(rds, path);
+    ByteWriter.writeBytes(rds);
 
 Bytes writeRoot(ByteRootDataset rds, {String path}) =>
-    ByteWriter.writePath(rds, path);
+    ByteWriter.writeBytes(rds);

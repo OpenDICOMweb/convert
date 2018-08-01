@@ -8,9 +8,9 @@
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/reader/subreader.dart';
-import 'package:convert/src/binary/tag/reader/tag_reader_mixin.dart';
-import 'package:convert/src/decoding_parameters.dart';
+import 'package:converter/src/binary/base/reader/subreader.dart';
+import 'package:converter/src/binary/tag/reader/tag_reader_mixin.dart';
+import 'package:converter/src/decoding_parameters.dart';
 
 class TagEvrSubReader extends EvrSubReader with TagReaderMixin {
   @override

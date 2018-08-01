@@ -9,9 +9,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:convert/convert.dart';
+import 'package:converter/converter.dart';
 import 'package:core/server.dart';
-import 'package:io/io.dart';
 
 import 'test_files.dart';
 

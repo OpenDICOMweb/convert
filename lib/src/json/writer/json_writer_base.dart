@@ -5,16 +5,14 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
-import 'dart:io';
-
+//
 import 'package:core/core.dart';
 
 abstract class JsonWriterBase {
   /// The [RootDataset] to be written.
   final RootDataset rds;
 
-  /// The output [File] path.
+  /// The path to the output file.
   final String path;
 
   /// An indenting StringBuffer
@@ -58,7 +56,6 @@ abstract class JsonWriterBase {
   String writeRootDataset();
   void writeSimpleElement(Element e, String separator);
   void writeEmptyElement(Element e, String separator);
-  void writeBulkdata(Element e, String separator, BulkdataUri url);
   void writeSQ(SQ e, String separator);
   void writeElementStart(Element e);
   void writeElementEnd(Element e, String separator);
@@ -95,6 +92,13 @@ abstract class JsonWriterBase {
     sb.indent(start);
     writeElementList(it.current, separator);
     sb.outdent(end);
+  }
+
+  String elementId(Element e) => '${e.hex} ${e.vrId}, ${e.keyword}';
+
+  BulkdataUri writeBulkdata(Element e, String separator, BulkdataUri url) {
+    sb.writeln('[${elementId(e)} Bulkdata "$url"]]$separator');
+    return url;
   }
 
   void writeElement(Element e, [String separator = '']) {

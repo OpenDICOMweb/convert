@@ -5,12 +5,12 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'dart:convert';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/json/writer/json_writer_base.dart';
+import 'package:converter/src/json/writer/json_writer_base.dart';
 
 /// Writes a JSON file that is readable
 class FastJsonWriter extends JsonWriterBase {
@@ -52,8 +52,10 @@ class FastJsonWriter extends JsonWriterBase {
       : sb.writeln('["${e.hex}", "${e.vrId}"]$separator');
 
   @override
-  void writeBulkdata(Element e, String separator, BulkdataUri url) =>
-      sb.writeln('["BulkDataUri": "$url"]]$separator');
+  BulkdataUri writeBulkdata(Element e, String separator, BulkdataUri url) {
+    sb.writeln('["BulkDataUri": "$url"]]$separator');
+    return url;
+  }
 
   @override
   void writeSQ(SQ e, String separator) {
@@ -96,8 +98,8 @@ class FastJsonWriter extends JsonWriterBase {
   static void _writeOtherFloat(Element e, Indenter sb) =>
       sb.write('["InlineBinary", "${base64.encode(e.vfBytes)}"]');
 
-  static void _writeInt(Element e, Indenter sb) => sb.write('[${e.values.join
-    (', ')}]');
+  static void _writeInt(Element e, Indenter sb) =>
+      sb.write('[${e.values.join(', ')}]');
 
   static void _writeOtherInt(Element e, Indenter sb) =>
       sb.write('["InlineBinary", "${base64.encode(e.vfBytes)}"]');

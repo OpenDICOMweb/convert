@@ -5,17 +5,15 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
-import 'dart:io';
+//
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
-import 'package:io/io.dart';
 
-import 'package:convert/src/binary/base/reader/reader.dart';
-import 'package:convert/src/binary/base/reader/subreader.dart';
-import 'package:convert/src/binary/tag/reader/tag_subreader.dart';
-import 'package:convert/src/decoding_parameters.dart';
+import 'package:converter/src/binary/base/reader/reader.dart';
+import 'package:converter/src/binary/base/reader/subreader.dart';
+import 'package:converter/src/binary/tag/reader/tag_subreader.dart';
+import 'package:converter/src/decoding_parameters.dart';
 
 /// Creates a new [TagReader], which is a decoder for Binary DICOM
 /// (application/dicom).
@@ -50,21 +48,6 @@ class TagReader extends Reader {
     return new TagReader._(bytes, dParams, rds, doLogging: doLogging);
   }
 
-  factory TagReader.fromFile(File f,
-      {DecodingParameters dParams = DecodingParameters.kNoChange,
-      bool doLogging = false}) {
-    final bList = f.readAsBytesSync();
-    return new TagReader.fromBytes(bList,
-        dParams: dParams, doLogging: doLogging);
-  }
-
-  factory TagReader.fromPath(String path,
-      {DecodingParameters dParams = DecodingParameters.kNoChange,
-      bool doLogging = false}) {
-    final f = new File(path);
-    return TagReader.fromFile(f, dParams: dParams, doLogging: doLogging);
-  }
-
   @override
   IvrSubReader get ivrSubReader => _ivrSubReader ??= //(doLogging)
       //  ? new LoggingTagIvrSubReader.from(evrSubReader)
@@ -89,34 +72,5 @@ class TagReader extends Reader {
     final bytes = new Bytes.typedDataView(td,0, td.lengthInBytes, endian);
     return TagReader.readBytes(bytes, dParams: dParams, doLogging: doLogging);
   }
-
-  /// Reads the [TagRootDataset] from a [File].
-  static TagRootDataset readFile(File file,
-      {bool doAsync = false,
-      Endian endian = Endian.little,
-      DecodingParameters dParams = DecodingParameters.kNoChange,
-      bool doLogging = false}) {
-    checkFile(file);
-    final Uint8List td = file.readAsBytesSync();
-    return TagReader.readTypedData(td, dParams: dParams, doLogging: doLogging);
-  }
-
-  /// Reads the [TagRootDataset] from a [path] ([File] or URL).
-  static TagRootDataset readPath(String path,
-      {bool doAsync = false,
-      Endian endian = Endian.little,
-      DecodingParameters dParams = DecodingParameters.kNoChange,
-      bool doLogging = false}) {
-    checkPath(path);
-    return TagReader.readFile(new File(path),
-        doAsync: doAsync,
-        endian: endian,
-        dParams: dParams,
-        doLogging: doLogging);
-  }
 }
 
-/*  TODO: later
-Future<Uint8List> _readFileAsync(File file) async =>
- await file.readAsBytes();
-*/

@@ -9,9 +9,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:convert/convert.dart';
+import 'package:converter/converter.dart';
 import 'package:core/server.dart';
-import 'package:io/io.dart';
 
 const String xx3 =
     'C:/odw_test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';

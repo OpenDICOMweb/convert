@@ -9,9 +9,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:convert/convert.dart';
+import 'package:converter/converter.dart';
 import 'package:core/server.dart';
-import 'package:io/io.dart';
 
 import 'test_files.dart';
 
@@ -37,7 +36,8 @@ Future main() async {
 
   RootDataset rds;
   try {
-    rds = TagReader.readPath(inPath, doLogging: true);
+    final bList = new File(inPath).readAsBytesSync();
+    rds = TagReader(bList, doLogging: true).rds;
   } on InvalidTransferSyntax {
     exit(-1);
   } on ShortFileError {

@@ -8,7 +8,7 @@
 import 'package:core/server.dart' hide group;
 import 'package:test/test.dart';
 
-import 'package:convert/src/binary/byte/reader/byte_reader.dart';
+import 'package:converter/src/binary/byte/reader/byte_reader.dart';
 
 void main() {
   Server.initialize(

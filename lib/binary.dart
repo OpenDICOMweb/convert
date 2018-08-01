@@ -6,30 +6,30 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 
-export 'package:convert/src/binary/base/reader/reader.dart';
-export 'package:convert/src/binary/base/reader/subreader.dart';
-export 'package:convert/src/binary/base/writer/subwriter.dart';
-export 'package:convert/src/binary/base/writer/writer.dart';
+export 'package:converter/src/binary/base/reader/reader.dart';
+export 'package:converter/src/binary/base/reader/subreader.dart';
+export 'package:converter/src/binary/base/writer/subwriter.dart';
+export 'package:converter/src/binary/base/writer/writer.dart';
 
-export 'package:convert/src/binary/byte/reader/byte_reader.dart';
-export 'package:convert/src/binary/byte/reader/byte_reader_mixin.dart';
-export 'package:convert/src/binary/byte/reader/byte_subreader.dart';
-export 'package:convert/src/binary/byte/writer/byte_subwriter.dart';
-export 'package:convert/src/binary/byte/writer/byte_writer.dart';
-export 'package:convert/src/binary/byte/reader/byte_read_utils.dart';
+export 'package:converter/src/binary/byte/reader/byte_reader.dart';
+export 'package:converter/src/binary/byte/reader/byte_reader_mixin.dart';
+export 'package:converter/src/binary/byte/reader/byte_subreader.dart';
+export 'package:converter/src/binary/byte/writer/byte_subwriter.dart';
+export 'package:converter/src/binary/byte/writer/byte_writer.dart';
+export 'package:converter/src/binary/byte/reader/byte_read_utils.dart';
 
-export 'package:convert/src/binary/compare_bytes.dart';
-export 'package:convert/src/binary/convert_dataset.dart';
-export 'package:convert/src/binary/convert_to_tag_dataset.dart';
+export 'package:converter/src/binary/compare_bytes.dart';
+export 'package:converter/src/binary/convert_dataset.dart';
+export 'package:converter/src/binary/convert_to_tag_dataset.dart';
 
-export 'package:convert/src/binary/tag/reader/tag_reader.dart';
-export 'package:convert/src/binary/tag/reader/tag_reader_mixin.dart';
-export 'package:convert/src/binary/tag/reader/tag_subreader.dart';
-export 'package:convert/src/binary/tag/writer/tag_subwriter.dart';
-export 'package:convert/src/binary/tag/writer/tag_writer.dart';
+export 'package:converter/src/binary/tag/reader/tag_reader.dart';
+export 'package:converter/src/binary/tag/reader/tag_reader_mixin.dart';
+export 'package:converter/src/binary/tag/reader/tag_subreader.dart';
+export 'package:converter/src/binary/tag/writer/tag_subwriter.dart';
+export 'package:converter/src/binary/tag/writer/tag_writer.dart';
 
-export 'package:convert/src/decoding_parameters.dart';
-export 'package:convert/src/element_offsets.dart';
+export 'package:converter/src/decoding_parameters.dart';
+export 'package:converter/src/element_offsets.dart';
 
 
 

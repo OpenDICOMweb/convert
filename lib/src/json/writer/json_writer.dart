@@ -9,7 +9,7 @@
 import 'dart:convert';
 
 import 'package:core/core.dart';
-import 'package:convert/src/json/writer/json_writer_base.dart';
+import 'package:converter/src/json/writer/json_writer_base.dart';
 
 class JsonWriter extends JsonWriterBase {
   JsonWriter(RootDataset rds, String path,
@@ -59,8 +59,10 @@ class JsonWriter extends JsonWriterBase {
       : sb.writeln('"${e.hex}": {"vr": "${e.vrId}]$separator');
 
   @override
-  void writeBulkdata(Element e, String separator, BulkdataUri url) =>
-      sb.writeln('{"BulkDataUri": "$url"}}$separator');
+  BulkdataUri writeBulkdata(Element e, String separator, BulkdataUri url) {
+    sb.writeln('{"BulkDataUri": "$url"}}$separator');
+    return url;
+  }
 
   @override
   void writeSQ(SQ e, String separator) {

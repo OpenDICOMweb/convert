@@ -11,11 +11,11 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
-import 'package:convert/src/binary/base/new_reader/no_logging_mixin.dart';
-import 'package:convert/src/errors.dart';
-import 'package:convert/src/decoding_parameters.dart';
-import 'package:convert/src/element_offsets.dart';
-import 'package:convert/src/parse_info.dart';
+import 'package:converter/src/binary/base/new_reader/no_logging_mixin.dart';
+import 'package:converter/src/errors.dart';
+import 'package:converter/src/decoding_parameters.dart';
+import 'package:converter/src/element_offsets.dart';
+import 'package:converter/src/parse_info.dart';
 
 // ignore_for_file: avoid_positional_boolean_parameters, only_throw_errors
 // ignore_for_file: avoid_catches_without_on_clauses

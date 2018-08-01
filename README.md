@@ -42,7 +42,7 @@ In Progress
 
 A simple usage example:
 
-    import 'package:convert/convert.dart';
+    import 'package:converter/converter.dart';
 
 
     // Read binary DICOM file and decode into Study Model
