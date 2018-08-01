@@ -8,7 +8,6 @@ import 'dart:io';
 
 import 'package:core/server.dart' hide group;
 import 'package:converter/converter.dart';
-import 'package:io_extended/io_extended.dart';
 import 'package:test/test.dart';
 
 String inRoot0 = 'C:/odw_test_data/sfd/CR';
