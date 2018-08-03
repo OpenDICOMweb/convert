@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file.
 // Original author: Jim Philbin <jfphilbin@gmail.edu> -
 // See the   AUTHORS file for other contributors.
-
+//
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
@@ -12,13 +12,13 @@ import 'package:converter/converter.dart';
 import 'package:core/server.dart';
 import 'package:path/path.dart' as path;
 
-import 'test_files.dart';
+import '../test_files.dart';
 
 Future main() async {
-  Server.initialize(name: 'ReadFiles', level: Level.debug, throwOnError: true);
+  Server.initialize(name: 'ReadFiles', level: Level.debug, throwOnError: false);
 
   for (var i = 0; i < files.length; i++) {
-    final fPath = files[i];
+    final fPath = cleanPath(files[i]);
 
     print('$i: path: $fPath');
     print(' out: ${getTempFile(fPath, 'dcmout')}');

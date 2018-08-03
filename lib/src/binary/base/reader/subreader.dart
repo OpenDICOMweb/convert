@@ -152,7 +152,7 @@ abstract class EvrSubReader extends SubReader {
         ..up
         ..debug('<R@${_rb.index} FinishedReading FMI:')
         ..up
-        ..debug('| TS: $ts');
+        ..debug('|@${_rb.index} TS: $ts');
     return _rb.index;
   }
 

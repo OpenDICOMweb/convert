@@ -5,14 +5,14 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:converter/converter.dart';
 import 'package:core/server.dart';
 
-import 'test_files.dart';
+import '../test_files.dart';
 
 const List<String> files = const <String>[x0, x1, x2, x3, x4];
 
@@ -20,7 +20,7 @@ void main() async {
   Server.initialize(
       name: 'ReadWriteFile', level: Level.debug, throwOnError: false);
 
-  final inPath = cleanPath(x4);
+  final inPath = cleanPath(x11);
 
   log.info('path: $inPath');
   final length = new File(inPath).lengthSync();

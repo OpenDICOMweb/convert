@@ -35,7 +35,7 @@ const String x6 =
 const String dcmDir = 'C:/odw_test_data/sfd/MG/DICOMDIR';
 
 const String evrULength =
-    'c:/odw/test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
+    'c:/odw_test_data/6684/2017/5/13/1/8D423251/B0BDD842/E52A69C2';
 
 const String x7 =
     'C:/odw_test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop'
@@ -67,36 +67,36 @@ const List<String> files = const <String>[
   ivrClean, ivrCleanMR, evrDataAfterPixels, ivrWithGroupLengths, bar
 ];
 
-const String x00 = 'c:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/'
+const String x00 = 'c:/odw_test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/'
     '1.2.392.200036.9123.100.12.11.3.dcm';
 const String x01 = 'C:/odw_test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop/'
     '1.2.840.10008.5.1.4.1.1.66.dcm';
 const String x02 = 'C:/odw_test_data/mweb/ASPERA/Clean_Pixel_test_data/'
     'Sop (user 349383158)/1.2.392.200036.9123.100.12.11.3.dcm';
 const String x03 =
-    'c:/odw/test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2'
+    'c:/odw_test_data/mweb/ASPERA/Clean_Pixel_test_data/Sop (user 349383158)/1.2'
     '.840.10008.5.1.4.1.1.66.dcm';
-const String x04 = 'c:/odw/test_data/mweb/ASPERA/DICOM files '
+const String x04 = 'c:/odw_test_data/mweb/ASPERA/DICOM files '
     'only/22c82bd4-6926-46e1-b055-c6b788388014.dcm';
-const String x05 = 'c:/odw/test_data/mweb/ASPERA/DICOM files '
+const String x05 = 'c:/odw_test_data/mweb/ASPERA/DICOM files '
     'only/4cf05f57-4893-4453-b540-4070ac1a9ffb.dcm';
-const String x06 = 'c:/odw/test_data/mweb/ASPERA/DICOM files '
+const String x06 = 'c:/odw_test_data/mweb/ASPERA/DICOM files '
     'only/523a693d-94fa-4143-babb-be8a847a38cd.dcm';
-const String x07 = 'c:/odw/test_data/mweb/ASPERA/DICOM files '
+const String x07 = 'c:/odw_test_data/mweb/ASPERA/DICOM files '
     'only/613a63c7-6c0e-4fd9-b4cb-66322a48524b.dcm';
 const String x08 =
-    'c:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
+    'c:/odw_test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
 const String x09 =
-    'c:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.826.0.1'
+    'c:/odw_test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.826.0.1'
     '.3680043.2.93.1.0.1.dcm';
 const String x10 =
-    'c:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.826.0.1'
+    'c:/odw_test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.826.0.1'
     '.3680043.2.93.1.0.2.dcm';
 const String x11 =
-    'c:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1'
-    '.2.5.5.dcm';
+    'c:/odw_test_data/mweb/Different_SOP_Class_UIDs/'
+    'Anonymized1.2.840.10008.3.1.2.5.5.dcm';
 const String x12 =
-    'c:/odw/test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1'
+    'c:/odw_test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840.10008.3.1'
     '.2.6.1.dcm';
 const String x13 =
     'C:/odw_test_data/mweb/Different_SOP_Class_UIDs/Anonymized1.2.840'

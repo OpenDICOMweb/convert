@@ -5,11 +5,10 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
-
 import 'package:converter/src/binary/base/padding_chars.dart';
 import 'package:converter/src/element_offsets.dart';
 import 'package:converter/src/encoding_parameters.dart';
@@ -111,7 +110,6 @@ abstract class EvrSubWriter extends SubWriter {
     if (doLogging)
       log
         ..debug('>@${_wb.index} Writing Root Dataset')
-        ..debug('|@${_wb.index} ${rds.transferSyntax}')
         ..down
         ..debug('>@W${_wb.index} Writing ${rds.fmi.length} FMI Elements ...')
         ..down;
@@ -135,7 +133,8 @@ abstract class EvrSubWriter extends SubWriter {
       log
         ..up
         ..debug('<W@${_wb.index} FinishedWriting FMI: $count Elements written')
-        ..up;
+        ..up
+        ..debug('|@${_wb.index} TS: ${rds.transferSyntax}');
     }
     return _wb.wIndex;
   }
@@ -322,8 +321,8 @@ abstract class SubWriter {
   /// writes it to a Uint8List, and returns the [Uint8List].
   Bytes writeRootDataset([int fmiEnd, TransferSyntax ts]) {
     final dsStart = _wb.index;
-    if (doLogging) _startRootDatasetMsg(dsStart, rds, ts);
     _wb.buffer.endian = (ts.isBigEndian) ? Endian.big : Endian.little;
+    if (doLogging) _startRootDatasetMsg(dsStart, rds, ts);
     _writeDataset(rds);
     final bytes = _wb.sublist(0, _wb.wIndex);
     final dsBytes = new RDSBytes(bytes, fmiEnd);

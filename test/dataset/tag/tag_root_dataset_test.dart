@@ -30,12 +30,13 @@ void main() {
 
   // Read, parse, and print a summary of each file.
   group('Data set', () {
-    test('Create a data set object from map', () {
+    test('Create a data set object from a File', () {
       for (var file in files) {
-        log.debug('Reading file: $file');
+        log.debug('Reading file: ${cleanPath(file.path)}');
         TagRootDataset rds;
         final bList = file.readAsBytesSync();
         rds = TagReader(bList).readRootDataset();
+        log.debug('rds: $rds');
         if (rds == null) {
           log.debug('Error: Skipping ... $file');
           continue;

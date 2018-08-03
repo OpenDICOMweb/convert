@@ -5,14 +5,14 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'dart:async';
 import 'dart:io';
 
 import 'package:converter/converter.dart';
 import 'package:core/server.dart';
 
-import 'test_files.dart';
+import '../test_files.dart';
 
 // ignore_for_file: avoid_catches_without_on_clauses
 
@@ -26,7 +26,7 @@ Future main() async {
       showBanner: true,
       showSdkBanner: false);
 
-  final inPath = cleanPath(x6);
+  final inPath = cleanPath(x11);
 
   final file = new File(inPath);
   final fLength = file.lengthSync();

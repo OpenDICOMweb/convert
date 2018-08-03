@@ -5,14 +5,14 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:converter/converter.dart';
 import 'package:core/server.dart';
 
-import 'test_files.dart';
+import '../test_files.dart';
 
 void main() async {
   Server.initialize(
