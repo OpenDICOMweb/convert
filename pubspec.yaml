@@ -1,30 +1,30 @@
 name: converter
-version: 0.7.0
+version: 0.7.5
 description: A package for encoding/decoding DICOM binary, json, ...
 author: Jim Philbin <jfphilbin@gmail.com>
 
 homepage: https://github.com/OpenDICOMweb/convert
 
 environment:
-  sdk: '>=1.24.0 <=2.0.0'
+  sdk: ^2.0.0
 
 dependencies:
   core:
-    path: C:/odw/sdk/core
-    version: ^0.7.2
+    path: ../core
+    version: ^0.7.5
 
 dev_dependencies:
   benchmark_harness: any
   coverage: any
   grinder: ^0.8.0
   io_extended:
-    path: C:/odw/sdk/io_extended
+    path: ../io_extended
     version: ^0.7.0
   path: ^1.6.2
   test: any
   test_tools:
-    path: C:/odw/test_tools
-    version: ^0.7.0
+    path: ../../test_tools
+    version: ^0.7.5
 
 
 
