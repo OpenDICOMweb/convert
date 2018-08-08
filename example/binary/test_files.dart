@@ -113,6 +113,12 @@ const String x16 =
 const String x17 =
     'C:/odw_test_data/mweb/Sop-selected/1.2.840.10008.5.1.4.1.1.66.dcm';
 
+//
+// This file has a Sequence with an odd length (109) that contains an Item
+// with with an odd length (101)
+const String mweb14 = 'C:/odw_test_data/sfd/MG/Patient_38/1_DICOM_Original/'
+    'IM000001.dcm';
+
 const List<String> badFiles = const <String>[
   x00,
   x01,

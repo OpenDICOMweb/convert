@@ -30,7 +30,7 @@ abstract class TagReaderMixin {
 
   Element makeSQFromBytes(Dataset parent,
           [Iterable<Item> items, DicomBytes bytes]) =>
-      TagElement.makeSQFromBytes(parent, items, bytes);
+    TagElement.makeSQFromBytes(parent, items, bytes);
 
   Element makePixelDataFromBytes(DicomBytes bytes,
           [TransferSyntax ts, VFFragments fragments]) =>

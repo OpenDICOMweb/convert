@@ -5,6 +5,7 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
+//
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -99,15 +100,15 @@ abstract class EvrSubReader extends SubReader {
   }
 
   void _nullVRIndex(int code, int eStart, int vrCode) =>
-      log.warn('** @$eStart ${dcm(code)} Null VR(${hex16(vrCode)}, $vrCode)');
+      warn('eStart: $eStart ${dcm(code)} Null VR(${hex16(vrCode)}, $vrCode)');
 
   void _changingVR(int code, int vrIndex) =>
-      log.warn('** Changing (${hex32(code)}) with Special VR '
+      warn('Changing (${hex32(code)}) with Special VR '
           '${vrIdFromIndex(vrIndex)}) to VR.kUN');
 
   void _invalidPrivateCreator(int code, int vrIndex) {
     assert(Tag.isPCCode(code) && (vrIndex != kLOIndex && vrIndex != kUNIndex));
-    log.warn('** Invalid Private Creator (${hex32(code)}) '
+    warn('Invalid Private Creator (${hex32(code)}) '
         '${vrIdFromIndex(vrIndex)}($vrIndex) should be VR.kLO');
   }
 
@@ -172,7 +173,7 @@ abstract class EvrSubReader extends SubReader {
 }
 
 void _noDcmPrefixPresent(Uint8List preamble, Uint8List prefix) =>
-    log.warn('No DICOM Prefix present:\n  $preamble\n  $prefix');
+    log.warn('** No DICOM Prefix present:\n  $preamble\n  $prefix');
 
 abstract class IvrSubReader extends SubReader {
   IvrSubReader(DicomReadBuffer rb, DecodingParameters dParams, Dataset cds)
@@ -339,16 +340,16 @@ abstract class SubReader {
     try {
       _readDatasetDefinedLength(rds, rdsStart, length);
     } on EndOfDataError catch (e) {
-      log.error(e);
+      error('$e');
       //  if (throwOnError) rethrow;
     } on InvalidTransferSyntax catch (e) {
-      log.error(e);
+      error('$e');
       //  if (throwOnError) rethrow;
     } on DataAfterPixelDataError catch (e) {
-      log.warn(e);
+      warn('$e');
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
-      log.error(e);
+      error('$e');
       if (throwOnError) rethrow;
     } finally {
       final rdsLength = _rb.index - fmiEnd;
@@ -378,7 +379,6 @@ abstract class SubReader {
     if (vlf == kUndefinedLength) {
       _readDatasetUndefinedLength(item, _rb.index);
     } else {
-      if (vlf.isOdd) log.debug('Dataset with odd vfl($vlf)');
       _readDatasetDefinedLength(item, _rb.index, vlf);
     }
 
@@ -394,21 +394,34 @@ abstract class SubReader {
   // **** This is the other of the only two places Elements are added to
   // **** the dataset.
 
+  bool allowOddValueLengthField = true;
+
   // **** This is one of the only two places Elements are added to the dataset.
-  void _readDatasetDefinedLength(Dataset ds, int dsStart, int vfl) {
-    assert(vfl != kUndefinedLength && dsStart == _rb.index);
+  void _readDatasetDefinedLength(Dataset ds, int dsStart, int vlf) {
+    assert(vlf != kUndefinedLength && dsStart == _rb.index);
+    assert(dsStart == _rb.index);
     ds.start = _rb.index;
-    final dsEnd = dsStart + vfl;
+    final dsEnd = dsStart + vlf;
+
     while (_rb.index < dsEnd) _readDataset(ds);
+
+    if (vlf.isOdd) {
+      final c = _rb.getUint8();
+      final s = String.fromCharCode(c);
+      error('Odd length Dataset: $vlf c= $c 0x${hex(c)} c: "$s"');
+    }
+
     ds.end = _rb.index;
-    assert(vfl == ds.end - ds.start);
+    if (dsEnd != ds.end)
+      error('Item vlf($vlf) != Item length(${ds.end - ds.start})');
+    assert(vlf == dsEnd - dsStart, '$vlf != ${dsEnd - dsStart}');
   }
 
   void _readDataset(Dataset ds) {
     final e = _readElement();
     final ok = ds.tryAdd(e);
     if (!ok) {
-      log.warn('** duplicate: $e');
+      warn('Duplicate: $e');
       cds.history.duplicates.add(e);
     }
   }
@@ -439,7 +452,7 @@ abstract class SubReader {
       break;
     }
     final length = _rb.readUint32();
-    if (length != 0) log.warn('Encountered non-zero delimiter length($length)');
+    if (length != 0) warn('Encountered non-zero delimiter length($length)');
   }
 
   /// Returns true if the [target] delimiter is found. If the target
@@ -451,7 +464,7 @@ abstract class SubReader {
       _rb.rSkip(4);
       final length = _rb.readUint32();
       if (length != 0)
-        log.warn('Encountered non-zero delimiter length($length)');
+        warn('Encountered non-zero delimiter length($length)');
       return true;
     }
     return false;
@@ -461,7 +474,8 @@ abstract class SubReader {
   /// field. The [vfOffset] is 12 for EVR and 8 for IVR.
   Element _readLong(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
     assert(_rb.index.isEven);
-    if (vlf.isOdd && vlf != kUndefinedLength) log.error('Odd vlf: $vlf');
+    if (vlf.isOdd && vlf != kUndefinedLength) error('Odd vlf: $vlf');
+
     // Read but don't advance index
     final delimiter = _rb.getCode(eStart);
 
@@ -582,9 +596,9 @@ abstract class SubReader {
   SQ _readSequence(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
     if (vrIndex != kSQIndex) {
       if (vrIndex == kUNIndex) {
-        log.warn('** Creating Sequence as UN(($vrIndex) ${dcm(code)}');
+        warn('Creating Sequence as UN(($vrIndex) ${dcm(code)}');
       } else {
-        log.error('** Creating Sequence with vr($vrIndex) ${dcm(code)}');
+        error('Creating Sequence with vr($vrIndex) ${dcm(code)}');
       }
     }
     if (doLogging) _startSQMsg(code, eStart, vrIndex, vfOffset, vlf);
@@ -596,10 +610,10 @@ abstract class SubReader {
     return sq;
   }
 
-  /// Reads a Sequence with a Value Field Length [vfl]
+  /// Reads a Sequence with a Value Field Length [vlf]
   /// containing [kUndefinedLength].
-  SQ _readUSQ(int code, int eStart, int vrIndex, int vfOffset, int vfl) {
-    assert(vfl == kUndefinedLength);
+  SQ _readUSQ(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
+    assert(vlf == kUndefinedLength);
     final items = <Item>[];
     while (!_isSequenceDelimiter()) {
       final item = _readItem();
@@ -613,16 +627,16 @@ abstract class SubReader {
   /// _delimiter_, reads and checks the _delimiter length_ field, and returns _true_.
   bool _isSequenceDelimiter() => _checkForDelimiter(kSequenceDelimitationItem);
 
-  /// Reads a Sequence with a defined length Value Field Length [vfl].
-  SQ _readDSQ(int code, int eStart, int vrIndex, int vfOffset, int vfl) {
-    assert(vfl != kUndefinedLength);
+  /// Reads a Sequence with a defined length Value Field Length [vlf].
+  SQ _readDSQ(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
+    assert(vlf != kUndefinedLength);
     final items = <Item>[];
-    final sqEnd = _rb.index + vfl;
+    final sqEnd = _rb.index + vlf;
     while (_rb.index < sqEnd) {
       final item = _readItem();
       items.add(item);
     }
-    if (sqEnd != _rb.index) log.warn('sqEnd($sqEnd) != rb.index(${_rb.index})');
+    if (sqEnd != _rb.index) warn('sqEnd($sqEnd) != rb.index(${_rb.index})');
     final dBytes = _makeLongDicomBytes(eStart);
     return makeSQFromBytes(cds, items, dBytes);
   }
@@ -676,13 +690,13 @@ abstract class SubReader {
 
   void _checkDelimiterLength(int delimiter) {
     final vlf = _rb.readUint32();
-    if (vlf != 0) log.warn('Encountered non-zero delimiter length($vlf)');
+    if (vlf != 0) warn('Encountered non-zero delimiter length($vlf)');
   }
 
   void _checkForOB(int vrIndex, TransferSyntax ts) {
     if (vrIndex != kOBIndex && vrIndex != kUNIndex) {
       final vr = vrByIndex[vrIndex];
-      log.warn('Invalid VR($vr) for Encapsulated TS: $ts');
+      warn('Invalid VR($vr) for Encapsulated TS: $ts');
     }
   }
 
@@ -695,7 +709,7 @@ abstract class SubReader {
   }
 
   void _vlfError(int vlf) {
-    log.error('Value Field Length($vlf) is longer than'
+    error('Value Field Length($vlf) is longer than'
         ' DicomReadBuffer remaining(${_rb.remaining})');
     if (throwOnError) throw new ShortFileError();
   }
@@ -737,7 +751,7 @@ abstract class SubReader {
     if (tag != null) {
       if (dParams.doCheckVR && _isNotValidVR(code, vrIndex, tag)) {
         final vr = vrIdFromIndex(vrIndex);
-        log.error('**** VR $vr is not valid for $tag');
+        error('VR $vr is not valid for $tag');
       }
 
       if (dParams.doCorrectVR) {
@@ -803,9 +817,14 @@ abstract class SubReader {
 */
 
   // **** Logging Functions
+
+  void error(String s) => log.error('**** @R${_rb.index} $s');
+  void warn(String s) => log.warn('** @R${_rb.index} $s');
+
   // TODO: create no_logging_mixin and logging_mixin
   void _startElementMsg(int code, int eStart, int vrIndex, int vlf) {
-    final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vfl: $vlf';
+    _checkVlf(vlf);
+    final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vlf: $vlf';
     final vrId = vrIdByIndex[vrIndex];
     log
       ..debug('>@R$eStart ${dcm(code)} $vrId($vrIndex) $len')
@@ -821,10 +840,11 @@ abstract class SubReader {
   }
 
   void _startSQMsg(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
-    final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vfl: $vlf';
+    _checkVlf(vlf);
+    final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vlf: $vlf';
     final vrId = vrIdByIndex[vrIndex];
     final tag = Tag.lookupByCode(code, vrIndex);
-    if (tag.vrIndex != kSQIndex) log.warn('Read SQ with Non-Sequence Tag $tag');
+    if (tag.vrIndex != kSQIndex) warn('Read SQ with Non-Sequence Tag $tag');
     final msg = '>@R$eStart ${dcm(code)} $vrId($vrIndex) $len $tag';
     log
       ..debug(msg)
@@ -841,7 +861,8 @@ abstract class SubReader {
 
   void _startDatasetMsg(
       int eStart, String name, int delimiter, int vlf, Dataset ds) {
-    final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vfl: $vlf';
+    _checkVlf(vlf);
+    final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vlf: $vlf';
     final dLimit = (delimiter == 0) ? 'No Delimiter' : dcm(delimiter);
     log
       ..debug('>@R$eStart $name $dLimit $len $ds')
@@ -854,10 +875,13 @@ abstract class SubReader {
       ..debug('<@R$dsStart $name $dsBytes: $ds');
   }
 
-  void _startReadRootDataset(int rdsStart, int length) => log
-    ..down
-    ..debug('>@R${_rb.index} subReadRootDataset length($length) $rds')
-    ..down;
+  void _startReadRootDataset(int rdsStart, int length) {
+    _checkVlf(length);
+    log
+      ..down
+      ..debug('>@R${_rb.index} subReadRootDataset length($length) $rds')
+      ..down;
+  }
 
   void _endReadRootDataset(RootDataset rds, RDSBytes dsBytes) {
     log
@@ -866,13 +890,17 @@ abstract class SubReader {
       ..debug('| $count Elements read');
     if (rds[kPixelData] == null)
       log.info('| ** Pixel Data Element not present');
-    if (rds.hasDuplicates) log.warn('| ** Duplicates Present in rds0');
+    if (rds.hasDuplicates) warn('Duplicates Present in rds0');
     log
       ..debug('<@R${_rb.index} subReadRootDataset $dsBytes $rds')
       ..up
       ..debug('<@R${_rb.index} readRootDataset ${rds.total}');
   }
 
+  void _checkVlf(int vlf) {
+    if (vlf != kUndefinedLength && vlf.isOdd)
+      error('Odd Value Length Field(vlf == $vlf)');
+  }
 /*
   // Urgent Jim test
   void convertVRUNImageElements(RootDataset rds, int vfOffset) {
