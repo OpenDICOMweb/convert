@@ -5,7 +5,7 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'package:core/core.dart';
 
 abstract class TagReaderMixin {
@@ -15,11 +15,11 @@ abstract class TagReaderMixin {
 
   RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
           DicomBytes bytes, int fmiEnd) =>
-      new ByteRootDataset(fmi, eMap, path, bytes, fmiEnd);
+      TagRootDataset(fmi, eMap, path, bytes, fmiEnd);
 
   Item makeItem(Dataset parent,
           [SQ sequence, Map<int, Element> eMap, DicomBytes bytes]) =>
-      new ByteItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
+      TagItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
 
   Element makeFromBytes(DicomBytes bytes, Dataset ds, {bool isEvr}) =>
       TagElement.makeFromBytes(bytes, ds, isEvr: isEvr);
@@ -30,7 +30,7 @@ abstract class TagReaderMixin {
 
   Element makeSQFromBytes(Dataset parent,
           [Iterable<Item> items, DicomBytes bytes]) =>
-    TagElement.makeSQFromBytes(parent, items, bytes);
+      TagElement.makeSQFromBytes(parent, items, bytes);
 
   Element makePixelDataFromBytes(DicomBytes bytes,
           [TransferSyntax ts, VFFragments fragments]) =>

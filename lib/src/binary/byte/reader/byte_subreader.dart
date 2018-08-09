@@ -5,7 +5,7 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'package:core/core.dart';
 
 import 'package:converter/src/binary/base/reader/subreader.dart';
@@ -19,10 +19,11 @@ class ByteEvrSubReader extends EvrSubReader with ByteReaderMixin {
   final bool doLogging;
   @override
   final bool doLookupVRIndex;
+
   factory ByteEvrSubReader(Bytes bytes, DecodingParameters dParams,
           {bool doLogging = false, bool doLookupVRIndex = true}) =>
-      new ByteEvrSubReader._(bytes, dParams, new ByteRootDataset.empty(),
-          doLogging, doLookupVRIndex);
+      ByteEvrSubReader._(
+          bytes, dParams, ByteRootDataset.empty(), doLogging, doLookupVRIndex);
 
   ByteEvrSubReader._(Bytes bytes, DecodingParameters dParams, this.rds,
       this.doLogging, this.doLookupVRIndex)

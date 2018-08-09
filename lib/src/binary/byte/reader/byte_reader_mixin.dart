@@ -5,16 +5,13 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-import 'dart:typed_data';
-
+//
 import 'package:core/core.dart';
 
 abstract class ByteReaderMixin {
   RootDataset get rds;
   Dataset get cds;
   ReadBuffer get rb;
-  bool get isEvr;
-  Endian get endian;
 
   RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
           DicomBytes bytes, int fmiEnd) =>

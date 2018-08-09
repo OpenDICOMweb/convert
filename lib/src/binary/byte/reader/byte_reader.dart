@@ -35,7 +35,6 @@ class ByteReader extends Reader {
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool doLogging = false})
       : evrSubReader =
-            //  ? new LoggingByteEvrSubReader(bytes, dParams)
             new ByteEvrSubReader(bytes, dParams, doLogging: doLogging),
         super(bytes);
 
@@ -81,6 +80,7 @@ class ByteReader extends Reader {
     return ByteReader.readBytes(bytes, dParams: dParams, doLogging: doLogging);
   }
 
+  // Issue: maybe remove
   /// Reads the [RootDataset] from a [File].
   static RootDataset readFile(File file,
       {bool doAsync = false,
@@ -93,6 +93,7 @@ class ByteReader extends Reader {
         endian: endian, dParams: dParams, doLogging: doLogging);
   }
 
+  // Issue: maybe remove
   /// Reads the [RootDataset] from a [path] ([File] or URL).
   static RootDataset readPath(String path,
       {bool doAsync = false,
@@ -106,6 +107,7 @@ class ByteReader extends Reader {
         dParams: dParams,
         doLogging: doLogging);
   }
+
 }
 /* TODO: later
   static Future<Uint8List> _readAsync(File file) async =>

@@ -5,7 +5,7 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -20,7 +20,7 @@ import 'package:converter/src/errors.dart';
 //TODO:  Move to IO
 String outPath = 'C:/odw/sdk/convert/bin/output/out.dcm';
 
-final Formatter format = new Formatter();
+final Formatter format = Formatter();
 
 bool byteReadWriteFileChecked(String path,
     {int fileNumber, int width = 5, bool fast = true, bool doLogging = false}) {
@@ -30,11 +30,11 @@ bool byteReadWriteFileChecked(String path,
   final fPath = cleanPath(path);
   log.info('$n: Reading: $fPath');
 
-  final f = new File(fPath);
+  final f = File(fPath);
   try {
     final bList0 = f.readAsBytesSync();
     if (doLogging) log.info('  File Length: ${bList0.length}');
-    final reader0 = new ByteReader(bList0, doLogging: doLogging);
+    final reader0 = ByteReader(bList0, doLogging: doLogging);
     final rds0 = reader0.readRootDataset();
     final bytes0 = reader0.rb.buffer;
     log.info('$n:   read ${bytes0.length} bytes');
@@ -49,10 +49,10 @@ bool byteReadWriteFileChecked(String path,
     if (fast) {
       // Just write bytes not file
       log.debug('  Writing ${rds0.length} bytes');
-      writer = new ByteWriter(rds0, doLogging: doLogging);
+      writer = ByteWriter(rds0, doLogging: doLogging);
     } else {
       log.debug('  Writing (${rds0.length} bytes) to: $outPath');
-      writer = new ByteWriter(rds0, doLogging: doLogging);
+      writer = ByteWriter(rds0, doLogging: doLogging);
     }
     final bytes1 = writer.writeRootDataset();
 
@@ -63,11 +63,11 @@ bool byteReadWriteFileChecked(String path,
     if (fast) {
       // Just read bytes not file
       log.debug('  Reading (${bytes1.length} bytes');
-      reader1 = new ByteReader.fromBytes(bytes1, doLogging: doLogging);
+      reader1 = ByteReader.fromBytes(bytes1, doLogging: doLogging);
     } else {
-      final f = new File(outPath);
+      final f = File(outPath);
       log.debug('  Reading (${f.lengthSync()} bytes) from: $outPath');
-      reader1 = new ByteReader.fromFile(f, doLogging: doLogging);
+      reader1 = ByteReader.fromFile(f, doLogging: doLogging);
     }
     final rds1 = reader1.readRootDataset();
 
@@ -78,8 +78,8 @@ bool byteReadWriteFileChecked(String path,
         ..warn('$pad ** ParseInfo is Different!')
         ..debug1('$pad rds0: ${reader0.pInfo.summary(rds0)}')
         ..debug1('$pad rds1: ${reader1.pInfo.summary(rds1)}')
-        ..debug2(rds0.format(new Formatter(maxDepth: -1)))
-        ..debug2(rds1.format(new Formatter(maxDepth: -1)));
+        ..debug2(rds0.format(Formatter(maxDepth: -1)))
+        ..debug2(rds1.format(Formatter(maxDepth: -1)));
     }
 
     // If duplicates are present the [ElementOffsets]s will not be equal.
@@ -124,7 +124,7 @@ ByteRootDataset readFileTimed(File file,
     bool printDS: false}) {
   log.level = level;
   final path = file.path;
-  final timer = new Stopwatch()..start();
+  final timer = Stopwatch()..start();
 
   final bytes = file.readAsBytesSync();
   timer.stop();
@@ -152,7 +152,7 @@ ByteRootDataset readFileTimed(File file,
       ..debug('  Has valid TS(${rds.hasSupportedTransferSyntax}) '
           '${rds.transferSyntax}');
     // log.debug('RDS: ${rds.info}');
-    if (printDS) rds.format(new Formatter());
+    if (printDS) rds.format(Formatter());
     return rds;
   }
 }
@@ -165,8 +165,8 @@ Bytes writeTimed(ByteRootDataset rds,
     bool fast = true,
     bool fmiOnly = false,
     TransferSyntax targetTS}) {
-  final timer = new Stopwatch();
-  final timestamp = new Timestamp();
+  final timer = Stopwatch();
+  final timestamp = Timestamp();
   final total = rds.total;
   log
     ..debug('current dir: ${Directory.current}')

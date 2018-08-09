@@ -6,10 +6,10 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
-
 import 'package:converter/src/binary/base/writer/writer.dart';
 import 'package:converter/src/binary/base/writer/subwriter.dart';
 import 'package:converter/src/binary/byte/writer/byte_subwriter.dart';
@@ -21,18 +21,17 @@ class ByteWriter extends Writer {
   @override
   final EvrSubWriter evrSubWriter;
 
-  /// Creates a new [ByteWriter] where index = 0.
+  /// Creates a [ByteWriter] where index = 0.
   ByteWriter(ByteRootDataset rds,
       {EncodingParameters eParams = EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false})
-      : evrSubWriter = new ByteEvrSubWriter(rds, eParams,
+      : evrSubWriter = ByteEvrSubWriter(rds, eParams,
             outputTS: outputTS, doLogging: doLogging);
 
   @override
-  IvrSubWriter get ivrSubWriter => _ivrSubWriter ??=
-       new ByteIvrSubWriter.from(evrSubWriter);
-
+  IvrSubWriter get ivrSubWriter =>
+      _ivrSubWriter ??= ByteIvrSubWriter.from(evrSubWriter);
   IvrSubWriter _ivrSubWriter;
 
   /// Writes the [ByteRootDataset] to a [Uint8List], and returns the [Uint8List].
@@ -41,12 +40,11 @@ class ByteWriter extends Writer {
       TransferSyntax outputTS,
       bool doLogging = false}) {
     checkRootDataset(rds);
-    final writer = new ByteWriter(rds,
+    final writer = ByteWriter(rds,
         eParams: eParams, outputTS: outputTS, doLogging: doLogging);
     return writer.writeRootDataset();
   }
 
-/*
   /// Writes the [ByteRootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
   static Bytes writeFile(ByteRootDataset rds, File file,
@@ -59,10 +57,8 @@ class ByteWriter extends Writer {
     file.writeAsBytesSync(bytes.asUint8List());
     return bytes;
   }
-*/
 
-/*
-  /// Creates a new empty [File] from [path], writes the [ByteRootDataset]
+  /// Creates a empty [File] from [path], writes the [ByteRootDataset]
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
   static Bytes writePath(ByteRootDataset ds, String path,
@@ -70,9 +66,7 @@ class ByteWriter extends Writer {
       TransferSyntax outputTS,
       bool doLogging = false}) {
     checkPath(path);
-    return writeFile(ds, new File(path),
+    return writeFile(ds, File(path),
         eParams: eParams, outputTS: outputTS, doLogging: doLogging);
   }
-*/
-
 }

@@ -5,7 +5,7 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'package:core/core.dart';
 
 import 'package:converter/src/binary/base/reader/subreader.dart';
@@ -20,9 +20,14 @@ class TagEvrSubReader extends EvrSubReader with TagReaderMixin {
   @override
   final bool doLookupVRIndex;
 
-  TagEvrSubReader(Bytes eBytes, DecodingParameters dParams, this.rds,
-      {this.doLogging = false, this.doLookupVRIndex = true})
-      : super(eBytes, dParams, rds);
+  factory TagEvrSubReader(Bytes bytes, DecodingParameters dParams,
+      {bool doLogging = false, bool doLookupVRIndex = true}) =>
+      TagEvrSubReader._(bytes, dParams, TagRootDataset.empty(),
+          doLogging, doLookupVRIndex);
+
+  TagEvrSubReader._(Bytes bytes, DecodingParameters dParams, this.rds,
+      this.doLogging, this.doLookupVRIndex)
+      : super(bytes, dParams, rds);
 }
 
 class TagIvrSubReader extends IvrSubReader with TagReaderMixin {
@@ -33,9 +38,9 @@ class TagIvrSubReader extends IvrSubReader with TagReaderMixin {
   @override
   final bool doLookupVRIndex;
 
-  TagIvrSubReader.from(TagEvrSubReader subReader)
-      : rds = subReader.rds,
-        doLogging = subReader.doLogging,
-        doLookupVRIndex = subReader.doLookupVRIndex,
-        super(subReader.rb, subReader.dParams, subReader.rds);
+  TagIvrSubReader.from(TagEvrSubReader evrSubReader)
+      : rds = evrSubReader.rds,
+        doLogging = evrSubReader.doLogging,
+        doLookupVRIndex = evrSubReader.doLookupVRIndex,
+        super(evrSubReader.rb, evrSubReader.dParams, evrSubReader.rds);
 }

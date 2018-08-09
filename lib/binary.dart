@@ -16,7 +16,6 @@ export 'package:converter/src/binary/byte/reader/byte_reader_mixin.dart';
 export 'package:converter/src/binary/byte/reader/byte_subreader.dart';
 export 'package:converter/src/binary/byte/writer/byte_subwriter.dart';
 export 'package:converter/src/binary/byte/writer/byte_writer.dart';
-export 'package:converter/src/binary/byte/reader/byte_read_utils.dart';
 
 export 'package:converter/src/binary/compare_bytes.dart';
 export 'package:converter/src/binary/convert_dataset.dart';
