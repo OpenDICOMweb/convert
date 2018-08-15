@@ -10,10 +10,13 @@ import 'package:converter/converter.dart';
 import 'package:core/server.dart' hide group;
 import 'package:test/test.dart';
 
-const String path0 = 'C:/odw_test_data/mweb/TransferUIDs/1.2.840.10008.1.2.5.dcm';
+const String path0 = 'C:/odw_test_data/mweb/TransferUIDs'
+    '/1.2.840.10008.1.2.5.dcm';
 
 void main() {
-  Server.initialize(name: 'ByteReader Test', level: Level.debug);
+  Server.initialize(name: 'ByteReader Test',
+      throwOnError: true,
+      level: Level.debug);
 
     test('ByteReader Read file', () {
       final rds = ByteReader.readPath(path0);

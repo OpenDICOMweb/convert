@@ -12,10 +12,13 @@ import 'package:converter/src/binary/byte/reader/byte_reader.dart';
 
 void main() {
   Server.initialize(
-      name: 'dcm_reader_test', level: Level.debug, throwOnError: false);
+      name: 'dcm_reader_test', level: Level.debug, throwOnError: true);
 
 //  const path0 = 'C:/odw_test_data/mweb/TransferUIDs/1.2.840.10008.1.2.5.dcm';
-  const path1 = 'C:/odw_test_data/mweb/10 Patient IDs/2a5bef0f-e4d2-4680-bd24-f42d902d6741.dcm';
+  const path0 = 'C:/odw_test_data/mweb/10 Patient IDs'
+      '/2a5bef0f-e4d2-4680-bd24-f42d902d6741.dcm';
+  const path1 = 'C:/odw_test_data/mweb/TransferUIDs'
+      '/1.2.840.10008.1.2.4.100.dcm';
 
   group('description', () {
     test('instance', () {
