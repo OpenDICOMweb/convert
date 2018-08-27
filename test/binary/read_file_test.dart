@@ -26,25 +26,9 @@ void main() {
     log.debug('${entity.info}');
   });
 
-  test('read_fie', () {
-    const x0 = 'C:/odw_test_data/mweb/500+/';
-    int fsEntityCount;
-    final dir = new Directory(x0);
-
-    final fList = dir.listSync(recursive: true);
-    fsEntityCount = fList.length;
-    log.debug('FSEntity count: $fsEntityCount');
-
-    //final files = <File>[];
-    final files = <String>[];
-    for (var fse in fList) {
-      if (fse is File) {
-        final path = fse.path;
-        if (path.endsWith('.dcm')) {
-          files.add(path);
-        }
-      }
-    }
+  test('read_files', () {
+    global.level = Level.debug;
+    final files = listFile();
     for (var i = 0; i < files.length; i++) {
       final inPath = cleanPath(files[i]);
 
@@ -80,4 +64,78 @@ void main() {
       log.debug('rds0.dsBytes: ${rds0.dsBytes}');
     }
   });
+
+  test('read_write_read files', () {
+    final files = listFile();
+    for (var i = 0; i < files.length; i++) {
+      final inPath = cleanPath(files[i]);
+      log.info('$i path: $inPath');
+      final length = new File(inPath).lengthSync();
+      stdout.writeln('Reading($length bytes): $inPath');
+
+      final rds0 = ByteReader.readPath(inPath, doLogging: false);
+      if (rds0 == null) {
+        log.warn('Invalid DICOM file: $inPath');
+      } else {
+        log.info('${rds0.summary}');
+      }
+
+      log.info('${rds0.dsBytes}');
+
+      final outPath = getVNAPath(rds0, 'bin/output/', 'dcm');
+      final outBytes = ByteWriter.writeBytes(rds0, doLogging: false);
+      log
+        ..info('outPath: $outPath')
+        ..info('Output length: ${outBytes.length}(${outBytes.length ~/ 1024}K)')
+        ..info('done');
+
+      expect(outBytes.isNotEmpty, true);
+      expect(outBytes.limit == outBytes.length, true);
+      expect(
+          outBytes.buffer.lengthInBytes == outBytes.asByteData().lengthInBytes,
+          true);
+      expect(outBytes.asUint8List(), equals(outBytes.buffer.asUint8List()));
+      expect(outBytes.elementSizeInBytes == 1, true);
+      expect(outBytes.offset == outBytes.asByteData().offsetInBytes, true);
+      expect(outBytes.vrIndex == vrIndexByCode8Bit[outBytes.vrCode], true);
+      expect(outBytes.asInt8List(), equals(outBytes.buffer.asInt8List()));
+
+      final rds1 = ByteReader.readBytes(outBytes, doLogging: false);
+      if (rds1 == null) {
+        log.warn('Invalid DICOM file: $outPath');
+      } else {
+        log.info('${rds1.summary}');
+      }
+
+      final result = (rds0 == rds1) ? 'Success' : 'Failure';
+      print(result);
+
+      if (result == 'Success')
+        expect(rds0 == rds1, true);
+      else
+        expect(rds0 == rds1, false);
+    }
+  });
+}
+
+List<String> listFile() {
+  const x0 = 'C:/odw/test_data/mweb/500+/';
+  int fsEntityCount;
+  final dir = new Directory(x0);
+
+  final fList = dir.listSync(recursive: true);
+  fsEntityCount = fList.length;
+  log.debug('FSEntity count: $fsEntityCount');
+
+  //final files = <File>[];
+  final files = <String>[];
+  for (var fse in fList) {
+    if (fse is File) {
+      final path = fse.path;
+      if (path.endsWith('.dcm')) {
+        files.add(path);
+      }
+    }
+  }
+  return files;
 }
