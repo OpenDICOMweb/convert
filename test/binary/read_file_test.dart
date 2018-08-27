@@ -19,6 +19,7 @@ void main() {
       level: Level.debug);
 
     test('ByteReader Read file', () {
+      global.allowBlankDateTimes = true;
       final rds = ByteReader.readPath(path0);
       log.debug('${rds.info}');
       final entity = activeStudies.entityFromRootDataset(rds);
