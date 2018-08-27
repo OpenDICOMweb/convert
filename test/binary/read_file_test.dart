@@ -17,7 +17,7 @@ const String path0 = 'C:/odw_test_data/mweb/TransferUIDs'
 
 void main() {
   Server.initialize(
-      name: 'ByteReader Test', throwOnError: true, level: Level.debug);
+      name: 'ByteReader Test', throwOnError: true, level: Level.info);
 
   test('ByteReader Read file', () {
     final rds = ByteReader.readPath(path0);
@@ -27,7 +27,7 @@ void main() {
   });
 
   test('read_fie', () {
-    const x0 = 'C:/odw/test_data/mweb/500+/';
+    const x0 = 'C:/odw_test_data/mweb/500+/';
     int fsEntityCount;
     final dir = new Directory(x0);
 

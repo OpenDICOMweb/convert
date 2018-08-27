@@ -10,7 +10,7 @@ import 'package:core/server.dart' hide group;
 import 'package:test/test.dart';
 
 void main() {
-  Server.initialize(name: 'byte_date_writer.dart', level: Level.debug);
+  Server.initialize(name: 'byte_date_writer.dart', level: Level.info);
 
   group('ByteDataBuffer', () {
 

@@ -12,7 +12,7 @@ import 'package:converter/src/binary/byte/reader/byte_reader.dart';
 
 void main() {
   Server.initialize(
-      name: 'dcm_reader_test', level: Level.debug, throwOnError: true);
+      name: 'dcm_reader_test', level: Level.info, throwOnError: true);
 
   const path0 = 'C:/odw_test_data/mweb/10 Patient IDs'
       '/2a5bef0f-e4d2-4680-bd24-f42d902d6741.dcm';
