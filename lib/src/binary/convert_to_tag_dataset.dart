@@ -28,7 +28,7 @@ TagRootDataset convertToTagDataset(RootDataset sourceRDS,
   log.level = Level.warn1;
   // rootBds = sourceRds;
   currentSDS = sourceRDS;
-  targetRDS = new TagRootDataset.empty();
+  targetRDS =  TagRootDataset.empty();
   currentTDS = targetRDS;
 
   log
@@ -94,7 +94,7 @@ const int kDefaultCount = 5;
 String valuesPrefix(Element te, [int count = kDefaultCount]) {
   final length = te.values.length;
   if (length <= 0) return '[]';
-  final sb = new StringBuffer('[');
+  final sb =  StringBuffer('[');
   final limit = (length > count) ? count : length;
   final last = limit - 1;
   for (var i = 0; i < last; i++) sb.write('${te.values.elementAt(i)}, ');
@@ -104,20 +104,20 @@ String valuesPrefix(Element te, [int count = kDefaultCount]) {
 }
 
 SQ convertSQ(SQ sq) {
-  final tItems = new List<TagItem>(sq.items.length);
+  final tItems =  List<TagItem>(sq.items.length);
   // Current source Dataset
   final parentSDS = currentSDS;
   // Current target Dataset
   final parentTDS = currentTDS;
   for (var i = 0; i < sq.items.length; i++) {
     currentSDS = sq.items.elementAt(i);
-    currentTDS = new TagItem.empty(parentTDS, sq);
+    currentTDS =  TagItem.empty(parentTDS, sq);
     convertItem(currentSDS, currentTDS);
     tItems[i] = currentTDS;
   }
   currentSDS = parentSDS;
   currentTDS = parentTDS;
-  final tagSQ = new SQtag(parentTDS, sq.tag,  tItems);
+  final tagSQ =  SQtag(parentTDS, sq.tag,  tItems);
 
   for (var item in tItems) item.sequence = tagSQ;
   return tagSQ;

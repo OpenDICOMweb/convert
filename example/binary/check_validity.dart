@@ -28,7 +28,7 @@ Future main() async {
 
   final inPath = cleanPath(x6);
 
-  final file = new File(inPath);
+  final file =  File(inPath);
   final fLength = file.lengthSync();
   stdout
     ..writeln('Reading($fLength bytes): $inPath')
@@ -53,14 +53,14 @@ Future main() async {
   print('File: "$inPath" $length bytes (${length ~/ 1024}K) read');
   print('ByteRootDataset: ${rds.total} Elements');
 
-  var issues = new Issues('dataset: $rds');
+  var issues =  Issues('dataset: $rds');
   rds.map((e) => e.check(issues)).toList(growable: false);
   print('Issues0: \n$issues');
 
-  final tagRds = new TagRootDataset.from(rds);
+  final tagRds =  TagRootDataset.from(rds);
   print('TagRootDataset: ${tagRds.total} Elements');
 
-  issues = new Issues('dataset: $tagRds');
+  issues =  Issues('dataset: $tagRds');
   rds.map((e) => e.check(issues)).toList(growable: false);
   print('Issues1: \n$issues');
 }

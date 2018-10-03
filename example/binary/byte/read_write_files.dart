@@ -14,14 +14,14 @@ import 'package:core/server.dart';
 
 import '../test_files.dart';
 
-void main() async {
+Future<void> main() async {
   Server.initialize(
       name: 'ReadWriteFiles', level: Level.debug, throwOnError: false);
 
   for (var i = 0; i < files.length; i++) {
     final inPath = cleanPath(files[i]);
     log.info('$i path: $inPath');
-    final length = new File(inPath).lengthSync();
+    final length =  File(inPath).lengthSync();
     stdout.writeln('Reading($length bytes): $inPath');
 
     final rds0 = ByteReader.readPath(inPath, doLogging: false);

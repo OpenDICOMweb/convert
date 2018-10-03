@@ -15,11 +15,13 @@ class EncodingParameters {
   final bool allowImplicitLittleEndian;
 
   final TransferSyntax targetTS;
+
   /// Encodes the Root Dataset even if it does not have any FMI.
   final bool allowMissingFMI;
 
   /// If true Elements will be checked for valid VR by looking up Tag.
   final bool doCheckVR;
+
   /// If true, ODW FMI (with clean preamble) will be added or replaced,
   /// undefined lengths will be removed, if RootDS is in Implicit VR it
   /// will be converted to Explicit VR, all fragments will be removed.
@@ -58,7 +60,7 @@ class EncodingParameters {
 
   const EncodingParameters({
     this.allowImplicitLittleEndian = true,
-	  this.targetTS,
+    this.targetTS,
     this.allowMissingFMI = true,
     this.doCheckVR = true,
     this.doConvertToNormalForm = false,
@@ -71,12 +73,11 @@ class EncodingParameters {
     this.doRemoveFragments = false,
     this.doRemoveNoZeroDelimiterLengths = false,
     this.doFixPaddingErrors = false,
-
   });
 
-  static const EncodingParameters kNoChange = const EncodingParameters();
+  static const EncodingParameters kNoChange = EncodingParameters();
 
-  static const EncodingParameters kCanonical = const EncodingParameters(
+  static const EncodingParameters kCanonical = EncodingParameters(
       allowImplicitLittleEndian: false,
       allowMissingFMI: false,
       doCheckVR: true,
@@ -91,7 +92,7 @@ class EncodingParameters {
       doRemoveNoZeroDelimiterLengths: true,
       doFixPaddingErrors: true);
 
-  static const EncodingParameters kCanonicalWithBulkdata = const EncodingParameters(
+  static const EncodingParameters kCanonicalWithBulkdata = EncodingParameters(
       allowImplicitLittleEndian: false,
       allowMissingFMI: false,
       doCheckVR: true,

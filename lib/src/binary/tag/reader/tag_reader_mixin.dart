@@ -7,6 +7,7 @@
 //  See the AUTHORS file for other contributors.
 //
 import 'package:core/core.dart';
+import 'package:core/vf_fragments.dart';
 
 abstract class TagReaderMixin {
   RootDataset get rds;
@@ -33,7 +34,7 @@ abstract class TagReaderMixin {
       TagElement.makeSQFromBytes(parent, items, bytes);
 
   Element makePixelDataFromBytes(DicomBytes bytes,
-          [TransferSyntax ts, VFFragments fragments]) =>
+          [TransferSyntax ts, VFFragmentList _]) =>
       TagElement.makePixelDataFromBytes(bytes, cds, ts);
 
   Element makeFromValues<V>(int code, int vrIndex, List<V> vList) =>

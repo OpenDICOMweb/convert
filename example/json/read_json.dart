@@ -24,7 +24,7 @@ void main() {
   log.info('path: $inPath');
   stdout.writeln('Reading(byte): $inPath');
 
-  final s = new File(inPath).readAsStringSync();
+  final s =  File(inPath).readAsStringSync();
   final rds = JsonReader(s).rds;
   if (rds == null) {
     log.error('"$inPath" either does not exist or is not a valid DICOM file');

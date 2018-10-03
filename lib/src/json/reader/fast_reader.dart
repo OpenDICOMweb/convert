@@ -23,7 +23,7 @@ class FastJsonReader extends JsonReaderBase {
 
   FastJsonReader(String s)
       : rootList = json.decode(s),
-        rds = new TagRootDataset.empty();
+        rds =  TagRootDataset.empty();
 
   List get fmiList => rootList[0];
   List get rdsList => rootList[1];
@@ -133,10 +133,10 @@ class FastJsonReader extends JsonReaderBase {
     if (vrIndex == kSQIndex &&
         (tag.vrIndex == kSQIndex || tag.vrIndex == kUNIndex)) {
       final length = entries.length;
-      final items = new List<TagItem>(length);
+      final items =  List<TagItem>(length);
       final sq = SQtag.fromValues(tag, items, kSQIndex, cds);
       // Add the empty Items
-      for (var i = 0; i < length; i++) items[i] = new TagItem.empty(cds, sq);
+      for (var i = 0; i < length; i++) items[i] =  TagItem.empty(cds, sq);
       readItems(sq, entries);
       return sq;
     }
@@ -144,5 +144,5 @@ class FastJsonReader extends JsonReaderBase {
   }
 
   static RootDataset fromString(String s) =>
-      new FastJsonReader(s).readRootDataset();
+       FastJsonReader(s).readRootDataset();
 }

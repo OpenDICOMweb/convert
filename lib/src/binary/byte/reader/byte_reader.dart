@@ -27,7 +27,7 @@ class ByteReader extends Reader {
   factory ByteReader(Uint8List bList,
           {DecodingParameters dParams = DecodingParameters.kNoChange,
           bool doLogging = false}) =>
-      new ByteReader.fromBytes(new Bytes.typedDataView(bList),
+       ByteReader.fromBytes( Bytes.typedDataView(bList),
           dParams: dParams, doLogging: doLogging);
 
   /// Creates a new [ByteReader].
@@ -35,29 +35,29 @@ class ByteReader extends Reader {
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool doLogging = false})
       : evrSubReader =
-            new ByteEvrSubReader(bytes, dParams, doLogging: doLogging),
+             ByteEvrSubReader(bytes, dParams, doLogging: doLogging),
         super(bytes);
 
   factory ByteReader.fromFile(File f,
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool doLogging = false}) {
     final Uint8List bList = f.readAsBytesSync();
-    final bytes = new Bytes.typedDataView(bList);
-    return new ByteReader.fromBytes(bytes,
+    final bytes =  Bytes.typedDataView(bList);
+    return  ByteReader.fromBytes(bytes,
         dParams: dParams, doLogging: doLogging);
   }
 
   factory ByteReader.fromPath(String path,
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool doLogging = false}) {
-    final f = new File(path);
-    return new ByteReader.fromFile(f, dParams: dParams, doLogging: doLogging);
+    final f =  File(path);
+    return  ByteReader.fromFile(f, dParams: dParams, doLogging: doLogging);
   }
 
   /// Returns a new [ByteIvrSubReader], which is created lazily on demand.
   @override
   ByteIvrSubReader get ivrSubReader =>
-      _ivrSubReader ??= new ByteIvrSubReader.from(evrSubReader);
+      _ivrSubReader ??=  ByteIvrSubReader.from(evrSubReader);
   ByteIvrSubReader _ivrSubReader;
 
   /// Reads the [RootDataset] from a [Uint8List].
@@ -65,7 +65,7 @@ class ByteReader extends Reader {
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool doLogging = false}) {
     final reader =
-        new ByteReader.fromBytes(bytes, dParams: dParams, doLogging: doLogging);
+         ByteReader.fromBytes(bytes, dParams: dParams, doLogging: doLogging);
     return reader.readRootDataset();
   }
 
@@ -76,7 +76,7 @@ class ByteReader extends Reader {
       bool doLogging = false}) {
     assert(td is Uint8List || td is ByteData);
     final bytes =
-        new Bytes.typedDataView(td, td.offsetInBytes, td.lengthInBytes, endian);
+         Bytes.typedDataView(td, td.offsetInBytes, td.lengthInBytes, endian);
     return ByteReader.readBytes(bytes, dParams: dParams, doLogging: doLogging);
   }
 
@@ -101,7 +101,7 @@ class ByteReader extends Reader {
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool doLogging = false}) {
     checkPath(path);
-    return ByteReader.readFile(new File(path),
+    return ByteReader.readFile( File(path),
         doAsync: doAsync,
         endian: endian,
         dParams: dParams,

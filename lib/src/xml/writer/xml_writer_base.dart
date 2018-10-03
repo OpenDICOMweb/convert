@@ -8,7 +8,7 @@
 //
 import 'package:core/core.dart';
 
-abstract class JsonWriterBase {
+abstract class XmlWriterBase {
   /// The [RootDataset] to be written.
   final RootDataset rds;
 
@@ -32,7 +32,7 @@ abstract class JsonWriterBase {
   /// the [RootDataset] being written.
   final bool includeFmi;
 
-  JsonWriterBase(this.rds, this.path,
+  XmlWriterBase(this.rds, this.path,
       {int tabSize = 0,
       this.bulkdataThreshold = 1024,
       this.separateBulkdata = false,
@@ -42,7 +42,7 @@ abstract class JsonWriterBase {
       : sb = Indenter('', tabSize),
         bdList = separateBulkdata ? BulkdataList(path) : null;
 
-  JsonWriterBase.indenting(this.rds, this.path,
+  XmlWriterBase.indenting(this.rds, this.path,
       {int tabSize = 2,
       this.bulkdataThreshold = 1024,
       this.separateBulkdata = false,

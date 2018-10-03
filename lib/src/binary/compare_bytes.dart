@@ -114,7 +114,7 @@ String toStr(Bytes bytes, int index) {
   for (var i = 0; i < 4; i++) {
     if (!isVisibleChar(line[i])) line[i] = kAsterisk;
   }
-  return new String.fromCharCodes(line);
+  return  String.fromCharCodes(line);
 }
 
 bool compareBytessets(Dataset ds0, Dataset ds1) {

@@ -10,11 +10,11 @@ import 'package:core/core.dart';
 import 'package:converter/converter.dart';
 //
 /// Logger
-Logger log = new Logger('read_write_element');
+Logger log =  Logger('read_write_element');
 
 /// Simple [Element] test
 void main(List<String> args) {
-  final sh = new SHtag(PTag.kReceivingApplicationEntityTitle, ['foo bar']);
+  final sh =  SHtag(PTag.kReceivingApplicationEntityTitle, ['foo bar']);
   elementTest(sh, <String>['abc', 'def']);
 }
 
@@ -29,14 +29,14 @@ bool elementTest(Element e0, List values) {
   if (e1 != e2) return false;
 
   // Write the element
-  final bd = new ByteData(4096);
-  final writer = new BDWriter(new ByteRootDataset.empty(bd));
+  final bd =  ByteData(4096);
+  final writer =  BDWriter( ByteRootDataset.empty(bd));
   writer.xWritePublicElement(e1);
   final wIndex = writer.wIndex;
 
   // Read the element
-  final rds1 = new TagRootDataset();
-  final reader = new ByteReader.fromList(writer.bytes, rds1);
+  final rds1 =  TagRootDataset();
+  final reader =  ByteReader.fromList(writer.bytes, rds1);
   final e3 = reader.xReadPublicElement();
   final rIndex = reader.rIndex;
   log.debug('wIndex: $wIndex, rIndex: $rIndex');

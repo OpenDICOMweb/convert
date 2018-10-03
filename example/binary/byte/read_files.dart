@@ -22,10 +22,10 @@ Future main() async {
 
     print('$i: path: $fPath');
     print(' out: ${getTempFile(fPath, 'dcmout')}');
-    final url = new Uri.file(fPath);
+    final url =  Uri.file(fPath);
     stdout.writeln('Reading(byte): $url');
 
-    final reader = new ByteReader.fromPath(fPath, doLogging: false);
+    final reader =  ByteReader.fromPath(fPath, doLogging: false);
     final rds = reader.readRootDataset();
 
     if (rds == null) {
@@ -34,17 +34,16 @@ Future main() async {
       if (reader.pInfo != null) {
         final infoPath = '${path.withoutExtension(fPath)}.info';
         log.info('infoPath: $infoPath');
-        final sb = new StringBuffer('${reader.pInfo.summary(rds)}\n')
+        final sb =  StringBuffer('${reader.pInfo.summary(rds)}\n')
           ..write('Bytes Dataset: ${rds.summary}');
-        new File(infoPath)..writeAsStringSync(sb.toString());
+         File(infoPath).writeAsStringSync(sb.toString());
         log.debug(sb.toString());
 
-        //   final formatter = new Formatter.withIndenter(-1, Indenter.basic);
-        final formatter = new Formatter(maxDepth: -1);
+        final formatter =  Formatter(maxDepth: -1);
         final fmtPath = '${path.withoutExtension(fPath)}.fmt';
         log.info('fmtPath: $fmtPath');
         final fmtOut = rds.format(formatter);
-        new File(fmtPath)..writeAsStringSync(sb.toString());
+         File(fmtPath).writeAsStringSync(sb.toString());
         log.debug(fmtOut);
       } else {
         print('${rds.summary}');

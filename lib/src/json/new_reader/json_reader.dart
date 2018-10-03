@@ -22,7 +22,7 @@ class JsonReader extends JsonReaderBase {
 
   JsonReader(String s)
       : rootMap = json.decode(s),
-        rds = new TagRootDataset.empty();
+        rds =  TagRootDataset.empty();
 
   @override
   RootDataset readRootDataset() {
@@ -112,9 +112,9 @@ class JsonReader extends JsonReaderBase {
   }
 
   @override
-  Element readSimpleElement(int code, int vrIndex, Object value,
+  Element readSimpleElement(int code, int vrIndex, Iterable values,
           [Dataset ds]) =>
-      TagElement.makeFromValues(code, vrIndex, value, ds);
+      TagElement.makeFromValues(code, vrIndex, values, ds);
 
   @override
   SQ readSequence(int code, Iterable entries, int vrIndex, [Dataset ds]) {
@@ -122,10 +122,10 @@ class JsonReader extends JsonReaderBase {
     if (vrIndex == kSQIndex &&
         (tag.vrIndex == kSQIndex || tag.vrIndex == kUNIndex)) {
       final length = entries.length;
-      final items = new List<TagItem>(length);
+      final items =  List<TagItem>(length);
       final sq = SQtag.fromValues(tag, items, kSQIndex, ds);
       // Add the empty Items
-      for (var i = 0; i < length; i++) items[i] = new TagItem.empty(cds, sq);
+      for (var i = 0; i < length; i++) items[i] =  TagItem.empty(cds, sq);
       readItems(sq, entries);
       return sq;
     }
@@ -133,5 +133,5 @@ class JsonReader extends JsonReaderBase {
   }
 
   static RootDataset fromString(String s) =>
-      new JsonReader(s).readRootDataset();
+       JsonReader(s).readRootDataset();
 }

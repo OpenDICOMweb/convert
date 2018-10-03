@@ -10,11 +10,10 @@ import 'dart:convert';
 
 import 'package:core/core.dart';
 import 'package:converter/src/binary/base/writer/writer.dart';
-import 'package:converter/src/json/writer/json_writer_base.dart';
+import 'package:converter/src/xml/writer/xml_writer_base.dart';
 
-/// Writes a JSON file that is readable
-class FastJsonWriter extends JsonWriterBase {
-  FastJsonWriter(RootDataset rds, String path,
+class XmlWriter extends XmlWriterBase {
+  XmlWriter(RootDataset rds, String path,
       {int bulkdataThreshold = 1024,
       bool separateBulkdata = false,
       bool includeFmi = true,
@@ -25,51 +24,60 @@ class FastJsonWriter extends JsonWriterBase {
             includeFmi: includeFmi,
             tabSize: tabSize);
 
+  XmlWriter.empty(
+      {String path = '',
+      int bulkdataThreshold = 1024,
+      bool separateBulkdata = false,
+      bool includeFmi = true,
+      int tabSize = 2})
+      : super(null, path,
+            bulkdataThreshold: bulkdataThreshold,
+            separateBulkdata: separateBulkdata,
+            includeFmi: includeFmi,
+            tabSize: tabSize);
+
   @override
   String writeRootDataset() {
-    sb.indent('[');
+    sb.indent('{');
     if (includeFmi) {
-      sb.indent('[');
-      writeElementList(rds.fmi.elements, ',');
-      sb.outdent('],');
+      for (var e in rds.fmi.elements) writeElement(e, ',');
     }
-    sb.indent('[');
     writeElementList(rds.elements, ',');
-    sb..outdent(']')..outdent(']');
+    sb.outdent('}');
     return sb.toString();
   }
 
   @override
   void writeSimpleElement(Element e, String separator) {
-    sb.startln('["${e.hex}", "${e.vrId}", ');
+    sb.startln('"${e.hex}": {"vr": "${e.vrId}", ');
     valueWriters[e.vrIndex](e, sb);
-    sb.endln(']$separator');
+    sb.endln('}$separator');
   }
 
   @override
   void writeEmptyElement(Element e, String separator) => emptyIsList
-      ? sb.writeln('["${e.hex}", "${e.vrId}", []]$separator')
-      : sb.writeln('["${e.hex}", "${e.vrId}"]$separator');
+      ? sb.writeln('"${e.hex}": {"vr": "${e.vrId}", "Values": []}$separator')
+      : sb.writeln('"${e.hex}": {"vr": "${e.vrId}]$separator');
 
   @override
   BulkdataUri writeBulkdata(Element e, String separator, BulkdataUri url) {
-    sb.writeln('["BulkDataUri": "$url"]]$separator');
+    sb.writeln('{"BulkDataUri": "$url"}}$separator');
     return url;
   }
 
   @override
   void writeSQ(SQ e, String separator) {
-    sb.indent('["${e.hex}", "${e.vrId}", [', 2);
-    writeItems(e.items, '[', ']', ',');
-    sb.outdent(']]$separator', 2);
+    sb.indent('"${e.hex}": {"vr": "${e.vrId}", "Values": [');
+    if (e.items.isNotEmpty) writeItems(e.items, '{', '}', ',');
+    sb.outdent(']}$separator');
   }
 
   @override
   void writeElementStart(Element e) =>
-      sb.indent('["${e.hex}", "${e.vrId}", [', 2);
+      sb.indent('"${e.hex}": {"vr": "${e.vrId}", ', 2);
 
   @override
-  void writeElementEnd(Element e, String separator) => sb.indent(']$separator');
+  void writeElementEnd(Element e, String separator) => sb.indent('}$separator');
 
   static List<ValueWriter> valueWriters = <ValueWriter>[
     _sqError,
@@ -86,27 +94,27 @@ class FastJsonWriter extends JsonWriterBase {
     _writeFloat, _writeStrings, _writeStrings, _writeText,
     _writeStrings, _writeStrings, _writeInt, _writeInt,
     _writeText, _writeStrings, _writeStrings, _writeInt,
-    _writeInt // No reformat
+    _writeInt // no reformat
   ];
 
   // ignore: prefer_void_to_null
-  static void _sqError(Element e, [Indenter sb]) =>
+  static Null _sqError(Element e, [Indenter sb]) =>
       invalidElementIndex(e.vrIndex);
 
   static void _writeFloat(Element e, [Indenter sb]) =>
-      sb.write('[${e.values.join(', ')}]');
+      sb.write('"Values": [${e.values.join(', ')}]');
 
   static void _writeOtherFloat(Element e, [Indenter sb]) =>
-      sb.write('["InlineBinary", "${base64.encode(e.vfBytes)}"]');
+      sb.write('"InlineBinary": "${base64.encode(e.vfBytes)}"');
 
   static void _writeInt(Element e, [Indenter sb]) =>
-      sb.write('[${e.values.join(', ')}]');
+      sb.write('"Values": [${e.values.join(', ')}]');
 
   static void _writeOtherInt(Element e, [Indenter sb]) =>
-      sb.write('["InlineBinary", "${base64.encode(e.vfBytes)}"]');
+      sb.write('"InlineBinary": "${base64.encode(e.vfBytes)}"');
 
   static void _writeText(Element e, [Indenter sb]) =>
-      sb.write('["${e.value}"]');
+      sb.write('"Values": ["${e.value}"]');
 
   static String _toString(String s) => '"$s"';
 
@@ -114,11 +122,11 @@ class FastJsonWriter extends JsonWriterBase {
     if (e is StringBase) {
       final sList = e.values.map(_toString);
       sb
-        ..write('[')
+        ..write('"Values": [')
         ..writeAll(sList, ', ')
         ..write(']');
     } else {
-      return badStringElement(e);
+      badStringElement(e);
     }
   }
 }

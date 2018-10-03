@@ -5,10 +5,11 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'dart:convert';
 
 import 'package:core/core.dart';
+import 'package:converter/src/binary/base/writer/writer.dart';
 import 'package:converter/src/json/writer/json_writer_base.dart';
 
 class JsonWriter extends JsonWriterBase {
@@ -54,7 +55,7 @@ class JsonWriter extends JsonWriterBase {
   }
 
   @override
-  void writeEmptyElement(Element e, String separator) => (emptyIsList)
+  void writeEmptyElement(Element e, String separator) => emptyIsList
       ? sb.writeln('"${e.hex}": {"vr": "${e.vrId}", "Values": []}$separator')
       : sb.writeln('"${e.hex}": {"vr": "${e.vrId}]$separator');
 
@@ -78,7 +79,7 @@ class JsonWriter extends JsonWriterBase {
   @override
   void writeElementEnd(Element e, String separator) => sb.indent('}$separator');
 
-  static List<_ValueWriters> valueWriters = <_ValueWriters>[
+  static List<ValueWriter> valueWriters = <ValueWriter>[
     _sqError,
     // Maybe Undefined Lengths
     _writeOtherInt, _writeOtherInt, _writeOtherInt,
@@ -96,27 +97,28 @@ class JsonWriter extends JsonWriterBase {
     _writeInt // no reformat
   ];
 
-  static Null _sqError(Element e, Indenter sb) =>
+  // ignore: prefer_void_to_null
+  static Null _sqError(Element e, [Indenter sb]) =>
       invalidElementIndex(e.vrIndex);
 
-  static void _writeFloat(Element e, Indenter sb) =>
+  static void _writeFloat(Element e, [Indenter sb]) =>
       sb.write('"Values": [${e.values.join(', ')}]');
 
-  static void _writeOtherFloat(Element e, Indenter sb) =>
+  static void _writeOtherFloat(Element e, [Indenter sb]) =>
       sb.write('"InlineBinary": "${base64.encode(e.vfBytes)}"');
 
-  static void _writeInt(Element e, Indenter sb) =>
+  static void _writeInt(Element e, [Indenter sb]) =>
       sb.write('"Values": [${e.values.join(', ')}]');
 
-  static void _writeOtherInt(Element e, Indenter sb) =>
+  static void _writeOtherInt(Element e, [Indenter sb]) =>
       sb.write('"InlineBinary": "${base64.encode(e.vfBytes)}"');
 
-  static void _writeText(Element e, Indenter sb) =>
+  static void _writeText(Element e, [Indenter sb]) =>
       sb.write('"Values": ["${e.value}"]');
 
   static String _toString(String s) => '"$s"';
 
-  static void _writeStrings(Element e, Indenter sb) {
+  static void _writeStrings(Element e, [Indenter sb]) {
     if (e is StringBase) {
       final sList = e.values.map(_toString);
       sb
@@ -128,5 +130,3 @@ class JsonWriter extends JsonWriterBase {
     }
   }
 }
-
-typedef void _ValueWriters(Element e, Indenter sb);

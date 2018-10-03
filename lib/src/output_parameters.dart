@@ -8,9 +8,9 @@
 
 import 'package:core/core.dart';
 
-typedef String OutputRegex(RegExp rexp);
+typedef OutputRegex = String Function(RegExp rexp);
 
-typedef String OutputPathFrom(String inputPath);
+typedef OutputPathFrom = String Function(String inputPath);
 
 const int k1MB = 1024 * 1024;
 
@@ -49,9 +49,9 @@ class OutputParameters {
 
         this.reUseBD = false});
 
-  static const OutputParameters kDefault = const OutputParameters();
+  static const OutputParameters kDefault = OutputParameters();
 
-  static const OutputParameters kCanonical = const OutputParameters(
+  static const OutputParameters kCanonical = OutputParameters(
     throwOnError: true,
     bufferLength: 1024 * 1024,
 

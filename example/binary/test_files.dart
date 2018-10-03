@@ -62,7 +62,7 @@ const String ivrWithGroupLengths =
 
 const String bar = 'C:/odw_test_data/mweb/10 Patient IDs/04443352';
 
-const List<String> files = const <String>[
+const List<String> files = <String>[
   x0, x1, x2, x3, x4, x5, x6, x7, dcmDir, evrXLarge, evrOWPixels,
   ivrClean, ivrCleanMR, evrDataAfterPixels, ivrWithGroupLengths, bar
 ];
@@ -119,7 +119,7 @@ const String x17 =
 const String mweb14 = 'C:/odw_test_data/sfd/MG/Patient_38/1_DICOM_Original/'
     'IM000001.dcm';
 
-const List<String> badFiles = const <String>[
+const List<String> badFiles = <String>[
   x00,
   x01,
   x02,

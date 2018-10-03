@@ -45,9 +45,9 @@ Future main() async {
       getOutputPath(inPath, dir: 'bin/output', base: base, ext: 'fjson');
   log.info('outPath: $outPath');
   final out =
-      new FastJsonWriter(rds, outPath, separateBulkdata: true, tabSize: 2)
+       FastJsonWriter(rds, outPath, separateBulkdata: true, tabSize: 2)
           .write();
   log.info('Output length: ${out.length}(${out.length ~/ 1024}K)');
-  new File(outPath).writeAsStringSync(out);
+   File(outPath).writeAsStringSync(out);
   log.info('done');
 }

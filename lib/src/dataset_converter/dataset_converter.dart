@@ -59,7 +59,7 @@ abstract class Converter {
   // Does not handle SQ or Private
   void _convertFmi(RootDataset sRds, RootDataset tRds) {
     for (var e in sRds.fmi.elements) {
-      final vrIndex = (doConvertUN) ? e.tag.vrIndex : e.vrIndex;
+      final vrIndex = doConvertUN ? e.tag.vrIndex : e.vrIndex;
       tRds.fmi.add(fromElement(e, vrIndex));
     }
   }
@@ -80,21 +80,22 @@ abstract class Converter {
     return eTarget;
   }
 
-  Element convertSimpleElement(Element e) {
-    var vrIndex = e.vrIndex;
-    final tagVRIndex = e.tag.vrIndex;
+  Element convertSimpleElement(Element eSrc) {
+    var vrIndex = eSrc.vrIndex;
+    final tagVRIndex = eSrc.tag.vrIndex;
     // Handle UN Elements specially
-    if (e.vrIndex == kUNIndex && doConvertUN) {
-      vrIndex =
-          (tagVRIndex > kVRNormalIndexMax) ? convertSpecialVR(e) : tagVRIndex;
+    if (eSrc.vrIndex == kUNIndex && doConvertUN) {
+      vrIndex = (tagVRIndex > kVRNormalIndexMax)
+          ? convertSpecialVR(eSrc)
+          : tagVRIndex;
     } else if (vrIndex != tagVRIndex) {
-      invalidElement('vrIndex($vrIndex) != tagVRIndex($tagVRIndex)', e);
+      invalidElement('vrIndex($vrIndex) != tagVRIndex($tagVRIndex)', eSrc);
     }
-    final eNew = fromElement(e, vrIndex);
-    log.debug('| @$_index eNew: $eNew');
-    currentTds.add(eNew);
-    if (eNew.tag.isPrivate) pRds.add(eNew);
-    return eNew;
+    final eDst = fromElement(eSrc, vrIndex);
+    log.debug('| @$_index eNew: $eDst');
+    currentTds.add(eDst);
+    if (eDst.tag.isPrivate) pRds.add(eDst);
+    return eDst;
   }
 
   // Note: if vr is a special then other Elements from
@@ -121,7 +122,7 @@ abstract class Converter {
     final tParentDS = currentTds;
 
     final sItems = sSQ.items.toList(growable: false);
-    final tItems = new List<Item>(sItems.length);
+    final tItems = List<Item>(sItems.length);
     for (var i = 0; i < sItems.length; i++) {
       currentSds = sItems[i];
       log.debug('> @$_index $currentSds[$i]', 1);
@@ -160,12 +161,12 @@ class TagConverter extends Converter {
   bool doConvertUN;
 
   factory TagConverter(RootDataset sRds, {bool doConvertUN = false}) {
-    final tRds = new TagRootDataset.empty();
-    return new TagConverter._(sRds, tRds, doConvertUN);
+    final tRds = TagRootDataset.empty();
+    return TagConverter._(sRds, tRds, doConvertUN);
   }
 
   TagConverter._(this.sRds, this.tRds, this.doConvertUN)
-      : pRds = new RootDatasetByGroup.empty();
+      : pRds = RootDatasetByGroup.empty();
 
   // TODO: Tag tag to int code
   @override
@@ -178,12 +179,12 @@ class TagConverter extends Converter {
       TagElement.makeFromValues(e.code, e.vrIndex, e.values, currentSds);
 
   @override
-  TagItem makeItem(Dataset parent, SQtag sq) => new TagItem.empty(parent, sq);
+  TagItem makeItem(Dataset parent, SQtag sq) => TagItem.empty(parent, sq);
 
   @override
   SQtag makeSequence(Dataset parent, Tag tag, int nItems,
           [int vfLengthField]) =>
-      new SQtag(parent, tag, new List<TagItem>(nItems));
+      SQtag(parent, tag, List<TagItem>(nItems));
 }
 
 /* Urgent Jim Finish

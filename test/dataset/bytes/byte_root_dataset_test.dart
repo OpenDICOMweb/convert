@@ -39,8 +39,8 @@ void main() {
           log.debug('Error: Skipping ... $file');
           continue;
         }
-        log.debug(
-            'File name ${file.path} with Transfer Syntax UID: ${rds.fmi[0x00020010].value}');
+        log.debug('File name ${file.path} with Transfer Syntax UID: '
+            '${rds.fmi[0x00020010].value}');
 
         expect(() => rds.fmi[0x00020010], isNotNull);
         expect(() => rds.fmi[0x00020010].values, isNotNull);

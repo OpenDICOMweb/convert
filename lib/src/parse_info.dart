@@ -27,7 +27,7 @@ class ParseInfo {
   bool wasShortFile = false;
 
   /// The bytes contained in the DICOM _preamble_.
-  Uint8List preamble = new Uint8List(0);
+  Uint8List preamble = Uint8List(0);
 
   /// if _null_ the preamble was not tested for all zeros. if _true_ all
   /// bytes in the preamble were zeros.
@@ -188,39 +188,38 @@ class ParseInfo {
       this.exceptions});
 
   @override
-  bool operator ==(Object other) => (other is ParseInfo &&
-          isEVR == other.isEVR &&
-          nElements == other.nElements &&
-          nSequences == other.nSequences &&
-          nPrivateElements == other.nPrivateElements &&
-          nPrivateSequences == other.nPrivateSequences &&
-          // Path is not included so we can compare results from different files
-          //  path == other.path &&
-          hadFmi == other.hadFmi &&
-          //TODO: preamble must be compared byte for byte
-          //     preamble == other.preamble &&
-          preambleAllZeros == other.preambleAllZeros &&
-          hadPrefix == other.hadPrefix &&
-          hadGroupLengths == other.hadGroupLengths &&
-          hadParsingErrors == other.hadParsingErrors &&
-          nonZeroDelimiterLengths == other.nonZeroDelimiterLengths &&
-          oddLengthValueFields == other.oddLengthValueFields &&
-          ts == other.ts &&
-          pixelDataVRIndex == other.pixelDataVRIndex &&
-          pixelDataStart == other.pixelDataStart &&
-          pixelDataEnd == other.pixelDataEnd &&
-          lastElement == other.lastElement &&
-          endOfLastElement == other.endOfLastElement &&
-          dsLengthInBytes == other.dsLengthInBytes &&
-          fileLengthInBytes == other.fileLengthInBytes &&
-          // TODO: decide if these should be included or not
-          // shortFileThreshold == other.shortFileThreshold &&
-          // hadTrailingBytes == other.hadTrailingBytes &&
-          // hadTrailingZeros == other.hadTrailingZeros) &&
-          // exceptions == other.exceptions
-          wasShortFile == other.wasShortFile)
-      ? true
-      : false;
+  bool operator ==(Object other) =>
+      other is ParseInfo &&
+      isEVR == other.isEVR &&
+      nElements == other.nElements &&
+      nSequences == other.nSequences &&
+      nPrivateElements == other.nPrivateElements &&
+      nPrivateSequences == other.nPrivateSequences &&
+      // Path is not included so we can compare results from different files
+      //  path == other.path &&
+      hadFmi == other.hadFmi &&
+      //TODO: preamble must be compared byte for byte
+      //     preamble == other.preamble &&
+      preambleAllZeros == other.preambleAllZeros &&
+      hadPrefix == other.hadPrefix &&
+      hadGroupLengths == other.hadGroupLengths &&
+      hadParsingErrors == other.hadParsingErrors &&
+      nonZeroDelimiterLengths == other.nonZeroDelimiterLengths &&
+      oddLengthValueFields == other.oddLengthValueFields &&
+      ts == other.ts &&
+      pixelDataVRIndex == other.pixelDataVRIndex &&
+      pixelDataStart == other.pixelDataStart &&
+      pixelDataEnd == other.pixelDataEnd &&
+      lastElement == other.lastElement &&
+      endOfLastElement == other.endOfLastElement &&
+      dsLengthInBytes == other.dsLengthInBytes &&
+      fileLengthInBytes == other.fileLengthInBytes &&
+      // TODO: decide if these should be included or not
+      // shortFileThreshold == other.shortFileThreshold &&
+      // hadTrailingBytes == other.hadTrailingBytes &&
+      // hadTrailingZeros == other.hadTrailingZeros) &&
+      // exceptions == other.exceptions
+      wasShortFile == other.wasShortFile;
 
   //TODO: implement hashCode if we keep equals
   @override
@@ -232,15 +231,9 @@ class ParseInfo {
   int get rootDSTotal => rds.total;
   bool get hadErrors => hadParsingErrors;
 
-  void addItem(SQ sq, Item item) {
-
-  }
-  void addElement(Element e) {
-
-  }
-  void addSequence(SQ sq) {
-
-  }
+  void addItem(SQ sq, Item item) {}
+  void addElement(Element e) {}
+  void addSequence(SQ sq) {}
   //TODO: this could be (exceptions.length != 0)
   bool get hadWarnings =>
       wasShortFile ||
@@ -325,7 +318,7 @@ Non-Zero Delimiter Lengths: $nonZeroDelimiterLengths
   ''';
 
   String get pixelDataProblems {
-    final sb = new StringBuffer();
+    final sb = StringBuffer();
     final length = pixelDataEnd - pixelDataStart;
     if (length != pixelDataLength)
       sb.writeln('*** Pixel Data stats inconsistent');
@@ -354,7 +347,7 @@ $pixelDataProblems
   String get tsMsg => (ts == null) ? '*** Not present' : '$ts';
 
   String get errorMsg {
-    final sb = new StringBuffer();
+    final sb = StringBuffer();
     if (wasShortFile) sb.write(shortFileMsg);
 
     if (!hadPrefix) sb.write('*** No DICOM Preable or Prefix present');
@@ -379,12 +372,12 @@ $errorMsg
 
   String get fileLengthsMsg =>
       (nTrailingBytes + rds.lengthInBytes != fileLengthInBytes)
-      ? '''
+          ? '''
 *** Inconsistent Lengths Error:
 		  File length: $fileLengthInBytes' is not equal to
 	    RDS length(${rds.lengthInBytes}) + trailing bytes($nTrailingBytes)
 	    '''
-      : 'File and Root Dataset have unequal lengths';
+          : 'File and Root Dataset have unequal lengths';
 
   String get fileMsg => '''
 	  	  $path
@@ -457,7 +450,7 @@ short + defined + undefined: $totalElements
 Had non-zero delimiter lengths: $nonZeroDelimiterLengths
   ''';
 
-  static final ParseInfo kEmpty = new ParseInfo(null);
+  static final ParseInfo kEmpty = ParseInfo(null);
 }
 
 /*

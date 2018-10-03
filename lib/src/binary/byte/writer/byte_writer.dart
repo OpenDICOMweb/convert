@@ -34,9 +34,10 @@ class ByteWriter extends Writer {
       _ivrSubWriter ??= ByteIvrSubWriter.from(evrSubWriter);
   IvrSubWriter _ivrSubWriter;
 
-  /// Writes the [ByteRootDataset] to a [Uint8List], and returns the [Uint8List].
+  /// Writes the [ByteRootDataset] to a [Uint8List],
+  /// and returns the [Uint8List].
   static Bytes writeBytes(ByteRootDataset rds,
-      {EncodingParameters eParams: EncodingParameters.kNoChange,
+      {EncodingParameters eParams = EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false}) {
     checkRootDataset(rds);
@@ -48,7 +49,7 @@ class ByteWriter extends Writer {
   /// Writes the [ByteRootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
   static Bytes writeFile(ByteRootDataset rds, File file,
-      {EncodingParameters eParams: EncodingParameters.kNoChange,
+      {EncodingParameters eParams = EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false}) {
     checkFile(file);
@@ -62,7 +63,7 @@ class ByteWriter extends Writer {
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
   static Bytes writePath(ByteRootDataset ds, String path,
-      {EncodingParameters eParams: EncodingParameters.kNoChange,
+      {EncodingParameters eParams = EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false}) {
     checkPath(path);

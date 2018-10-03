@@ -13,6 +13,8 @@ import 'package:core/core.dart';
 import 'package:converter/src/binary/base/writer/subwriter.dart';
 import 'package:converter/src/element_offsets.dart';
 
+typedef ValueWriter = void Function(Element e, [Indenter sb]);
+
 /// A [class] for writing a [ByteRootDataset] to a [Uint8List],
 /// Supports encoding all LITTLE ENDIAN [TransferSyntax]es.
 abstract class Writer {

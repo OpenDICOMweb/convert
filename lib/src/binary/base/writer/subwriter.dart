@@ -15,7 +15,7 @@ import 'package:converter/src/encoding_parameters.dart';
 
 //Urgent Jim: add to EvrULength at appropriate places
 
-typedef void ElementSubWriter(Element e);
+typedef ElementSubWriter = void Function(Element e);
 
 /// Default allocation is 16K bytes
 const int kMinWriteBufferLength = 0x4000;
@@ -47,7 +47,7 @@ abstract class EvrSubWriter extends SubWriter {
     } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
       _writeMaybeUndefinedLength(e, vrIndex);
     } else {
-      throw new ArgumentError('Invalid VRIndex($vrIndex): $e');
+      throw ArgumentError('Invalid VRIndex($vrIndex): $e');
     }
 
     _count++;
@@ -75,10 +75,11 @@ abstract class EvrSubWriter extends SubWriter {
   }
 
   @override
-  void __writeLongDefinedLengthHeader(Element e, int vrIndex, int vfLength) {
-    assert(vfLength != kUndefinedLength);
-    assert(vfLength >= 0 && vfLength <= kMaxLongVF);
-    final vlf = (vfLength.isOdd) ? vfLength + 1 : vfLength;
+  void __writeLongDefinedLengthHeader(
+      Element e, int vrIndex, int vfLengthField) {
+    assert(vfLengthField != kUndefinedLength);
+    assert(vfLengthField >= 0 && vfLengthField <= kMaxLongVF);
+    final vlf = (vfLengthField.isOdd) ? vfLengthField + 1 : vfLengthField;
     __writeLongHeader(e, vrIndex, vlf);
   }
 
@@ -204,7 +205,7 @@ abstract class IvrSubWriter extends SubWriter {
     } else if (_isMaybeUndefinedLengthVR(vrIndex)) {
       _writeMaybeUndefinedLength(e, vrIndex);
     } else {
-      throw new ArgumentError('Invalid VR($vrIndex): $e');
+      throw ArgumentError('Invalid VR($vrIndex): $e');
     }
 
     if (doLogging) _endElementMsg(start, e);
@@ -219,9 +220,9 @@ abstract class IvrSubWriter extends SubWriter {
   ///
   /// _Note_: all IVR Headers have 32-bit Value Field Length field.
   @override
-  void __writeLongDefinedLengthHeader(Element e, int _, int vfLength) {
-    assert(vfLength >= 0 && vfLength <= kMaxLongVF);
-    final vlf = (vfLength.isOdd) ? vfLength + 1 : vfLength;
+  void __writeLongDefinedLengthHeader(Element e, int _, int vfLengthField) {
+    assert(vfLengthField >= 0 && vfLengthField <= kMaxLongVF);
+    final vlf = (vfLengthField.isOdd) ? vfLengthField + 1 : vfLengthField;
     _wb
       ..writeCode(e.code, 12 + vlf)
       ..writeUint32(vlf);
@@ -325,7 +326,7 @@ abstract class SubWriter {
     if (doLogging) _startRootDatasetMsg(dsStart, rds, ts);
     _writeDataset(rds);
     final bytes = _wb.sublist(0, _wb.wIndex);
-    final dsBytes = new RDSBytes(bytes, fmiEnd);
+    final dsBytes = RDSBytes(bytes, fmiEnd);
     rds.dsBytes = dsBytes;
     if (doLogging) _endRootDatasetMsg(dsStart, dsBytes);
     return bytes;
@@ -382,13 +383,14 @@ abstract class SubWriter {
     final bulkdata = e.bulkdata;
     if (e.frames is CompressedFrameList) {
       _wb
-        ..writeCode(kItem, 8 +  e.frames.length)
+        ..writeCode(kItem, 8 + e.frames.length)
         ..writeUint32(e.offsets.lengthInBytes)
         ..writeUint32List(offsets)
         ..writeCode(kItem, bulkdata.lengthInBytes)
         ..writeUint32(bulkdata.lengthInBytes)
         ..writeUint8List(bulkdata);
-    } /*else {
+    }
+    /*else {
       _wb
         ..writeCode(kItem, 8 + frames.lengthInBytes)
         ..writeUint32(0)
@@ -399,18 +401,20 @@ abstract class SubWriter {
 */
   }
 
-  void _writeFragments(BytePixelData e) {
+  void _writeFragments(Element e) {
     assert(e.vfLengthField == kUndefinedLength);
-    for (final fragment in e.fragments.fragments) {
-      _wb
-        ..writeCode(kItem, 12 + e.vfLength)
-        ..writeUint32(fragment.lengthInBytes)
-        ..writeUint8List(fragment);
+    if (e is BytePixelData) {
+      for (final fragment in e.fragments.fragments) {
+        _wb
+          ..writeCode(kItem, 12 + e.vfLength)
+          ..writeUint32(fragment.lengthInBytes)
+          ..writeUint8List(fragment);
 
-      // If odd length write padding byte
-      if (fragment.length.isOdd) {
-        log.warn('Odd length(${fragment.lengthInBytes}) fragment');
-        _wb.writeUint8(0);
+        // If odd length write padding byte
+        if (fragment.length.isOdd) {
+          log.warn('Odd length(${fragment.lengthInBytes}) fragment');
+          _wb.writeUint8(0);
+        }
       }
     }
   }
@@ -442,7 +446,8 @@ abstract class SubWriter {
     _writeValueField(e, vrIndex);
   }
 
-  /// Write a non-Sequence Element (OB, OW, UN) that may have an undefined length
+  /// Write a non-Sequence Element (OB, OW, UN) that may have
+  /// an undefined length.
   void _writeMaybeUndefinedLength(Element e, [int vrIndex]) {
     (e.hadULength && !eParams.doConvertUndefinedLengths)
         ? _writeLongUndefinedLength(e, vrIndex)
@@ -456,7 +461,8 @@ abstract class SubWriter {
         _wb.index.isEven);
     __writeLongUndefinedLengthHeader(e, vrIndex);
     if (e.code == kPixelData) {
-      if (e is BytePixelData) {
+      if (e is ByteElement) {
+        // ignore: avoid_as
         _writeFragments(e);
       } else {
         _writeEncapsulatedPixelData(e);
@@ -716,9 +722,9 @@ DicomWriteBuffer _reUseBuffer;
 DicomWriteBuffer getWriteBuffer([int length]) {
   length ??= kDefaultWriteBufferLength;
   if (!reUseWriteBuffer || _reUseBuffer == null) {
-    _reUseBuffer = new DicomWriteBuffer(length);
+    _reUseBuffer = DicomWriteBuffer(length);
   } else if (length > _reUseBuffer.length) {
-    _reUseBuffer = new DicomWriteBuffer(length + 1024);
+    _reUseBuffer = DicomWriteBuffer(length + 1024);
     log.warn('**** DcmSubWriterBase creating new Reuse BD of Size: '
         '${_reUseBuffer.length}');
   } else {

@@ -43,11 +43,10 @@ void analyze() {
 Future unittest() async {
   if (runAsync) {
     log('Unit Tests (running asynchronously)...');
-    await new TestRunner().testAsync();
+    await  TestRunner().testAsync();
   } else {
     log('Unit Tests (running synchronously)...');
-    new PubApp.local('test').run([]);
-    // new TestRunner();
+     PubApp.local('test').run([]);
   }
 }
 
@@ -69,7 +68,7 @@ void format() {
 String dartDocPath = 'C:/odw/sdk/doc/convert';
 
 /// The default directory for convert docs output
-Directory dartDocDir = new Directory('C:/odw/sdk/doc/convert');
+Directory dartDocDir =  Directory('C:/odw/sdk/doc/convert');
 
 /// Generate Documentation for convert package.
 @Task('DartDoc')
@@ -118,8 +117,8 @@ void buildRelease() {
 void compile() {
   log('Dart Dev Compiler: Compiling...');
   const dartDevCOutPath = 'dart_dev_output';
-  final dartDevCOutputDir = new Directory(dartDevCOutPath);
-  new DevCompiler().compile('lib', dartDevCOutputDir);
+  final dartDevCOutputDir =  Directory(dartDevCOutPath);
+   DevCompiler().compile('lib', dartDevCOutputDir);
 }
 
 /// Test the JavaScript files
@@ -128,7 +127,7 @@ void compile() {
 //TODO: make sure this runs the .js files
 @Depends(build)
 void testJavaScript() {
-  new PubApp.local('test').run([]);
+   PubApp.local('test').run([]);
 }
 
 /// Clean the convert package. Used before release.

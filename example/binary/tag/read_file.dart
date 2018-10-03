@@ -28,7 +28,7 @@ Future main() async {
 
   final inPath = cleanPath(x6);
 
-  final file = new File(inPath);
+  final file =  File(inPath);
   final fLength = file.lengthSync();
   stdout
     ..writeln('Reading($fLength bytes): $inPath')
@@ -36,7 +36,7 @@ Future main() async {
 
   RootDataset rds;
   try {
-    final bList = new File(inPath).readAsBytesSync();
+    final bList =  File(inPath).readAsBytesSync();
     rds = TagReader(bList, doLogging: true).rds;
   } on InvalidTransferSyntax {
     exit(-1);

@@ -9,8 +9,9 @@
 import 'dart:convert';
 
 import 'package:core/core.dart';
-
 import 'package:converter/src/json/writer/json_writer_base.dart';
+
+typedef JsonValueToString = String Function(Element e, [Indenter sb]);
 
 class ReadableJsonWriter extends JsonWriterBase {
   ReadableJsonWriter(RootDataset rds, String path,
@@ -57,25 +58,15 @@ class ReadableJsonWriter extends JsonWriterBase {
   }
 
   @override
-  void writeEmptyElement(Element e, String separator) => (emptyIsList)
+  void writeEmptyElement(Element e, String separator) => emptyIsList
       ? sb.writeln('[${elementId(e)} []]$separator')
       : sb.writeln('[${elementId(e)}]$separator');
-
-/*
-  String elementId(Element e) => '${e.hex} ${e.vrId}, ${e.keyword}';
-
-  @override
-  BulkdataUri writeBulkdata(Element e, String separator, BulkdataUri url) {
-    sb.writeln('[${elementId(e)} Bulkdata "$url"]]$separator');
-    return url;
-  }
-*/
 
   @override
   void writeSQ(SQ e, String separator) {
     sb.indent('[${elementId(e)} [', 2);
     writeItems(e.items, '[', ']', ',');
-    sb..outdent(']]$separator', 2);
+    sb.outdent(']]$separator', 2);
   }
 
   @override
@@ -84,7 +75,7 @@ class ReadableJsonWriter extends JsonWriterBase {
   @override
   void writeElementEnd(Element e, String separator) => sb.indent(']$separator');
 
-  static List<_ValueWriters> valueWriters = <_ValueWriters>[
+  static List<JsonValueToString> valueWriters = <JsonValueToString>[
     _sqError,
     // Maybe Undefined Lengths
     _writeOtherInt, _writeOtherInt, _writeOtherInt,
@@ -102,33 +93,35 @@ class ReadableJsonWriter extends JsonWriterBase {
     _writeInt // No reformat
   ];
 
-  static Null _sqError(Element e) => invalidElementIndex(e.vrIndex);
+  // ignore: prefer_void_to_null
+  static String _sqError(Element e, [Indenter sb]) =>
+      badElementIndex(e.vrIndex);
 
-  static String _writeFloat(Element e) =>
+  static String _writeFloat(Element e, [Indenter sb]) =>
       (e.values.length == 1) ? '${e.value}' : '[${e.values.join(', ')}]';
 
-  static String _writeOtherFloat(Element e) =>
+  static String _writeOtherFloat(Element e, [Indenter sb]) =>
       '[Base64 "${base64.encode(e.vfBytes)}"]';
 
-  static String _writeInt(Element e) =>
+  static String _writeInt(Element e, [Indenter sb]) =>
       (e.values.length == 1) ? '${e.value}' : '[${e.values.join(', ')}]';
 
-  static String _writeOtherInt(Element e) =>
+  static String _writeOtherInt(Element e, [Indenter sb]) =>
       'Base64:"${base64.encode(e.vfBytes)}"';
 
-  static String _writeDates(Element e) {
+  static String _writeDates(Element e, [Indenter sb]) {
     if (e is DA)
       return (e.values.length == 1) ? '${e.date}' : '[${e.dates.join(', ')}]';
     return badStringElement(e);
   }
 
-  static String _writeTimes(Element e) {
+  static String _writeTimes(Element e, [Indenter sb]) {
     if (e is TM)
       return (e.values.length == 1) ? '${e.time}' : '[${e.times.join(', ')}]';
     return badStringElement(e);
   }
 
-  static String _writeDateTimes(Element e) {
+  static String _writeDateTimes(Element e, [Indenter sb]) {
     if (e is DT)
       return (e.values.length == 1)
           ? '${e.dateTime}'
@@ -136,14 +129,14 @@ class ReadableJsonWriter extends JsonWriterBase {
     return badStringElement(e);
   }
 
-  static String _writeText(Element e) => '"${e.value}"';
+  static String _writeText(Element e, [Indenter sb]) => '"${e.value}"';
 
-  static String _toString(String s) => '"$s"';
+  static String _toString(String s, [Indenter sb]) => '"$s"';
 
-  static String _writeStrings(Element e) {
+  static String _writeStrings(Element e, [Indenter sb]) {
     if (e.values.length == 1) return '"${e.value}"';
 
-    final sb = new StringBuffer();
+    final sb = StringBuffer();
     if (e is StringBase) {
       final sList = e.values.map(_toString);
       sb
@@ -156,5 +149,3 @@ class ReadableJsonWriter extends JsonWriterBase {
     return sb.toString();
   }
 }
-
-typedef String _ValueWriters(Element e);

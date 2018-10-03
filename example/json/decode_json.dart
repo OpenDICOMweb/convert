@@ -10,11 +10,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:core/core.dart';
+
 //
 void main(List<String> args) {
   // ArgParser parser = getArgParser();
 
-  final inFile = new File('C:/odw_test_data/sdk/convert/example/json/example.json');
+  final inFile = File('C:/odw_test_data/sdk/convert/example/json/example.json');
   final s = inFile.readAsStringSync();
   final Map code = json.decode(s);
   print('json array(${code.length}');
@@ -26,11 +27,10 @@ void main(List<String> args) {
   // Map dsx0 = toDataset(ds0);
 //  Map dsx1 = toDataset(ds1);
 
- const encoder = const JsonEncoder.withIndent('  ');
- final pretty = encoder.convert(code);
+  const encoder = JsonEncoder.withIndent('  ');
+  final pretty = encoder.convert(code);
 
-  new File('C:/odw/sdk/convert/example/json/output.json')
-  ..writeAsStringSync(pretty);
+  File('C:/odw/sdk/convert/example/json/output.json').writeAsStringSync(pretty);
 }
 
 /// Convert a JSON [Map] to a [Dataset] [Map]
@@ -41,7 +41,7 @@ Map<int, TagElement> toDataset(Map<String, dynamic> jsMap) {
 }
 
 // ignore: avoid_annotating_with_dynamic
-void decodeMap(String s,  dynamic map) {
+void decodeMap(String s, dynamic map) {
   final code = int.parse(s, radix: 16);
   String vrId;
   var vrIndex = kUNIndex;
@@ -49,13 +49,14 @@ void decodeMap(String s,  dynamic map) {
   var values = const <TagElement>[];
   if (map.length != 0) {
     vrId = map['vr'];
-    vrIndex = vrIndexFromId(vrId );
+    vrIndex = vrIndexFromId(vrId);
+
+    // There should be one of the following in [map].
     values = map['Value'];
-    if (values == null) {
-      values = map['InlineBinary'];
-      values ?? map['BulkDataUri'];
-    }
+    values ??= map['InlineBinary'];
+    values ??= map['BulkDataUri'];
   }
+
   //TODO: debug not finished
   final tag = Tag.lookupByCode(code, vrIndex);
   print('${tag.dcm}($vrId): $values');

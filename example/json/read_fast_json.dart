@@ -28,7 +28,7 @@ Future main() async {
   stdout.writeln('Reading(byte): $inPath');
 
 
-  final s = new File(inPath).readAsStringSync();
+  final s =  File(inPath).readAsStringSync();
   final rds = JsonReader(s).rds;
   if (rds == null) {
     log.error('"$inPath" either does not exist or is not a valid DICOM file');
@@ -39,7 +39,7 @@ Future main() async {
   print('RDS length: ${rds.length ~/ 1024}');
   print('RDS: ${rds.info}');
 
-  rds.format(new Formatter.basic());
+  rds.format( Formatter.basic());
 
   final outPath = getOutputPath(k6684x0, dir: 'bin/output', ext: 'fjson');
   print('outPath: $outPath');

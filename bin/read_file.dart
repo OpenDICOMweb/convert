@@ -36,7 +36,7 @@ Future main() async {
 
   final inPath = cleanPath(xx3);
 
-  final file = new File(inPath);
+  final file =  File(inPath);
   final fLength = file.lengthSync();
   stdout
     ..writeln('Reading($fLength bytes): $inPath')

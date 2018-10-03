@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
+import 'package:core/vf_fragments.dart';
 
 import 'package:converter/src/errors.dart';
 import 'package:converter/src/decoding_parameters.dart';
@@ -20,8 +21,8 @@ import 'package:converter/src/parse_info.dart';
 // ignore_for_file: avoid_catches_without_on_clauses
 
 // Reader axioms
-// 1. eStart is always the first byte of the Element being read and eEnd is always
-//    the end of the Element be
+// 1. eStart is always the first byte of the Element being read and eEnd
+//    is always the end of the Element be
 // 2. The read index (rIndex) should always be at the last place read,
 //    and the end of the value field should be calculated by subtracting
 //    the length of the delimiter (and delimiter length), which is 8 bytes.
@@ -33,7 +34,8 @@ import 'package:converter/src/parse_info.dart';
 // 3. [_finishReadElement] is only called from [readByteElement] and
 //    [readByteElement].
 
-typedef Element LongElementReader(int code, int eStart, int vrIndex, int vlf);
+typedef LongElementReader = Element Function(
+    int code, int eStart, int vrIndex, int vlf);
 
 // TODO:
 //   1. convert all if (doLogging) log.... to log....
@@ -41,7 +43,7 @@ typedef Element LongElementReader(int code, int eStart, int vrIndex, int vlf);
 
 abstract class EvrSubReader extends SubReader {
   EvrSubReader(Bytes bytes, DecodingParameters dParams, Dataset cds)
-      : super(new DicomReadBuffer(bytes), dParams, cds);
+      : super(DicomReadBuffer(bytes), dParams, cds);
 
   /// Returns _true_ if reading an Explicit VR Little Endian file.
   @override
@@ -134,7 +136,7 @@ abstract class EvrSubReader extends SubReader {
 
     if (!_rb.rHasRemaining(dParams.shortFileThreshold - _rb.index)) {
       if (doLogging) log.up;
-      throw new EndOfDataError(
+      throw EndOfDataError(
           '_readFmi', 'index: ${_rb.index} bdLength: ${_rb.length}');
     }
 
@@ -157,9 +159,9 @@ abstract class EvrSubReader extends SubReader {
     return _rb.index;
   }
 
-  /// Reads the Preamble (128 bytes) and Prefix ('DICM') of a PS3.10 DICOM File Format.
-  /// Returns true if a valid Preamble and Prefix where read.
-  /// Read as 32-bit integer. This is faster
+  /// Reads the Preamble (128 bytes) and Prefix ('DICM') of a
+  /// PS3.10 DICOM File Format. Returns true if a valid Preamble
+  /// and Prefix where read. Read as 32-bit integer. This is faster
   bool _readPrefix() {
     _rb.buffer.endian = Endian.little;
     if (_rb.index != 0) return false;
@@ -277,7 +279,7 @@ abstract class SubReader {
 
   /// Creates an Element from [DicomBytes].
   Element makePixelDataFromBytes(DicomBytes bytes,
-      [TransferSyntax ts, VFFragments fragments]);
+      [TransferSyntax ts, VFFragmentList vf]);
 
   /// Create an SQ Element.
   Element makeSQFromBytes(Dataset parent,
@@ -354,7 +356,7 @@ abstract class SubReader {
     } finally {
       final rdsLength = _rb.index - fmiEnd;
       final rdsBytes = _rb.view(0, rdsLength);
-      dsBytes = new RDSBytes(rdsBytes, fmiEnd);
+      dsBytes = RDSBytes(rdsBytes, fmiEnd);
       rds.dsBytes = dsBytes;
     }
 
@@ -383,7 +385,7 @@ abstract class SubReader {
     }
 
     final bd = _rb.sublist(iStart, _rb.index);
-    final dsBytes = new IDSBytes(bd);
+    final dsBytes = IDSBytes(bd);
     item.dsBytes = dsBytes;
     cds = parentDS;
     if (doLogging) _endDatasetMsg(_rb.index, 'readItem', dsBytes, item);
@@ -456,15 +458,14 @@ abstract class SubReader {
   }
 
   /// Returns true if the [target] delimiter is found. If the target
-  /// delimiter is found the _read index_ is advanced to the end of the delimiter
-  /// field (8 bytes); otherwise, readIndex does not change.
+  /// delimiter is found the _read index_ is advanced to the end of
+  /// the delimiter field (8 bytes); otherwise, readIndex does not change.
   bool _checkForDelimiter(int target) {
     final delimiter = _rb.getCode(_rb.index);
     if (target == delimiter) {
       _rb.rSkip(4);
       final length = _rb.readUint32();
-      if (length != 0)
-        warn('Encountered non-zero delimiter length($length)');
+      if (length != 0) warn('Encountered non-zero delimiter length($length)');
       return true;
     }
     return false;
@@ -532,23 +533,23 @@ abstract class SubReader {
   DicomBytes _makeDicomBytes(int start, int vfOffset) {
     final end = _rb.index;
     return (!isEvr)
-        ? new IvrBytes.view(_rb.buffer, start, end)
+        ? IvrBytes.view(_rb.buffer, start, end)
         : (vfOffset == 8)
-            ? new EvrShortBytes.view(_rb.buffer, start, end, endian)
-            : new EvrLongBytes.view(_rb.buffer, start, end, endian);
+            ? EvrShortBytes.view(_rb.buffer, start, end, endian)
+            : EvrLongBytes.view(_rb.buffer, start, end, endian);
   }
 
   /// Returns
   DicomBytes _makeLongDicomBytes(int start) => (!isEvr)
-      ? new IvrBytes.view(_rb.buffer, start, _rb.index)
-      : new EvrLongBytes.view(_rb.buffer, start, _rb.index, endian);
+      ? IvrBytes.view(_rb.buffer, start, _rb.index)
+      : EvrLongBytes.view(_rb.buffer, start, _rb.index, endian);
 
   bool _afterPixelData = false;
 
   /// Returns a new Pixel Data [Element].
   Element _makePixelData(
       int code, int start, int vrIndex, int vfOffset, int vfLengthField,
-      [TransferSyntax ts, VFFragments fragments]) {
+      [TransferSyntax ts, VFFragmentList fragments]) {
     _afterPixelData = true;
     final dBytes = _makeLongDicomBytes(start);
     return makePixelDataFromBytes(dBytes, ts, fragments);
@@ -568,7 +569,7 @@ abstract class SubReader {
         _isMaybeUndefinedLengthVR(vrIndex) &&
         vrIndex != kSQIndex);
 
-    VFFragments fragments;
+    VFFragmentList fragments;
     if (code == kPixelData) {
       fragments = _readEncapsulatedPixelData(code, eStart, vrIndex, vlf);
       assert(fragments != null);
@@ -623,8 +624,9 @@ abstract class SubReader {
     return makeSQFromBytes(cds, items, dBytes);
   }
 
-  /// If the sequence delimiter is found at the current _read index_, reads the
-  /// _delimiter_, reads and checks the _delimiter length_ field, and returns _true_.
+  /// If the sequence delimiter is found at the current _read index_,
+  /// reads the _delimiter_, reads and checks the _delimiter length_ field,
+  /// and returns _true_.
   bool _isSequenceDelimiter() => _checkForDelimiter(kSequenceDelimitationItem);
 
   /// Reads a Sequence with a defined length Value Field Length [vlf].
@@ -641,9 +643,9 @@ abstract class SubReader {
     return makeSQFromBytes(cds, items, dBytes);
   }
 
-  /// Returns [VFFragments] for a [kPixelData] Element.
+  /// Returns [VFFragmentList] for a [kPixelData] Element.
   /// There are only three valid VRs for this method: OB, OW, UN.
-  VFFragments _readEncapsulatedPixelData(
+  VFFragmentList _readEncapsulatedPixelData(
       int code, int eStart, int vrIndex, int vlf) {
     assert(vlf == kUndefinedLength && _isMaybeUndefinedLengthVR(vrIndex));
     final delimiter = _rb.readCode();
@@ -663,7 +665,7 @@ abstract class SubReader {
   ///
   /// Each Fragment starts with an Item Delimiter followed by the 32-bit Item
   /// length field, which may not have a value of kUndefinedValue.
-  VFFragments _readPixelDataFragments(
+  VFFragmentList _readPixelDataFragments(
       int code, int eStart, int vrIndex, int vlf, int itemDelimiter) {
     assert(code == kPixelData &&
         _isMaybeUndefinedLengthVR(vrIndex) &&
@@ -684,7 +686,7 @@ abstract class SubReader {
     } while (delimiter != kSequenceDelimitationItem);
 
     _checkDelimiterLength(delimiter);
-    final v = new VFFragments(fragments);
+    final v = VFFragmentList(fragments);
     return v;
   }
 
@@ -711,7 +713,7 @@ abstract class SubReader {
   void _vlfError(int vlf) {
     error('Value Field Length($vlf) is longer than'
         ' DicomReadBuffer remaining(${_rb.remaining})');
-    if (throwOnError) throw new ShortFileError();
+    if (throwOnError) throw ShortFileError();
   }
 
   /// Reads a 32-bit Value Field Length field and throws an error if it
@@ -720,7 +722,7 @@ abstract class SubReader {
     final vlf = _rb.readUint32();
     if (vlf > _rb.length && vlf != kUndefinedLength) {
       if (_afterPixelData) {
-        throw new DataAfterPixelDataError('@${_rb.index} *** after pixel data: '
+        throw DataAfterPixelDataError('@${_rb.index} *** after pixel data: '
             '${_rb.remaining} bytes remaining');
       }
       _vlfError(vlf);
@@ -734,87 +736,6 @@ abstract class SubReader {
   bool _isMaybeUndefinedLengthVR(int vrIndex) =>
       vrIndex >= kVRMaybeUndefinedIndexMin &&
       vrIndex <= kVRMaybeUndefinedIndexMax;
-
-/*
-  /// The current Group being read.
-  int _group;
-
-
-  Tag _lookupTag(int code, int vrIndex, Element e) {
-    final group = code >> 16;
-    if (group != _group) _group = -1;
-    final tag = (group.isEven)
-        ? PTag.lookupByCode(code, vrIndex)
-        : _getPrivateTag(code, vrIndex, group, e);
-
-    // Note: this is only relevant for EVR
-    if (tag != null) {
-      if (dParams.doCheckVR && _isNotValidVR(code, vrIndex, tag)) {
-        final vr = vrIdFromIndex(vrIndex);
-        error('VR $vr is not valid for $tag');
-      }
-
-      if (dParams.doCorrectVR) {
-        //Urgent: implement replacing the VR, but must be after parsing
-        final newVRIndex = _correctVR(code, vrIndex, tag);
-        if (newVRIndex != vrIndex) {
-          final newVR = tag.vr;
-          log.info1('** Changing VR from $vrIndex to $newVR');
-          //       vrIndex = newVR.index;
-        }
-      }
-    }
-    return tag;
-  }
-
-  int _subgroup;
-  Map<int, PCTag> _creators;
-  PCTag _creator;
-
-  Tag _getPrivateTag(int code, int vrIndex, int group, Element e) {
-    assert(group.isOdd);
-    if (_group == -1) {
-      _group = group;
-      _subgroup = 0;
-      _creators = <int, PCTag>{};
-    }
-
-    final elt = code & 0xFFFF;
-
-    if (elt == 0) return new GroupLengthPrivateTag(code, vrIndex);
-    if (elt < 0x10) return new IllegalPrivateTag(code, vrIndex);
-    if ((elt >= 0x10) && (elt <= 0xFF)) {
-      // Private Creator - might not be LO
-      final subgroup = elt & 0xFF;
-
-      String token;
-      if (vrIndex == kLOIndex) {
-        if (e.isEmpty) {
-          token = 'Creator w/o token';
-        } else {
-          token = e.value;
-        }
-      } else {
-        token = ascii.decode(e.vfBytes, allowInvalid: true).trimRight();
-      }
-
-      final tag = PCTag.make(code, vrIndex, token);
-      _creators[subgroup] = tag;
-      return tag;
-    }
-    if ((elt > 0x00FF) && (elt <= 0xFFFF)) {
-      // Private Data
-      final subgroup = (elt & 0xFF00) >> 8;
-      if (subgroup != _subgroup) {
-        _creator = _creators[subgroup];
-        _subgroup = subgroup;
-      }
-      return PDTag.make(code, vrIndex, _creator);
-    }
-    // This should never happen
-    return invalidTagCode(code);
-  }
-*/
 
   // **** Logging Functions
 
@@ -949,5 +870,6 @@ class InvalidDicomReadBufferIndex extends Error {
   String toString() => 'InvalidReadBufferIndex($index): $_rb';
 }
 
+// ignore: prefer_void_to_null
 Null invalidReadBufferIndex(DicomReadBuffer rb, int index) =>
-    throw new InvalidDicomReadBufferIndex(rb, index);
+    throw InvalidDicomReadBufferIndex(rb, index);

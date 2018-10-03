@@ -9,7 +9,8 @@
 import 'package:core/core.dart';
 
 class DecodingParameters {
-	final int shortFileThreshold;
+  final int shortFileThreshold;
+
   /// if true Datasets will be allowed to be encoded in IVRLE.
   /// The default is false.
   final bool allowImplicitLittleEndian;
@@ -77,10 +78,10 @@ class DecodingParameters {
   final int bulkdataThreshold;
 
   const DecodingParameters({
-	  this.shortFileThreshold = 131,
+    this.shortFileThreshold = 131,
     this.allowImplicitLittleEndian = true,
     this.targetTS,
-	  this.checkPreambleAllZeros = true,
+    this.checkPreambleAllZeros = true,
     this.allowMissingPrefix = false,
     this.allowMissingFMI = true,
     this.allowDuplicates = true,
@@ -99,9 +100,9 @@ class DecodingParameters {
     this.doFixPaddingErrors = false,
   });
 
-  static const DecodingParameters kNoChange = const DecodingParameters();
+  static const DecodingParameters kNoChange = DecodingParameters();
 
-  static const DecodingParameters kCanonical = const DecodingParameters(
+  static const DecodingParameters kCanonical = DecodingParameters(
       allowImplicitLittleEndian: false,
       allowMissingFMI: false,
       doCheckVR: true,
@@ -116,7 +117,7 @@ class DecodingParameters {
       doRemoveNoZeroDelimiterLengths: true,
       doFixPaddingErrors: true);
 
-  static const DecodingParameters kCanonicalWithBulkdata = const DecodingParameters(
+  static const DecodingParameters kCanonicalWithBulkdata = DecodingParameters(
       allowImplicitLittleEndian: false,
       allowMissingFMI: false,
       doCheckVR: true,

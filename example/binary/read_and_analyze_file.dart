@@ -28,7 +28,7 @@ Future main() async {
 
   final inPath = cleanPath(x1);
 
-  final file = new File(inPath);
+  final file =  File(inPath);
   final fLength = file.lengthSync();
   stdout
     ..writeln('Reading($fLength bytes): $inPath')
@@ -57,9 +57,7 @@ Future main() async {
   print('RootDataset: ${bdRds.total} Elements');
   print(bdRds.summary);
   print('------');
-  //final converter = new TagConverter(bdRds, doConvertUN: true);
   final tagRds = TagRootDataset.convert(bdRds);
-  //print(tagRds.summary);
-  print(tagRds.format(new Formatter.basic()));
+  print(tagRds.format( Formatter.basic()));
   print('${tagRds.pcTags}');
 }

@@ -23,7 +23,7 @@ class TestStudy {
   const TestStudy(this.studyUid,
       this.eCount, this.sqCount, this.privateCount, this.path);
 
-  static const f1 = const TestStudy('0.1.2', -1, -1, -1, '');
+  static TestStudy f1 = const TestStudy('0.1.2', -1, -1, -1, '');
 
 }
 

@@ -6,10 +6,9 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
-
 import 'package:core/core.dart' hide Indenter;
 
-abstract class JsonReaderBase {
+abstract class XmlReaderBase {
   // final List<List<List>> rootList;
   RootDataset get rds;
   Dataset get cds;

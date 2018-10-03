@@ -46,12 +46,12 @@ A simple usage example:
 
 
     // Read binary DICOM file and decode into Study Model
-    List<int> bytes = new File('foo.dcm').readAsBytes();
+    List<int> bytes =  File('foo.dcm').readAsBytes();
     Study study = Dicom.decode(bytes);
 
     // Encode Study model into JSON and write to file
     List<int> json = DicomJson.encode(study);
-    new File('foo.json').writeAsBytes(json);
+     File('foo.json').writeAsBytes(json);
 
 ### _TODO_
 

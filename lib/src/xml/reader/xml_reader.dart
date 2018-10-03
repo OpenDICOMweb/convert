@@ -10,25 +10,27 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:core/core.dart';
-import 'package:converter/src/json/reader/json_reader_base.dart';
+import 'package:xml/xml.dart' as xml;
+import 'package:converter/src/xml/reader/xml_reader_base.dart';
+
 
 // ignore_for_file: only_throw_errors
 
-class JsonReader extends JsonReaderBase {
-  final Map<String, Map<String, dynamic>> rootMap;
+class XmlReader extends XmlReaderBase {
+  final xml.XmlDocument document;
   @override
   final TagRootDataset rds;
   @override
   Dataset cds;
 
-  JsonReader(String s)
-      : rootMap = json.decode(s),
+  XmlReader(String s)
+      : document = xml.parse(s),
         rds =  TagRootDataset.empty();
 
   @override
   RootDataset readRootDataset() {
-    for (var entry in rootMap.entries) {
-      final e = readEntry(entry);
+    for (var element in document.children) {
+      final e = readEntry(element);
       if (e.code >= 0x00020000 && e.code < 0x00030000) {
         rds.fmi.add(e);
       } else {
@@ -54,13 +56,20 @@ class JsonReader extends JsonReaderBase {
   Map<int, String> privateCreatorsMap = <int, String>{};
   Map<int, PCTag> knownPrivateCreators = <int, PCTag>{};
 
-  Element readEntry(MapEntry entry) {
-    print('entry: ${entry.key}, ${entry.value}');
-    final code = int.parse(entry.key, radix: 16);
-    final Map vField = entry.value;
-    print('vField: $vField');
-    final vrIndex = vrIndexFromId(vField['vr']);
-    final dynamic values = readValueField(vField);
+  Element readEntry(xml.XmlNode entry) {
+    final a0 = entry.attributes.firstWhere((a) => a.name.local == 'tag');
+    final code = int.tryParse(a0.value, radix: 16);
+    final a1 = entry.attributes.firstWhere((a) => a0.name.local == 'vr');
+    final vrName = a1.value;
+    final vrIndex = vrNameByIndex.indexOf(vrName);
+    final valueElements = entry.children[0].children;
+
+
+
+//    final Map vField = value;
+//    final vrIndex = vrIndexFromId(vField['vr']);
+    final values = readValueFields(valueElements);
+    print('entry: $code, $vrName($vrIndex), $values');
     Tag tag;
     var csg = 0;
     PCTag cPCTag;
@@ -102,6 +111,9 @@ class JsonReader extends JsonReaderBase {
     return readElement(code, values, vrIndex);
   }
 
+  // TODO: implement
+  List<Object> readValueFields(List<xml.XmlNode> vFields) => [];
+
   Object readValueField(Map<String, dynamic> vField) {
     Object values = vField['Values'];
     if (values != null) return values;
@@ -134,5 +146,5 @@ class JsonReader extends JsonReaderBase {
   }
 
   static RootDataset fromString(String s) =>
-       JsonReader(s).readRootDataset();
+       XmlReader(s).readRootDataset();
 }

@@ -7,6 +7,7 @@
 //  See the AUTHORS file for other contributors.
 //
 import 'package:core/core.dart';
+import 'package:core/vf_fragments.dart';
 
 abstract class ByteReaderMixin {
   RootDataset get rds;
@@ -15,11 +16,11 @@ abstract class ByteReaderMixin {
 
   RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
           DicomBytes bytes, int fmiEnd) =>
-      new ByteRootDataset(fmi, eMap, path, bytes, fmiEnd);
+       ByteRootDataset(fmi, eMap, path, bytes, fmiEnd);
 
   Item makeItem(Dataset parent,
           [SQ sequence, Map<int, Element> eMap, DicomBytes bytes]) =>
-      new ByteItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
+       ByteItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
 
   Element makeFromBytes(DicomBytes bytes, Dataset ds, {bool isEvr}) =>
       ByteElement.makeFromBytes(bytes, ds, isEvr: isEvr);
@@ -29,8 +30,8 @@ abstract class ByteReaderMixin {
       ByteElement.makeMaybeUndefinedFromBytes(bytes, ds);
 
   Element makePixelDataFromBytes(DicomBytes bytes,
-          [TransferSyntax ts, VFFragments fragments]) =>
-      ByteElement.makePixelDataFromBytes(bytes, ts, fragments, cds);
+          [TransferSyntax ts, VFFragmentList vf]) =>
+      ByteElement.makePixelDataFromBytes(bytes, ts, vf, cds);
 
   Element makeSQFromBytes(Dataset parent,
           [Iterable<Item> items, DicomBytes bytes]) =>

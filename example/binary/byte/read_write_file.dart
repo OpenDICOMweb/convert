@@ -14,16 +14,19 @@ import 'package:core/server.dart';
 
 import '../test_files.dart';
 
-const List<String> files = const <String>[x0, x1, x2, x3, x4];
+const List<String> files = <String>[x0, x1, x2, x3, x4];
 
-void main() async {
+const String test = 'C:/odw_test_data/mweb/500+/MECANIX/MECANIX/MECANIX/'
+    'Vasculaire ANGIO_AORTE (Adulte)/3D VR - 5631/IM-0001-0000.dcm';
+
+Future<void> main() async {
   Server.initialize(
-      name: 'ReadWriteFile', level: Level.debug, throwOnError: false);
+      name: 'ReadWriteFile', level: Level.info, throwOnError: true);
 
-  final inPath = cleanPath(x11);
+  final inPath = cleanPath(test);
 
   log.info('path: $inPath');
-  final length = new File(inPath).lengthSync();
+  final length =  File(inPath).lengthSync();
   stdout.writeln('Reading($length bytes): $inPath');
 
   final rds0 = ByteReader.readPath(inPath, doLogging: true);

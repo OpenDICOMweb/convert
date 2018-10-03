@@ -18,7 +18,7 @@ class DatasetConverter {
   Dataset currentTDS;
   int nElements = 0;
 
-  DatasetConverter(this.sourceRDS) : targetRDS = new TagRootDataset.empty();
+  DatasetConverter(this.sourceRDS) : targetRDS =  TagRootDataset.empty();
 
   /// Converts any [RootDataset] to a [TagRootDataset]
   TagRootDataset convert({bool keepFmi = true}) {
@@ -81,10 +81,10 @@ class DatasetConverter {
     final parentTDS = currentTDS;
 
     // add try {} catch {} finally {}
-    final tItems = new List<TagItem>(sq.items.length);
+    final tItems =  List<TagItem>(sq.items.length);
     for (var i = 0; i < sq.items.length; i++) {
       currentSDS = sq.items.elementAt(i);
-      currentTDS = new TagItem.empty(parentTDS, sq);
+      currentTDS =  TagItem.empty(parentTDS, sq);
       _convertDataset(currentSDS, currentTDS);
       tItems[i] = currentTDS;
     }
@@ -92,12 +92,12 @@ class DatasetConverter {
     currentSDS = parentSDS;
     currentTDS = parentTDS;
 
-    final tagSQ = new SQtag(parentTDS, sq.tag, tItems);
+    final tagSQ =  SQtag(parentTDS, sq.tag, tItems);
     for (var item in tItems) item.sequence = tagSQ;
     return tagSQ;
   }
 
   static TagRootDataset fromByteRootDataset(ByteRootDataset rds,
           {bool keepFmi = true}) =>
-      new DatasetConverter(rds).convert(keepFmi: keepFmi);
+       DatasetConverter(rds).convert(keepFmi: keepFmi);
 }

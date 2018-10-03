@@ -17,9 +17,9 @@ void main() {
 
   group('RLE Data set', () {
     test('Verify RLE parsing', () {
-      final file = new File(path0);
+      final file =  File(path0);
       final rds = ByteReader.readFile(file);
-      print(rds.format(new Formatter(maxDepth: 146)));
+      print(rds.format( Formatter(maxDepth: 146)));
     });
   });
 }

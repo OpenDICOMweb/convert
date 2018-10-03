@@ -21,7 +21,7 @@ abstract class DatasetByGroup {
   int keyToIndex(int key) => key;
 
   String get info {
-    final sb = new Indenter('$runtimeType: ${groups.length}')..down;
+    final sb =  Indenter('$runtimeType: ${groups.length}')..down;
     for (var group in groups.values) sb.writeln('${group.info}');
     sb.up;
     return '$sb';
@@ -30,7 +30,7 @@ abstract class DatasetByGroup {
   void add(Element e) {
     final gNumber = e.group;
     if (gNumber.isOdd) hasPrivate = true;
-    groups.putIfAbsent(gNumber, () => new PrivateGroup(e));
+    groups.putIfAbsent(gNumber, () =>  PrivateGroup(e));
   }
 
   void addGroup(GroupBase group) => groups[group.gNumber] = group;

@@ -83,7 +83,7 @@ class ElementOffsets {
 
   @override
   String toString() {
-    final sb = new StringBuffer('ElementOffsets:\n');
+    final sb =  StringBuffer('ElementOffsets:\n');
     final sWidth = '${starts.last}'.length;
     final eWidth = '${ends.last}'.length;
     for (var i = 0; i < elements.length; i++) {
@@ -96,5 +96,5 @@ class ElementOffsets {
     return sb.toString();
   }
 
-  static final ElementOffsets kEmpty = new ElementOffsets();
+  static final ElementOffsets kEmpty =  ElementOffsets();
 }

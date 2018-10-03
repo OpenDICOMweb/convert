@@ -30,7 +30,7 @@ abstract class Reader {
 
   Reader.fromUint8List(Uint8List list,
       [int offset = 0, int length, Endian endian])
-      : _bytes = new Bytes.typedDataView(
+      : _bytes =  Bytes.typedDataView(
             list, offset, length ?? list.length, endian ?? Endian.host);
 
   // **** Interface

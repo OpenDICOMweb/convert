@@ -27,13 +27,13 @@ void main() {
   });
 
   test('read_files', () {
-    global.level = Level.debug;
+    global.level = Level.info;
     final files = listFile();
     for (var i = 0; i < files.length; i++) {
       final inPath = cleanPath(files[i]);
 
       log.debug('path: $inPath');
-      final length = new File(inPath).lengthSync();
+      final length =  File(inPath).lengthSync();
       stdout.writeln('Reading($length bytes): $inPath');
 
       final rds0 = ByteReader.readPath(inPath, doLogging: true);
@@ -70,7 +70,7 @@ void main() {
     for (var i = 0; i < files.length; i++) {
       final inPath = cleanPath(files[i]);
       log.info('$i path: $inPath');
-      final length = new File(inPath).lengthSync();
+      final length =  File(inPath).lengthSync();
       stdout.writeln('Reading($length bytes): $inPath');
 
       final rds0 = ByteReader.readPath(inPath, doLogging: false);
@@ -119,9 +119,9 @@ void main() {
 }
 
 List<String> listFile() {
-  const x0 = 'C:/odw/test_data/mweb/500+/';
+  const x0 = 'C:/odw_test_data/mweb/500+/';
   int fsEntityCount;
-  final dir = new Directory(x0);
+  final dir =  Directory(x0);
 
   final fList = dir.listSync(recursive: true);
   fsEntityCount = fList.length;

@@ -36,7 +36,7 @@ class TagWriter extends Writer {
 
   /// Writes the [TagRootDataset] to a [Uint8List], and returns the [Uint8List].
   static Bytes writeBytes(TagRootDataset rds,
-      {EncodingParameters eParams: EncodingParameters.kNoChange,
+      {EncodingParameters eParams = EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false}) {
     checkRootDataset(rds);
@@ -48,7 +48,7 @@ class TagWriter extends Writer {
   /// Writes the [TagRootDataset] to a [Uint8List], and then writes the
   /// [Uint8List] to the [File]. Returns the [Uint8List].
   static Bytes writeFile(TagRootDataset rds, File file,
-      {EncodingParameters eParams: EncodingParameters.kNoChange,
+      {EncodingParameters eParams = EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false}) {
     checkFile(file);
@@ -62,7 +62,7 @@ class TagWriter extends Writer {
   /// to a [Uint8List], then writes the [Uint8List] to the [File], and
   /// returns the [Uint8List].
   static Bytes writePath(TagRootDataset ds, String path,
-      {EncodingParameters eParams: EncodingParameters.kNoChange,
+      {EncodingParameters eParams = EncodingParameters.kNoChange,
       TransferSyntax outputTS,
       bool doLogging = false}) {
     checkPath(path);

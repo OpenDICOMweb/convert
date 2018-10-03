@@ -34,33 +34,31 @@ class ReaderParameters {
   final bool throwOnError;
   final int shortFileThreshold;
 
-  const ReaderParameters({
-    this.deIdentify,
-    this.allowDuplicates,
-    this.removeDuplicates,
-    this.allowBadPaddingChars,
-    this.checkIssues,
-    this.checkIssuesWhileDecoding,
-    this.checkIssuesAfterDecoding,
-    this.checkIssuesOnAccess,
-    this.checkIssuesOnCreation,
-    this.allowNonZeroDelimiterLengths,
-    this.throwOnError,
-    this.shortFileThreshold
-});
+  const ReaderParameters(
+      {this.deIdentify,
+      this.allowDuplicates,
+      this.removeDuplicates,
+      this.allowBadPaddingChars,
+      this.checkIssues,
+      this.checkIssuesWhileDecoding,
+      this.checkIssuesAfterDecoding,
+      this.checkIssuesOnAccess,
+      this.checkIssuesOnCreation,
+      this.allowNonZeroDelimiterLengths,
+      this.throwOnError,
+      this.shortFileThreshold});
 
-  static const ReaderParameters normal = const ReaderParameters(
-    deIdentify: false,
-    allowDuplicates: true,
+  static const ReaderParameters normal = ReaderParameters(
+      deIdentify: false,
+      allowDuplicates: true,
       removeDuplicates: false,
-    allowBadPaddingChars: true,
-    checkIssues: true,
-    checkIssuesWhileDecoding: false,
-    checkIssuesAfterDecoding: true,
-    checkIssuesOnAccess: false,
-    checkIssuesOnCreation: true,
-    allowNonZeroDelimiterLengths: true,
-    throwOnError: false,
-      shortFileThreshold: 1024
-  );
+      allowBadPaddingChars: true,
+      checkIssues: true,
+      checkIssuesWhileDecoding: false,
+      checkIssuesAfterDecoding: true,
+      checkIssuesOnAccess: false,
+      checkIssuesOnCreation: true,
+      allowNonZeroDelimiterLengths: true,
+      throwOnError: false,
+      shortFileThreshold: 1024);
 }

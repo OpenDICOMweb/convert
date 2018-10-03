@@ -17,50 +17,47 @@ abstract class TestFileBase {
   final int sqCount;
   final int privateCount;
 
+  const TestFileBase(this.eCount, this.sqCount, this.privateCount);
 
-  const TestFileBase(
-      this.eCount, this.sqCount, this.privateCount);
-
-  TransferSyntax get  ts;
-  String get  fPath;
+  TransferSyntax get ts;
+  String get fPath;
 }
 
 class IvrTestFile extends TestFileBase {
   @override
-  final TransferSyntax ts = TransferSyntax.kImplicitVRLittleEndian;
-  @override
   final String fPath;
 
-  const IvrTestFile(int eCount, int sqCount, int privateCount,
-      this.fPath) : super(eCount, sqCount,  privateCount);
+  const IvrTestFile(int eCount, int sqCount, int privateCount, this.fPath)
+      : super(eCount, sqCount, privateCount);
 
-  static const f1 = const IvrTestFile(-1, -1, -1, '');
+  @override
+  TransferSyntax get ts => TransferSyntax.kImplicitVRLittleEndian;
 
+  static IvrTestFile f1 = const IvrTestFile(-1, -1, -1, '');
 }
 
 class EvrTestFile extends TestFileBase {
   @override
-  final TransferSyntax ts = TransferSyntax.kExplicitVRLittleEndian;
-  @override
   final String fPath;
 
-  const EvrTestFile(int eCount, int sqCount, int privateCount,
-      this.fPath) : super(eCount, sqCount,  privateCount);
+  const EvrTestFile(int eCount, int sqCount, int privateCount, this.fPath)
+      : super(eCount, sqCount, privateCount);
 
-  static const f1 = const EvrTestFile(-1, -1, -1, '');
+  @override
+  TransferSyntax get ts => TransferSyntax.kExplicitVRLittleEndian;
 
+  static EvrTestFile f1 = const EvrTestFile(-1, -1, -1, '');
 }
 
 class JpegTestFile extends TestFileBase {
   @override
-  final TransferSyntax ts = TransferSyntax.kJpeg2000ImageCompression;
-  @override
   final String fPath;
 
-  const JpegTestFile(int eCount, int sqCount, int privateCount,
-      this.fPath) : super(eCount, sqCount,  privateCount);
+  const JpegTestFile(int eCount, int sqCount, int privateCount, this.fPath)
+      : super(eCount, sqCount, privateCount);
 
-  static const f1 = const EvrTestFile(-1, -1, -1, '');
+  @override
+  TransferSyntax get ts => TransferSyntax.kJpeg2000ImageCompression;
 
+  static EvrTestFile f1 = const EvrTestFile(-1, -1, -1, '');
 }
-

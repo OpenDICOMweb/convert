@@ -8,7 +8,7 @@
 
 import 'package:core/core.dart';
 
-const List<int> kPaddingByVRIndex = const <int>[
+const List<int> kPaddingByVRIndex = <int>[
   // Sequence == 0
   -1,
   // EVR Long maybe undefined

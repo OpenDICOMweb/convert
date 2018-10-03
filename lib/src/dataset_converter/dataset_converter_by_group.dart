@@ -28,7 +28,7 @@ class DatasetConverterByGroup {
   int sIndex = 0;
   int tIndex = 0;
 
-  DatasetConverterByGroup(this.rSds) : rTds = new RootDatasetByGroup.empty();
+  DatasetConverterByGroup(this.rSds) : rTds =  RootDatasetByGroup.empty();
 
   RootDatasetByGroup find() {
     currentSds = rSds;
@@ -73,8 +73,8 @@ class DatasetConverterByGroup {
         if (currentGNumber > 0) log.up;
         currentGNumber = gNumber;
         currentGroup = (gNumber.isEven)
-            ? new PublicGroup(e, sqParent)
-            : new PrivateGroup(e);
+            ?  PublicGroup(e, sqParent)
+            :  PrivateGroup(e);
 
         if (currentTds is DatasetByGroup) {
           currentTds.addGroup(currentGroup);
@@ -92,13 +92,13 @@ class DatasetConverterByGroup {
         tIndex++;
 
         if (tag.elt < 10) {
-          currentSGNumber == 0;
+          currentSGNumber = 0;
           log.debug1('00 $e');
         } else if (tag is PCTag) {
           final sgNumber = tag.sgNumber;
           log.debug1('${hex8(sgNumber)} $e');
           if (currentSGNumber == 0) currentSGNumber = sgNumber;
-          final sg = new PrivateSubgroup(currentGroup, sgNumber);
+          final sg =  PrivateSubgroup(currentGroup, sgNumber);
           currentSubgroup = sg;
           currentGroup.subgroups[sgNumber] = sg;
         } else if (tag is PDTag) {
@@ -112,7 +112,7 @@ class DatasetConverterByGroup {
             if (sg == null) {
               log.warn('Subgroup $sg with no creator');
 //           final creator = PCtag.makeEmptyPrivateCreator(e.code, e.vrIndex);
-              sg = new PrivateSubgroup(currentGroup, sgNumber);
+              sg =  PrivateSubgroup(currentGroup, sgNumber);
               currentGroup.subgroups[sgNumber] = sg;
             }
             currentSubgroup = sg;
@@ -160,7 +160,7 @@ class DatasetConverterByGroup {
       final ItemByGroup sItem = sq.items.elementAt(i);
       currentSds = sItem;
       final ItemByGroup cItem = currentTds;
-      final tItem = new ItemByGroup(cItem);
+      final tItem =  ItemByGroup(cItem);
       currentTds = tItem;
       log
         ..debug1('DS: $i')

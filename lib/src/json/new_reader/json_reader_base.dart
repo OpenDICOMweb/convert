@@ -1,4 +1,4 @@
-//  Copyright (c) 2016, 2017, 2018, 
+//  Copyright (c) 2016, 2017, 2018,
 //  Poplar Hill Informatics and the American College of Radiology
 //  All rights reserved.
 //  Use of this source code is governed by the open source license
@@ -11,7 +11,7 @@
 import 'package:core/core.dart' hide Indenter;
 // import 'package:converter/src/json/reader/fast_reader_utils.dart';
 
-const List<int> bulkdataVRs = const <int>[
+const List<int> bulkdataVRs = <int>[
   kDSIndex, kFLIndex, kFDIndex, kISIndex, kLTIndex,
   kOBIndex, kODIndex, kOFIndex, kOLIndex, kOWIndex,
   kSLIndex, kSSIndex, kSTIndex, kUCIndex, kULIndex,

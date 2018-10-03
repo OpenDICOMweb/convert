@@ -8,6 +8,7 @@
 //
 export 'package:converter/binary.dart';
 export 'package:converter/json.dart';
+export 'package:converter/xml.dart';
 
 export 'package:converter/src/dataset_converter/dataset_converter.dart';
 export 'package:converter/src/dataset_converter/dataset_by_group.dart';
