@@ -76,10 +76,3 @@ int _bytesToLongs(int lengthIB) =>
 int _bytesToDoubles(int lengthIB) =>
     ((lengthIB & 0x7) == 0) ? lengthIB >> 3 : null;
 
-/*
-int _lengthError(int vfLength, int sizeInBytes) {
-  print('Invalid vfLength($vfLength) for elementSize($sizeInBytes)'
-      'the vfLength must be evenly divisible by elementSize');
-  return -1;
-}
-*/
