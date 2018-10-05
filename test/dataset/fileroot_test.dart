@@ -19,7 +19,7 @@ void main() {
     test('Verify RLE parsing', () {
       final file =  File(path0);
       final rds = ByteReader.readFile(file);
-      print(rds.format( Formatter(maxDepth: 146)));
+      log.debug(rds.format( Formatter(maxDepth: 146)));
     });
   });
 }

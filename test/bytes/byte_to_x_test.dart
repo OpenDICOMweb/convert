@@ -25,7 +25,6 @@ void main() {
     expect(v == 0, true);
 
     v = _bytesToWords(2);
-    //  print('v= $v');
     expect(v == 1, true);
 
     v = _bytesToLongs(4);
