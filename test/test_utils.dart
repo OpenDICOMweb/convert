@@ -28,7 +28,7 @@ const bool doShortTest = true;
 int fileCount;
 
 List<String> listFile() {
-  const x0 = doShortTest ? 'C:/odw_test_data/mweb/500+/' : 'C:/odw_test_data/';
+  const x0 = doShortTest ? 'C:/odw_test_data/mweb/500+/MECANIX/' : 'C:/odw_test_data/';
   print('Directory: $x0');
   final dir = Directory(x0);
   final fList = dir.listSync(recursive: true);

@@ -15,8 +15,7 @@ void main() {
   Server.initialize(
       name: 'ByteReader Test', throwOnError: false, level: Level.info);
 
-  global.level = Level.info;
-
+  const doLogging = true;
   final files = listFile();
   print('Reading ${files.length} files ...');
 

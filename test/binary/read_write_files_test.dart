@@ -17,7 +17,6 @@ void main() {
       name: 'ByteReader Test', throwOnError: true, level: Level.info);
 
   const doLogging = false;
-  global.level = Level.info;
   final files = listFile();
   print('Reading ${files.length} files ...');
 
