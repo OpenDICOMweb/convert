@@ -29,7 +29,7 @@ void main() {
     test('Path0', () {
       final rds = ByteReader.readPath(path0);
       log.debug('${rds.info}');
-      final entity = activeStudies.entityFromRootDataset(rds);
+      final entity = ActiveStudies.addSopInstance(rds);
       log.debug('${entity.info}');
     });
 

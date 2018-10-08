@@ -23,7 +23,7 @@ void main() {
     print('${activeStudies.summary}\n');
 
     for (var i = 0; i < files.length; i++) {
-      final rds = readPath(files[i], doLogging: true);
+      final rds = readPath(files[i], doLogging: doLogging);
 
       log.debug('\n${rds.info}');
       if (rds == null) {
@@ -52,14 +52,16 @@ void main() {
         }
       }
 
-      final entity = ActiveStudies.addSopInstance(rds);
-      print('$entity.summary\n');
+     // final Instance entity = ActiveStudies.addSopInstance(rds);
+    //  print('${entity.study.summary}\n');
     }
-    print('${activeStudies.summary}\n');
-    for (var study in activeStudies.studies)
-      print('${study.summary}');
-    print('studies: ${activeStudies.studies}');
-    print('series: ${activeStudies.series}');
-    print('instances: ${activeStudies.instances}');
+//    print('${activeStudies.summary}\n');
+//    for (var study in activeStudies.studies) print('${study.summary}');
+    print('studies(${activeStudies.studies.length}):\n  '
+        '${activeStudies.studies.toList().join('\n  ')}');
+    print('series(${activeStudies.series.length}):\n  '
+        '${activeStudies.series.toList().join('\n  ')}');
+    print('instances(${activeStudies.instances.length}):\n  '
+        '${activeStudies.instances.toList().join('\n  ')}');
   });
 }

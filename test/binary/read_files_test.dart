@@ -16,12 +16,13 @@ void main() {
       name: 'ByteReader Test', throwOnError: false, level: Level.info);
 
   const doLogging = true;
+
   final files = listFile();
   print('Reading ${files.length} files ...');
 
   test('read_files', () {
     for (var i = 0; i < files.length; i++) {
-      final rds0 = readPath(files[i], doLogging: true);
+      final rds0 = readPath(files[i], doLogging: doLogging);
 
       if (rds0 == null) {
         log.warn('Invalid DICOM file: ${rds0.path}');

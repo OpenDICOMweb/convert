@@ -27,8 +27,11 @@ RootDataset readPath(String inPath, {bool doLogging = true}) {
 const bool doShortTest = true;
 int fileCount;
 
+const String dir6684 = 'C:/odw_test_data/6684/2017/5/13/0/0B5106EF/';
+const String dirMECANIX = 'C:/odw_test_data/mweb/500+/MECANIX/';
+
 List<String> listFile() {
-  const x0 = doShortTest ? 'C:/odw_test_data/mweb/500+/MECANIX/' : 'C:/odw_test_data/';
+  const x0 = doShortTest ? dir6684 : 'C:/odw_test_data/';
   print('Directory: $x0');
   final dir = Directory(x0);
   final fList = dir.listSync(recursive: true);
