@@ -6,7 +6,7 @@ author: Jim Philbin <jfphilbin@gmail.com>
 homepage: https://github.com/OpenDICOMweb/convert
 
 environment:
-  sdk: ^2.0.0
+  sdk: '>=2.0.0 < 3.0.0'
 
 dependencies:
   core:

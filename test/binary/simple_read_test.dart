@@ -5,10 +5,14 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
+import 'package:converter/converter.dart';
 import 'package:core/server.dart' hide group;
 import 'package:test/test.dart';
 
-import 'package:converter/src/binary/byte/reader/byte_reader.dart';
+import 'package:core/server.dart' hide group;
+import 'package:test/test.dart';
+
+import '../../test/test_utils.dart';
 
 void main() {
   Server.initialize(
@@ -23,9 +27,10 @@ void main() {
   const path3 = 'C:/odw_test_data/mweb/ASPERA/'
       'Clean_Pixel_test_data/RTOG Study/'
       'RTP_2.25.369465182237858466013782274173253459938.1.dcm';
+  const path4 = 'C:/odw_test_data/mweb/ASPERA/DICOM files only/'
+      '22f01f4d-32c0-4a13-9350-9f0b4390889b.dcm';
 
   group('Simple Read Tests', () {
-
     test('Path0', () {
       final rds = ByteReader.readPath(path0);
       log.debug('${rds.info}');
@@ -52,6 +57,26 @@ void main() {
       log.debug('${rds.info}');
       final entity = activeStudies.entityFromRootDataset(rds);
       log.debug('${entity.info}');
+    });
+
+    test('Path4', () {
+      final rds = ByteReader.readPath(path4);
+      log.debug('${rds.info}');
+      final entity = activeStudies.entityFromRootDataset(rds);
+      log.debug('${entity.info}');
+
+      final outPath = getVNAPath(rds, 'bin/output/', 'dcm');
+      final outBytes = ByteWriter.writeBytes(rds, doLogging: false);
+
+      final length = outBytes.length;
+      log
+        ..info('${rds.dsBytes}')
+        ..info('outPath: $outPath')
+        ..info('Output length: $length(${length ~/ 1024}K)')
+        ..info('done');
+
+      final rds1 = ByteReader.readBytes(outBytes, doLogging: false);
+      log.info('${rds1.info}');
     });
   });
 }
