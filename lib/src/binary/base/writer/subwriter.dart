@@ -8,10 +8,11 @@
 //
 import 'dart:typed_data';
 
-import 'package:core/core.dart';
+import 'package:converter/src/binary/base/constants.dart';
 import 'package:converter/src/binary/base/padding_chars.dart';
 import 'package:converter/src/element_offsets.dart';
 import 'package:converter/src/encoding_parameters.dart';
+import 'package:core/core.dart';
 
 //Urgent Jim: add to EvrULength at appropriate places
 
@@ -379,26 +380,16 @@ abstract class SubWriter {
   /// Writes Encapsulated Pixel Data without Fragments
   void _writeEncapsulatedPixelData(PixelData e) {
     assert(e.vfLengthField == kUndefinedLength);
+    assert(e.frames is CompressedFrameList);
     final offsets = e.offsets;
     final bulkdata = e.bulkdata;
-    if (e.frames is CompressedFrameList) {
-      _wb
-        ..writeCode(kItem, 8 + e.frames.length)
-        ..writeUint32(e.offsets.lengthInBytes)
-        ..writeUint32List(offsets)
-        ..writeCode(kItem, bulkdata.lengthInBytes)
-        ..writeUint32(bulkdata.lengthInBytes)
-        ..writeUint8List(bulkdata);
-    }
-    /*else {
-      _wb
-        ..writeCode(kItem, 8 + frames.lengthInBytes)
-        ..writeUint32(0)
-        ..writeCode(kItem, frames.bulkdata.lengthInBytes)
-        ..writeUint32(frames.bulkdata.lengthInBytes)
-        ..writeUint8List(frames.bulkdata);
-    }
-*/
+    _wb
+      ..writeCode(kItem, 8 + e.frames.length)
+      ..writeUint32(e.offsets.lengthInBytes)
+      ..writeUint32List(offsets)
+      ..writeCode(kItem, bulkdata.lengthInBytes)
+      ..writeUint32(bulkdata.lengthInBytes)
+      ..writeUint8List(bulkdata);
   }
 
   void _writeFragments(Element e) {
@@ -635,52 +626,6 @@ abstract class SubWriter {
       ..debug('<@W$end writeRootDataset: $range');
   }
 
-/* Flush if not used
-  void writePrivateInformation(Uid uid, Bytes privateInfo) {
-    _wb.ascii(uid.asString);
-  }
-*/
-
-  // **** External interface for debugging and monitoring
-
-/*
-// Urgent: decide on best way to handle this
-//  void writeElement(Element e) => _writeElement(e);
-
-  Bytes writeRootDataset([int fmiEnd]) => _writeRootDataset(fmiEnd);
-
-  void writeExistingFmi({bool cleanPreamble = true}) =>
-      _writeExistingFmi(cleanPreamble: cleanPreamble);
-  Bytes writeOdwFmi() => _writeOdwFmi();
-
-  void writeItems(List<Item> items) => _writeItems(items);
-
-  void writeItem(Item item) => _writeItem(item);
-  void writeDefinedLengthItem(Item item) => _writeDefinedLengthItem(item);
-  void writeUndefinedLengthItem(Item item) => _writeUndefinedLengthItem(item);
-
-  /// Write an EVR Element with a short Value Length field.
-  void writeElement(Element e, [int vrIndex]) => _writeElement(e, vrIndex);
-
-  /// Write an EVR Element with a short Value Length field.
-  void writeShortElement(Element e, [int vrIndex]) => _writeShort(e, vrIndex);
-
-  /// Write a non-Sequence EVR Element with a long Value Length field
-  /// and a _defined length_.
-  void writeLongElement(Element e, [int vrIndex]) =>
-      _writeLongDefinedLength(e, vrIndex);
-
-  /// Write a non-Sequence Element (OB, OW, UN) that may have an undefined length
-  void writeMaybeUndefinedLengthElement(Element e, [int vrIndex]) =>
-      _writeMaybeUndefinedLength(e, vrIndex);
-*/
-
-/*
-  /// Write a non-Sequence _undefined length_ Element.
-  void writeLongUndefinedLength(Element e, [int vrIndex]) =>
-      _writeLongUndefinedLength(e, vrIndex);
-*/
-
   /// Write a Sequence Element.
   void writeSequence(SQ e, [int vrIndex]) => _writeSequence(e, vrIndex);
 
@@ -691,21 +636,6 @@ abstract class SubWriter {
   /// Write an EVR Sequence with _defined length_.
   void writeSQUndefinedLength(SQ e, [int vrIndex]) =>
       _writeSQUndefinedLength(e, vrIndex);
-
-/*
-  // Urgent delete or Move Elsewhere if needed
-  /// Returns the [outputTS] for the encoded output.
-  static TransferSyntax getOutputTS(RootDataset rds, TransferSyntax outputTS) {
-    if (outputTS == null) {
-      return (rds.transferSyntax == null)
-          ? global.defaultTransferSyntax
-          : rds.transferSyntax;
-    } else {
-      return outputTS;
-    }
-  }
-*/
-
 }
 
 Endian getEndianness(RootDataset rds, [TransferSyntax outputTS]) =>

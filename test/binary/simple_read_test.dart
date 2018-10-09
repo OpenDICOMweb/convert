@@ -9,11 +9,6 @@ import 'package:converter/converter.dart';
 import 'package:core/server.dart' hide group;
 import 'package:test/test.dart';
 
-import 'package:core/server.dart' hide group;
-import 'package:test/test.dart';
-
-import '../../test/test_utils.dart';
-
 void main() {
   Server.initialize(
       name: 'dcm_reader_test', level: Level.debug, throwOnError: true);

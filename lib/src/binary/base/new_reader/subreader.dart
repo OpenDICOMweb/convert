@@ -12,6 +12,7 @@ import 'dart:typed_data';
 import 'package:core/core.dart';
 import 'package:core/vf_fragments.dart';
 
+import 'package:converter/src/binary/base/constants.dart';
 import 'package:converter/src/binary/base/new_reader/no_logging_mixin.dart';
 import 'package:converter/src/errors.dart';
 import 'package:converter/src/decoding_parameters.dart';
