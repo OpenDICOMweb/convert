@@ -106,7 +106,7 @@ abstract class JsonWriterBase {
     } else if (e is SQ) {
       writeSQ(e, separator);
     } else if (e.vfLength > bulkdataThreshold &&
-        (separateBulkdata || (e is PixelData && separatePixelData))) {
+        (separateBulkdata || (e is PixelDataMixin && separatePixelData))) {
       final url = bdList.add(e.code, e.vfBytes);
       writeBulkdata(e, separator, url);
     } else {

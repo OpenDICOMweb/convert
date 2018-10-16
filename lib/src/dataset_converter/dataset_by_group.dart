@@ -16,7 +16,7 @@ abstract class DatasetByGroup {
   bool hasPrivate;
   // A map that can contain PublicGroup or PrivateGroup
   Map<int, GroupBase> get groups;
-  Iterable<Element> get elements;
+  List<Element> get elements;
 
   int keyToIndex(int key) => key;
 
@@ -27,7 +27,7 @@ abstract class DatasetByGroup {
     return '$sb';
   }
 
-  void add(Element e) {
+  void add(Element e, [Issues issues]) {
     final gNumber = e.group;
     if (gNumber.isOdd) hasPrivate = true;
     groups.putIfAbsent(gNumber, () =>  PrivateGroup(e));

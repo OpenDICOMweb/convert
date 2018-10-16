@@ -39,7 +39,7 @@ abstract class Reader {
   // **** End Interface
 
   Bytes get bytes => _bytes;
-  ReadBuffer get rb => evrSubReader.rb;
+  DicomReadBuffer get rb => evrSubReader.rb;
   Bytes get input => rb.view();
 
   DecodingParameters get dParams => evrSubReader.dParams;

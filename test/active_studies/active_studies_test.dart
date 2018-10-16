@@ -31,9 +31,9 @@ void main() {
       } else {
         log.debug('rds0.summary: ${rds.summary}');
         expect(rds.isNotEmpty, true);
-        //expect(rds0.elements.length != 0, true);
+        // expect(rds0.elements.length != 0, true);
         expect(rds.duplicates, <int>[]);
-        expect(rds.nPrivateElements != 0, true);
+        // expect(rds.nPrivateElements != 0, true);
         expect(rds.lengthInBytes == rds.dsBytes.vfLength, true);
         expect(rds.prefix == rds.dsBytes.prefix, true);
         expect(rds.preamble == rds.dsBytes.preamble, true);

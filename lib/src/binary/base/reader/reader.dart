@@ -25,17 +25,17 @@ abstract class Reader {
   /// Creates a new [Reader].
   Reader(this.bytes);
 
-  Reader.fromUint8List(Uint8List list, [int offset = 0, int length, Endian
-  endian])
-      : bytes =  Bytes.typedDataView(list, offset,
-      length ?? list.length, endian ?? Endian.host);
+  Reader.fromUint8List(Uint8List list,
+      [int offset = 0, int length, Endian endian])
+      : bytes = Bytes.typedDataView(
+            list, offset, length ?? list.length, endian ?? Endian.host);
 
   // **** Interface
   EvrSubReader get evrSubReader;
   IvrSubReader get ivrSubReader;
   // **** End Interface
 
-  ReadBuffer get rb => evrSubReader.rb;
+  DicomReadBuffer get rb => evrSubReader.rb;
   Bytes get input => rb.view();
 
   DecodingParameters get dParams => evrSubReader.dParams;
@@ -57,13 +57,13 @@ abstract class Reader {
 
     var fmiEnd = 0;
     try {
-       fmiEnd = evrSubReader.readFmi();
-    } on EndOfDataError catch(e){
+      fmiEnd = evrSubReader.readFmi();
+    } on EndOfDataError catch (e) {
       log.warn(e);
-    } on ShortFileError catch(e) {
+    } on ShortFileError catch (e) {
       log.warn(e);
       // ignore: Avoid_catches_without_on_clauses
-    } catch(e) {
+    } catch (e) {
       log.error(e);
       if (throwOnError) rethrow;
     }

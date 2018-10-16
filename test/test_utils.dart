@@ -15,9 +15,8 @@ int filesRead = 1;
 
 RootDataset readPath(String inPath, {bool doLogging = true}) {
   final path = cleanPath(inPath);
-  log.debug('path: $path');
   final length = File(path).lengthSync();
-  if (doLogging) stdout.writeln('$filesRead: Reading($length bytes): $path');
+  if (doLogging) print('$filesRead: Reading($length bytes): $path');
   final rds =  ByteReader.readPath(path, doLogging: doLogging);
   filesRead++;
   return rds;
@@ -30,12 +29,14 @@ int fileCount;
 const String dir6684 = 'C:/odw_test_data/6684';
 const String dir6684_2017_5_13_0 = 'C:/odw_test_data/6684/2017/5/13/0/0B5106EF/';
 
+const String dir6688 = 'C:/odw_test_data/6688';
+
 const String dirMweb = 'C:/odw_test_data/mweb/';
 const String dirMweb500 = 'C:/odw_test_data/mweb/500+/';
 const String dirMwebMECANIX = 'C:/odw_test_data/mweb/500+/MECANIX/';
 
 List<String> listFile() {
-  const x0 = doShortTest ? dirMweb500 : 'C:/odw_test_data/';
+  const x0 = doShortTest ? dirMwebMECANIX : 'C:/odw_test_data/';
   print('Directory: $x0');
   final dir = Directory(x0);
   final fList = dir.listSync(recursive: true);

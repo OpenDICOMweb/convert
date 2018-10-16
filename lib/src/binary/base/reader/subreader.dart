@@ -42,187 +42,6 @@ typedef LongElementReader = Element Function(
 //   1. convert all if (doLogging) log.... to log....
 //   2. make any error and warnings conditional
 
-abstract class EvrSubReader extends SubReader {
-  EvrSubReader(Bytes bytes, DecodingParameters dParams, Dataset cds)
-      : super(DicomReadBuffer(bytes), dParams, cds);
-
-  /// Returns _true_ if reading an Explicit VR Little Endian file.
-  @override
-  bool get isEvr => true;
-
-  /// Returns _true_ if the VR has a 16-bit Value Field Length field.
-  bool _isEvrShortVR(int vrIndex) =>
-      vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
-
-  void readRootDataset(int fmiEnd) {
-    assert(fmiEnd == _rb.index, 'fmiEnd: $fmiEnd rb.index: $_rb.index');
-    if (ts == TransferSyntax.kExplicitVRBigEndian)
-      _rb.buffer.endian = Endian.big;
-    _readRootDataset(fmiEnd);
-    if (doLogging) {
-      final fmiCount = rds.fmi.length;
-      final eCount = rds.elements.length;
-      log
-        ..debug('TS: $ts')
-        ..debug('Fmi Elements: $fmiCount')
-        ..debug('Evr Elements: $eCount')
-        ..debug('Total:        ${rds.total}')
-        ..debug('Duplicates:   ${rds.duplicates.length}')
-        ..debug('Bytes read:   ${_rb.index} ');
-    }
-  }
-
-  /// For EVR Datasets, all Elements are read by this method.
-  @override
-  Element _readElement() {
-    final eStart = _rb.index;
-    final code = _rb.readCode();
-    final vrCode = _rb.readVRCode();
-    final vrIndex = _lookupEvrVRIndex(code, eStart, vrCode);
-    if (_isEvrShortVR(vrIndex)) {
-      return _readDefinedLength(code, eStart, vrIndex, 8, _getVlf16());
-    } else {
-      _rb.rSkip(2);
-      return _readLong(code, eStart, vrIndex, 12, _getVlf32());
-    }
-  }
-
-  int _lookupEvrVRIndex(int code, int eStart, int vrCode) {
-    final vrIndex = vrIndexFromCode(vrCode);
-    if (vrIndex == null) {
-      // TODO: this should throw
-      _nullVRIndex(code, eStart, vrCode);
-    } else if (_isSpecialVR(vrIndex)) {
-      _changingVR(code, vrIndex);
-      return kUNIndex;
-    } else if (Tag.isPCCode(code) &&
-        (vrIndex != kLOIndex && vrIndex != kUNIndex)) {
-      _invalidPrivateCreator(code, vrIndex);
-    }
-    return vrIndex;
-  }
-
-  void _nullVRIndex(int code, int eStart, int vrCode) =>
-      warn('eStart: $eStart ${dcm(code)} Null VR(${hex16(vrCode)}, $vrCode)');
-
-  void _changingVR(int code, int vrIndex) =>
-      warn('Changing (${hex32(code)}) with Special VR '
-          '${vrIdFromIndex(vrIndex)}) to VR.kUN');
-
-  void _invalidPrivateCreator(int code, int vrIndex) {
-    assert(Tag.isPCCode(code) && (vrIndex != kLOIndex && vrIndex != kUNIndex));
-    warn('Invalid Private Creator (${hex32(code)}) '
-        '${vrIdFromIndex(vrIndex)}($vrIndex) should be VR.kLO');
-  }
-
-  /// Reads File Meta Information (FMI) and returns a Map<int, Element>
-  /// if any [Fmi] [Element]s were present; otherwise, returns null.
-  int readFmi() {
-    if (doLogging) log.debug('>@R${_rb.index} Reading FMI:', 1);
-    if (_rb.index != 0) return invalidReadBufferIndex(_rb, _rb.index);
-
-    if (!_readPrefix()) {
-      _rb.rIndex = 0;
-      if (doLogging) log.up;
-      return 0;
-    }
-    assert(_rb.index == 132, 'Non-Prefix start index: ${_rb.index}');
-    if (doLogging) log.down;
-    while (_rb.isReadable) {
-      final code = _rb.peekCode();
-      if (code >= 0x00030000) break;
-      final e = _readElement();
-      rds.fmi[e.code] = e;
-    }
-
-    if (!_rb.rHasRemaining(dParams.shortFileThreshold - _rb.index)) {
-      if (doLogging) log.up;
-      throw EndOfDataError(
-          '_readFmi', 'index: ${_rb.index} bdLength: ${_rb.length}');
-    }
-
-    _ts = rds.transferSyntax;
-    if (!global.isSupportedTransferSyntax(ts.asString)) {
-      log.up;
-      return invalidTransferSyntax(ts);
-    }
-    if (dParams.targetTS != null && ts != dParams.targetTS) {
-      log.up;
-      return invalidTransferSyntax(ts, dParams.targetTS);
-    }
-
-    if (doLogging)
-      log
-        ..up
-        ..debug('<R@${_rb.index} FinishedReading FMI:')
-        ..up
-        ..debug('|@${_rb.index} TS: $ts');
-    return _rb.index;
-  }
-
-  /// Reads the Preamble (128 bytes) and Prefix ('DICM') of a
-  /// PS3.10 DICOM File Format. Returns true if a valid Preamble
-  /// and Prefix where read. Read as 32-bit integer. This is faster
-  bool _readPrefix() {
-    _rb.buffer.endian = Endian.little;
-    if (_rb.index != 0) return false;
-    _rb.rSkip(128);
-    final prefix = _rb.readUint32();
-    if (prefix == kDcmPrefix) return true;
-    _rb.reset;
-    _noDcmPrefixPresent(_rb.readUint8List(128), _rb.readUint8List(4));
-    return false;
-  }
-}
-
-void _noDcmPrefixPresent(Uint8List preamble, Uint8List prefix) =>
-    log.warn('** No DICOM Prefix present:\n  $preamble\n  $prefix');
-
-abstract class IvrSubReader extends SubReader {
-  IvrSubReader(DicomReadBuffer rb, DecodingParameters dParams, Dataset cds)
-      : super(rb, dParams, cds);
-
-  @override
-  bool get isEvr => false;
-
-  /// The [DicomBytes] being read by _this_.
-  @override
-  DicomBytes get bytes => _rb.buffer;
-
-  void readRootDataset(int fmiEnd) {
-    assert(fmiEnd == _rb.index, 'fmiEnd: $fmiEnd != rb.index: ${_rb.index}');
-    _readRootDataset(fmiEnd);
-    if (doLogging) {
-      final fmiCount = rds.fmi.length;
-      final eCount = rds.elements.length;
-      log
-        ..debug('TS: $ts')
-        ..debug('Fmi Elements: $fmiCount')
-        ..debug('Ivr Elements: $eCount')
-        ..debug('Total:        ${rds.total}')
-        ..debug('Duplicates:   ${rds.duplicates.length}')
-        ..debug('Bytes read:   ${_rb.index} ');
-    }
-  }
-
-  @override
-  Element _readElement() {
-    final eStart = _rb.index;
-    final code = _rb.readCode();
-    final vlf = _getVlf32();
-
-    var vrIndex = kUNIndex;
-    Tag tag;
-    if (doLookupVRIndex) {
-      final token = (Tag.isPCCode(code)) ? _rb.getUtf8(vlf).trim() : '';
-      tag = Tag.lookupByCode(code, vrIndex, token);
-      if (tag != null && (tag.vrIndex <= kVRNormalIndexMax))
-        vrIndex = tag.vrIndex;
-    }
-    return _readLong(code, eStart, vrIndex, 8, vlf);
-  }
-}
-
 TransferSyntax _ts;
 
 /// A [Converter] for [Uint8List]s containing a [Dataset] encoded in the
@@ -860,6 +679,188 @@ abstract class SubReader {
   String toString() => '$runtimeType: rds: $rds, cds: $cds';
 }
 
+abstract class EvrSubReader extends SubReader {
+  EvrSubReader(Bytes bytes, DecodingParameters dParams, Dataset cds)
+      : super(DicomReadBuffer(bytes), dParams, cds);
+
+  /// Returns _true_ if reading an Explicit VR Little Endian file.
+  @override
+  bool get isEvr => true;
+
+  /// Returns _true_ if the VR has a 16-bit Value Field Length field.
+  bool _isEvrShortVR(int vrIndex) =>
+      vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
+
+  void readRootDataset(int fmiEnd) {
+    assert(fmiEnd == _rb.index, 'fmiEnd: $fmiEnd rb.index: $_rb.index');
+    if (ts == TransferSyntax.kExplicitVRBigEndian)
+      _rb.buffer.endian = Endian.big;
+    _readRootDataset(fmiEnd);
+    if (doLogging) {
+      final fmiCount = rds.fmi.length;
+      final eCount = rds.elements.length;
+      log
+        ..debug('TS: $ts')
+        ..debug('Fmi Elements: $fmiCount')
+        ..debug('Evr Elements: $eCount')
+        ..debug('Total:        ${rds.total}')
+        ..debug('Duplicates:   ${rds.duplicates.length}')
+        ..debug('Bytes read:   ${_rb.index} ');
+    }
+  }
+
+  /// For EVR Datasets, all Elements are read by this method.
+  @override
+  Element _readElement() {
+    final eStart = _rb.index;
+    final code = _rb.readCode();
+    final vrCode = _rb.readVRCode();
+    final vrIndex = _lookupEvrVRIndex(code, eStart, vrCode);
+    if (_isEvrShortVR(vrIndex)) {
+      return _readDefinedLength(code, eStart, vrIndex, 8, _getVlf16());
+    } else {
+      _rb.rSkip(2);
+      return _readLong(code, eStart, vrIndex, 12, _getVlf32());
+    }
+  }
+
+  int _lookupEvrVRIndex(int code, int eStart, int vrCode) {
+    final vrIndex = vrIndexFromCode(vrCode);
+    if (vrIndex == null) {
+      // TODO: this should throw
+      _nullVRIndex(code, eStart, vrCode);
+    } else if (_isSpecialVR(vrIndex)) {
+      _changingVR(code, vrIndex);
+      return kUNIndex;
+    } else if (Tag.isPCCode(code) &&
+        (vrIndex != kLOIndex && vrIndex != kUNIndex)) {
+      _invalidPrivateCreator(code, vrIndex);
+    }
+    return vrIndex;
+  }
+
+  void _nullVRIndex(int code, int eStart, int vrCode) =>
+      warn('eStart: $eStart ${dcm(code)} Null VR(${hex16(vrCode)}, $vrCode)');
+
+  void _changingVR(int code, int vrIndex) =>
+      warn('Changing (${hex32(code)}) with Special VR '
+          '${vrIdFromIndex(vrIndex)}) to VR.kUN');
+
+  void _invalidPrivateCreator(int code, int vrIndex) {
+    assert(Tag.isPCCode(code) && (vrIndex != kLOIndex && vrIndex != kUNIndex));
+    warn('Invalid Private Creator (${hex32(code)}) '
+        '${vrIdFromIndex(vrIndex)}($vrIndex) should be VR.kLO');
+  }
+
+  /// Reads File Meta Information (FMI) and returns a Map<int, Element>
+  /// if any [Fmi] [Element]s were present; otherwise, returns null.
+  int readFmi() {
+    if (doLogging) log.debug('>@R${_rb.index} Reading FMI:', 1);
+    if (_rb.index != 0)
+      return invalidReadBufferIndex(_rb as ReadBuffer, _rb.index);
+
+    if (!_readPrefix()) {
+      _rb.rIndex = 0;
+      if (doLogging) log.up;
+      return 0;
+    }
+    assert(_rb.index == 132, 'Non-Prefix start index: ${_rb.index}');
+    if (doLogging) log.down;
+    while (_rb.isReadable) {
+      final code = _rb.peekCode();
+      if (code >= 0x00030000) break;
+      final e = _readElement();
+      rds.fmi[e.code] = e;
+    }
+
+    if (!_rb.rHasRemaining(dParams.shortFileThreshold - _rb.index)) {
+      if (doLogging) log.up;
+      throw EndOfDataError(
+          '_readFmi', 'index: ${_rb.index} bdLength: ${_rb.length}');
+    }
+
+    _ts = rds.transferSyntax;
+    if (!global.isSupportedTransferSyntax(ts.asString)) {
+      log.up;
+      return invalidTransferSyntax(ts);
+    }
+    if (dParams.targetTS != null && ts != dParams.targetTS) {
+      log.up;
+      return invalidTransferSyntax(ts, dParams.targetTS);
+    }
+
+    if (doLogging)
+      log
+        ..up
+        ..debug('<R@${_rb.index} FinishedReading FMI:')
+        ..up
+        ..debug('|@${_rb.index} TS: $ts');
+    return _rb.index;
+  }
+
+  /// Reads the Preamble (128 bytes) and Prefix ('DICM') of a
+  /// PS3.10 DICOM File Format. Returns true if a valid Preamble
+  /// and Prefix where read. Read as 32-bit integer. This is faster
+  bool _readPrefix() {
+    _rb.buffer.endian = Endian.little;
+    if (_rb.index != 0) return false;
+    _rb.rSkip(128);
+    final prefix = _rb.readUint32();
+    if (prefix == kDcmPrefix) return true;
+    _rb.reset;
+    _noDcmPrefixPresent(_rb.readUint8List(128), _rb.readUint8List(4));
+    return false;
+  }
+}
+
+void _noDcmPrefixPresent(Uint8List preamble, Uint8List prefix) =>
+    log.warn('** No DICOM Prefix present:\n  $preamble\n  $prefix');
+
+abstract class IvrSubReader extends SubReader {
+  IvrSubReader(DicomReadBuffer rb, DecodingParameters dParams, Dataset cds)
+      : super(rb, dParams, cds);
+
+  @override
+  bool get isEvr => false;
+
+  /// The [DicomBytes] being read by _this_.
+  @override
+  DicomBytes get bytes => _rb.buffer;
+
+  void readRootDataset(int fmiEnd) {
+    assert(fmiEnd == _rb.index, 'fmiEnd: $fmiEnd != rb.index: ${_rb.index}');
+    _readRootDataset(fmiEnd);
+    if (doLogging) {
+      final fmiCount = rds.fmi.length;
+      final eCount = rds.elements.length;
+      log
+        ..debug('TS: $ts')
+        ..debug('Fmi Elements: $fmiCount')
+        ..debug('Ivr Elements: $eCount')
+        ..debug('Total:        ${rds.total}')
+        ..debug('Duplicates:   ${rds.duplicates.length}')
+        ..debug('Bytes read:   ${_rb.index} ');
+    }
+  }
+
+  @override
+  Element _readElement() {
+    final eStart = _rb.index;
+    final code = _rb.readCode();
+    final vlf = _getVlf32();
+
+    var vrIndex = kUNIndex;
+    Tag tag;
+    if (doLookupVRIndex) {
+      final token = (Tag.isPCCode(code)) ? _rb.getUtf8(vlf).trim() : '';
+      tag = Tag.lookupByCode(code, vrIndex, token);
+      if (tag != null && (tag.vrIndex <= kVRNormalIndexMax))
+        vrIndex = tag.vrIndex;
+    }
+    return _readLong(code, eStart, vrIndex, 8, vlf);
+  }
+}
+
 class InvalidDicomReadBufferIndex extends Error {
   final ReadBuffer _rb;
   final int index;
@@ -872,5 +873,5 @@ class InvalidDicomReadBufferIndex extends Error {
 }
 
 // ignore: prefer_void_to_null
-Null invalidReadBufferIndex(DicomReadBuffer rb, int index) =>
+Null invalidReadBufferIndex(ReadBuffer rb, int index) =>
     throw InvalidDicomReadBufferIndex(rb, index);

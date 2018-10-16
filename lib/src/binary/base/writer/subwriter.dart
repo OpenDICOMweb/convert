@@ -34,7 +34,7 @@ abstract class EvrSubWriter extends SubWriter {
   @override
   void _writeElement(Element e, [int vrIndex]) {
     assert(e != null);
-    final start = _wb.index;
+    final start = _wb.wIndex;
     if (doLogging) _startElementMsg(start, e);
     vrIndex ??= e.vrIndex;
     assert(!_isSpecialVR(vrIndex), 'Invalid VR: $vrIndex');
@@ -57,7 +57,7 @@ abstract class EvrSubWriter extends SubWriter {
 
   /// Write an EVR Element with a short Value Length field.
   void _writeShort(Element e, int vrIndex) {
-    assert(e.vfLengthField != kUndefinedLength && _wb.index.isEven);
+    assert(e.vfLengthField != kUndefinedLength && _wb.wIndex.isEven);
     final vfLength = e.vfLength + (e.vfLength.isOdd ? 1 : 0);
     assert(vfLength.isEven);
     assert(vfLength >= 0 && vfLength <= kMaxShortVF, 'length: $vfLength');
@@ -111,9 +111,9 @@ abstract class EvrSubWriter extends SubWriter {
   int writeFmi() {
     if (doLogging)
       log
-        ..debug('>@${_wb.index} Writing Root Dataset')
+        ..debug('>@${_wb.wIndex} Writing Root Dataset')
         ..down
-        ..debug('>@W${_wb.index} Writing ${rds.fmi.length} FMI Elements ...')
+        ..debug('>@W${_wb.wIndex} Writing ${rds.fmi.length} FMI Elements ...')
         ..down;
 
     if (rds.hasFmi) {
@@ -134,9 +134,9 @@ abstract class EvrSubWriter extends SubWriter {
     if (doLogging) {
       log
         ..up
-        ..debug('<W@${_wb.index} FinishedWriting FMI: $count Elements written')
+        ..debug('<W@${_wb.wIndex} FinishedWriting FMI: $count Elements written')
         ..up
-        ..debug('|@${_wb.index} TS: ${rds.transferSyntax}');
+        ..debug('|@${_wb.wIndex} TS: ${rds.transferSyntax}');
     }
     return _wb.wIndex;
   }
@@ -161,7 +161,7 @@ abstract class EvrSubWriter extends SubWriter {
     final v = (rds.prefix == kEmptyBytes || eParams.doCleanPreamble)
         ? _writeEmptyPreambleAndPrefix()
         : _writeExistingPreambleAndPrefix();
-    if (doLogging) log.info('|@W${_wb.index} Preamble and Prefix written');
+    if (doLogging) log.info('|@W${_wb.wIndex} Preamble and Prefix written');
     return v;
   }
 
@@ -194,7 +194,7 @@ abstract class IvrSubWriter extends SubWriter {
   /// Write an IVR [Element].
   @override
   void _writeElement(Element e, [int vrIndex]) {
-    final start = _wb.index;
+    final start = _wb.wIndex;
     if (doLogging) _startElementMsg(start, e);
     vrIndex ??= e.vrIndex;
     assert(e != null && !_isSpecialVR(vrIndex), 'Invalid VR: $vrIndex');
@@ -322,7 +322,7 @@ abstract class SubWriter {
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].
   Bytes writeRootDataset([int fmiEnd, TransferSyntax ts]) {
-    final dsStart = _wb.index;
+    final dsStart = _wb.wIndex;
     _wb.buffer.endian = (ts.isBigEndian) ? Endian.big : Endian.little;
     if (doLogging) _startRootDatasetMsg(dsStart, rds, ts);
     _writeDataset(rds);
@@ -351,7 +351,7 @@ abstract class SubWriter {
 
   /// Write one [Item].
   void _writeItem(Item item) {
-    final iStart = _wb.index;
+    final iStart = _wb.wIndex;
     if (doLogging) _startItemMsg(iStart, item);
     (item.hasULength && !eParams.doConvertUndefinedLengths)
         ? _writeUndefinedLengthItem(item)
@@ -378,18 +378,23 @@ abstract class SubWriter {
   }
 
   /// Writes Encapsulated Pixel Data without Fragments
-  void _writeEncapsulatedPixelData(PixelData e) {
+  void _writeEncapsulatedPixelData(Integer e) {
     assert(e.vfLengthField == kUndefinedLength);
-    assert(e.frames is CompressedFrameList);
-    final offsets = e.offsets;
-    final bulkdata = e.bulkdata;
-    _wb
-      ..writeCode(kItem, 8 + e.frames.length)
-      ..writeUint32(e.offsets.lengthInBytes)
-      ..writeUint32List(offsets)
-      ..writeCode(kItem, bulkdata.lengthInBytes)
-      ..writeUint32(bulkdata.lengthInBytes)
-      ..writeUint8List(bulkdata);
+    if (e.code == kPixelData) {
+      final pd = e as PixelDataMixin;
+      if (pd.frames is! CompressedFrameList)
+        return badElement('Not Pixel Data: $e');
+      final offsets = pd.offsets;
+      final bulkdata = pd.bulkdata;
+      _wb
+        ..writeCode(kItem, 8 + pd.frames.length)
+        ..writeUint32(pd.offsets.lengthInBytes)
+        ..writeUint32List(offsets)
+        ..writeCode(kItem, bulkdata.lengthInBytes)
+        ..writeUint32(bulkdata.lengthInBytes)
+        ..writeUint8List(bulkdata);
+    }
+    badElement('Not Pixel Data: $e');
   }
 
   void _writeFragments(Element e) {
@@ -432,7 +437,7 @@ abstract class SubWriter {
   /// Write a non-Sequence EVR Element with a long Value Length field
   /// and a _defined length_.
   void _writeLongDefinedLength(Element e, [int vrIndex]) {
-    assert(e.vfLengthField != kUndefinedLength && _wb.index.isEven);
+    assert(e.vfLengthField != kUndefinedLength && _wb.wIndex.isEven);
     _writeLongDefinedLengthHeader(e, vrIndex);
     _writeValueField(e, vrIndex);
   }
@@ -449,7 +454,7 @@ abstract class SubWriter {
   void _writeLongUndefinedLength(Element e, int vrIndex) {
     assert(_isMaybeUndefinedLengthVR(vrIndex) &&
         e.vfLengthField == kUndefinedLength &&
-        _wb.index.isEven);
+        _wb.wIndex.isEven);
     __writeLongUndefinedLengthHeader(e, vrIndex);
     if (e.code == kPixelData) {
       if (e is ByteElement) {
@@ -469,7 +474,7 @@ abstract class SubWriter {
 
   /// Write a Sequence Element.
   void _writeSequence(Element sq, int vrIndex) {
-    final start = _wb.index;
+    final start = _wb.wIndex;
     if (doLogging) _startSQMsg(start, sq);
     if (sq.vfLengthField == 0) {
       _writeLongDefinedLength(sq, vrIndex);
@@ -502,7 +507,7 @@ abstract class SubWriter {
   // Note: A Sequence cannot have an _odd_ length.
   void _writeSQUndefinedLength(SQ e, int vrIndex) {
     assert(e is SQ);
-    assert(_wb.index.isEven);
+    assert(_wb.wIndex.isEven);
     __writeLongUndefinedLengthHeader(e, vrIndex);
     _writeItems(e.items);
     _wb
@@ -521,7 +526,7 @@ abstract class SubWriter {
     assert(length.isEven);
     assert(length >= 0 && length < kUndefinedLength, 'length: $length');
     __writeLongDefinedLengthHeader(e, vrIndex, length);
-    assert(_wb.index.isEven);
+    assert(_wb.wIndex.isEven);
     return isOddLength;
   }
 
@@ -564,7 +569,7 @@ abstract class SubWriter {
 
   void _endElementMsg(int start, Element e) {
     final eNumber = '$count'.padLeft(4, '0');
-    final end = _wb.index;
+    final end = _wb.wIndex;
     final range = _range(start, end);
     log
       ..up
@@ -580,7 +585,7 @@ abstract class SubWriter {
 
   void _endSQMsg(int start) {
     final eNumber = '$count'.padLeft(4, '0');
-    final end = _wb.index;
+    final end = _wb.wIndex;
     final range = _range(start, end);
     final msg = '<@W$end #$eNumber: $range';
     log
@@ -596,7 +601,7 @@ abstract class SubWriter {
   }
 
   void _endItemMsg(int start, DSBytes dsBytes) {
-    final end = _wb.index;
+    final end = _wb.wIndex;
     final range = _range(start, end);
     log
       ..up
@@ -615,7 +620,7 @@ abstract class SubWriter {
 
   void _endRootDatasetMsg(int start, DSBytes dsBytes) {
     final eNumber = '$count'.padLeft(4, '0');
-    final end = _wb.index;
+    final end = _wb.wIndex;
     final range = _range(start, end);
     log
       ..up

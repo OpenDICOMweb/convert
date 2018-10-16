@@ -12,7 +12,7 @@ import 'package:core/vf_fragments.dart';
 abstract class TagReaderMixin {
   RootDataset get rds;
   Dataset get cds;
-  ReadBuffer get rb;
+  DicomReadBuffer get rb;
 
   RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
           DicomBytes bytes, int fmiEnd) =>

@@ -27,7 +27,7 @@ class ByteReader extends Reader {
   factory ByteReader(Uint8List bList,
           {DecodingParameters dParams = DecodingParameters.kNoChange,
           bool doLogging = false}) =>
-       ByteReader.fromBytes( Bytes.typedDataView(bList),
+       ByteReader.fromBytes(Bytes.typedDataView(bList),
           dParams: dParams, doLogging: doLogging);
 
   /// Creates a new [ByteReader].
