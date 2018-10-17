@@ -69,7 +69,7 @@ abstract class SubReader {
   SubReader(this._rb, this.dParams, this.cds);
 
   DicomReadBuffer get rb => _rb;
-  Endian get endian => _rb.buffer.endian;
+  Endian get endian => _rb.bytes.endian;
 
   // **** Interface for Evr and Ivr ****
   bool get isEvr;
@@ -77,7 +77,7 @@ abstract class SubReader {
   bool get doLogging;
   bool get doLookupVRIndex;
 
-  Bytes get bytes => _rb.buffer;
+  Bytes get bytes => _rb.bytes;
 
   // ---- Interface ----
 
@@ -353,16 +353,16 @@ abstract class SubReader {
   DicomBytes _makeDicomBytes(int start, int vfOffset) {
     final end = _rb.index;
     return (!isEvr)
-        ? IvrBytes.view(_rb.buffer, start, end)
+        ? IvrBytes.view(_rb.bytes, start, end)
         : (vfOffset == 8)
-            ? EvrShortBytes.view(_rb.buffer, start, end, endian)
-            : EvrLongBytes.view(_rb.buffer, start, end, endian);
+            ? EvrShortBytes.view(_rb.bytes, start, end, endian)
+            : EvrLongBytes.view(_rb.bytes, start, end, endian);
   }
 
   /// Returns
   DicomBytes _makeLongDicomBytes(int start) => (!isEvr)
-      ? IvrBytes.view(_rb.buffer, start, _rb.index)
-      : EvrLongBytes.view(_rb.buffer, start, _rb.index, endian);
+      ? IvrBytes.view(_rb.bytes, start, _rb.index)
+      : EvrLongBytes.view(_rb.bytes, start, _rb.index, endian);
 
   bool _afterPixelData = false;
 
@@ -694,7 +694,7 @@ abstract class EvrSubReader extends SubReader {
   void readRootDataset(int fmiEnd) {
     assert(fmiEnd == _rb.index, 'fmiEnd: $fmiEnd rb.index: $_rb.index');
     if (ts == TransferSyntax.kExplicitVRBigEndian)
-      _rb.buffer.endian = Endian.big;
+      _rb.bytes.endian = Endian.big;
     _readRootDataset(fmiEnd);
     if (doLogging) {
       final fmiCount = rds.fmi.length;
@@ -802,7 +802,7 @@ abstract class EvrSubReader extends SubReader {
   /// PS3.10 DICOM File Format. Returns true if a valid Preamble
   /// and Prefix where read. Read as 32-bit integer. This is faster
   bool _readPrefix() {
-    _rb.buffer.endian = Endian.little;
+    _rb.bytes.endian = Endian.little;
     if (_rb.index != 0) return false;
     _rb.rSkip(128);
     final prefix = _rb.readUint32();
@@ -825,7 +825,7 @@ abstract class IvrSubReader extends SubReader {
 
   /// The [DicomBytes] being read by _this_.
   @override
-  DicomBytes get bytes => _rb.buffer;
+  DicomBytes get bytes => _rb.bytes;
 
   void readRootDataset(int fmiEnd) {
     assert(fmiEnd == _rb.index, 'fmiEnd: $fmiEnd != rb.index: ${_rb.index}');

@@ -67,5 +67,6 @@ void main() {
       else
         expect(rds0 == rds1, false);
     }
+    print('Tested ${files.length} files');
   });
 }

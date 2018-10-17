@@ -323,7 +323,7 @@ abstract class SubWriter {
   /// writes it to a Uint8List, and returns the [Uint8List].
   Bytes writeRootDataset([int fmiEnd, TransferSyntax ts]) {
     final dsStart = _wb.wIndex;
-    _wb.buffer.endian = (ts.isBigEndian) ? Endian.big : Endian.little;
+    _wb.bytes.endian = (ts.isBigEndian) ? Endian.big : Endian.little;
     if (doLogging) _startRootDatasetMsg(dsStart, rds, ts);
     _writeDataset(rds);
     final bytes = _wb.sublist(0, _wb.wIndex);
@@ -500,7 +500,7 @@ abstract class SubWriter {
     final vfLength = (_wb.wIndex - eStart) - vfOffset;
     assert(vfLength.isEven && _wb.wIndex.isEven);
     // Now that vfLength is known write it at vflOffset.
-    _wb.buffer.setUint32(vlfOffset, vfLength);
+    _wb.bytes.setUint32(vlfOffset, vfLength);
   }
 
   /// Write an EVR Sequence with _defined length_.

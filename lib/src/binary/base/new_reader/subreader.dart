@@ -756,7 +756,7 @@ abstract class IvrSubReader extends SubReader with NoLoggingMixin {
 
   /// The [Bytes] being read by _this_.
   @override
-  Bytes get bytes => rb.buffer;
+  Bytes get bytes => rb.bytes;
 
   @override
   Element _readElement() {

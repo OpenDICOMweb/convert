@@ -11,12 +11,17 @@ import 'dart:io';
 import 'package:core/server.dart' hide group;
 import 'package:converter/src/binary/byte/reader/byte_reader.dart';
 
-int filesRead = 1;
+const int printEvery = 1000;
+int filesRead = 0;
+
 
 RootDataset readPath(String inPath, {bool doLogging = true}) {
   final path = cleanPath(inPath);
   final length = File(path).lengthSync();
-  if (doLogging) print('$filesRead: Reading($length bytes): $path');
+  if (doLogging && (filesRead % printEvery == 0) ) {
+    final now = DateTime.now();
+    print('$now $filesRead: Reading($length bytes): $path');
+  }
   final rds =  ByteReader.readPath(path, doLogging: doLogging);
   filesRead++;
   return rds;
@@ -36,7 +41,7 @@ const String dirMweb500 = 'C:/odw_test_data/mweb/500+/';
 const String dirMwebMECANIX = 'C:/odw_test_data/mweb/500+/MECANIX/';
 
 List<String> listFile() {
-  const x0 = doShortTest ? dirMwebMECANIX : 'C:/odw_test_data/';
+  const x0 = doShortTest ? dir6684 : 'C:/odw_test_data/';
   print('Directory: $x0');
   final dir = Directory(x0);
   final fList = dir.listSync(recursive: true);
