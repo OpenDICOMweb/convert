@@ -13,7 +13,7 @@ import '../../test/test_utils.dart';
 
 void main() {
   Server.initialize(
-      name: 'ByteReader Test', throwOnError: true, level: Level.error);
+      name: 'ByteReader Test', throwOnError: true, level: Level.info);
 
   const doLogging = true;
 
@@ -41,7 +41,7 @@ void main() {
         expect(rds0.isEvr == rds0.transferSyntax.isEvr, true);
         expect(rds0.isIVR == rds0.transferSyntax.isIvr, true);
         expect(rds0.duplicates == rds0.history.duplicates, true);
-        final pixels = rds0.pixelData;
+        final pixels = rds0.getPixelData();
         if (pixels != null) {
           expect(rds0.pixelRepresentation >= 0, true);
           expect(rds0.samplesPerPixel >= 1, true);

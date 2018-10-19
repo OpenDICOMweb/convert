@@ -39,6 +39,7 @@ const String dir6688 = 'C:/odw_test_data/6688';
 const String dirMweb = 'C:/odw_test_data/mweb/';
 const String dirMweb500 = 'C:/odw_test_data/mweb/500+/';
 const String dirMwebMECANIX = 'C:/odw_test_data/mweb/500+/MECANIX/';
+const String dirMwebDoseSheets = 'C:/odw_test_data/mweb/Sample Dose Sheets/';
 
 List<String> listFile() {
   const x0 = doShortTest ? dir6684 : 'C:/odw_test_data/';

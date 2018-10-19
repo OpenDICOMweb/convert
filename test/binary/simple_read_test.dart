@@ -27,12 +27,18 @@ void main() {
   const path4 = 'C:/odw_test_data/mweb/ASPERA/DICOM files only/'
       '22f01f4d-32c0-4a13-9350-9f0b4390889b.dcm';
   const path5 ='C:/odw_test_data/6684/2017/5/13/4/888A5773/2463BF1A/2463C2DB';
+  const path6 = 'C:/odw_test_data/mweb/ASPERA/DICOM files only/'
+      '22f01f4d-32c0-4a13-9350-9f0b4390889b.dcm';
+  const path7 = 'C:/odw_test_data/mweb/ASPERA/DICOM files only/'
+      '22f01f4d-32c0-4a13-9350-9f0b4390889b.dcm';
+  const path8 = 'C:/odw_test_data/mweb/Sample Dose Sheets/'
+      '4cfc6ccc-2a8c-4af4-beb6-c4968fbb10d0.dcm';
 
   const doLogging = true;
 
   group('Simple Read Tests', () {
     test('Path0', () {
-      final rds = readPath(path0, doLogging: doLogging);
+      final rds = readPath(path7, doLogging: doLogging);
       log.debug('${rds.info}');
       final entity = ActiveStudies.addSopInstance(rds);
       log.debug('${entity.info}');
@@ -60,13 +66,13 @@ void main() {
     });
 
     test('Path4', () {
-      final rds = readPath(path4, doLogging: doLogging);
+      final rds = readPath(path8, doLogging: doLogging);
       log.debug('${rds.info}');
       final entity = activeStudies.entityFromRootDataset(rds);
       log.debug('${entity.info}');
 
       final outPath = getVNAPath(rds, 'bin/output/', 'dcm');
-      final outBytes = ByteWriter.writeBytes(rds, doLogging: false);
+      final outBytes = ByteWriter.writeBytes(rds, doLogging: true);
 
       final length = outBytes.length;
       log
@@ -75,7 +81,7 @@ void main() {
         ..info('Output length: $length(${length ~/ 1024}K)')
         ..info('done');
 
-      final rds1 = ByteReader.readBytes(outBytes, doLogging: false);
+      final rds1 = ByteReader.readBytes(outBytes, doLogging: true);
       log.info('${rds1.info}');
     });
 
