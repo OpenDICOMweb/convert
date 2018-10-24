@@ -14,10 +14,11 @@ import '../../test/test_utils.dart';
 
 void main() {
   Server.initialize(
-      name: 'TagReader Test', throwOnError: true, level: Level.debug2);
+      name: 'TagReader Test', throwOnError: true, level: Level.debug);
 
   const doLogging = true;
-  const stopOnError = false;
+  const stopOnError = true;
+
   final files = listFile();
   print('Reading ${files.length} files ...');
   /// Allow Ages == 0
