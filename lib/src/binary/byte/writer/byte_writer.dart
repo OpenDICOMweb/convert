@@ -43,6 +43,7 @@ class ByteWriter extends Writer {
     checkRootDataset(rds);
     final writer = ByteWriter(rds,
         eParams: eParams, outputTS: outputTS, doLogging: doLogging);
+    if (doLogging) log.reset;
     return writer.writeRootDataset();
   }
 

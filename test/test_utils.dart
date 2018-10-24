@@ -10,12 +10,13 @@ import 'dart:io';
 
 import 'package:core/server.dart' hide group;
 import 'package:converter/src/binary/byte/reader/byte_reader.dart';
+import 'package:converter/src/binary/tag/reader/tag_reader.dart';
 
-const int printEvery = 1000;
+const int printEvery = 1;
 int filesRead = 0;
 
 
-RootDataset readPath(String inPath, {bool doLogging = true}) {
+RootDataset readBytePath(String inPath, {bool doLogging = true}) {
   final path = cleanPath(inPath);
   final length = File(path).lengthSync();
   if (doLogging && (filesRead % printEvery == 0) ) {
@@ -27,12 +28,25 @@ RootDataset readPath(String inPath, {bool doLogging = true}) {
   return rds;
 }
 
+RootDataset readTagPath(String inPath, {bool doLogging = true}) {
+  final path = cleanPath(inPath);
+  final length = File(path).lengthSync();
+  if (doLogging && (filesRead % printEvery == 0) ) {
+    final now = DateTime.now();
+    print('$now $filesRead: Reading($length bytes): $path');
+  }
+  final rds =  TagReader.readPath(path, doLogging: doLogging);
+  filesRead++;
+  return rds;
+}
+
 /// [doShortTest] controls the number of files tested.
 const bool doShortTest = true;
 int fileCount;
 
 const String dir6684 = 'C:/odw_test_data/6684';
-const String dir6684_2017_5_13_0 = 'C:/odw_test_data/6684/2017/5/13/0/0B5106EF/';
+const String dir6684_2017_5_13_0 =
+    'C:/odw_test_data/6684/2017/5/13/0/0B5106EF/';
 
 const String dir6688 = 'C:/odw_test_data/6688';
 
@@ -41,8 +55,8 @@ const String dirMweb500 = 'C:/odw_test_data/mweb/500+/';
 const String dirMwebMECANIX = 'C:/odw_test_data/mweb/500+/MECANIX/';
 const String dirMwebDoseSheets = 'C:/odw_test_data/mweb/Sample Dose Sheets/';
 
-List<String> listFile() {
-  const x0 = doShortTest ? dir6684 : 'C:/odw_test_data/';
+List<String> listFile([String directory = dirMwebDoseSheets]) {
+  final x0 = doShortTest ? directory : 'C:/odw_test_data/';
   print('Directory: $x0');
   final dir = Directory(x0);
   final fList = dir.listSync(recursive: true);

@@ -5,22 +5,31 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
 import 'package:core/core.dart';
 
 const List<int> kPaddingByVRIndex = <int>[
-  // Sequence == 0
-  -1,
+  kSpace, // UN == 0
+  -1,   // Sequence == 1
+
   // EVR Long maybe undefined
-  -1, -1, -1,
-  // EVR Long
-  -1, -1, -1, kSpace, kSpace, kSpace,
+  -1, -1,      // OB, OW
+  // EVR Long binary
+  -1, -1, -1,  // OD, OF, OL
+  // Evr Long String
+  kSpace, kSpace, kSpace,
   // EVR Short
-  kSpace, kSpace, -1, kSpace, kSpace, kSpace, kSpace,
-  -1, -1, kSpace, kSpace, kSpace, kSpace, kSpace,
-  -1, -1, kSpace, kSpace, kNull, -1, -1,
+  kSpace, kSpace, kSpace,
+  kSpace, kSpace, kSpace,
+  kSpace, kSpace, kSpace,
+  kSpace, kSpace, kSpace,
+  kSpace, kNull,
+
+  // EVR Short Binary
+  -1, -1, -1,
+  -1, -1, -1,
+  -1,
   // EVR Special
-  -1, -1, -1, -1
+  -1, -1, -1, -1,
 ];
 
 int paddingChar(int vrIndex) => kPaddingByVRIndex[vrIndex];

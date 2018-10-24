@@ -342,7 +342,7 @@ abstract class SubReader {
   Element _readLongUndefinedLength(
       int code, int eStart, int vrIndex, int vfOffset, int vlf) {
     if (doLogging) startElementMsg(code, eStart, vrIndex, vlf);
-    assert(vlf == kUndefinedLength && _isMaybeUndefinedLengthVR(vrIndex));
+    assert(vlf == kUndefinedLength && isMaybeUndefinedLengthVR(vrIndex));
     assert(vrIndex != kSQIndex);
     VFFragmentList vf;
     if (code == kPixelData) {
@@ -379,7 +379,7 @@ abstract class SubReader {
   VFFragmentList _readEncapsulatedPixelData(
       int code, int eStart, int vrIndex, int vlf) {
     assert(vlf == kUndefinedLength);
-    assert(_isMaybeUndefinedLengthVR(vrIndex));
+    assert(isMaybeUndefinedLengthVR(vrIndex));
     final delimiter = rb.getUint32();
     if (delimiter == kItem32BitLE) {
       return _readPixelDataFragments(code, eStart, vrIndex, vlf);
@@ -400,7 +400,7 @@ abstract class SubReader {
   /// Reads an encapsulated (compressed) [kPixelData] [Element].
   VFFragmentList _readPixelDataFragments(
       int code, int eStart, int vrIndex, int vlf) {
-    assert(_isMaybeUndefinedLengthVR(vrIndex));
+    assert(isMaybeUndefinedLengthVR(vrIndex));
     _checkForOB(vrIndex, rds.transferSyntax);
     return _readFragments(code, vrIndex, vlf);
   }
@@ -456,12 +456,6 @@ abstract class SubReader {
     return vlf;
   }
 
-  bool _isSpecialVR(int vrIndex) =>
-      vrIndex >= kVRSpecialIndexMin && vrIndex <= kVRSpecialIndexMax;
-
-  bool _isMaybeUndefinedLengthVR(int vrIndex) =>
-      vrIndex >= kVRMaybeUndefinedIndexMin &&
-          vrIndex <= kVRMaybeUndefinedIndexMax;
 
 /*
   /// The current Group being read.
@@ -642,7 +636,7 @@ abstract class EvrSubReader extends SubReader with NoLoggingMixin {
 
   /// Returns _true_ if the VR has a 16-bit Value Field Length field.
   bool _isEvrShortVR(int vrIndex) =>
-      vrIndex >= kVREvrShortIndexMin && vrIndex <= kVREvrShortIndexMax;
+      vrIndex >= kAEIndex && vrIndex <= kUSIndex;
 
   /// For EVR Datasets, all Elements are read by this method.
   @override
@@ -664,7 +658,7 @@ abstract class EvrSubReader extends SubReader with NoLoggingMixin {
     if (vrIndex == null) {
       // TODO: this should throw
       _nullVRIndex(code, eStart, vrCode);
-    } else if (_isSpecialVR(vrIndex)) {
+    } else if (isSpecialVRIndex(vrIndex)) {
       log.warn('** Changing (${hex32(code)}) with Special VR '
           '${vrIdFromIndex(vrIndex)}) to VR.kUN');
       return kUNIndex;

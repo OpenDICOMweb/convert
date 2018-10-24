@@ -85,7 +85,7 @@ abstract class Converter {
     final tagVRIndex = eSrc.tag.vrIndex;
     // Handle UN Elements specially
     if (eSrc.vrIndex == kUNIndex && doConvertUN) {
-      vrIndex = (tagVRIndex > kVRNormalIndexMax)
+      vrIndex = (tagVRIndex > kMaxNormalVRIndex)
           ? convertSpecialVR(eSrc)
           : tagVRIndex;
     } else if (vrIndex != tagVRIndex) {
@@ -168,7 +168,6 @@ class TagConverter extends Converter {
   TagConverter._(this.sRds, this.tRds, this.doConvertUN)
       : pRds = RootDatasetByGroup.empty();
 
-  // TODO: Tag tag to int code
   @override
   Element makeElement<V>(int code, Iterable<V> values, int vrIndex,
           [int vfLengthField]) =>

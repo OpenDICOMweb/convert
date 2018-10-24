@@ -66,6 +66,7 @@ class ByteReader extends Reader {
       bool doLogging = false}) {
     final reader =
          ByteReader.fromBytes(bytes, dParams: dParams, doLogging: doLogging);
+    if (doLogging) log.reset;
     return reader.readRootDataset();
   }
 

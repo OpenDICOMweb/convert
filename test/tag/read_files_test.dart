@@ -13,12 +13,13 @@ import '../../test/test_utils.dart';
 
 void main() {
   Server.initialize(
-      name: 'ByteReader Test', throwOnError: true, level: Level.info);
+      name: 'TagReader Test', throwOnError: true, level: Level.error);
 
   const doLogging = false;
   const stopOnError = false;
   allowBlankDates = true;
   allowZeroAges = true;
+  allowOversizedStrings = true;
 
   final files = listFile(dirMweb500);
   print('Reading ${files.length} files ...');
@@ -27,7 +28,7 @@ void main() {
     for (var i = 0; i < files.length; i++) {
       final file = files[i];
       try {
-        final rds0 = readBytePath(file, doLogging: doLogging);
+        final rds0 = readTagPath(files[i], doLogging: doLogging);
         if (rds0 == null) {
           log.warn('Invalid DICOM file: ${rds0.path}');
         } else if (rds0.fmi.isNotEmpty && rds0.isEmpty) {

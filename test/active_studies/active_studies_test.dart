@@ -23,7 +23,7 @@ void main() {
     print('${activeStudies.summary}\n');
 
     for (var i = 0; i < files.length; i++) {
-      final rds = readPath(files[i], doLogging: doLogging);
+      final rds = readBytePath(files[i], doLogging: doLogging);
 
       log.debug('\n${rds.info}');
       if (rds == null) {

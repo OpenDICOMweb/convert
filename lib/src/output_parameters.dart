@@ -56,7 +56,7 @@ class OutputParameters {
     bufferLength: 1024 * 1024,
 
     //TODO: complete
-    reUseBD: true,);
+    reUseBD: false,);
 
 
 }
