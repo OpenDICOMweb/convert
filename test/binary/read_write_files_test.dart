@@ -14,14 +14,14 @@ import '../../test/test_utils.dart';
 
 void main() {
   Server.initialize(
-      name: 'ByteReader Test', throwOnError: true, level: Level.debug2);
+      name: 'ByteReader Test', throwOnError: true, level: Level.warn1);
 
-  const doLogging = true;
+  const doLogging = false;
   const stopOnError = true;
   allowZeroAges = true;
   allowBlankDates = true;
 
-  final files = listFile();
+  final files = listFile(dirMweb500);
   print('Reading ${files.length} files ...');
 
   test('read_write_read files', () {
@@ -75,7 +75,8 @@ void main() {
 
         // ignore: avoid_catches_without_on_clauses
       } catch (e, trace) {
-        print('Error: "$file"');
+        print('File: "$file"');
+        print('Error: "$e"');
         print('Stack: $trace');
         if (stopOnError) rethrow;
       }

@@ -20,8 +20,10 @@ void main() {
   allowBlankDates = true;
   allowZeroAges = true;
   allowOversizedStrings = true;
+  allowInvalidValueLengths = true;
+  allowInvalidCharsInStrings = true;
 
-  final files = listFile(dirMweb500);
+  final files = listFile();
   print('Reading ${files.length} files ...');
 
   test('read_files', () {
@@ -61,10 +63,12 @@ void main() {
         }
         // ignore: avoid_catches_without_on_clauses
       } catch (e, trace) {
-        print('Error: "$file"');
+        print('File($i): "$file"');
+        print('Error: "$e"');
         print('Stack: $trace');
         if (stopOnError) rethrow;
       }
     }
+    print('Tested ${files.length} files');
   });
 }

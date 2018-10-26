@@ -13,10 +13,10 @@ import '../../test/test_utils.dart';
 
 void main() {
   Server.initialize(
-      name: 'ByteReader Test', throwOnError: true, level: Level.info);
+      name: 'ByteReader Test', throwOnError: true, level: Level.warn1);
 
   const doLogging = false;
-  const stopOnError = false;
+  const stopOnError = true;
   allowBlankDates = true;
   allowZeroAges = true;
 
@@ -65,5 +65,6 @@ void main() {
         if (stopOnError) rethrow;
       }
     }
+    print('Tested ${files.length} files');
   });
 }

@@ -40,6 +40,8 @@ void main() {
   const path10 = 'C:/odw_test_data/mweb/500+/'
       'PET PETCT_CTplusFET_LM_Brain (Adult)/'
       'dynamic recon 3x10min Volume (Corrected) - 7/IM-0001-0218.dcm';
+  const path11 = 'C:/odw_test_data/mweb/Sample Dose Sheets/'
+      '4e627a0a-7ac2-4c44-8a3e-6515951fc6bb.dcm';
 
   group('Simple Read Tests', () {
     test('Path0', () {
@@ -107,7 +109,7 @@ void main() {
     });
 
     test('Path9', () {
-      final rds = readBytePath(path9, doLogging: doLogging);
+      final rds = readBytePath(path11, doLogging: doLogging);
       log.debug('${rds.info}');
       final entity = activeStudies.entityFromRootDataset(rds);
       log.debug('${entity.info}');
