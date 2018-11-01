@@ -46,7 +46,6 @@ class OutputParameters {
         this.outputTS,
         this.throwOnError = true,
         this.bufferLength = k1MB,
-
         this.reUseBD = false});
 
   static const OutputParameters kDefault = OutputParameters();

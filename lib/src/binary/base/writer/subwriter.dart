@@ -467,7 +467,6 @@ bool reUseWriteBuffer = false;
 DicomWriteBuffer _reUseBuffer;
 
 DicomWriteBuffer getWriteBuffer([int length]) {
-  length ??= kDefaultWriteBufferLength;
   if (!reUseWriteBuffer || _reUseBuffer == null) {
     _reUseBuffer = DicomWriteBuffer(length);
   } else if (length > _reUseBuffer.length) {

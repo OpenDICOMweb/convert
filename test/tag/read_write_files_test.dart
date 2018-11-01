@@ -27,6 +27,7 @@ void main() {
   allowInvalidNumberOfValues = true;
   allowInvalidValueLengths = true;
   allowOversizedStrings = true;
+  allowInvalidValueLengths = true;
   allowInvalidCharsInStrings = true;
   allowInvalidSex = true;
 
@@ -83,7 +84,8 @@ void main() {
           expect(rds0 == rds1, false);
         // ignore: avoid_catches_without_on_clauses
       } catch (e, trace) {
-        print('Error: "$file"');
+        print('File($i): "$file"');
+        print('Error: "$e"');
         print('Stack: $trace');
         if (stopOnError) rethrow;
       }
