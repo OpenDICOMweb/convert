@@ -5,6 +5,7 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
+import 'package:converter/converter.dart';
 import 'package:core/server.dart' hide group;
 import 'package:test/test.dart';
 
@@ -17,24 +18,30 @@ void main() {
 
   const doLogging = true;
 
-  group('Tag Simple Read', () {
-    test('Read', () {
+  group('Byte Simple Read/Write', () {
+    test('Byte Read/Write/Read', () {
       activeStudies.clear();
 
-      allowZeroAges = true;
-      allowBlankDates = true;
-      allowInvalidNumberOfValues = true;
-      allowInvalidValueLengths = true;
-      allowOversizedStrings = true;
-      allowInvalidCharsInStrings = true;
       allowInvalidSex = true;
-      doTrimWhitespace = true;
 
       for (var path in paths) {
-        final rds = readTagPath(path, doLogging: doLogging);
+        final rds = readBytePath(path, doLogging: doLogging);
         log.debug('${rds.info}');
         final entity = activeStudies.entityFromRootDataset(rds);
         log.debug('${entity.info}');
+
+        final outPath = getVNAPath(rds, 'bin/output/', 'dcm');
+        final outBytes = ByteWriter.writeBytes(rds, doLogging: doLogging);
+
+        final length = outBytes.length;
+        log
+          ..info('${rds.dsBytes}')
+          ..info('outPath: $outPath')
+          ..info('Output length: $length(${length ~/ 1024}K)')
+          ..info('done');
+
+        final rds1 = ByteReader.readBytes(outBytes, doLogging: doLogging);
+        log.info('${rds1.info}');
       }
     });
   });

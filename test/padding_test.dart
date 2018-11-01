@@ -10,50 +10,54 @@ import 'package:test/test.dart';
 import 'package:converter/src/binary/base/padding_chars.dart';
 
 void main() {
+  const kSpace = 32;
+  const kNull = 0;
+  const kInvalid = -1;
+
   test('Padding Char Test', () {
     for (var i = 0; i < kPaddingByVRIndex.length; i++) {
       final v = paddingChar(i);
       print('$i: $v');
     }
 
-    expect(paddingChar(0) == -1, true);
-    expect(paddingChar(1) == -1, true);
-    expect(paddingChar(2) == -1, true);
-    expect(paddingChar(3) == -1, true);
-    expect(paddingChar(4) == -1, true);
-    expect(paddingChar(5) == -1, true);
-    expect(paddingChar(6) == -1, true);
+    expect(paddingChar(0) == kSpace, true);
+    expect(paddingChar(1) == kInvalid, true);
+    expect(paddingChar(2) == kInvalid, true);
+    expect(paddingChar(3) == kInvalid, true);
+    expect(paddingChar(4) == kInvalid, true);
+    expect(paddingChar(5) == kInvalid, true);
+    expect(paddingChar(6) == kInvalid, true);
 
-    expect(paddingChar(7) == 32, true);
-    expect(paddingChar(8) == 32, true);
-    expect(paddingChar(9) == 32, true);
-    expect(paddingChar(10) == 32, true);
-    expect(paddingChar(11) == 32, true);
-    expect(paddingChar(12) == 32, true);
-    expect(paddingChar(13) == 32, true);
-    expect(paddingChar(14) == 32, true);
-    expect(paddingChar(15) == 32, true);
-    expect(paddingChar(16) == 32, true);
-    expect(paddingChar(17) == 32, true);
-    expect(paddingChar(18) == 32, true);
-    expect(paddingChar(19) == 32, true);
-    expect(paddingChar(20) == 32, true);
-    expect(paddingChar(21) == 32, true);
-    expect(paddingChar(22) == 32, true);
+    expect(paddingChar(7) == kSpace, true);
+    expect(paddingChar(8) == kSpace, true);
+    expect(paddingChar(9) == kSpace, true);
+    expect(paddingChar(10) == kSpace, true);
+    expect(paddingChar(11) == kSpace, true);
+    expect(paddingChar(12) == kSpace, true);
+    expect(paddingChar(13) == kSpace, true);
+    expect(paddingChar(14) == kSpace, true);
+    expect(paddingChar(15) == kSpace, true);
+    expect(paddingChar(16) == kSpace, true);
+    expect(paddingChar(17) == kSpace, true);
+    expect(paddingChar(18) == kSpace, true);
+    expect(paddingChar(19) == kSpace, true);
+    expect(paddingChar(20) == kSpace, true);
+    expect(paddingChar(21) == kSpace, true);
+    expect(paddingChar(22) == kSpace, true);
 
-    expect(paddingChar(23) == 0, true);
+    expect(paddingChar(23) == kNull, true);
 
-    expect(paddingChar(24) == -1, true);
-    expect(paddingChar(25) == -1, true);
-    expect(paddingChar(26) == -1, true);
-    expect(paddingChar(27) == -1, true);
-    expect(paddingChar(28) == -1, true);
-    expect(paddingChar(29) == -1, true);
-    expect(paddingChar(30) == -1, true);
-    expect(paddingChar(31) == -1, true);
-    expect(paddingChar(32) == -1, true);
-    expect(paddingChar(33) == -1, true);
-    expect(paddingChar(34) == -1, true);
+    expect(paddingChar(24) == kInvalid, true);
+    expect(paddingChar(25) == kInvalid, true);
+    expect(paddingChar(26) == kInvalid, true);
+    expect(paddingChar(27) == kInvalid, true);
+    expect(paddingChar(28) == kInvalid, true);
+    expect(paddingChar(29) == kInvalid, true);
+    expect(paddingChar(30) == kInvalid, true);
+    expect(paddingChar(31) == kInvalid, true);
+    expect(paddingChar(32) == kInvalid, true);
+    expect(paddingChar(33) == kInvalid, true);
+    expect(paddingChar(34) == kInvalid, true);
 
   });
 }

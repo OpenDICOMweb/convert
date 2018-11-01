@@ -17,8 +17,14 @@ void main() {
 
   const doLogging = false;
   const stopOnError = false;
-  allowBlankDates = true;
+
   allowZeroAges = true;
+  allowBlankDates = true;
+  allowInvalidNumberOfValues = true;
+  allowInvalidValueLengths = true;
+  allowOversizedStrings = true;
+  allowInvalidCharsInStrings = true;
+  allowInvalidSex = true;
 
   final files = listFile(dirMweb500);
   print('Reading ${files.length} files ...');

@@ -300,13 +300,14 @@ abstract class SubWriter {
   void _writeSQDefinedLength(SQ e, int vrIndex) {
     assert(e is SQ && (vrIndex == kSQIndex || vrIndex == kUNIndex), '$e');
     _writeLongDefinedLengthHeader(e, vrIndex, 0);
-    final eStart = _wb.wIndex;
-    assert(eStart.isEven);
+    final vfStart = _wb.wIndex;
+    assert(vfStart.isEven);
     // This if the offset where the vfLengthField will be written
-    final vlfOffset = _wb.wIndex - 4;
+    final vlfOffset = vfStart - 4;
     _writeItems(e.items);
-    final vfLength = _wb.wIndex - eStart;
-    assert(vfLength.isEven && _wb.wIndex.isEven);
+    final vfLength = _wb.wIndex - vfStart;
+    assert(
+        vfLength.isEven && _wb.wIndex.isEven && vfLength != kUndefinedLength);
     // Now that vfLength is known write it at vflOffset.
     _wb.bytes.setUint32(vlfOffset, vfLength);
   }

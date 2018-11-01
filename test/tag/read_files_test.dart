@@ -13,13 +13,18 @@ import '../../test/test_utils.dart';
 
 void main() {
   Server.initialize(
-      name: 'TagReader Test', throwOnError: true, level: Level.error);
+      name: 'TagReader Test', throwOnError: true, level: Level.info);
 
   const doLogging = false;
   const stopOnError = false;
-  allowBlankDates = true;
+
   allowZeroAges = true;
+  allowBlankDates = true;
+  allowInvalidNumberOfValues = true;
+  allowInvalidValueLengths = true;
   allowOversizedStrings = true;
+  allowInvalidCharsInStrings = true;
+  allowInvalidSex = true;
 
   final files = listFile(dirMweb500);
   print('Reading ${files.length} files ...');
