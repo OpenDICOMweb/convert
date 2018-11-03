@@ -775,7 +775,7 @@ abstract class EvrSubReader extends SubReader {
   int readFmi() {
     if (doLogging) log.debug('>@R${_rb.index} Reading FMI:', 1);
     if (_rb.index != 0)
-      return invalidReadBufferIndex(_rb as ReadBuffer, _rb.index);
+      return invalidReadBufferIndex(_rb, _rb.index);
 
     if (!_readPrefix()) {
       _rb.rIndex = 0;
@@ -887,5 +887,5 @@ class InvalidDicomReadBufferIndex extends Error {
 }
 
 // ignore: prefer_void_to_null
-Null invalidReadBufferIndex(ReadBuffer rb, int index) =>
+Null invalidReadBufferIndex(ReadBufferBase rb, int index) =>
     throw InvalidDicomReadBufferIndex(rb, index);

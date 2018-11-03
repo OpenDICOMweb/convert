@@ -11,8 +11,6 @@ import 'package:test/test.dart';
 import '../test_data.dart';
 import '../test_utils.dart';
 
-import 'package:converter/src/binary/byte/reader/byte_reader.dart';
-
 void main() {
   Server.initialize(
       name: 'dcm_reader_test', level: Level.info, throwOnError: true);
