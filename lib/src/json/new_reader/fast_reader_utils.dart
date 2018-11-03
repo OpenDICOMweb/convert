@@ -97,7 +97,7 @@ OLtag _readOL(Tag tag, int vrIndex, Iterable vf) {
   final String key = vf.elementAt(0);
   final String value = vf.elementAt(1);
   if (key == 'InlineBinary')
-    return OLtag.fromBytes(tag, Bytes.fromBase64(value));
+    return OLtag.fromBytes(tag, Bytes.fromBase64(value), null);
   if (key == 'BulkDataURI') {
     final bd = FloatBulkdataRef(tag.code, Uri.parse(value));
     return OLtag.bulkdata(tag, bd.uri);
@@ -110,7 +110,7 @@ OFtag _readOF(Tag tag, int vrIndex, Iterable vf) {
   final String key = vf.elementAt(0);
   final String value = vf.elementAt(1);
   if (key == 'InlineBinary')
-    return OFtag.fromBytes(tag, Bytes.fromBase64(value));
+    return OFtag.fromBytes(tag, Bytes.fromBase64(value), null);
 
   if (key == 'BulkDataURI')
     return OFtag.fromValues(tag, FloatBulkdataRef(tag.code, Uri.parse(value)));
@@ -123,7 +123,7 @@ ODtag _readOD(Tag tag, int vrIndex, Iterable vf) {
   final String key = vf.elementAt(0);
   final String value = vf.elementAt(1);
   if (key == 'InlineBinary')
-    return ODtag.fromBytes(tag, Bytes.fromBase64(value));
+    return ODtag.fromBytes(tag, Bytes.fromBase64(value), null);
   if (key == 'BulkDataURI')
     return ODtag.fromValues(tag, FloatBulkdataRef(tag.code, Uri.parse(value)));
   return badValues(vf);

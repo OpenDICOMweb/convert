@@ -71,7 +71,7 @@ class DatasetConverter {
   Element _convertElement(Dataset ds, Element e) {
     final te = (e is SQ)
                ? _convertSQ(e)
-               : TagElement.makeFromValues(e.code, e.vrIndex, e.values, ds);
+               : TagElement.fromValues(e.code, e.vrIndex, e.values, ds);
     nElements++;
     return te;
   }

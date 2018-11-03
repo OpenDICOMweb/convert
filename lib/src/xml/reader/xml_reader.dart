@@ -127,7 +127,7 @@ class XmlReader extends XmlReaderBase {
   @override
   Element readSimpleElement(int code, int vrIndex, Iterable values,
           [Dataset ds]) =>
-      TagElement.makeFromValues(code, vrIndex, values, ds);
+      TagElement.fromValues(code, vrIndex, values, ds);
 
   @override
   SQ readSequence(int code, Iterable entries, int vrIndex, [Dataset ds]) {

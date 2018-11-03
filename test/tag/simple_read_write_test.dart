@@ -19,7 +19,7 @@ void main() {
   const doLogging = true;
 
   group('Tag Simple Read', () {
-       test('Tag Read/Write/Read', () {
+    test('Tag Read/Write/Read', () {
       activeStudies.clear();
 
       allowZeroAges = true;
@@ -33,7 +33,7 @@ void main() {
       doRemoveBlankStrings = true;
       doTrimWhitespace = true;
 
-      for (var path in [path8]) {
+      for (var path in paths) {
         final rds = readTagPath(path, doLogging: doLogging);
         log.debug('${rds.info}');
         final entity = activeStudies.entityFromRootDataset(rds);

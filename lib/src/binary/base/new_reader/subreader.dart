@@ -85,14 +85,14 @@ abstract class SubReader {
 
   /// Creates an Element from [Bytes].
 // TODO: maybe in future to lift the dependency on bytes
-//  Element makeFromIndex(int code, int eStart, int eEnd, int vfl, int vrIndex);
+//  Element fromIndex(int code, int eStart, int eEnd, int vfl, int vrIndex);
 
   /// Creates an Element from [Bytes].
-  Element makeFromBytes(int code, Bytes bytes, int vrIndex, int vfOffset);
+  Element fromBytes(int code, Bytes bytes, int vrIndex, int vfOffset);
 
   /// Returns a new [Element].
   // Note: Typically this may or may not be implemented.
-  Element makeFromValues(int code, Iterable values, int vrIndex,
+  Element fromValues(int code, Iterable values, int vrIndex,
       [Bytes bytes]) =>
       unsupportedError();
 
@@ -354,7 +354,7 @@ abstract class SubReader {
     final bytes = rb.sublist(eStart, rb.index);
     final e = (code == kPixelData)
         ? makePixelData(code, bytes, vrIndex, vlf, defaultTS, vf)
-        : makeFromBytes(code, bytes, vrIndex, vfOffset);
+        : fromBytes(code, bytes, vrIndex, vfOffset);
     _count++;
     if (doLogging) endElementMsg(e);
     return e;
@@ -368,7 +368,7 @@ abstract class SubReader {
     final bytes = rb.sublist(eStart, rb.index);
     final e = (code == kPixelData)
         ? makePixelData(code, bytes, vrIndex, vfOffset)
-        : makeFromBytes(code, bytes, vrIndex, vfOffset);
+        : fromBytes(code, bytes, vrIndex, vfOffset);
     _count++;
     if (doLogging) endElementMsg(e);
     return e;

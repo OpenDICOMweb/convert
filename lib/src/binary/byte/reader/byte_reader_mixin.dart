@@ -22,21 +22,21 @@ abstract class ByteReaderMixin {
           [SQ sequence, Map<int, Element> eMap, DicomBytes bytes]) =>
        ByteItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
 
-  Element makeFromBytes(DicomBytes bytes, Dataset ds, {bool isEvr}) =>
-      ByteElement.makeFromBytes(bytes, ds, isEvr: isEvr);
+  Element fromBytes(DicomBytes bytes, Dataset ds, {bool isEvr}) =>
+      ByteElement.fromBytes(bytes, ds, isEvr: isEvr);
 
-  Element makeMaybeUndefinedFromBytes(
+  Element maybeUndefinedFromBytes(
           DicomBytes bytes,  Dataset ds) =>
       ByteElement.makeMaybeUndefinedFromBytes(bytes, ds);
 
-  Element makePixelDataFromBytes(DicomBytes bytes,
+  Element pixelDataFromBytes(DicomBytes bytes,
           [TransferSyntax ts, VFFragmentList vf]) =>
-      ByteElement.makePixelDataFromBytes(bytes, ts, vf, cds);
+      ByteElement.pixelDataFromBytes(bytes, ts, vf, cds);
 
-  Element makeSQFromBytes(Dataset parent,
+  Element sqFromBytes(Dataset parent,
           [Iterable<Item> items, DicomBytes bytes]) =>
       SQbytes.fromBytes(parent, items, bytes);
 
-  Element makeFromValues<V>(int code, int vrIndex, List<V> vList) =>
-      ByteElement.makeFromValues(code, vrIndex, vList, isEvr: true, ds: cds);
+  Element fromValues<V>(int code, int vrIndex, List<V> vList) =>
+      ByteElement.fromValues(code, vrIndex, vList, isEvr: true, ds: cds);
 }

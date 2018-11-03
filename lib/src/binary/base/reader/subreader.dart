@@ -81,6 +81,8 @@ abstract class SubReader {
 
   // ---- Interface ----
 
+  Charset charset = utf8Charset;
+
   TransferSyntax get ts => _ts;
 
   //Urgent Jim: cleanup interface
@@ -92,34 +94,31 @@ abstract class SubReader {
       [SQ sequence, Map<int, Element> eMap, DicomBytes bd]);
 
   /// Creates an Element from [DicomBytes].
-  Element makeFromBytes(DicomBytes bytes, Dataset ds, {bool isEvr});
+  Element fromBytes(DicomBytes bytes, Dataset ds, {bool isEvr});
 
   /// Creates an Element from [DicomBytes].
-  Element makeMaybeUndefinedFromBytes(DicomBytes bytes, Dataset ds);
+  Element maybeUndefinedFromBytes(DicomBytes bytes, Dataset ds);
 
   /// Creates an Element from [DicomBytes].
-  Element makePixelDataFromBytes(DicomBytes bytes,
+  Element pixelDataFromBytes(DicomBytes bytes,
       [TransferSyntax ts, VFFragmentList vf]);
 
   /// Create an SQ Element.
-  Element makeSQFromBytes(Dataset parent,
-      [Iterable<Item> items, DicomBytes bytes]);
+  Element sqFromBytes(Dataset parent, [Iterable<Item> items, DicomBytes bytes]);
 
   /// Returns a new [Element].
   // Note: Typically this may or may not be implemented.
-  Element makeFromValues<V>(int code, int vrIndex, List<V> values) =>
+  Element fromValues<V>(int code, int vrIndex, List<V> values) =>
       unsupportedError();
 
   /// Returns a new [Element] of type SQ, OB, OW, or UN.
   //  Designed to be overridden in TagElement.
-  Element makeMaybeUndefinedFromValues(
-          int code, Iterable values, int vrIndex) =>
+  Element maybeUndefinedFromValues(int code, Iterable values, int vrIndex) =>
       unsupportedError();
 
   /// Creates a new Sequence ([SQ]) [Element].
   //  Designed to be overridden in TagElement.
-  SQ makeSequenceFromTag(Dataset parent, Tag tag, Iterable items,
-          [DicomBytes bytes]) =>
+  SQ sqFromTag(Dataset parent, Tag tag, Iterable items, [DicomBytes bytes]) =>
       unsupportedError();
 
   // **** Interface for Logging
@@ -156,9 +155,25 @@ abstract class SubReader {
 
   RootDataset _readRootDataset(int fmiEnd) {
     final rdsStart = fmiEnd;
-    final length = rb.remaining;
+    final length = _rb.remaining;
     if (doLogging) _startReadRootDataset(rdsStart, length);
 
+    // check specific charset
+    final code = _rb.peekCode();
+    if (code == kSpecificCharacterSet) {
+      final e = _readElement();
+      rds.add(e);
+
+      final v = e.values;
+      if (v.length == 1) {
+        charset = charsets[v[0]];
+        if (charset == null) {
+          log.warn('Unsupported Charset: "$charset');
+          charset = utf8Charset;
+        }
+      }
+    }
+    rds.charset = charset;
     DSBytes dsBytes;
     try {
       _readDatasetDefinedLength(rds, rdsStart, length);
@@ -217,8 +232,8 @@ abstract class SubReader {
 
   // **** This is one of the only two places Elements are added to the dataset.
   void _readDatasetDefinedLength(Dataset ds, int dsStart, int vlf) {
-    assert(vlf != kUndefinedLength && dsStart == _rb.index);
-    ds.start = _rb.index;
+    assert(vlf != kUndefinedLength);
+    ds.start = dsStart;
     final dsEnd = dsStart + vlf;
 
     while (_rb.index < dsEnd) _readDataset(ds);
@@ -315,7 +330,7 @@ abstract class SubReader {
       _rb.rSkip(4);
       final items = <Item>[_makeEmptyItem(cds)];
       final bytes = _rb.view(eStart, _rb.index - eStart);
-      return makeSQFromBytes(cds, items, bytes);
+      return sqFromBytes(cds, items, bytes);
     } else if (vlf == kUndefinedLength) {
       return _readUndefinedLength(code, eStart, vrIndex, vfOffset, vlf);
     } else {
@@ -332,18 +347,18 @@ abstract class SubReader {
     _rb.rSkip(vlf);
     final e = (code == kPixelData)
         ? _makePixelData(code, start, vrIndex, vfOffset, vlf)
-        : _makeFromBytes(code, start, vrIndex, vfOffset);
+        : _fromBytes(code, start, vrIndex, vfOffset);
     _count++;
     if (doLogging) _endElementMsg(start, e);
     return e;
   }
 
-  Element _makeFromBytes(int code, int start, int vrIndex, int vfOffset) {
+  Element _fromBytes(int code, int start, int vrIndex, int vfOffset) {
     final end = _rb.index;
     final dBytes = isStringVR(vrIndex)
         ? _makeDicomStringBytes(start, end, vfOffset)
         : _makeDicomBytes(start, end, vfOffset);
-    return makeFromBytes(dBytes, cds, isEvr: isEvr);
+    return fromBytes(dBytes, cds, isEvr: isEvr);
   }
 
   DicomBytes _makeDicomStringBytes(int start, int end, int vfOffset) {
@@ -376,7 +391,7 @@ abstract class SubReader {
       [TransferSyntax ts, VFFragmentList fragments]) {
     _afterPixelData = true;
     final dBytes = _makeLongDicomBytes(start);
-    return makePixelDataFromBytes(dBytes, ts, fragments);
+    return pixelDataFromBytes(dBytes, ts, fragments);
   }
 
   /// Reads an Element with a 32-bit Value Field Length Field [vlf]
@@ -403,7 +418,7 @@ abstract class SubReader {
     final e = (code == kPixelData)
         ? _makePixelData(
             code, start, vrIndex, vfOffset, vlf, defaultTS, fragments)
-        : _makeFromBytes(code, start, vrIndex, vfOffset);
+        : _fromBytes(code, start, vrIndex, vfOffset);
     _count++;
     if (doLogging) _endElementMsg(start, e);
     return e;
@@ -443,7 +458,7 @@ abstract class SubReader {
       items.add(item);
     }
     final dBytes = _makeLongDicomBytes(eStart);
-    return makeSQFromBytes(cds, items, dBytes);
+    return sqFromBytes(cds, items, dBytes);
   }
 
   /// If the sequence delimiter is found at the current _read index_,
@@ -462,7 +477,7 @@ abstract class SubReader {
     }
     if (sqEnd != _rb.index) warn('sqEnd($sqEnd) != rb.index(${_rb.index})');
     final dBytes = _makeLongDicomBytes(eStart);
-    return makeSQFromBytes(cds, items, dBytes);
+    return sqFromBytes(cds, items, dBytes);
   }
 
   /// Returns [VFFragmentList] for a [kPixelData] Element.
@@ -712,8 +727,8 @@ abstract class EvrSubReader extends SubReader {
     final vrCode = _rb.readVRCode();
     final vrIndex = _lookupEvrVRIndex(code, eStart, vrCode);
     if (vrIndex == null)
-      print('${dcm(code)} '
-          'vrCode: $vrCode vrIndex: $vrIndex');
+      log.error('${dcm(code)} '
+          'vrCode: $vrCode(${hex16(vrCode)} vrIndex: $vrIndex');
     if (_isEvrShortVR(vrIndex)) {
       return _readDefinedLength(code, eStart, vrIndex, 8, _getVlf16());
     } else {
@@ -771,15 +786,8 @@ abstract class EvrSubReader extends SubReader {
     if (doLogging) log.down;
     while (_rb.isReadable) {
       final code = _rb.peekCode();
-      if (code >= 0x00030000) {
-/* Urgent debug
-        print('doLogging: $doLogging');
-        print('rb.index: ${_rb.rIndex}');
-        print('0x00030000: ${0x00030000}');
-*/
+      if (code >= 0x00030000) break;
 
-        break;
-      }
       final e = _readElement();
       rds.fmi[e.code] = e;
     }

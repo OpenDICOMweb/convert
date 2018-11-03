@@ -86,7 +86,7 @@ Element convertElement(Element e) {
 
 Element _convertSimpleElement(Element e) {
   if (e.vrIndex > 30) throw 'bad e.vr: ${e.vrIndex}';
-  return  TagElement.makeFromValues(e.code, e.vrIndex, e.values, sourceRDS);
+  return  TagElement.fromValues(e.code, e.vrIndex, e.values, sourceRDS);
 }
 
 const int kDefaultCount = 5;
