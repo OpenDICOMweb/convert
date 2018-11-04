@@ -1,9 +1,9 @@
 ## TODO
 
 1.	Read/write byte and compare byte for byte
-2.	Add coerce function to convert blanks to empty list for all elements
+2.	Add trim function to convert blanks to empty list for all elements
 3.	When converting from byte to tag trim all whitespace.
-4.	Build Validator for Byte Datasets
+4.	Build Validator for Tag Datasets
 5.	Define private creator & private data format
    a.	Creator (gggg,00cc): [token, group, default subgroup] 
    b.	Data (gggg,ccdd):
@@ -11,6 +11,9 @@
 6.	Test removeAllPrivate
 7.	Test removeSafePrivate
 8.	Test remove group
+9.  de-identify dataset
+   a. replace Uids
+   b. convert patient birth date to age.
  
 0. Look for de-identified tag and allow looser verification.
 1. Add DICOM+JSON
