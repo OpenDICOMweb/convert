@@ -16,22 +16,31 @@ abstract class ByteReaderMixin {
 
   RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
           DicomBytes bytes, int fmiEnd) =>
-       ByteRootDataset(fmi, eMap, path, bytes, fmiEnd);
+      ByteRootDataset(fmi, eMap, path, bytes, fmiEnd);
 
   Item makeItem(Dataset parent,
           [SQ sequence, Map<int, Element> eMap, DicomBytes bytes]) =>
-       ByteItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
+      ByteItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
 
   Element fromBytes(DicomBytes bytes, Dataset ds, {bool isEvr}) =>
       ByteElement.fromBytes(bytes, ds, isEvr: isEvr);
 
-  Element maybeUndefinedFromBytes(
-          DicomBytes bytes,  Dataset ds) =>
+  Element maybeUndefinedFromBytes(DicomBytes bytes, Dataset ds) =>
       ByteElement.makeMaybeUndefinedFromBytes(bytes, ds);
 
   Element pixelDataFromBytes(DicomBytes bytes,
-          [TransferSyntax ts, VFFragmentList vf]) =>
-      ByteElement.pixelDataFromBytes(bytes, ts, vf, cds);
+      [TransferSyntax ts, VFFragmentList vf]) {
+    switch (bytes.vrIndex) {
+      case kOBIndex:
+        return OBbytesPixelData.fromBytes(bytes);
+      case kOWIndex:
+        return OWbytesPixelData.fromBytes(bytes);
+      case kUNIndex:
+        return UNbytesPixelData.fromBytes(bytes);
+      default:
+        return badVRIndex(bytes.vrIndex, null, -1);
+    }
+  }
 
   Element sqFromBytes(Dataset parent,
           [Iterable<Item> items, DicomBytes bytes]) =>

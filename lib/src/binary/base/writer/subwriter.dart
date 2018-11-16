@@ -178,20 +178,20 @@ abstract class SubWriter {
   void _writeEncapsulatedPixelData(Integer e) {
     assert(e.vfLengthField == kUndefinedLength);
     if (e.code == kPixelData) {
-        final pd = e as PixelDataMixin;
-        if (pd.frames is! CompressedFrameList)
-          return badElement('Not Pixel Data: $e');
-        final offsets = pd.offsets;
-        final vfLength = offsets.lengthInBytes;
-        final bulkdata = pd.bulkdata;
-        final bdLength = bulkdata.lengthInBytes;
-        _wb
-          ..writeCode(kItem, 8 + vfLength)
-          ..writeUint32(vfLength)
-          ..writeUint32List(offsets)
-          ..writeCode(kItem, 8 + bdLength)
-          ..writeUint32(bdLength)
-          ..writeUint8List(bulkdata);
+      final pd = e as PixelDataMixin;
+      if (pd.frames is! CompressedFrameList)
+        return badElement('Not Pixel Data: $e');
+      final offsets = pd.offsets;
+      final vfLength = offsets.lengthInBytes;
+      final bulkdata = pd.bulkdata;
+      final bdLength = bulkdata.lengthInBytes;
+      _wb
+        ..writeCode(kItem, 8 + vfLength)
+        ..writeUint32(vfLength)
+        ..writeUint32List(offsets)
+        ..writeCode(kItem, 8 + bdLength)
+        ..writeUint32(bdLength)
+        ..writeUint8List(bulkdata);
     }
     badElement('Not Pixel Data: $e');
   }

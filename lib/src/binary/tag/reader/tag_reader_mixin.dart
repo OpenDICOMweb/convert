@@ -31,11 +31,21 @@ abstract class TagReaderMixin {
 
   Element sqFromBytes(Dataset parent,
           [Iterable<Item> items, DicomBytes bytes]) =>
-      TagElement.sqFromBytes(parent, items, bytes);
+      SQtag(parent, Tag.lookup(bytes.code), items);
 
   Element pixelDataFromBytes(DicomBytes bytes,
-          [TransferSyntax ts, VFFragmentList _]) =>
-      TagElement.pixelDataFromBytes(bytes, cds, ts);
+          [TransferSyntax ts, VFFragmentList _]) {
+    switch (bytes.vrIndex) {
+      case kOBIndex:
+        return OBtagPixelData.fromBytes(bytes);
+      case kOWIndex:
+        return OWtagPixelData.fromBytes(bytes);
+      case kUNIndex:
+        return UNtagPixelData.fromBytes(bytes);
+      default:
+        return badVRIndex(bytes.vrIndex, null, -1);
+    }
+  }
 
   Element fromValues<V>(int code, int vrIndex, List<V> vList) =>
       TagElement.fromValues(code, vrIndex, vList, cds);
