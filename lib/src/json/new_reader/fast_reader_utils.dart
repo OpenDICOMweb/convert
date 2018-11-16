@@ -100,7 +100,7 @@ OLtag _readOL(Tag tag, int vrIndex, Iterable vf) {
     return OLtag.fromBytes(tag, Bytes.fromBase64(value), null);
   if (key == 'BulkDataURI') {
     final bd = FloatBulkdataRef(tag.code, Uri.parse(value));
-    return OLtag.bulkdata(tag, bd.uri);
+    return OLtag.fromBulkdata(tag, bd.uri);
   }
   return badValues(vf);
 }
@@ -180,7 +180,7 @@ ULtag _readUL(Tag tag, int vrIndex, Iterable vf) {
 
   final bulkdata = _getIntBulkdata(tag, vf);
   return (bulkdata != null)
-      ? ULtag.bulkdata(tag, bulkdata.uri)
+      ? ULtag.fromBulkdata(tag, bulkdata.uri)
       : invalidValueField('', vf);
 }
 

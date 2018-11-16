@@ -177,16 +177,12 @@ abstract class SubWriter {
 
   /// Writes Encapsulated Pixel Data without Fragments
   void _writeEncapsulatedPixelData(Element e) {
-    if (e.code != kPixelData) return badElement('Not Pixel Data: $e');
-    if (e.vfLengthField != kUndefinedLength)
-      return badElement('Not Undefined Length: $e');
-    // Urgent: figure out how to remove this 'as'
-    final pd = e as PixelDataMixin;
-    if (pd.frames is! CompressedFrameList)
+    assert(e.code == kPixelData && e.vfLengthField == kUndefinedLength);
+    if (e.frames is! CompressedFrameList)
       return badElement('Not Pixel Data: $e');
-    final offsets = pd.offsets;
+    final offsets = e.offsets;
     final vfLength = offsets.lengthInBytes;
-    final bulkdata = pd.bulkdata;
+    final bulkdata = e.bulkdata;
     final bdLength = bulkdata.lengthInBytes;
     _wb
       ..writeCode(kItem, 8 + vfLength)
@@ -199,9 +195,7 @@ abstract class SubWriter {
 
   void _writeFragments(Element e) {
     assert(e.vfLengthField == kUndefinedLength && e.code == kPixelData);
-    // Urgent: figure out how to remove this 'as'
-    final pd = e as PixelDataMixin;
-    for (final fragment in pd.fragments.fragments) {
+    for (final fragment in e.fragments.fragments) {
       final length = fragment.lengthInBytes;
       _wb
         ..writeCode(kItem, 8 + length)
