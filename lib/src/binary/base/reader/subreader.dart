@@ -346,7 +346,7 @@ abstract class SubReader {
     if (doLogging) _startElementMsg(code, vrIndex, vlf);
     _rb.rSkip(vlf);
     final e = (code == kPixelData)
-        ? _makePixelData(code, start, vrIndex, vfOffset, vlf)
+        ? _makePixelData(code, start, vrIndex, vfOffset, vlf, defaultTS)
         : _fromBytes(code, start, vrIndex, vfOffset);
     _count++;
     if (doLogging) _endElementMsg(start, e);

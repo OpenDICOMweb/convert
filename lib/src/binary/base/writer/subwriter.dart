@@ -8,11 +8,12 @@
 //
 import 'dart:typed_data';
 
+import 'package:core/core.dart';
+
 import 'package:converter/src/binary/base/constants.dart';
 import 'package:converter/src/binary/base/padding_chars.dart';
 import 'package:converter/src/element_offsets.dart';
 import 'package:converter/src/encoding_parameters.dart';
-import 'package:core/core.dart';
 
 //Urgent Jim: add to EvrULength at appropriate places
 
@@ -175,42 +176,42 @@ abstract class SubWriter {
   }
 
   /// Writes Encapsulated Pixel Data without Fragments
-  void _writeEncapsulatedPixelData(Integer e) {
-    assert(e.vfLengthField == kUndefinedLength);
-    if (e.code == kPixelData) {
-      final pd = e as PixelDataMixin;
-      if (pd.frames is! CompressedFrameList)
-        return badElement('Not Pixel Data: $e');
-      final offsets = pd.offsets;
-      final vfLength = offsets.lengthInBytes;
-      final bulkdata = pd.bulkdata;
-      final bdLength = bulkdata.lengthInBytes;
-      _wb
-        ..writeCode(kItem, 8 + vfLength)
-        ..writeUint32(vfLength)
-        ..writeUint32List(offsets)
-        ..writeCode(kItem, 8 + bdLength)
-        ..writeUint32(bdLength)
-        ..writeUint8List(bulkdata);
-    }
-    badElement('Not Pixel Data: $e');
+  void _writeEncapsulatedPixelData(Element e) {
+    if (e.code != kPixelData) return badElement('Not Pixel Data: $e');
+    if (e.vfLengthField != kUndefinedLength)
+      return badElement('Not Undefined Length: $e');
+    // Urgent: figure out how to remove this 'as'
+    final pd = e as PixelDataMixin;
+    if (pd.frames is! CompressedFrameList)
+      return badElement('Not Pixel Data: $e');
+    final offsets = pd.offsets;
+    final vfLength = offsets.lengthInBytes;
+    final bulkdata = pd.bulkdata;
+    final bdLength = bulkdata.lengthInBytes;
+    _wb
+      ..writeCode(kItem, 8 + vfLength)
+      ..writeUint32(vfLength)
+      ..writeUint32List(offsets)
+      ..writeCode(kItem, 8 + bdLength)
+      ..writeUint32(bdLength)
+      ..writeUint8List(bulkdata);
   }
 
   void _writeFragments(Element e) {
-    assert(e.vfLengthField == kUndefinedLength);
-    if (e is BytePixelData) {
-      for (final fragment in e.fragments.fragments) {
-        final length = fragment.lengthInBytes;
-        _wb
-          ..writeCode(kItem, 8 + length)
-          ..writeUint32(length)
-          ..writeUint8List(fragment);
+    assert(e.vfLengthField == kUndefinedLength && e.code == kPixelData);
+    // Urgent: figure out how to remove this 'as'
+    final pd = e as PixelDataMixin;
+    for (final fragment in pd.fragments.fragments) {
+      final length = fragment.lengthInBytes;
+      _wb
+        ..writeCode(kItem, 8 + length)
+        ..writeUint32(length)
+        ..writeUint8List(fragment);
 
-        // If odd length write padding byte
-        if (fragment.length.isOdd) {
-          log.warn('Odd length(${fragment.lengthInBytes}) fragment');
-          _wb.writeUint8(0);
-        }
+      // If odd length write padding byte
+      if (fragment.length.isOdd) {
+        log.warn('Odd length(${fragment.lengthInBytes}) fragment');
+        _wb.writeUint8(0);
       }
     }
   }
@@ -263,8 +264,7 @@ abstract class SubWriter {
 
     __writeLongUndefinedLengthHeader(e, vrIndex);
     if (e.code == kPixelData) {
-      if (e is ByteElement) {
-        // ignore: avoid_as
+      if (rds.transferSyntax.isEncapsulated) {
         _writeFragments(e);
       } else {
         _writeEncapsulatedPixelData(e);

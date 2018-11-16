@@ -23,6 +23,7 @@ void main() {
       activeStudies.clear();
 
       allowInvalidSex = true;
+      allowZeroAges = true;
 
       for (var path in paths) {
         final rds = readBytePath(path, doLogging: doLogging);

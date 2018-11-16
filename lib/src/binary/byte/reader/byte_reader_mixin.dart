@@ -29,16 +29,16 @@ abstract class ByteReaderMixin {
       ByteElement.makeMaybeUndefinedFromBytes(bytes, ds);
 
   Element pixelDataFromBytes(DicomBytes bytes,
-      [TransferSyntax ts, VFFragmentList vf]) {
+      [TransferSyntax ts, VFFragmentList fragments]) {
     switch (bytes.vrIndex) {
       case kOBIndex:
-        return OBbytesPixelData.fromBytes(bytes);
+        return OBbytesPixelData.fromBytes(bytes, ts, fragments);
       case kOWIndex:
-        return OWbytesPixelData.fromBytes(bytes);
+        return OWbytesPixelData.fromBytes(bytes, ts, fragments);
       case kUNIndex:
-        return UNbytesPixelData.fromBytes(bytes);
+        return UNbytesPixelData.fromBytes(bytes, ts, fragments);
       default:
-        return badVRIndex(bytes.vrIndex, null, -1);
+        return badVRIndex(bytes.vrIndex, null, -1, bytes.tag);
     }
   }
 
