@@ -366,7 +366,7 @@ abstract class SubReader {
     if ((end - start) > vfOffset) {
       assert(end.isEven);
       final last = end - 1;
-      final c = _rb.bytes.getUint8(last);
+      final int c = _rb.bytes.getUint8(last);
       offset = (c == kNull) ? last : end;
     }
     return _makeDicomBytes(start, offset, vfOffset);
