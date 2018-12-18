@@ -12,6 +12,8 @@ import 'package:core/core.dart';
 import 'package:converter/src/binary/base/writer/writer.dart';
 import 'package:converter/src/xml/writer/xml_writer_base.dart';
 
+// ignore_for_file: public_member_api_docs
+
 class XmlWriter extends XmlWriterBase {
   XmlWriter(RootDataset rds, String path,
       {int bulkdataThreshold = 1024,

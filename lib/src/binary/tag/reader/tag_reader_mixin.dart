@@ -9,7 +9,9 @@
 import 'package:core/core.dart';
 import 'package:core/vf_fragments.dart';
 
-abstract class TagReaderMixin {
+// ignore_for_file: public_member_api_docs
+
+mixin TagReaderMixin {
   RootDataset get rds;
   Dataset get cds;
   DicomReadBuffer get rb;

@@ -8,6 +8,8 @@
 //
 import 'package:core/core.dart' hide Indenter;
 
+// ignore_for_file: public_member_api_docs
+
 const List<int> bulkdataVRs = <int>[
   kDSIndex, kFLIndex, kFDIndex, kISIndex, kLTIndex,
   kOBIndex, kODIndex, kOFIndex, kOLIndex, kOWIndex,

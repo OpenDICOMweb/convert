@@ -5,8 +5,10 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'package:core/core.dart';
+
+// ignore_for_file: public_member_api_docs
 
 class DecodingParameters {
   final int shortFileThreshold;

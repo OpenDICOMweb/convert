@@ -11,6 +11,8 @@ import 'dart:convert';
 import 'package:core/core.dart';
 import 'package:converter/src/json/writer/json_writer_base.dart';
 
+// ignore_for_file: public_member_api_docs
+
 typedef JsonValueToString = String Function(Element e, [Indenter sb]);
 
 class ReadableJsonWriter extends JsonWriterBase {

@@ -19,6 +19,7 @@ import 'package:converter/src/decoding_parameters.dart';
 import 'package:converter/src/element_offsets.dart';
 import 'package:converter/src/parse_info.dart';
 
+// ignore_for_file: public_member_api_docs
 // ignore_for_file: avoid_positional_boolean_parameters, only_throw_errors
 // ignore_for_file: avoid_catches_without_on_clauses
 

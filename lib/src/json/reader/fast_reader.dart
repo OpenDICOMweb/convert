@@ -12,6 +12,7 @@ import 'dart:typed_data';
 import 'package:core/core.dart' hide Indenter;
 import 'package:converter/src/json/reader/json_reader_base.dart';
 
+// ignore_for_file: public_member_api_docs
 // ignore_for_file: only_throw_errors
 
 class FastJsonReader extends JsonReaderBase {

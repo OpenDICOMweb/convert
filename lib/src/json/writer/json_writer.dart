@@ -12,6 +12,8 @@ import 'package:core/core.dart';
 import 'package:converter/src/binary/base/writer/writer.dart';
 import 'package:converter/src/json/writer/json_writer_base.dart';
 
+// ignore_for_file: public_member_api_docs
+
 class JsonWriter extends JsonWriterBase {
   JsonWriter(RootDataset rds, String path,
       {int bulkdataThreshold = 1024,

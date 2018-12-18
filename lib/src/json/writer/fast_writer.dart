@@ -12,6 +12,8 @@ import 'package:core/core.dart';
 import 'package:converter/src/binary/base/writer/writer.dart';
 import 'package:converter/src/json/writer/json_writer_base.dart';
 
+// ignore_for_file: public_member_api_docs
+
 /// Writes a JSON file that is readable
 class FastJsonWriter extends JsonWriterBase {
   FastJsonWriter(RootDataset rds, String path,

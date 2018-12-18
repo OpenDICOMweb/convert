@@ -9,6 +9,7 @@
 import 'dart:convert';
 import 'package:core/core.dart' hide Indenter;
 
+// ignore_for_file: public_member_api_docs
 
 typedef ValueFieldReader = Element Function(Tag tag, int vrIndex, List vf);
 

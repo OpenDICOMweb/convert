@@ -13,6 +13,8 @@ import 'package:core/core.dart';
 import 'package:converter/src/binary/base/writer/subwriter.dart';
 import 'package:converter/src/element_offsets.dart';
 
+// ignore_for_file: public_member_api_docs
+
 typedef ValueWriter = void Function(Element e, [Indenter sb]);
 
 /// A [class] for writing a [ByteRootDataset] to a [Uint8List],

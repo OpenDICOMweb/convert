@@ -10,6 +10,8 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
+// ignore_for_file: public_member_api_docs
+
 class ParseInfo {
   /// The path of the Object that was parsed, if any.
   String path = '';

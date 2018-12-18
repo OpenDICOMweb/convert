@@ -8,6 +8,8 @@
 
 import 'package:core/core.dart';
 
+// ignore_for_file: public_member_api_docs
+
 //Urgent: test
 class EncodingParameters {
   /// if true Datasets will be allowed to be encoded in IVRLE.

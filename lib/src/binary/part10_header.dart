@@ -8,6 +8,8 @@ import 'dart:typed_data';
 
 import 'package:core/core.dart';
 
+// ignore_for_file: public_member_api_docs
+
 /// The Part 10 Header of the DICOM File Format. See PS3.10.
 class Part10Header<K, V> {
   final ByteData bd;

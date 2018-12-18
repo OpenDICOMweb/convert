@@ -8,11 +8,12 @@
 
 import 'package:core/core.dart';
 
+// ignore_for_file: public_member_api_docs
 // ignore_for_file: only_throw_errors
 
 /// A Dataset containing only private [Element]s or Sequences ([SQ])
 /// containing only private [Element]s.
-abstract class DatasetByGroup {
+mixin DatasetByGroup {
   bool hasPrivate;
   // A map that can contain PublicGroup or PrivateGroup
   Map<int, GroupBase> get groups;

@@ -9,7 +9,8 @@
 // import 'dart:convert';
 
 import 'package:core/core.dart' hide Indenter;
-// import 'package:converter/src/json/reader/fast_reader_utils.dart';
+
+// ignore_for_file: public_member_api_docs
 
 const List<int> bulkdataVRs = <int>[
   kDSIndex, kFLIndex, kFDIndex, kISIndex, kLTIndex,

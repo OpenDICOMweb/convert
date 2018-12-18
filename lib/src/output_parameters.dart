@@ -8,6 +8,8 @@
 
 import 'package:core/core.dart';
 
+// ignore_for_file: public_member_api_docs
+
 typedef OutputRegex = String Function(RegExp rexp);
 
 typedef OutputPathFrom = String Function(String inputPath);

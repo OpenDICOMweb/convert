@@ -7,6 +7,8 @@
 //  See the AUTHORS file for other contributors.
 import 'package:core/core.dart';
 
+// ignore_for_file: public_member_api_docs
+
 const List<int> kPaddingByVRIndex = <int>[
   kSpace, // UN == 0
   -1,   // Sequence == 1

@@ -16,6 +16,8 @@ import 'package:converter/src/binary/base/reader/subreader.dart';
 import 'package:converter/src/binary/byte/reader/byte_subreader.dart';
 import 'package:converter/src/decoding_parameters.dart';
 
+// ignore_for_file: public_member_api_docs
+
 /// Creates a new [ByteReader], which is a decoder for Binary DICOM
 /// (application/dicom).
 class ByteReader extends Reader {

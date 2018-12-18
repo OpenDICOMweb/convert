@@ -13,7 +13,7 @@ import 'package:core/core.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:converter/src/xml/reader/xml_reader_base.dart';
 
-
+// ignore_for_file: public_member_api_docs
 // ignore_for_file: only_throw_errors
 
 class XmlReader extends XmlReaderBase {

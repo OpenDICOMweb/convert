@@ -11,4 +11,5 @@ import 'dart:typed_data';
 /// The DICOM Prefix 'DICM' as an integer.
 const int kDcmPrefix = 0x4d434944;
 
+/// The DICOM Prefix 'DICM' as an integer.
 final List<int> kPrefixAsList = Uint8List.fromList([68, 73, 67, 77]);

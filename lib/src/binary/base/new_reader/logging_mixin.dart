@@ -5,8 +5,10 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'package:core/core.dart';
+
+// ignore_for_file: public_member_api_docs
 
 abstract class LoggingMixin {
   ReadBuffer get rb;
@@ -15,20 +17,20 @@ abstract class LoggingMixin {
 
   // **** Logging Functions
   // TODO: create no_logging_mixin and logging_mixin
-  
+
   void startElementMsg(int code, int eStart, int vrIndex, int vlf) {
     final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vfl: $vlf';
     final vrId = vrIdByIndex[vrIndex];
     log..debug('>@R$eStart ${dcm(code)} $vrId($vrIndex) $len')..down;
   }
 
-  
+
   void endElementMsg(Element e) {
     final eNumber = '$count'.padLeft(4, '0');
     log..up..debug('<@R${rb.index} $eNumber: $e');
   }
 
-  
+
   void startSQMsg(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
     final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vfl: $vlf';
     final vrId = vrIdByIndex[vrIndex];
@@ -38,14 +40,14 @@ abstract class LoggingMixin {
     log.debug(msg);
   }
 
-  
+
   void endSQMsg(SQ e) {
     final eNumber = '$count'.padLeft(4, '0');
     final msg = '<@R${rb.index} $eNumber: $e';
     log.debug(msg);
   }
 
-  
+
   void startDatasetMsg(
       int eStart, String name, int delimiter, int vlf, Dataset ds) {
     final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vfl: $vlf';
@@ -53,16 +55,16 @@ abstract class LoggingMixin {
     log..debug('>@R$eStart $name $dLimit $len $ds', 1)..down;
   }
 
-  
+
   void endDatasetMsg(int dsStart, String name, DSBytes dsBytes, Dataset ds) {
     log..up..debug('>@R$dsStart $name $dsBytes: $ds', -1);
   }
 
-  
+
   void startReadRootDataset(int rdsStart, int length) =>
       log..debug('>@${rb.index} subReadRootDataset length($length) $rds')..down;
 
-  
+
   void endReadRootDataset(RootDataset rds, RDSBytes dsBytes) {
     log..up..debug('>@${rb.index} subReadRootDataset $dsBytes $rds')
       ..debug('$count Elements read');

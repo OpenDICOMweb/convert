@@ -5,17 +5,12 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'package:core/core.dart';
 
 import 'package:converter/src/dataset_converter/dataset_by_group.dart';
 
-//typedef Element _ElementFrom(Element e);
-
-//typedef Element _ElementMaker<V>(Tag tag, List<V> values, int vrIndex,
-//    [int vfLengthField]);
-
-//typedef Item _ItemMaker(Dataset parent, SQ sq);
+// ignore_for_file: public_member_api_docs
 
 abstract class Converter {
   // **** Interface

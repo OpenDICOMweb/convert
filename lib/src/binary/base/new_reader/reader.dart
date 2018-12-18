@@ -15,6 +15,8 @@ import 'package:converter/src/decoding_parameters.dart';
 import 'package:converter/src/element_offsets.dart';
 import 'package:converter/src/parse_info.dart';
 
+// ignore_for_file: public_member_api_docs
+
 /// Creates a new [Reader], which is a decoder for Binary DICOM
 /// (application/dicom).
 abstract class Reader {

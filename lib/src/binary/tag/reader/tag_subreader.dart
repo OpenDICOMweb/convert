@@ -12,6 +12,8 @@ import 'package:converter/src/binary/base/reader/subreader.dart';
 import 'package:converter/src/binary/tag/reader/tag_reader_mixin.dart';
 import 'package:converter/src/decoding_parameters.dart';
 
+// ignore_for_file: public_member_api_docs
+
 class TagEvrSubReader extends EvrSubReader with TagReaderMixin {
   @override
   final TagRootDataset rds;

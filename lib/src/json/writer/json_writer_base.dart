@@ -8,6 +8,8 @@
 //
 import 'package:core/core.dart';
 
+// ignore_for_file: public_member_api_docs
+
 abstract class JsonWriterBase {
   /// The [RootDataset] to be written.
   final RootDataset rds;

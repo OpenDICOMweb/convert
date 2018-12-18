@@ -9,6 +9,8 @@
 
 import 'package:core/core.dart' hide Indenter;
 
+// ignore_for_file: public_member_api_docs
+
 abstract class JsonReaderBase {
   // final List<List<List>> rootList;
   RootDataset get rds;

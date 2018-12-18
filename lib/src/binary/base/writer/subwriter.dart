@@ -15,6 +15,8 @@ import 'package:converter/src/binary/base/padding_chars.dart';
 import 'package:converter/src/element_offsets.dart';
 import 'package:converter/src/encoding_parameters.dart';
 
+// ignore_for_file: public_member_api_docs
+
 //Urgent Jim: add to EvrULength at appropriate places
 
 typedef ElementSubWriter = void Function(Element e);

@@ -8,7 +8,9 @@
 
 import 'package:core/core.dart';
 
-class NoLoggingMixin {
+// ignore_for_file: public_member_api_docs
+
+mixin NoLoggingMixin {
   // **** Logging Functions
   // TODO: create nologgingmixin and loggingmixin
   void startElementMsg(int code, int eStart, int vrIndex, int vlf) {}

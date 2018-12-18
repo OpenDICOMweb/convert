@@ -10,14 +10,8 @@ import 'package:core/core.dart';
 
 import 'package:converter/src/dataset_converter/dataset_by_group.dart';
 
+// ignore_for_file: public_member_api_docs
 // ignore_for_file: only_throw_errors
-
-//typedef Element _ElementFrom(Element e);
-
-//typedef Element _ElementMaker<V>(Tag tag, List<V> values, int vrIndex,
-//    [int vfLengthField]);
-
-//typedef Item _ItemMaker(Dataset parent, SQ sq);
 
 class DatasetConverterByGroup {
   final RootDatasetByGroup rSds;

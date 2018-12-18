@@ -18,6 +18,7 @@ import 'package:converter/src/decoding_parameters.dart';
 import 'package:converter/src/element_offsets.dart';
 import 'package:converter/src/parse_info.dart';
 
+// ignore_for_file: public_member_api_docs
 // ignore_for_file: avoid_positional_boolean_parameters, only_throw_errors
 // ignore_for_file: avoid_catches_without_on_clauses
 
@@ -366,7 +367,7 @@ abstract class SubReader {
     if ((end - start) > vfOffset) {
       assert(end.isEven);
       final last = end - 1;
-      final int c = _rb.bytes.getUint8(last);
+      final c = _rb.bytes.getUint8(last);
       offset = (c == kNull) ? last : end;
     }
     return _makeDicomBytes(start, offset, vfOffset);
