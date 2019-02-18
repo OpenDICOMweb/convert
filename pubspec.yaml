@@ -10,7 +10,7 @@ environment:
 
 dependencies:
   core:
-    path: ../core
+    path: C:/odw/sdk/core
     version: ^0.7.6
   xml: any
 
@@ -20,8 +20,8 @@ dev_dependencies:
   grinder: ^0.8.0
   io_extended:
     path: ../io_extended
-    version: ^0.7.5
-  path: ^1.6.2
+    version: ^0.7.6
+  path: any
   test: any
   test_tools:
     path: ../../test_tools
