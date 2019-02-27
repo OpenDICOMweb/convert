@@ -126,12 +126,12 @@ abstract class SubWriter {
   /// Writes a [Dataset] to the output.
   void _writeDataset(Dataset ds) {
     // ignore: prefer_forEach
-    for (var e in ds.elements) _writeElement(e);
+    for (final e in ds.elements) _writeElement(e);
   }
 
   /// Write all [Item]s in [items].
   void _writeItems(List<Item> items) {
-    for (var item in items) {
+    for (final item in items) {
       final parentDS = cds;
       cds = item;
       _writeItem(item);
@@ -180,8 +180,10 @@ abstract class SubWriter {
   /// Writes Encapsulated Pixel Data without Fragments
   void _writeEncapsulatedPixelData(Element e) {
     assert(e.code == kPixelData && e.vfLengthField == kUndefinedLength);
-    if (e.frames is! CompressedFrameList)
-      return badElement('Not Pixel Data: $e');
+    if (e.frames is! CompressedFrameList) {
+      badElement('Not Pixel Data: $e');
+      return;
+    }
     final offsets = e.offsets;
     final vfLength = offsets.lengthInBytes;
     final bulkdata = e.bulkdata;
@@ -666,7 +668,7 @@ mixin FmiMixin {
   }
 
   void _writeFmiElements() {
-    for (var e in rds.fmi.elements) {
+    for (final e in rds.fmi.elements) {
       if (e.code > 0x00030000) break;
       _writeElement(e);
     }

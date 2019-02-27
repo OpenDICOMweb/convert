@@ -68,7 +68,8 @@ abstract class XmlWriterBase {
   void writeList(Iterable values) => sb.writeList(values);
 
   void writeElementList(Iterable<Element> elements, [String separator = '']) {
-    if (elements.isEmpty) return;
+    if (elements.isEmpty)
+      return;
     final it = elements.iterator;
     final length = elements.length;
     for (var i = 0; i < length - 1; i++) {

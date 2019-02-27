@@ -58,7 +58,8 @@ Future main() async {
     exit(-1);
   } catch (e) {
     log.error(e);
-    if (throwOnError) rethrow;
+    if (throwOnError)
+      rethrow;
   }
   final length = rds.lengthInBytes;
   print('File: $length bytes (${length ~/ 1024}K) read');

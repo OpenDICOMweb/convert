@@ -22,7 +22,7 @@ class DatasetConverterByGroup {
   int sIndex = 0;
   int tIndex = 0;
 
-  DatasetConverterByGroup(this.rSds) : rTds =  RootDatasetByGroup.empty();
+  DatasetConverterByGroup(this.rSds) : rTds = RootDatasetByGroup.empty();
 
   RootDatasetByGroup find() {
     currentSds = rSds;
@@ -42,7 +42,7 @@ class DatasetConverterByGroup {
 
   // Does not handle SQ or Private
   void _findFmi() {
-    for (var e in rSds.fmi.elements) if (e.isPrivate) rTds.fmi[e.code] = e;
+    for (final e in rSds.fmi.elements) if (e.isPrivate) rTds.fmi[e.code] = e;
     sIndex += rSds.fmi.length;
     tIndex += rTds.fmi.length;
   }
@@ -55,7 +55,7 @@ class DatasetConverterByGroup {
     var currentGNumber = 0;
     var currentSGNumber = 0;
 //    sIndex += currentSds.elements.length;
-    for (var e in currentSds.elements) {
+    for (final e in currentSds.elements) {
       //  log.debug1('* $e');
       final gNumber = e.group;
       final tag = e.tag;
@@ -66,9 +66,8 @@ class DatasetConverterByGroup {
         //       assert(e is! SQ, '$e');
         if (currentGNumber > 0) log.up;
         currentGNumber = gNumber;
-        currentGroup = (gNumber.isEven)
-            ?  PublicGroup(e, sqParent)
-            :  PrivateGroup(e);
+        currentGroup =
+            (gNumber.isEven) ? PublicGroup(e, sqParent) : PrivateGroup(e);
 
         if (currentTds is DatasetByGroup) {
           currentTds.addGroup(currentGroup);
@@ -92,7 +91,7 @@ class DatasetConverterByGroup {
           final sgNumber = tag.sgNumber;
           log.debug1('${hex8(sgNumber)} $e');
           if (currentSGNumber == 0) currentSGNumber = sgNumber;
-          final sg =  PrivateSubgroup(currentGroup, sgNumber);
+          final sg = PrivateSubgroup(currentGroup, sgNumber);
           currentSubgroup = sg;
           currentGroup.subgroups[sgNumber] = sg;
         } else if (tag is PDTag) {
@@ -106,7 +105,7 @@ class DatasetConverterByGroup {
             if (sg == null) {
               log.warn('Subgroup $sg with no creator');
 //           final creator = PCtag.makeEmptyPrivateCreator(e.code, e.vrIndex);
-              sg =  PrivateSubgroup(currentGroup, sgNumber);
+              sg = PrivateSubgroup(currentGroup, sgNumber);
               currentGroup.subgroups[sgNumber] = sg;
             }
             currentSubgroup = sg;
@@ -154,7 +153,7 @@ class DatasetConverterByGroup {
       final ItemByGroup sItem = sq.items.elementAt(i);
       currentSds = sItem;
       final ItemByGroup cItem = currentTds;
-      final tItem =  ItemByGroup(cItem);
+      final tItem = ItemByGroup(cItem);
       currentTds = tItem;
       log
         ..debug1('DS: $i')

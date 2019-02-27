@@ -56,7 +56,7 @@ void _convertFmi(RootDataset sRDS, RootDataset tRDS) {
     ..debug('  rootBDS FMI: ${sRDS.fmi.length}')
     ..debug('  rootTDS FMI: ${tRDS.fmi.length}');
   if (targetRDS.fmi.isNotEmpty) throw 'bad targetRDS: $tRDS';
-  for (var e in sRDS.fmi.elements) {
+  for (final e in sRDS.fmi.elements) {
     final te = convertElement(e);
     tRDS.fmi[te.code] = te;
     if (te == null) throw 'null TE';
@@ -67,7 +67,7 @@ void _convertFmi(RootDataset sRDS, RootDataset tRDS) {
 void _convertRootDataset(RootDataset sRds, RootDataset tRDS) {
   log.debug('  count: $nElements');
   if (tRDS.isNotEmpty) throw 'bad rootTds: $tRDS';
-  for (var e in sRds.elements) {
+  for (final e in sRds.elements) {
     final te = convertElement(e);
     tRDS.add(te);
     if (te == null) throw 'null TE';
@@ -120,7 +120,7 @@ SQ convertSQ(SQ sq) {
   currentTDS = parentTDS;
   final tagSQ =  SQtag(parentTDS, sq.tag,  tItems);
 
-  for (var item in tItems) item.sequence = tagSQ;
+  for (final item in tItems) item.sequence = tagSQ;
   return tagSQ;
 }
 
@@ -129,7 +129,7 @@ void convertItem(Item sourceItem, Item targetItem) {
  // var _currentSubgroup = 0;
 //  Element _currentCreator;
 //  String _currentCreatorToken;
-  for (var e in sourceItem.elements) {
+  for (final e in sourceItem.elements) {
 //    final gNumber = e.group;
 
 //    log.debug('convert: $e');

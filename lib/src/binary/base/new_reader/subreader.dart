@@ -40,7 +40,6 @@ import 'package:converter/src/parse_info.dart';
 typedef LongElementReader = Element Function(
     int code, int eStart, int vrIndex, int vlf);
 
-
 /// A [Converter] for [Uint8List]s containing a [Dataset] encoded in the
 /// application/dicom media type.
 ///
@@ -77,7 +76,7 @@ abstract class SubReader {
   /// Creates an RootDataset.
   // Note: Typically this is not implemented.
   RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
-      Bytes bd, int fmiEnd) =>
+          Bytes bd, int fmiEnd) =>
       unimplementedError();
 
   /// Creates an Item.
@@ -93,8 +92,7 @@ abstract class SubReader {
 
   /// Returns a new [Element].
   // Note: Typically this may or may not be implemented.
-  Element fromValues(int code, Iterable values, int vrIndex,
-      [Bytes bytes]) =>
+  Element fromValues(int code, Iterable values, int vrIndex, [Bytes bytes]) =>
       unsupportedError();
 
   /// Returns a new Pixel Data [Element].
@@ -141,13 +139,15 @@ abstract class SubReader {
     final rdsStart = rb.index;
     final length = rb.remaining;
 
-    if (doLogging) startReadRootDataset(rdsStart, length);
+    if (doLogging)
+      startReadRootDataset(rdsStart, length);
     _readDatasetDefinedLength(rds, rdsStart, length);
     final rdsLength = rb.index - fmiEnd;
     final rdsBytes = rb.view(fmiEnd, rdsLength);
     final dsBytes = RDSBytes(rdsBytes, fmiEnd);
     rds.dsBytes = dsBytes;
-    if (doLogging) endReadRootDataset(rds, dsBytes);
+    if (doLogging)
+      endReadRootDataset(rds, dsBytes);
     return rds;
   }
 
@@ -158,17 +158,20 @@ abstract class SubReader {
 
     // read 32-bit kItem code and Item length field
     final delimiter = rb.readUint32();
-    if (delimiter != kItem32BitLE) throw 'Missing Item Delimiter';
+    if (delimiter != kItem32BitLE)
+      throw 'Missing Item Delimiter';
     final vlf = _getVlf32();
     final item = _makeEmptyItem(cds);
     final parentDS = cds;
     cds = item;
-    if (doLogging) startDatasetMsg(iStart, 'readItem', delimiter, vlf, cds);
+    if (doLogging)
+      startDatasetMsg(iStart, 'readItem', delimiter, vlf, cds);
 
     if (vlf == kUndefinedLength) {
       _readDatasetUndefinedLength(item, rb.index);
     } else {
-      if (vlf.isOdd) log.debug('Dataset with odd vfl($vlf)');
+      if (vlf.isOdd)
+        log.debug('Dataset with odd vfl($vlf)');
       _readDatasetDefinedLength(item, rb.index, vlf);
     }
 
@@ -176,7 +179,8 @@ abstract class SubReader {
     final dsBytes = IDSBytes(bd);
     item.dsBytes = dsBytes;
     cds = parentDS;
-    if (doLogging) endDatasetMsg(rb.index, 'readItem', dsBytes, item);
+    if (doLogging)
+      endDatasetMsg(rb.index, 'readItem', dsBytes, item);
     return item;
   }
 
@@ -191,7 +195,8 @@ abstract class SubReader {
     while (rb.index < dsEnd) {
       final e = _readElement();
       final ok = ds.tryAdd(e);
-      if (!ok) log.warn('*** duplicate: $e');
+      if (!ok)
+        log.warn('*** duplicate: $e');
     }
   }
 
@@ -201,7 +206,8 @@ abstract class SubReader {
       // **** This is the only place they are added to the dataset.
       final e = _readElement();
       final ok = ds.tryAdd(e);
-      if (!ok) log.warn('*** duplicate: $e');
+      if (!ok)
+        log.warn('*** duplicate: $e');
     }
   }
 
@@ -219,12 +225,14 @@ abstract class SubReader {
   /// on return the [rb].rIndex at the end of the Value Field.
   void _findEndOfULengthVF() {
     while (rb.isReadable) {
-      if (uint16 != kDelimiterFirst16Bits) continue;
-      if (uint16 != kSequenceDelimiterLast16Bits) continue;
+      if (uint16 != kDelimiterFirst16Bits ||
+          uint16 != kSequenceDelimiterLast16Bits)
+        continue;
       break;
     }
     final length = rb.readUint32();
-    if (length != 0) log.warn('Encountered non-zero delimiter length($length)');
+    if (length != 0)
+      log.warn('Encountered non-zero delimiter length($length)');
   }
 
   /// Returns true if the [target] delimiter is found. If the target
@@ -246,7 +254,8 @@ abstract class SubReader {
   /// [vfOffset] is 12 for EVR and 8 for IVR.
   Element _readLong(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
     assert(rb.index.isEven);
-    if (vlf.isOdd && vlf != kUndefinedLength) log.error('Odd vlf: $vlf');
+    if (vlf.isOdd && vlf != kUndefinedLength)
+      log.error('Odd vlf: $vlf');
     // Read but don't advance index
     final delimiter = rb.getUint32();
 
@@ -293,12 +302,14 @@ abstract class SubReader {
         log.error('** Creating Sequence with vr($vrIndex) ${dcm(code)}');
       }
     }
-    if (doLogging) startSQMsg(code, eStart, vrIndex, vfOffset, vlf);
+    if (doLogging)
+      startSQMsg(code, eStart, vrIndex, vfOffset, vlf);
     final sq = (vlf == kUndefinedLength)
         ? _readUSQ(code, eStart, kSQIndex, vfOffset, vlf)
         : _readDSQ(code, eStart, kSQIndex, vfOffset, vlf);
     _count++;
-    if (doLogging) endSQMsg(sq);
+    if (doLogging)
+      endSQMsg(sq);
     return sq;
   }
 
@@ -330,7 +341,8 @@ abstract class SubReader {
       final item = _readItem();
       items.add(item);
     }
-    if (sqEnd != rb.index) log.warn('sqEnd($sqEnd) != rb.index(${rb.index})');
+    if (sqEnd != rb.index)
+      log.warn('sqEnd($sqEnd) != rb.index(${rb.index})');
     final bytes = rb.sublist(eStart, sqEnd);
     return makeSequenceFromCode(code, cds, items, vfOffset, vfl, bytes);
   }
@@ -342,7 +354,8 @@ abstract class SubReader {
   /// Field [vlf] containing [kUndefinedLength] OB, OW, and UN.
   Element _readLongUndefinedLength(
       int code, int eStart, int vrIndex, int vfOffset, int vlf) {
-    if (doLogging) startElementMsg(code, eStart, vrIndex, vlf);
+    if (doLogging)
+      startElementMsg(code, eStart, vrIndex, vlf);
     assert(vlf == kUndefinedLength && isMaybeUndefinedLengthVR(vrIndex));
     assert(vrIndex != kSQIndex);
     VFFragmentList vf;
@@ -357,21 +370,24 @@ abstract class SubReader {
         ? makePixelData(code, bytes, vrIndex, vlf, defaultTS, vf)
         : fromBytes(code, bytes, vrIndex, vfOffset);
     _count++;
-    if (doLogging) endElementMsg(e);
+    if (doLogging)
+      endElementMsg(e);
     return e;
   }
 
   /// Return a defined length Element with a long Value Field
   Element _readDefinedLength(
       int code, int eStart, int vrIndex, int vfOffset, int vlf) {
-    if (doLogging) startElementMsg(code, eStart, vrIndex, vlf);
+    if (doLogging)
+      startElementMsg(code, eStart, vrIndex, vlf);
     rb.rSkip(vlf);
     final bytes = rb.sublist(eStart, rb.index);
     final e = (code == kPixelData)
         ? makePixelData(code, bytes, vrIndex, vfOffset)
         : fromBytes(code, bytes, vrIndex, vfOffset);
     _count++;
-    if (doLogging) endElementMsg(e);
+    if (doLogging)
+      endElementMsg(e);
     return e;
   }
 
@@ -395,7 +411,8 @@ abstract class SubReader {
 
   void _checkDelimiterLength(int delimiter) {
     final vlf = rb.readUint32();
-    if (vlf != 0) log.warn('Encountered non-zero delimiter length($vlf)');
+    if (vlf != 0)
+      log.warn('Encountered non-zero delimiter length($vlf)');
   }
 
   /// Reads an encapsulated (compressed) [kPixelData] [Element].
@@ -439,7 +456,8 @@ abstract class SubReader {
   /// is longer than [rb].remaining.
   int _getVlf16() {
     final vlf = rb.readUint16();
-    if (vlf > rb.remaining) _vlfError(vlf);
+    if (vlf > rb.remaining)
+      _vlfError(vlf);
     return vlf;
   }
 
@@ -456,7 +474,6 @@ abstract class SubReader {
     if (vlf > rb.length && vlf != kUndefinedLength) _vlfError(vlf);
     return vlf;
   }
-
 
 /*
   /// The current Group being read.
@@ -636,8 +653,7 @@ abstract class EvrSubReader extends SubReader with NoLoggingMixin {
   bool get isEvr => true;
 
   /// Returns _true_ if the VR has a 16-bit Value Field Length field.
-  bool _isEvrShortVR(int vrIndex) =>
-      vrIndex >= kAEIndex && vrIndex <= kUSIndex;
+  bool _isEvrShortVR(int vrIndex) => vrIndex >= kAEIndex && vrIndex <= kUSIndex;
 
   /// For EVR Datasets, all Elements are read by this method.
   @override

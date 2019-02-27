@@ -120,7 +120,7 @@ class FastJsonWriter extends JsonWriterBase {
         ..writeAll(sList, ', ')
         ..write(']');
     } else {
-      return badStringElement(e);
+      badStringElement(e);
     }
   }
 }

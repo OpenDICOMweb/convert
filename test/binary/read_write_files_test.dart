@@ -33,7 +33,8 @@ void main() {
         if (rds0 == null) {
           log.warn('Invalid DICOM file: ${rds0.path}');
         } else {
-          if (doLogging) log.info('${rds0.summary}');
+          if (doLogging)
+            log.info('${rds0.summary}');
         }
 
         final outPath = getVNAPath(rds0, 'bin/output/', 'dcm');
@@ -63,11 +64,13 @@ void main() {
         if (rds1 == null) {
           log.warn('Invalid DICOM file: $outPath');
         } else {
-          if (doLogging) log.info('${rds1.summary}');
+          if (doLogging)
+            log.info('${rds1.summary}');
         }
 
         final result = rds0 == rds1;
-        if (doLogging) print(result ? '** Success' : '**** Failure ****');
+        if (doLogging)
+          print(result ? '** Success' : '**** Failure ****');
 
         final source = rds0.dsBytes.bytes;
         if (!bytesEqual1(source, output))
@@ -77,7 +80,8 @@ void main() {
       } catch (e, trace) {
         print('Error: "$file"');
         print('Stack: $trace');
-        if (stopOnError) rethrow;
+        if (stopOnError)
+          rethrow;
       }
     }
     print('Tested ${files.length} files');

@@ -35,7 +35,8 @@ abstract class LoggingMixin {
     final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vfl: $vlf';
     final vrId = vrIdByIndex[vrIndex];
     final tag = Tag.lookupByCode(code, vrIndex);
-    if (tag.vrIndex != kSQIndex) log.warn('Read SQ with Non-Sequence Tag $tag');
+    if (tag.vrIndex != kSQIndex)
+      log.warn('Read SQ with Non-Sequence Tag $tag');
     final msg = '>@R$eStart ${dcm(code)} $vrId($vrIndex) $len $tag';
     log.debug(msg);
   }
@@ -68,8 +69,10 @@ abstract class LoggingMixin {
   void endReadRootDataset(RootDataset rds, RDSBytes dsBytes) {
     log..up..debug('>@${rb.index} subReadRootDataset $dsBytes $rds')
       ..debug('$count Elements read');
-    if (rds[kPixelData] == null) log.info('** Pixel Data Element not present');
-    if (rds.hasDuplicates) log.warn('** Duplicates Present in rds0');
+    if (rds[kPixelData] == null)
+      log.info('** Pixel Data Element not present');
+    if (rds.hasDuplicates)
+      log.warn('** Duplicates Present in rds0');
   }
 
 

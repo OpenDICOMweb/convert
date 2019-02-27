@@ -68,7 +68,8 @@ void main() {
       } catch (e, trace) {
         print('Error: "$file"');
         print('Stack: $trace');
-        if (stopOnError) rethrow;
+        if (stopOnError)
+          rethrow;
       }
     }
   });

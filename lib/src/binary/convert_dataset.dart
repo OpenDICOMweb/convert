@@ -50,7 +50,7 @@ class DatasetConverter {
       ..debug('  rootBDS FMI: ${sRds.fmi.length}')
       ..debug('  rootTDS FMI: ${tRds.fmi.length}');
     if (targetRDS.fmi.isNotEmpty) throw 'bad targetRDS: $tRds';
-    for (var e in sRds.fmi.elements) {
+    for (final e in sRds.fmi.elements) {
       final te = _convertElement(sRds, e);
       tRds.fmi[te.code] = te;
       if (te == null) throw 'null TE';
@@ -61,7 +61,7 @@ class DatasetConverter {
   void _convertDataset(RootDataset sRds, RootDataset tRds) {
     log.debug('  count: $nElements');
     if (tRds.isNotEmpty) throw 'bad rootTds: $tRds';
-    for (var e in sRds.elements) {
+    for (final e in sRds.elements) {
       final te = _convertElement(sRds, e);
       tRds.add(te);
       if (te == null) throw 'null TE';
@@ -94,7 +94,7 @@ class DatasetConverter {
     currentTDS = parentTDS;
 
     final tagSQ =  SQtag(parentTDS, sq.tag, tItems);
-    for (var item in tItems) item.sequence = tagSQ;
+    for (final item in tItems) item.sequence = tagSQ;
     return tagSQ;
   }
 

@@ -136,7 +136,8 @@ class ReadableJsonWriter extends JsonWriterBase {
   static String _toString(String s, [Indenter sb]) => '"$s"';
 
   static String _writeStrings(Element e, [Indenter sb]) {
-    if (e.values.length == 1) return '"${e.value}"';
+    if (e.values.length == 1)
+      return '"${e.value}"';
 
     final sb = StringBuffer();
     if (e is StringBase) {

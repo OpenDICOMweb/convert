@@ -23,7 +23,7 @@ mixin DatasetByGroup {
 
   String get info {
     final sb =  Indenter('$runtimeType: ${groups.length}')..down;
-    for (var group in groups.values) sb.writeln('${group.info}');
+    for (final group in groups.values) sb.writeln('${group.info}');
     sb.up;
     return '$sb';
   }

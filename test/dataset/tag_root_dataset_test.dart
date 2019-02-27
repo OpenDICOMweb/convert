@@ -26,12 +26,13 @@ void main({bool doLogging = false}) {
   Server.initialize(name: 'dataset/tag_root_dataset_test', level: Level.info0);
   // Get the files in the directory
   final files = getFilesFromDirectory(inRoot5, '.dcm');
-  if (doLogging) stdout.writeln('File count: ${files.length}\n');
+  if (doLogging)
+    stdout.writeln('File count: ${files.length}\n');
 
   // Read, parse, and print a summary of each file.
   group('Data set', () {
     test('Create a data set object from a File', () {
-      for (var file in files) {
+      for (final file in files) {
         log.debug('Reading file: ${cleanPath(file.path)}');
         TagRootDataset rds;
         final bList = file.readAsBytesSync();

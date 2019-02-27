@@ -350,11 +350,14 @@ $pixelDataProblems
 
   String get errorMsg {
     final sb = StringBuffer();
-    if (wasShortFile) sb.write(shortFileMsg);
-
-    if (!hadPrefix) sb.write('*** No DICOM Preable or Prefix present');
-    if (hadPrefix && !preambleAllZeros) sb.write(preambleMsg);
-    if (!hadFmi) sb.write('*** FMI not present');
+    if (wasShortFile)
+      sb.write(shortFileMsg);
+    if (!hadPrefix)
+      sb.write('*** No DICOM Preable or Prefix present');
+    if (hadPrefix && !preambleAllZeros)
+      sb.write(preambleMsg);
+    if (!hadFmi)
+      sb.write('*** FMI not present');
 
     if (hadParsingErrors)
       sb.write('          *** Had Parsing Errors: $hadParsingErrors\n');

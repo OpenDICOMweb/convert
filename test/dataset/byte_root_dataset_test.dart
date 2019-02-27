@@ -26,12 +26,13 @@ void main({bool doLogging = false}) {
   Server.initialize(name: 'dataset/byte_root_dataset_dart', level: Level.info0);
   // Get the files in the directory
   final files = getFilesFromDirectory(inRoot5, '.dcm');
-  if (doLogging) stdout.writeln('File count: ${files.length}');
+  if (doLogging)
+    stdout.writeln('File count: ${files.length}');
 
   // Read, parse, and print a summary of each file.
   group('Data set', () {
     test('Create a data set object from map', () {
-      for (var file in files) {
+      for (final file in files) {
         log.debug('Reading file: $file');
         ByteRootDataset rds;
         rds = ByteReader.readFile(file);

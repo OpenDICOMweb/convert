@@ -25,7 +25,7 @@ void main() {
       allowInvalidSex = true;
       allowZeroAges = true;
 
-      for (var path in paths) {
+      for (final path in paths) {
         final rds = readBytePath(path, doLogging: doLogging);
         log.debug('${rds.info}');
         final entity = activeStudies.entityFromRootDataset(rds);

@@ -53,7 +53,7 @@ abstract class Converter {
 
   // Does not handle SQ or Private
   void _convertFmi(RootDataset sRds, RootDataset tRds) {
-    for (var e in sRds.fmi.elements) {
+    for (final e in sRds.fmi.elements) {
       final vrIndex = doConvertUN ? e.tag.vrIndex : e.vrIndex;
       tRds.fmi.add(fromElement(e, vrIndex));
     }
@@ -135,7 +135,7 @@ abstract class Converter {
   void convertDataset(Dataset sds, Dataset tds) {
     currentSds = sds;
     currentTds = tds;
-    for (var e in sds.elements) {
+    for (final e in sds.elements) {
       tds.add(convertElement(e));
     }
   }

@@ -29,7 +29,7 @@ class XmlReader extends XmlReaderBase {
 
   @override
   RootDataset readRootDataset() {
-    for (var element in document.children) {
+    for (final element in document.children) {
       final e = readEntry(element);
       if (e.code >= 0x00020000 && e.code < 0x00030000) {
         rds.fmi.add(e);
@@ -44,7 +44,7 @@ class XmlReader extends XmlReaderBase {
   Item readItem(SQ sequence, Item item, Iterable entries) {
     final parentDS = cds;
     cds = item;
-    for (var entry in entries) {
+    for (final entry in entries) {
       final e = readEntry(entry);
       print('e: $e');
       cds.add(e);
@@ -116,11 +116,14 @@ class XmlReader extends XmlReaderBase {
 
   Object readValueField(Map<String, dynamic> vField) {
     Object values = vField['Values'];
-    if (values != null) return values;
+    if (values != null)
+      return values;
     values = vField['InlineBinary'];
-    if (values != null) return base64.decode(values);
+    if (values != null)
+      return base64.decode(values);
     values = vField['BulkDataUrl'];
-    if (values != null) return values;
+    if (values != null)
+      return values;
     return parseError('Invalid values Map: $vField');
   }
 
@@ -138,7 +141,8 @@ class XmlReader extends XmlReaderBase {
       final items =  List<TagItem>(length);
       final sq = SQtag.fromValues(tag, items, kSQIndex, ds);
       // Add the empty Items
-      for (var i = 0; i < length; i++) items[i] =  TagItem.empty(cds, sq);
+      for (var i = 0; i < length; i++)
+        items[i] =  TagItem.empty(cds, sq);
       readItems(sq, entries);
       return sq;
     }

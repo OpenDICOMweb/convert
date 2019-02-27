@@ -30,7 +30,7 @@ void main() {
       allowInvalidSex = true;
       doTrimWhitespace = true;
 
-      for (var path in paths) {
+      for (final path in paths) {
         final rds = readTagPath(path, doLogging: doLogging);
         log.debug('${rds.info}');
         final entity = activeStudies.entityFromRootDataset(rds);

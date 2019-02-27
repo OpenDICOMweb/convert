@@ -66,13 +66,14 @@ List<String> listFile([String directory = dirMwebDoseSheets]) {
 
   //final files = <File>[];
   final files = <String>[];
-  for (var fse in fList) {
+  for (final fse in fList) {
     if (fse is File) {
       final path = fse.path;
       // Urgent Sharath: this should handle files with no extension
       // i.e. foo or foo.dir
       if (path.contains('.')) {
-        if (path.endsWith('.dcm')) files.add(path);
+        if (path.endsWith('.dcm'))
+          files.add(path);
       } else {
         files.add(path);
       }

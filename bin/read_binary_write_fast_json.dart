@@ -20,7 +20,7 @@ const String xx2 = 'C:/odw_test_data/mweb/Different_SOP_Class_UIDs'
 const String xx3 =
     'C:/odw_test_data/mweb/Different_SOP_Class_UIDs/Anonymized.dcm';
 
-Future main() async {
+Future<void> main() async {
   Server.initialize(
       name: 'Read Binary write FastJson',
       level: Level.debug,

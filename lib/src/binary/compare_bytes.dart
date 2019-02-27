@@ -119,7 +119,7 @@ String toStr(Bytes bytes, int index) {
 }
 
 bool compareBytessets(Dataset ds0, Dataset ds1) {
-  for (var e0 in ds0.elements) {
+  for (final e0 in ds0.elements) {
     final e1 = ds1[e0.code];
     if (e0.vrCode == VR.kSQ.code) {
       if (e1.vrCode != VR.kSQ.code) return false;

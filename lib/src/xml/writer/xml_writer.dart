@@ -42,7 +42,8 @@ class XmlWriter extends XmlWriterBase {
   String writeRootDataset() {
     sb.indent('{');
     if (includeFmi) {
-      for (var e in rds.fmi.elements) writeElement(e, ',');
+      for (final e in rds.fmi.elements)
+        writeElement(e, ',');
     }
     writeElementList(rds.elements, ',');
     sb.outdent('}');
@@ -70,7 +71,8 @@ class XmlWriter extends XmlWriterBase {
   @override
   void writeSQ(SQ e, String separator) {
     sb.indent('"${e.hex}": {"vr": "${e.vrId}", "Values": [');
-    if (e.items.isNotEmpty) writeItems(e.items, '{', '}', ',');
+    if (e.items.isNotEmpty)
+      writeItems(e.items, '{', '}', ',');
     sb.outdent(']}$separator');
   }
 

@@ -32,7 +32,7 @@ class FastJsonReader extends JsonReaderBase {
   void readFmi() => _readFmi();
 
   void _readFmi() {
-    for (var entry in fmiList) {
+    for (final entry in fmiList) {
       final e = readEntry(entry);
       rds.fmi[e.code] = e;
     }
@@ -41,7 +41,8 @@ class FastJsonReader extends JsonReaderBase {
   @override
   RootDataset readRootDataset() {
     _readFmi();
-    for (var entry in rdsList) rds.add(readEntry(entry));
+    for (final entry in rdsList)
+      rds.add(readEntry(entry));
     return rds;
   }
 
@@ -55,7 +56,7 @@ class FastJsonReader extends JsonReaderBase {
   Item readItem(SQ sequence, Item item, Iterable entries) {
     final parentDS = cds;
     cds = item;
-    for (var entry in entries) {
+    for (final entry in entries) {
       final e = readEntry(entry);
       cds.add(e);
     }
@@ -114,11 +115,14 @@ class FastJsonReader extends JsonReaderBase {
 
   Object readValueField(List vField) {
     print('vField: $vField');
-    if (vField.length < 2) return vField;
+    if (vField.length < 2)
+      return vField;
     final Object key = vField[0];
     final Object value = vField[1];
-    if (key == 'InlineBinary') return base64.decode(value);
-    if (key == 'BulkDataUrl') return value;
+    if (key == 'InlineBinary')
+      return base64.decode(value);
+    if (key == 'BulkDataUrl')
+      return value;
     return vField;
   }
 
@@ -136,7 +140,8 @@ class FastJsonReader extends JsonReaderBase {
       final items = List<TagItem>(length);
       final sq = SQtag.fromValues(tag, items, kSQIndex);
       // Add the empty Items
-      for (var i = 0; i < length; i++) items[i] = TagItem.empty(cds, sq);
+      for (var i = 0; i < length; i++)
+        items[i] = TagItem.empty(cds, sq);
       readItems(sq, entries);
       return sq;
     }

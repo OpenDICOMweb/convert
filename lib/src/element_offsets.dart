@@ -70,8 +70,10 @@ class ElementOffsets {
   }
 
   bool insertAt(int index, int start, int end, Element e) {
-  	if (index >= starts.length) throw 'Invalid Insert at $index';
-  	if (elements[index] != null) throw 'Invalid Insert at $index - '
+  	if (index >= starts.length)
+  	  throw 'Invalid Insert at $index';
+  	if (elements[index] != null)
+  	  throw 'Invalid Insert at $index - '
 			  'element[$index] = ${elements[index]} which is not null : $e ';
 
   	starts[index] = start;
