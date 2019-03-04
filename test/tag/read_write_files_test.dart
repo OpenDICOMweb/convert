@@ -14,7 +14,7 @@ import '../../test/test_utils.dart';
 
 void main() {
   Server.initialize(
-      name: 'TagReader Test', throwOnError: true, level: Level.info);
+      name: 'TagReader Test', throwOnError: false, level: Level.info);
 
   const doLogging = true;
   const stopOnError = true;

@@ -36,7 +36,7 @@ Future main() async {
 
   final inPath = cleanPath(xx3);
 
-  final file =  File(inPath);
+  final file = File(inPath);
   final fLength = file.lengthSync();
   stdout
     ..writeln('Reading($fLength bytes): $inPath')
@@ -52,16 +52,32 @@ Future main() async {
     log.error('Short file error');
 //    if (throwOnError == true)  rethrow;
     exit(-1);
-  } on RangeError catch(e){
+  } on RangeError catch (e) {
     log.error(e);
- //   if (throwOnError == true)  rethrow;
+    //   if (throwOnError == true)  rethrow;
     exit(-1);
   } catch (e) {
     log.error(e);
-    if (throwOnError)
-      rethrow;
+    if (throwOnError) rethrow;
   }
   final length = rds.lengthInBytes;
   print('File: $length bytes (${length ~/ 1024}K) read');
   print('RootDataset: ${rds.total} Elements');
+  final issues = validate(rds);
+  print('$issues');
+}
+**** test this ****
+Issues validate(Dataset ds) {
+  final issues = Issues('Dataset Issues:\n');
+  _validate(ds, issues);
+  return issues;
+}
+
+Issues _validate(Dataset ds, Issues issues) {
+  for (final e in ds) {
+    e.check(issues);
+    if (e is SQ)
+      for (final item in e.items)
+        _validate(item, issues);
+  }
 }
