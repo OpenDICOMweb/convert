@@ -80,4 +80,5 @@ Issues _validate(Dataset ds, Issues issues) {
       for (final item in e.items)
         _validate(item, issues);
   }
+  return issues;
 }
