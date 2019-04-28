@@ -47,7 +47,6 @@ void main() {
         }
 
         expect(output.isNotEmpty, true);
-        expect(output.limit == output.length, true);
         expect(length == output.buffer.lengthInBytes, true);
         expect(length == output
             .asByteData()
@@ -57,7 +56,6 @@ void main() {
         expect(output.offset == output
             .asByteData()
             .offsetInBytes, true);
-//        expect(output.vrIndex == vrIndexByCode8Bit[output.vrCode], true);
         expect(output.asInt8List(), equals(output.buffer.asInt8List()));
 
         final rds1 = ByteReader.readBytes(output, doLogging: doLogging);

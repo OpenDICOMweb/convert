@@ -13,16 +13,16 @@ import 'package:core/core.dart';
 mixin NoLoggingMixin {
   // **** Logging Functions
   // TODO: create nologgingmixin and loggingmixin
-  void startElementMsg(int code, int eStart, int vrIndex, int vlf) {}
+  void startElementMsg(int code, int start, int vrIndex, int vlf) {}
 
   void endElementMsg(Element e) {}
 
-  void startSQMsg(int code, int eStart, int vrIndex, int vfOffset, int vlf) {}
+  void startSQMsg(int code, int start, int vrIndex, int vfOffset, int vlf) {}
 
   void endSQMsg(SQ e) {}
 
   void startDatasetMsg(
-      int eStart, String name, int delimiter, int vlf, Dataset ds) {}
+      int start, String name, int delimiter, int vlf, Dataset ds) {}
 
   void endDatasetMsg(int dsStart, String name, DSBytes dsBytes, Dataset ds) {}
 

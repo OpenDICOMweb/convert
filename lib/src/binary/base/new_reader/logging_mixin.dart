@@ -18,10 +18,10 @@ abstract class LoggingMixin {
   // **** Logging Functions
   // TODO: create no_logging_mixin and logging_mixin
 
-  void startElementMsg(int code, int eStart, int vrIndex, int vlf) {
+  void startElementMsg(int code, int start, int vrIndex, int vlf) {
     final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vfl: $vlf';
     final vrId = vrIdByIndex[vrIndex];
-    log..debug('>@R$eStart ${dcm(code)} $vrId($vrIndex) $len')..down;
+    log..debug('>@R$start ${dcm(code)} $vrId($vrIndex) $len')..down;
   }
 
 
@@ -31,13 +31,13 @@ abstract class LoggingMixin {
   }
 
 
-  void startSQMsg(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
+  void startSQMsg(int code, int start, int vrIndex, int vfOffset, int vlf) {
     final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vfl: $vlf';
     final vrId = vrIdByIndex[vrIndex];
     final tag = Tag.lookupByCode(code, vrIndex);
     if (tag.vrIndex != kSQIndex)
       log.warn('Read SQ with Non-Sequence Tag $tag');
-    final msg = '>@R$eStart ${dcm(code)} $vrId($vrIndex) $len $tag';
+    final msg = '>@R$start ${dcm(code)} $vrId($vrIndex) $len $tag';
     log.debug(msg);
   }
 
@@ -50,10 +50,10 @@ abstract class LoggingMixin {
 
 
   void startDatasetMsg(
-      int eStart, String name, int delimiter, int vlf, Dataset ds) {
+      int start, String name, int delimiter, int vlf, Dataset ds) {
     final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vfl: $vlf';
     final dLimit = (delimiter == 0) ? 'No Delimiter' : dcm(delimiter);
-    log..debug('>@R$eStart $name $dLimit $len $ds', 1)..down;
+    log..debug('>@R$start $name $dLimit $len $ds', 1)..down;
   }
 
 

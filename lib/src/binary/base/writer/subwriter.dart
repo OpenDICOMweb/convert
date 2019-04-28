@@ -153,10 +153,10 @@ abstract class SubWriter {
     _wb
       ..writeCode(kItem, 8 + item.vfLength)
       ..writeUint32(0);
-    final eStart = _wb.wIndex;
-    final vlfOffset = eStart - 4;
+    final mark = _wb.wIndex;
+    final vlfOffset = mark - 4;
     _writeDataset(item);
-    final vfLength = _wb.wIndex - eStart;
+    final vfLength = _wb.wIndex - mark;
     assert(vfLength.isEven && _wb.wIndex.isEven);
     // Now that vfLength is known write it at vflOffset.
     _wb.bytes.setUint32(vlfOffset, vfLength);

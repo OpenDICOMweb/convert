@@ -13,7 +13,7 @@ import '../test_utils.dart';
 
 void main() {
   Server.initialize(
-      name: 'dcm_reader_test', level: Level.info, throwOnError: false);
+      name: 'dcm_reader_test', level: Level.info, throwOnError: true);
 
   const doLogging = true;
 

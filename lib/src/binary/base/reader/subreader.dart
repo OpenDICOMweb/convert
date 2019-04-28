@@ -23,7 +23,7 @@ import 'package:converter/src/parse_info.dart';
 // ignore_for_file: avoid_catches_without_on_clauses
 
 // Reader axioms
-// 1. eStart is always the first byte of the Element being read and eEnd
+// 1. start is always the first byte of the Element being read and eEnd
 //    is always the end of the Element be
 // 2. The read index (rIndex) should always be at the last place read,
 //    and the end of the value field should be calculated by subtracting
@@ -37,7 +37,7 @@ import 'package:converter/src/parse_info.dart';
 //    [readByteElement].
 
 typedef LongElementReader = Element Function(
-    int code, int eStart, int vrIndex, int vlf);
+    int code, int start, int vrIndex, int vlf);
 
 // TODO:
 //   1. convert all if (doLogging) log.... to log....
@@ -305,37 +305,37 @@ abstract class SubReader {
 
   /// Reads and returns an [Element] with a 32-bit Value Field Length
   /// field. The [vfOffset] is 12 for EVR and 8 for IVR.
-  Element _readLong(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
+  Element _readLong(int code, int start, int vrIndex, int vfOffset, int vlf) {
     assert(_rb.index.isEven);
     if (vlf.isOdd && vlf != kUndefinedLength) error('Odd vlf: $vlf');
 
     // Read but don't advance index
-    final next = _rb.getCode(eStart);
+    final next = _rb.getCode(start);
 
     if (vrIndex == kSQIndex) {
-      return _readSequence(code, eStart, vrIndex, vfOffset, vlf);
+      return _readSequence(code, start, vrIndex, vfOffset, vlf);
     } else if (vrIndex == kUNIndex && next == kItem && code != kPixelData) {
       final index = _rb.index;
       try {
         log.debug('** reading UN(SQ) ${dcm(code)} vrIndex($vrIndex) vlf: $vlf');
-        return _readSequence(code, eStart, vrIndex, vfOffset, vlf);
+        return _readSequence(code, start, vrIndex, vfOffset, vlf);
       } catch (e) {
         _rb.rIndex = index;
         log.up2;
         return (vlf == kUndefinedLength)
-            ? _readUndefinedLength(code, eStart, vrIndex, vfOffset, vlf)
-            : _readDefinedLength(code, eStart, vrIndex, vfOffset, vlf);
+            ? _readUndefinedLength(code, start, vrIndex, vfOffset, vlf)
+            : _readDefinedLength(code, start, vrIndex, vfOffset, vlf);
       }
     } else if (next == kSequenceDelimitationItem && vlf == kUndefinedLength) {
       // A Sequence that has a VR of UN.
       _rb.rSkip(4);
       final items = <Item>[_makeEmptyItem(cds)];
-      final bytes = _rb.view(eStart, _rb.index - eStart);
+      final bytes = _rb.view(start, _rb.index - start);
       return sqFromBytes(cds, items, bytes);
     } else if (vlf == kUndefinedLength) {
-      return _readUndefinedLength(code, eStart, vrIndex, vfOffset, vlf);
+      return _readUndefinedLength(code, start, vrIndex, vfOffset, vlf);
     } else {
-      return _readDefinedLength(code, eStart, vrIndex, vfOffset, vlf);
+      return _readDefinedLength(code, start, vrIndex, vfOffset, vlf);
     }
   }
 
@@ -344,7 +344,7 @@ abstract class SubReader {
   /// [vfOffset].
   Element _readDefinedLength(
       int code, int start, int vrIndex, int vfOffset, int vlf) {
-    if (doLogging) _startElementMsg(code, vrIndex, vlf);
+    if (doLogging) _startElementMsg(start, code, vrIndex, vlf);
     _rb.rSkip(vlf);
     final e = (code == kPixelData)
         ? _makePixelData(code, start, vrIndex, vfOffset, vlf, defaultTS)
@@ -404,7 +404,7 @@ abstract class SubReader {
   /// _Note_: Undefined Length Elements always have a long (32-bit) VF.
   Element _readUndefinedLength(
       int code, int start, int vrIndex, int vfOffset, int vlf) {
-    if (doLogging) _startElementMsg(code, vrIndex, vlf);
+    if (doLogging) _startElementMsg(start, code, vrIndex, vlf);
     assert(vlf == kUndefinedLength &&
         _isMaybeUndefinedLengthVR(vrIndex) &&
         vrIndex != kSQIndex);
@@ -432,7 +432,7 @@ abstract class SubReader {
   // If it is a Sequence, it will start with either a [kItem]
   // delimiter or if it is an empty undefined length
   // Sequence it will start with a kSequenceDelimiter.
-  SQ _readSequence(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
+  SQ _readSequence(int code, int start, int vrIndex, int vfOffset, int vlf) {
     if (vrIndex != kSQIndex) {
       if (vrIndex == kUNIndex) {
         warn('Creating Sequence as UN(($vrIndex) ${dcm(code)}');
@@ -440,10 +440,10 @@ abstract class SubReader {
         error('Creating Sequence with vr($vrIndex) ${dcm(code)}');
       }
     }
-    if (doLogging) _startSQMsg(code, eStart, vrIndex, vfOffset, vlf);
+    if (doLogging) _startSQMsg(code, start, vrIndex, vfOffset, vlf);
     final sq = (vlf == kUndefinedLength)
-        ? _readUSQ(code, eStart, kSQIndex, vfOffset, vlf)
-        : _readDSQ(code, eStart, kSQIndex, vfOffset, vlf);
+        ? _readUSQ(code, start, kSQIndex, vfOffset, vlf)
+        : _readDSQ(code, start, kSQIndex, vfOffset, vlf);
     _count++;
     if (doLogging) _endSQMsg(sq);
     return sq;
@@ -451,14 +451,14 @@ abstract class SubReader {
 
   /// Reads a Sequence with a Value Field Length [vlf]
   /// containing [kUndefinedLength].
-  SQ _readUSQ(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
+  SQ _readUSQ(int code, int start, int vrIndex, int vfOffset, int vlf) {
     assert(vlf == kUndefinedLength);
     final items = <Item>[];
     while (!_isSequenceDelimiter()) {
       final item = _readItem();
       items.add(item);
     }
-    final dBytes = _makeLongDicomBytes(eStart);
+    final dBytes = _makeLongDicomBytes(start);
     return sqFromBytes(cds, items, dBytes);
   }
 
@@ -468,7 +468,7 @@ abstract class SubReader {
   bool _isSequenceDelimiter() => _checkForDelimiter(kSequenceDelimitationItem);
 
   /// Reads a Sequence with a defined length Value Field Length [vlf].
-  SQ _readDSQ(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
+  SQ _readDSQ(int code, int start, int vrIndex, int vfOffset, int vlf) {
     assert(vlf != kUndefinedLength);
     final items = <Item>[];
     final sqEnd = _rb.index + vlf;
@@ -477,18 +477,18 @@ abstract class SubReader {
       items.add(item);
     }
     if (sqEnd != _rb.index) warn('sqEnd($sqEnd) != rb.index(${_rb.index})');
-    final dBytes = _makeLongDicomBytes(eStart);
+    final dBytes = _makeLongDicomBytes(start);
     return sqFromBytes(cds, items, dBytes);
   }
 
   /// Returns [VFFragmentList] for a [kPixelData] Element.
   /// There are only three valid VRs for this method: OB, OW, UN.
   VFFragmentList _readEncapsulatedPixelData(
-      int code, int eStart, int vrIndex, int vlf) {
+      int code, int start, int vrIndex, int vlf) {
     assert(vlf == kUndefinedLength && _isMaybeUndefinedLengthVR(vrIndex));
     final delimiter = _rb.readCode();
     if (delimiter == kItem) {
-      return _readPixelDataFragments(code, eStart, vrIndex, vlf, delimiter);
+      return _readPixelDataFragments(code, start, vrIndex, vlf, delimiter);
     } else if (delimiter == kSequenceDelimitationItem) {
       // An Empty Pixel Data Element
       _checkDelimiterLength(delimiter);
@@ -504,7 +504,7 @@ abstract class SubReader {
   /// Each Fragment starts with an Item Delimiter followed by the 32-bit Item
   /// length field, which may not have a value of kUndefinedValue.
   VFFragmentList _readPixelDataFragments(
-      int code, int eStart, int vrIndex, int vlf, int itemDelimiter) {
+      int code, int start, int vrIndex, int vlf, int itemDelimiter) {
     assert(code == kPixelData &&
         _isMaybeUndefinedLengthVR(vrIndex) &&
         itemDelimiter == kItem);
@@ -581,12 +581,12 @@ abstract class SubReader {
   void warn(String s) => log.warn('** @R${_rb.index} $s');
 
   // TODO: create no_logging_mixin and logging_mixin
-  void _startElementMsg(int code, int vrIndex, int vlf) {
+  void _startElementMsg(int start, int code, int vrIndex, int vlf) {
     _checkVlf(vlf);
     final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vlf: $vlf';
     final vrId = vrIdByIndex[vrIndex];
     log
-      ..debug('>@R${_rb.rIndex} ${dcm(code)} $vrId($vrIndex) $len')
+      ..debug('>@R$start ${dcm(code)} $vrId($vrIndex) $len')
       ..down;
   }
 
@@ -597,13 +597,13 @@ abstract class SubReader {
       ..debug('<@R${_rb.index} #$eNumber(${_rb.rIndex - start}): $e');
   }
 
-  void _startSQMsg(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
+  void _startSQMsg(int code, int start, int vrIndex, int vfOffset, int vlf) {
     _checkVlf(vlf);
     final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vlf: $vlf';
     final vrId = vrIdByIndex[vrIndex];
     final tag = Tag.lookupByCode(code, vrIndex);
     if (tag.vrIndex != kSQIndex) warn('Read SQ with Non-Sequence Tag $tag');
-    final msg = '>@R$eStart ${dcm(code)} $vrId($vrIndex) $len $tag';
+    final msg = '>@R$start ${dcm(code)} $vrId($vrIndex) $len $tag';
     log
       ..debug(msg)
       ..down;
@@ -618,12 +618,12 @@ abstract class SubReader {
   }
 
   void _startDatasetMsg(
-      int eStart, String name, int delimiter, int vlf, Dataset ds) {
+      int start, String name, int delimiter, int vlf, Dataset ds) {
     _checkVlf(vlf);
     final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vlf: $vlf';
     final dLimit = (delimiter == 0) ? 'No Delimiter' : dcm(delimiter);
     log
-      ..debug('>@R$eStart $name $dLimit $len $ds')
+      ..debug('>@R$start $name $dLimit $len $ds')
       ..down;
   }
 
@@ -723,18 +723,20 @@ abstract class EvrSubReader extends SubReader {
   /// For EVR Datasets, all Elements are read by this method.
   @override
   Element _readElement() {
-    final eStart = _rb.index;
+    final start = _rb.index;
     final code = _rb.readCode();
     final vrCode = _rb.readVRCode();
-    final vrIndex = _lookupEvrVRIndex(code, eStart, vrCode);
+    if (vrCode == null)
+      throw 'bad VR Code';
+    final vrIndex = _lookupEvrVRIndex(code, start, vrCode);
     if (vrIndex == null)
       log.error('${dcm(code)} '
           'vrCode: $vrCode(${hex16(vrCode)} vrIndex: $vrIndex');
     if (_isEvrShortVR(vrIndex)) {
-      return _readDefinedLength(code, eStart, vrIndex, 8, _getVlf16());
+      return _readDefinedLength(code, start, vrIndex, 8, _getVlf16());
     } else {
       _rb.rSkip(2);
-      return _readLong(code, eStart, vrIndex, 12, _getVlf32());
+      return _readLong(code, start, vrIndex, 12, _getVlf32());
     }
   }
 
@@ -744,10 +746,10 @@ abstract class EvrSubReader extends SubReader {
     return vrIndex >= kAEIndex && vrIndex <= kUSIndex;
   }
 
-  int _lookupEvrVRIndex(int code, int eStart, int vrCode) {
+  int _lookupEvrVRIndex(int code, int start, int vrCode) {
     final vrIndex = vrIndexFromCode(vrCode);
     if (vrIndex == null) {
-      _nullVRIndex(code, eStart, vrCode);
+      _nullVRIndex(code, start, vrCode);
     } else if (_isSpecialVR(vrIndex)) {
       _changingVR(code, vrIndex);
       return kUNIndex;
@@ -758,8 +760,8 @@ abstract class EvrSubReader extends SubReader {
     return vrIndex;
   }
 
-  void _nullVRIndex(int code, int eStart, int vrCode) =>
-      warn('eStart: $eStart ${dcm(code)} Null VR(${hex16(vrCode)}, $vrCode)');
+  void _nullVRIndex(int code, int start, int vrCode) =>
+      warn('start: $start ${dcm(code)} Null VR(${hex16(vrCode)}, $vrCode)');
 
   void _changingVR(int code, int vrIndex) =>
       warn('Changing (${hex32(code)}) with Special VR '
@@ -860,7 +862,7 @@ abstract class IvrSubReader extends SubReader {
 
   @override
   Element _readElement() {
-    final eStart = _rb.index;
+    final start = _rb.index;
     final code = _rb.readCode();
     final vlf = _getVlf32();
 
@@ -872,7 +874,7 @@ abstract class IvrSubReader extends SubReader {
       if (tag != null && (tag.vrIndex <= kMaxNormalVRIndex))
         vrIndex = tag.vrIndex;
     }
-    return _readLong(code, eStart, vrIndex, 8, vlf);
+    return _readLong(code, start, vrIndex, 8, vlf);
   }
 }
 

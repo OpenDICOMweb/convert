@@ -24,7 +24,7 @@ import 'package:converter/src/parse_info.dart';
 // ignore_for_file: avoid_catches_without_on_clauses
 
 // Reader axioms
-// 1. eStart is always the first byte of the Element being read
+// 1. start is always the first byte of the Element being read
 //    and eEnd is always the end of the Element [be]
 // 2. The read index (rIndex) should always be at the last place read,
 //    and the end of the value field should be calculated by subtracting
@@ -38,7 +38,7 @@ import 'package:converter/src/parse_info.dart';
 //    [readByteElement].
 
 typedef LongElementReader = Element Function(
-    int code, int eStart, int vrIndex, int vlf);
+    int code, int start, int vrIndex, int vlf);
 
 /// A [Converter] for [Uint8List]s containing a [Dataset] encoded in the
 /// application/dicom media type.
@@ -85,7 +85,7 @@ abstract class SubReader {
 
   /// Creates an Element from [Bytes].
 // TODO: maybe in future to lift the dependency on bytes
-//  Element fromIndex(int code, int eStart, int eEnd, int vfl, int vrIndex);
+//  Element fromIndex(int code, int start, int eEnd, int vfl, int vrIndex);
 
   /// Creates an Element from [Bytes].
   Element fromBytes(int code, Bytes bytes, int vrIndex, int vfOffset);
@@ -252,7 +252,7 @@ abstract class SubReader {
 
   /// Reads an returns an [Element] with a 32-bit Value Field. The
   /// [vfOffset] is 12 for EVR and 8 for IVR.
-  Element _readLong(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
+  Element _readLong(int code, int start, int vrIndex, int vfOffset, int vlf) {
     assert(rb.index.isEven);
     if (vlf.isOdd && vlf != kUndefinedLength)
       log.error('Odd vlf: $vlf');
@@ -260,19 +260,19 @@ abstract class SubReader {
     final delimiter = rb.getUint32();
 
     if (vrIndex == kSQIndex) {
-      return _readSequence(code, eStart, vrIndex, vfOffset, vlf);
+      return _readSequence(code, start, vrIndex, vfOffset, vlf);
     } else if (vrIndex == kUNIndex &&
         delimiter == kItem32BitLE &&
         code != kPixelData) {
       final index = rb.index;
       try {
         log.debug('** reading ${dcm(code)} vrIndex($vrIndex) vlf: $vlf');
-        return _readSequence(code, eStart, vrIndex, vfOffset, vlf);
+        return _readSequence(code, start, vrIndex, vfOffset, vlf);
       } catch (e) {
         rb.rIndex = index;
         return (vlf == kUndefinedLength)
-            ? _readLongUndefinedLength(code, eStart, vrIndex, vfOffset, vlf)
-            : _readDefinedLength(code, eStart, vrIndex, vfOffset, vlf);
+            ? _readLongUndefinedLength(code, start, vrIndex, vfOffset, vlf)
+            : _readDefinedLength(code, start, vrIndex, vfOffset, vlf);
       }
     } else if (delimiter == kSequenceDelimitationItem32BitLE &&
         vlf == kUndefinedLength) {
@@ -281,9 +281,9 @@ abstract class SubReader {
       return makeSequenceFromCode(
           code, cds, items, vfOffset, kUndefinedLength, Bytes.kEmptyBytes);
     } else if (vlf == kUndefinedLength) {
-      return _readLongUndefinedLength(code, eStart, vrIndex, vfOffset, vlf);
+      return _readLongUndefinedLength(code, start, vrIndex, vfOffset, vlf);
     } else {
-      return _readDefinedLength(code, eStart, vrIndex, vfOffset, vlf);
+      return _readDefinedLength(code, start, vrIndex, vfOffset, vlf);
     }
   }
 
@@ -294,7 +294,7 @@ abstract class SubReader {
   /// If it is a Sequence, it will start with either a [kItem32BitLE]
   /// delimiter or if it is an empty undefined length Sequence it will
   /// start with a kSequenceDelimiter.
-  SQ _readSequence(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
+  SQ _readSequence(int code, int start, int vrIndex, int vfOffset, int vlf) {
     if (vrIndex != kSQIndex) {
       if (vrIndex == kUNIndex) {
         log.warn('** Creating Sequence as UN(($vrIndex) ${dcm(code)}');
@@ -303,10 +303,10 @@ abstract class SubReader {
       }
     }
     if (doLogging)
-      startSQMsg(code, eStart, vrIndex, vfOffset, vlf);
+      startSQMsg(code, start, vrIndex, vfOffset, vlf);
     final sq = (vlf == kUndefinedLength)
-        ? _readUSQ(code, eStart, kSQIndex, vfOffset, vlf)
-        : _readDSQ(code, eStart, kSQIndex, vfOffset, vlf);
+        ? _readUSQ(code, start, kSQIndex, vfOffset, vlf)
+        : _readDSQ(code, start, kSQIndex, vfOffset, vlf);
     _count++;
     if (doLogging)
       endSQMsg(sq);
@@ -315,14 +315,14 @@ abstract class SubReader {
 
   /// Reads a Sequence with a Value Field Length [vfl]
   /// containing [kUndefinedLength].
-  SQ _readUSQ(int code, int eStart, int vrIndex, int vfOffset, int vfl) {
+  SQ _readUSQ(int code, int start, int vrIndex, int vfOffset, int vfl) {
     assert(vfl == kUndefinedLength);
     final items = <Item>[];
     while (!_isSequenceDelimiter()) {
       final item = _readItem();
       items.add(item);
     }
-    final bytes = rb.sublist(eStart, rb.index);
+    final bytes = rb.sublist(start, rb.index);
     return makeSequenceFromCode(code, cds, items, vfOffset, vfl, bytes);
   }
 
@@ -333,7 +333,7 @@ abstract class SubReader {
       _checkForDelimiter(kSequenceDelimitationItem32BitLE);
 
   /// Reads a Sequence with a defined length Value Field Length [vfl].
-  SQ _readDSQ(int code, int eStart, int vrIndex, int vfOffset, int vfl) {
+  SQ _readDSQ(int code, int start, int vrIndex, int vfOffset, int vfl) {
     assert(vfl != kUndefinedLength);
     final items = <Item>[];
     final sqEnd = rb.index + vfl;
@@ -343,7 +343,7 @@ abstract class SubReader {
     }
     if (sqEnd != rb.index)
       log.warn('sqEnd($sqEnd) != rb.index(${rb.index})');
-    final bytes = rb.sublist(eStart, sqEnd);
+    final bytes = rb.sublist(start, sqEnd);
     return makeSequenceFromCode(code, cds, items, vfOffset, vfl, bytes);
   }
 
@@ -353,19 +353,19 @@ abstract class SubReader {
   /// Only three non-Sequence [Element]s can have Value Field Length
   /// Field [vlf] containing [kUndefinedLength] OB, OW, and UN.
   Element _readLongUndefinedLength(
-      int code, int eStart, int vrIndex, int vfOffset, int vlf) {
+      int code, int start, int vrIndex, int vfOffset, int vlf) {
     if (doLogging)
-      startElementMsg(code, eStart, vrIndex, vlf);
+      startElementMsg(code, start, vrIndex, vlf);
     assert(vlf == kUndefinedLength && isMaybeUndefinedLengthVR(vrIndex));
     assert(vrIndex != kSQIndex);
     VFFragmentList vf;
     if (code == kPixelData) {
-      vf = _readEncapsulatedPixelData(code, eStart, vrIndex, vlf);
+      vf = _readEncapsulatedPixelData(code, start, vrIndex, vlf);
       assert(vf != null);
     } else {
       _findEndOfULengthVF();
     }
-    final bytes = rb.sublist(eStart, rb.index);
+    final bytes = rb.sublist(start, rb.index);
     final e = (code == kPixelData)
         ? makePixelData(code, bytes, vrIndex, vlf, defaultTS, vf)
         : fromBytes(code, bytes, vrIndex, vfOffset);
@@ -377,11 +377,11 @@ abstract class SubReader {
 
   /// Return a defined length Element with a long Value Field
   Element _readDefinedLength(
-      int code, int eStart, int vrIndex, int vfOffset, int vlf) {
+      int code, int start, int vrIndex, int vfOffset, int vlf) {
     if (doLogging)
-      startElementMsg(code, eStart, vrIndex, vlf);
+      startElementMsg(code, start, vrIndex, vlf);
     rb.rSkip(vlf);
-    final bytes = rb.sublist(eStart, rb.index);
+    final bytes = rb.sublist(start, rb.index);
     final e = (code == kPixelData)
         ? makePixelData(code, bytes, vrIndex, vfOffset)
         : fromBytes(code, bytes, vrIndex, vfOffset);
@@ -394,12 +394,12 @@ abstract class SubReader {
   /// Returns [VFFragmentList] for a [kPixelData] Element.
   /// There are only three valid VRs for this method: OB, OW, UN.
   VFFragmentList _readEncapsulatedPixelData(
-      int code, int eStart, int vrIndex, int vlf) {
+      int code, int start, int vrIndex, int vlf) {
     assert(vlf == kUndefinedLength);
     assert(isMaybeUndefinedLengthVR(vrIndex));
     final delimiter = rb.getUint32();
     if (delimiter == kItem32BitLE) {
-      return _readPixelDataFragments(code, eStart, vrIndex, vlf);
+      return _readPixelDataFragments(code, start, vrIndex, vlf);
     } else if (delimiter == kSequenceDelimitationItem32BitLE) {
       // An Empty Pixel Data Element
       _checkDelimiterLength(delimiter);
@@ -417,7 +417,7 @@ abstract class SubReader {
 
   /// Reads an encapsulated (compressed) [kPixelData] [Element].
   VFFragmentList _readPixelDataFragments(
-      int code, int eStart, int vrIndex, int vlf) {
+      int code, int start, int vrIndex, int vlf) {
     assert(isMaybeUndefinedLengthVR(vrIndex));
     _checkForOB(vrIndex, rds.transferSyntax);
     return _readFragments(code, vrIndex, vlf);
@@ -560,10 +560,10 @@ abstract class SubReader {
 
   // **** Logging Functions
   // TODO: create no_logging_mixin and logging_mixin
-  void startElementMsg(int code, int eStart, int vrIndex, int vlf) {
+  void startElementMsg(int code, int start, int vrIndex, int vlf) {
     final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vfl: $vlf';
     final vrId = vrIdByIndex[vrIndex];
-    log..debug('>@R$eStart ${dcm(code)} $vrId($vrIndex) $len')..down;
+    log..debug('>@R$start ${dcm(code)} $vrId($vrIndex) $len')..down;
   }
 
   void endElementMsg(Element e) {
@@ -571,12 +571,12 @@ abstract class SubReader {
     log..up..debug('<@R${rb.index} $eNumber: $e');
   }
 
-  void startSQMsg(int code, int eStart, int vrIndex, int vfOffset, int vlf) {
+  void startSQMsg(int code, int start, int vrIndex, int vfOffset, int vlf) {
     final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vfl: $vlf';
     final vrId = vrIdByIndex[vrIndex];
     final tag = Tag.lookupByCode(code, vrIndex);
     if (tag.vrIndex != kSQIndex) log.warn('Read SQ with Non-Sequence Tag $tag');
-    final msg = '>@R$eStart ${dcm(code)} $vrId($vrIndex) $len $tag';
+    final msg = '>@R$start ${dcm(code)} $vrId($vrIndex) $len $tag';
     log.debug(msg);
   }
 
@@ -587,10 +587,10 @@ abstract class SubReader {
   }
 
   void startDatasetMsg(
-      int eStart, String name, int delimiter, int vlf, Dataset ds) {
+      int start, String name, int delimiter, int vlf, Dataset ds) {
     final len = (vlf == kUndefinedLength) ? 'Undefined Length' : 'vfl: $vlf';
     final dLimit = (delimiter == 0) ? 'No Delimiter' : dcm(delimiter);
-    log..debug('>@R$eStart $name $dLimit $len $ds', 1)..down;
+    log..debug('>@R$start $name $dLimit $len $ds', 1)..down;
   }
 
   void endDatasetMsg(int dsStart, String name, DSBytes dsBytes, Dataset ds) {
@@ -612,16 +612,16 @@ abstract class SubReader {
   String toString() => '$runtimeType: rds: $rds, cds: $cds';
 
   // **** Logging Interface
-  void startElementMsg(int code, int eStart, int vrIndex, int vlf);
+  void startElementMsg(int code, int start, int vrIndex, int vlf);
 
   void endElementMsg(Element e);
 
-  void startSQMsg(int code, int eStart, int vrIndex, int vfOffset, int vlf);
+  void startSQMsg(int code, int start, int vrIndex, int vfOffset, int vlf);
 
   void endSQMsg(SQ e) {}
 
   void startDatasetMsg(
-      int eStart, String name, int delimiter, int vlf, Dataset ds);
+      int start, String name, int delimiter, int vlf, Dataset ds);
 
   void endDatasetMsg(int dsStart, String name, DSBytes dsBytes, Dataset ds);
 
@@ -658,23 +658,23 @@ abstract class EvrSubReader extends SubReader with NoLoggingMixin {
   /// For EVR Datasets, all Elements are read by this method.
   @override
   Element _readElement() {
-    final eStart = rb.index;
+    final start = rb.index;
     final code = rb.readCode();
     final vrCode = rb.readUint16();
-    final vrIndex = _lookupEvrVRIndex(code, eStart, vrCode);
+    final vrIndex = _lookupEvrVRIndex(code, start, vrCode);
     if (_isEvrShortVR(vrIndex)) {
-      return _readDefinedLength(code, eStart, vrIndex, 8, _getVlf16());
+      return _readDefinedLength(code, start, vrIndex, 8, _getVlf16());
     } else {
       rb.rSkip(2);
-      return _readLong(code, eStart, vrIndex, 12, _getVlf32());
+      return _readLong(code, start, vrIndex, 12, _getVlf32());
     }
   }
 
-  int _lookupEvrVRIndex(int code, int eStart, int vrCode) {
+  int _lookupEvrVRIndex(int code, int start, int vrCode) {
     final vrIndex = vrIndexFromCode(vrCode);
     if (vrIndex == null) {
       // TODO: this should throw
-      _nullVRIndex(code, eStart, vrCode);
+      _nullVRIndex(code, start, vrCode);
     } else if (isSpecialVRIndex(vrIndex)) {
       log.warn('** Changing (${hex32(code)}) with Special VR '
           '${vrIdFromIndex(vrIndex)}) to VR.kUN');
@@ -686,8 +686,8 @@ abstract class EvrSubReader extends SubReader with NoLoggingMixin {
     return vrIndex;
   }
 
-  void _nullVRIndex(int code, int eStart, int vrCode) {
-    log.warn('** @$eStart ${dcm(code)} Null VR(${hex16(vrCode)}, $vrCode)');
+  void _nullVRIndex(int code, int start, int vrCode) {
+    log.warn('** @$start ${dcm(code)} Null VR(${hex16(vrCode)}, $vrCode)');
   }
 
   void _invalidPrivateCreator(int code, int vrIndex) {
@@ -771,15 +771,15 @@ abstract class IvrSubReader extends SubReader with NoLoggingMixin {
 
   @override
   Element _readElement() {
-    final eStart = rb.index;
+    final start = rb.index;
     final code = rb.readCode();
-    final tag = doLookupVRIndex ? _lookupTag(code, eStart) : null;
+    final tag = doLookupVRIndex ? _lookupTag(code, start) : null;
     final vrIndex = (tag == null) ? kUNIndex : tag.vrIndex;
     final vlf = _getVlf32();
-    return _readLong(code, eStart, vrIndex, 8, vlf);
+    return _readLong(code, start, vrIndex, 8, vlf);
   }
 
-  Tag _lookupTag(int code, int eStart, [int vrIndex, Object token]) {
+  Tag _lookupTag(int code, int start, [int vrIndex, Object token]) {
     // Urgent Fix
     if (isPublicCode(code)) {
       return Tag.lookupByCode(code);

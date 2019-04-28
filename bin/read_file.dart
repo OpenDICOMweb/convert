@@ -28,13 +28,13 @@ Future main() async {
   Server.initialize(
       name: 'ReadFile',
       level: Level.debug,
-      throwOnError: true,
+      throwOnError: false,
       minYear: 1901,
       maxYear: 2049,
       showBanner: true,
       showSdkBanner: false);
 
-  final inPath = cleanPath(xx3);
+  final inPath = cleanPath(xx0);
 
   final file = File(inPath);
   final fLength = file.lengthSync();
@@ -66,7 +66,7 @@ Future main() async {
   final issues = validate(rds);
   print('$issues');
 }
-**** test this ****
+// **** test this ****
 Issues validate(Dataset ds) {
   final issues = Issues('Dataset Issues:\n');
   _validate(ds, issues);

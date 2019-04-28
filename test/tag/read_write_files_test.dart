@@ -56,7 +56,6 @@ void main() {
         }
 
         expect(outBytes.isNotEmpty, true);
-        expect(outBytes.limit == outBytes.length, true);
         expect(length == outBytes.buffer.lengthInBytes, true);
         expect(length == outBytes
             .asByteData()
@@ -66,7 +65,6 @@ void main() {
         expect(outBytes.offset == outBytes
             .asByteData()
             .offsetInBytes, true);
-//        expect(outBytes.vrIndex == vrIndexByCode8Bit[outBytes.vrCode], true);
         expect(outBytes.asInt8List(), equals(outBytes.buffer.asInt8List()));
 
         final rds1 = TagReader.readBytes(outBytes, doLogging: doLogging);
