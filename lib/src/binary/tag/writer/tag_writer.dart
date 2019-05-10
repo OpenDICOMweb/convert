@@ -61,7 +61,7 @@ class TagWriter extends Writer {
     checkRootDataset(rds);
     final writer = TagWriter(rds,
         eParams: eParams, outputTS: outputTS, doLogging: doLogging);
-    return writer.writeRootDataset();
+    return writer.writeRootDataset().bytes;
   }
 
   /// Writes the [TagRootDataset] to a [Uint8List], and then writes the

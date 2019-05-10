@@ -26,7 +26,7 @@ Future main() async {
       showBanner: true,
       showSdkBanner: false);
 
-  final inPath = cleanPath(mweb14);
+  final inPath = cleanPath(x0);
 
   final file =  File(inPath);
   final fLength = file.lengthSync();
@@ -52,5 +52,5 @@ Future main() async {
   }
   final length = rds.lengthInBytes;
   print('File: $length bytes (${length ~/ 1024}K) read');
-  print('RootDataset: ${rds.total} Elements');
+  print('RootDataset: ${rds.total} Elements FMI: ${rds.fmi.length} Elements');
 }

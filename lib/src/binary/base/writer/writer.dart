@@ -30,17 +30,17 @@ abstract class Writer {
 
   EvrSubWriter get evrSubWriter;
   IvrSubWriter get ivrSubWriter;
-  Bytes write() => writeRootDataset();
+  DSBytes write() => writeRootDataset();
   int writeFmi() => evrSubWriter.writeFmi();
 
   RootDataset get rds => evrSubWriter.rds;
 
   /// Writes a [RootDataset] to a [Uint8List], then returns it.
-  Bytes writeRootDataset() {
+  DSBytes writeRootDataset() {
     int fmiEnd;
     if (!evrSubWriter.isFmiWritten) fmiEnd = evrSubWriter.writeFmi();
 
-    Bytes bytes;
+    DSBytes bytes;
     final ts = evrSubWriter.rds.transferSyntax;
     if (ts.isEvr) {
       bytes = evrSubWriter.writeRootDataset(fmiEnd, ts);

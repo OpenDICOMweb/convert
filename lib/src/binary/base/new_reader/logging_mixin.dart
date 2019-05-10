@@ -36,7 +36,7 @@ abstract class LoggingMixin {
     final vrId = vrIdByIndex[vrIndex];
     final tag = Tag.lookupByCode(code, vrIndex);
     if (tag.vrIndex != kSQIndex)
-      log.warn('Read SQ with Non-Sequence Tag $tag');
+      log.warn('** Read SQ with Non-Sequence Tag $tag');
     final msg = '>@R$start ${dcm(code)} $vrId($vrIndex) $len $tag';
     log.debug(msg);
   }

@@ -61,12 +61,12 @@ abstract class Reader {
     try {
       fmiEnd = evrSubReader.readFmi();
     } on EndOfDataError catch (e) {
-      log.warn(e);
+      log.warn('** $e');
     } on ShortFileError catch (e) {
-      log.warn(e);
+      log.warn('** $e');
       // ignore: Avoid_catches_without_on_clauses
     } catch (e) {
-      log.error(e);
+      log.error('**** $e');
       if (throwOnError) rethrow;
     }
 

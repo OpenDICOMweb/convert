@@ -44,7 +44,7 @@ class ByteWriter extends Writer {
     final writer = ByteWriter(rds,
         eParams: eParams, outputTS: outputTS, doLogging: doLogging);
     if (doLogging) log.reset;
-    return writer.writeRootDataset();
+    return writer.writeRootDataset().bytes;
   }
 
   /// Writes the [ByteRootDataset] to a [Uint8List], and then writes the

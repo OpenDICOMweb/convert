@@ -172,7 +172,7 @@ void _warnVRIndex(Element e) {
 void _warn(int code, String msg) {
   final s = '** Warning ${dcm(code)} $msg';
   _exceptions.add(s);
-  log.warn(s);
+  log.warn('** $s');
 }
 
 void _error(int code, String msg) {

@@ -109,18 +109,19 @@ abstract class SubWriter {
 
   /// Writes (encodes) the root [Dataset] in 'application/dicom' media type,
   /// writes it to a Uint8List, and returns the [Uint8List].
-  Bytes writeRootDataset([int fmiEnd, TransferSyntax ts]) {
+  DSBytes writeRootDataset([int fmiEnd, TransferSyntax ts]) {
     final dsStart = _wb.wIndex;
     _wb.bytes.endian = (ts.isBigEndian) ? Endian.big : Endian.little;
     if (doLogging) {
       _startRootDatasetMsg(dsStart, rds, ts);
     }
     _writeDataset(rds);
-    final bytes = _wb.bytes.sublist(0, _wb.wIndex);
-    final dsBytes = RDSBytes(bytes, fmiEnd);
+    final rdsLength = _wb.wIndex;
+    final rdsBytes = _wb.view(0, rdsLength);
+    final dsBytes = RDSBytes(rdsBytes, fmiEnd);
     rds.dsBytes = dsBytes;
     if (doLogging) _endRootDatasetMsg(dsStart, rds, dsBytes);
-    return bytes;
+    return dsBytes;
   }
 
   /// Writes a [Dataset] to the output.
@@ -208,7 +209,7 @@ abstract class SubWriter {
 
       // If odd length write padding byte
       if (fragment.length.isOdd) {
-        log.warn('Odd length(${fragment.lengthInBytes}) fragment');
+        log.warn('** Odd length(${fragment.lengthInBytes}) fragment');
         _wb.writeUint8(0);
       }
     }
@@ -282,10 +283,10 @@ abstract class SubWriter {
   void _writeSequence(Element sq, int vrIndex) {
     final start = _wb.wIndex;
     if (doLogging) _startSQMsg(sq);
-    if (sq.isEmpty) {
+    final doConvert = eParams.doConvertUndefinedLengths;
+    if (sq.isEmpty && doConvert) {
       _writeLongDefinedLengthHeader(sq, vrIndex, 0);
-    } else if (!eParams.doConvertUndefinedLengths &&
-        (sq.vfLengthField == kUndefinedLength)) {
+    } else if (!doConvert && (sq.vfLengthField == kUndefinedLength)) {
       _writeSQUndefinedLength(sq, vrIndex);
     } else {
       _writeSQDefinedLength(sq, vrIndex);
@@ -318,7 +319,7 @@ abstract class SubWriter {
         (e is SQ || e is UN) && (vrIndex == kSQIndex || vrIndex == kUNIndex));
     assert(_wb.wIndex.isEven);
     __writeLongUndefinedLengthHeader(e, doConvertUN ? kSQIndex : vrIndex);
-    _writeItems(e.items);
+    if (e.items.isNotEmpty) _writeItems(e.items);
     _wb
       ..writeCode(kSequenceDelimitationItem, 8)
       ..writeUint32(0);
@@ -339,6 +340,7 @@ abstract class SubWriter {
   }
 
   void _writeValueField(Element e, int vrIndex) {
+    print('e: $e');
     assert(_wb.wIndex.isEven);
     _wb.write(e.vfBytes);
     if (e.vfBytes.length.isOdd) _writePaddingChar(e, vrIndex);
@@ -346,13 +348,14 @@ abstract class SubWriter {
   }
 
   void _writePaddingChar(Element e, int vrIndex) {
-    assert(_wb.wIndex.isOdd, 'vfLength: ${e.vfLength} - $e');
+    assert(_wb.wIndex.isOdd, 'wb.index: ${_wb.wIndex} - $e');
+//    assert(e.vfLength.isOdd, 'vfLength: ${e.vfLength} - $e');
     final padChar = paddingChar(vrIndex);
     if (padChar.isNegative) {
       log.error('Padding a non-padded Element: $e');
       invalidValueField('vfLength(${e.vfLength}) is odd integer', e.vfBytes);
     }
-    if (doLogging) log.debug2('** writing pad char: $padChar');
+    if (doLogging) log.debug('** writing pad char: $padChar');
     _wb.writeUint8(padChar);
     assert(_wb.wIndex.isEven);
   }
@@ -469,7 +472,7 @@ DicomWriteBuffer getWriteBuffer([int length]) {
     _reUseBuffer = DicomWriteBuffer(length);
   } else if (length > _reUseBuffer.length) {
     _reUseBuffer = DicomWriteBuffer(length + 1024);
-    log.warn('**** DcmSubWriterBase creating new Reuse BD of Size: '
+    log.warn('** DcmSubWriterBase creating new Reuse BD of Size: '
         '${_reUseBuffer.length}');
   } else {
     _reUseBuffer.reset;
@@ -642,7 +645,7 @@ mixin FmiMixin {
       if (eParams.doAddMissingFMI) {
         _writeOdwFmi();
       } else if (!eParams.allowMissingFMI) {
-        log.warn('Dataset $rds is missing FMI elements');
+        log.warn('** Dataset $rds is missing FMI elements');
         return 0;
       }
     }
@@ -700,6 +703,7 @@ mixin FmiMixin {
 
   bool __writePrefix() {
     _wb.writeUint8List(kPrefixAsList);
+    print('prefix: ${_wb.bytes.asUint8List(128, 4)}');
     return true;
   }
 }

@@ -22,12 +22,12 @@ const String test = 'C:/odw_test_data/mweb/500+/MECANIX/MECANIX/MECANIX/'
 
 Future<void> main() async {
   Server.initialize(
-      name: 'ReadWriteFile', level: Level.info, throwOnError: true);
+      name: 'ReadWriteFile', level: Level.debug, throwOnError: true);
 
-  final inPath = cleanPath(test);
+  final inPath = cleanPath(x5);
 
   log.info('path: $inPath');
-  final length =  File(inPath).lengthSync();
+  final length = File(inPath).lengthSync();
   stdout.writeln('Reading($length bytes): $inPath');
 
   final rds0 = ByteReader.readPath(inPath, doLogging: true);
@@ -40,11 +40,13 @@ Future<void> main() async {
   log.info('${rds0.dsBytes}');
 
   final outPath = getVNAPath(rds0, 'bin/output/', 'dcm');
-  final outBytes = ByteWriter.writeBytes(rds0, doLogging: true);
+  final outBytes = ByteWriter.writeBytes(rds0,
+      doLogging: true, eParams: EncodingParameters.kNoChange);
   log
     ..up
     ..info('| Out Path: $outPath')
     ..info('| Output length: ${outBytes.length}(${outBytes.length ~/ 1024}K)')
+    ..info('| Prefix: ${outBytes.asUint8List(128, 4)}')
     ..info('| ${outBytes.asUint8List(132, 32)}')
     ..info('| Done');
 
@@ -56,6 +58,11 @@ Future<void> main() async {
     log.info('${rds1.summary}');
   }
 
-  final result = (rds0 == rds1) ? 'Success' : 'Failure';
-  print(result);
+  final bytes0 = rds0.dsBytes;
+  final bytes1 = rds1.dsBytes;
+  if (bytes0.length != bytes1.length)
+    print('bytes0.length ${bytes0.length} bytes1.length ${bytes1.length}');
+  final bytesEQ = bytes0 == bytes1;
+  if (!bytesEQ) print('Bytes Not EQ');
+  if (rds0 == rds1) print('Root Datasets Not EQ');
 }

@@ -196,7 +196,7 @@ abstract class SubReader {
       final e = _readElement();
       final ok = ds.tryAdd(e);
       if (!ok)
-        log.warn('*** duplicate: $e');
+        log.warn('** duplicate: $e');
     }
   }
 
@@ -207,7 +207,7 @@ abstract class SubReader {
       final e = _readElement();
       final ok = ds.tryAdd(e);
       if (!ok)
-        log.warn('*** duplicate: $e');
+        log.warn('** duplicate: $e');
     }
   }
 
@@ -225,14 +225,14 @@ abstract class SubReader {
   /// on return the [rb].rIndex at the end of the Value Field.
   void _findEndOfULengthVF() {
     while (rb.isReadable) {
-      if (uint16 != kDelimiterFirst16Bits ||
-          uint16 != kSequenceDelimiterLast16Bits)
+      if (rb.readUint16() != kDelimiterFirst16Bits ||
+          rb.readUint16() != kSequenceDelimiterLast16Bits)
         continue;
       break;
     }
     final length = rb.readUint32();
     if (length != 0)
-      log.warn('Encountered non-zero delimiter length($length)');
+      log.warn('** Encountered non-zero delimiter length($length)');
   }
 
   /// Returns true if the [target] delimiter is found. If the target
@@ -244,7 +244,7 @@ abstract class SubReader {
       rb.rSkip(4);
       final length = rb.readUint32();
       if (length != 0)
-        log.warn('Encountered non-zero delimiter length($length)');
+        log.warn('** Encountered non-zero delimiter length($length)');
       return true;
     }
     return false;
@@ -342,7 +342,7 @@ abstract class SubReader {
       items.add(item);
     }
     if (sqEnd != rb.index)
-      log.warn('sqEnd($sqEnd) != rb.index(${rb.index})');
+      log.warn('** sqEnd($sqEnd) != rb.index(${rb.index})');
     final bytes = rb.sublist(start, sqEnd);
     return makeSequenceFromCode(code, cds, items, vfOffset, vfl, bytes);
   }
@@ -412,7 +412,7 @@ abstract class SubReader {
   void _checkDelimiterLength(int delimiter) {
     final vlf = rb.readUint32();
     if (vlf != 0)
-      log.warn('Encountered non-zero delimiter length($vlf)');
+      log.warn('** Encountered non-zero delimiter length($vlf)');
   }
 
   /// Reads an encapsulated (compressed) [kPixelData] [Element].
@@ -426,7 +426,7 @@ abstract class SubReader {
   void _checkForOB(int vrIndex, TransferSyntax ts) {
     if (vrIndex != kOBIndex && vrIndex != kUNIndex) {
       final vr = vrByIndex[vrIndex];
-      log.warn('Invalid VR($vr) for Encapsulated TS: $ts');
+      log.warn('** Invalid VR($vr) for Encapsulated TS: $ts');
     }
   }
 
@@ -456,9 +456,8 @@ abstract class SubReader {
   /// is longer than [rb].remaining.
   int _getVlf16() {
     final vlf = rb.readUint16();
-    if (vlf > rb.remaining)
-      _vlfError(vlf);
-    return vlf;
+    if (vlf > rb.remaining) _vlfError(vlf);
+    return (vlf.isOdd) ? vlf + 1 : vlf;
   }
 
   void _vlfError(int vlf) {
@@ -472,7 +471,7 @@ abstract class SubReader {
   int _getVlf32() {
     final vlf = rb.readUint32();
     if (vlf > rb.length && vlf != kUndefinedLength) _vlfError(vlf);
-    return vlf;
+    return (vlf.isOdd) ? vlf + 1 : vlf;
   }
 
 /*
@@ -751,7 +750,7 @@ abstract class EvrSubReader extends SubReader with NoLoggingMixin {
     rb.rSkip(128);
     final prefix = rb.readUint32();
     if (prefix == kDcmPrefix) return true;
-    log.warn('No DICOM Prefix present');
+    log.warn('** No DICOM Prefix present');
     return false;
   }
 }
