@@ -8,6 +8,7 @@
 //
 import 'dart:typed_data';
 
+import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:core/core.dart';
 
 import 'package:converter/src/binary/base/constants.dart';
@@ -459,8 +460,10 @@ abstract class SubWriter {
 Endian getEndianness(RootDataset rds, [TransferSyntax outputTS]) =>
     (outputTS == null) ? rds.transferSyntax.endian : outputTS.endian;
 
+const _k1MB = 1024 * 1024;
+
 /// The default [Bytes] buffer length, if none is provided.
-const int kDefaultWriteBufferLength = k1MB; //200 * k1MB;
+const int kDefaultWriteBufferLength = _k1MB; //200 * k1MB;
 
 bool reUseWriteBuffer = false;
 
@@ -469,9 +472,9 @@ DicomWriteBuffer _reUseBuffer;
 
 DicomWriteBuffer getWriteBuffer([int length]) {
   if (!reUseWriteBuffer || _reUseBuffer == null) {
-    _reUseBuffer = DicomWriteBuffer(length);
+    _reUseBuffer = DicomWriteBuffer.empty(length);
   } else if (length > _reUseBuffer.length) {
-    _reUseBuffer = DicomWriteBuffer(length + 1024);
+    _reUseBuffer = DicomWriteBuffer.empty(length + 1024);
     log.warn('** DcmSubWriterBase creating new Reuse BD of Size: '
         '${_reUseBuffer.length}');
   } else {

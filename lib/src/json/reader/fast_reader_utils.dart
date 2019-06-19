@@ -5,9 +5,10 @@
 //  that can be found in the odw/LICENSE file.
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
-
+//
 import 'dart:convert';
 
+import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:core/core.dart' hide Indenter;
 
 // ignore_for_file: public_member_api_docs

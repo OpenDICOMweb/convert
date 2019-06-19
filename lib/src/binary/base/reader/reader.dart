@@ -8,6 +8,7 @@
 //
 import 'dart:typed_data';
 
+import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:core/core.dart';
 
 import 'package:converter/src/binary/base/reader/subreader.dart';
@@ -45,7 +46,7 @@ abstract class Reader {
   RootDataset get rds => _rds ??= evrSubReader.rds;
   RootDataset _rds;
 
-  Bytes get bytesRead => rb.view(0, rb.index);
+  Bytes get bytesRead => rb.view(0, rb.rIndex);
   ElementOffsets get offsets => evrSubReader.offsets;
   ParseInfo get pInfo => evrSubReader.pInfo;
 
@@ -54,7 +55,7 @@ abstract class Reader {
     if (evrSubReader.doLogging) {
       log
         ..debug('Logging ...')
-        ..debug('>R@${rb.index} readRootDataset  ${rb.length} bytes');
+        ..debug('>R@${rb.rIndex} readRootDataset  ${rb.length} bytes');
     }
 
     var fmiEnd = 0;

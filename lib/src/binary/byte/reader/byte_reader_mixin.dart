@@ -6,6 +6,7 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
+import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:core/core.dart';
 import 'package:core/vf_fragments.dart';
 
@@ -17,20 +18,20 @@ mixin ByteReaderMixin {
   DicomReadBuffer get rb;
 
   RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
-          DicomBytes bytes, int fmiEnd) =>
+          BytesDicom bytes, int fmiEnd) =>
       ByteRootDataset(fmi, eMap, path, bytes, fmiEnd);
 
   Item makeItem(Dataset parent,
-          [SQ sequence, Map<int, Element> eMap, DicomBytes bytes]) =>
+          [SQ sequence, Map<int, Element> eMap, BytesDicom bytes]) =>
       ByteItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
 
-  Element fromBytes(DicomBytes bytes, Dataset ds, {bool isEvr}) =>
+  Element fromBytes(BytesDicom bytes, Dataset ds, {bool isEvr}) =>
       ByteElement.fromBytes(bytes, ds, isEvr: isEvr);
 
-  Element maybeUndefinedFromBytes(DicomBytes bytes, Dataset ds) =>
+  Element maybeUndefinedFromBytes(BytesDicom bytes, Dataset ds) =>
       ByteElement.makeMaybeUndefinedFromBytes(bytes, ds);
 
-  Element pixelDataFromBytes(DicomBytes bytes,
+  Element pixelDataFromBytes(BytesDicom bytes,
       [TransferSyntax ts, VFFragmentList fragments]) {
     switch (bytes.vrIndex) {
       case kOBIndex:
@@ -45,7 +46,7 @@ mixin ByteReaderMixin {
   }
 
   Element sqFromBytes(Dataset parent,
-          [Iterable<Item> items, DicomBytes bytes]) =>
+          [Iterable<Item> items, BytesDicom bytes]) =>
       SQbytes.fromBytes(parent, items, bytes);
 
   Element fromValues<V>(int code, int vrIndex, List<V> vList) =>

@@ -9,6 +9,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:core/core.dart';
 
 import 'package:converter/src/binary/base/reader/reader.dart';

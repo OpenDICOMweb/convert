@@ -9,6 +9,10 @@ environment:
   sdk: '>=2.0.0 < 3.0.0'
 
 dependencies:
+  bytes:
+    path: C:/odw/sdk/bytes
+  bytes_dicom:
+    path: C:/odw/sdk/bytes_dicom
   core:
     path: C:/odw/sdk/core
     version: ^0.7.6

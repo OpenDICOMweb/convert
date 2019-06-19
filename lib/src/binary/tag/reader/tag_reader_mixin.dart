@@ -6,6 +6,7 @@
 //  Primary Author: Jim Philbin <jfphilbin@gmail.edu>
 //  See the AUTHORS file for other contributors.
 //
+import 'package:bytes_dicom/bytes_dicom.dart';
 import 'package:core/core.dart';
 import 'package:core/vf_fragments.dart';
 
@@ -17,25 +18,25 @@ mixin TagReaderMixin {
   DicomReadBuffer get rb;
 
   RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
-          DicomBytes bytes, int fmiEnd) =>
+          BytesDicom bytes, int fmiEnd) =>
       TagRootDataset(fmi, eMap, path, bytes, fmiEnd);
 
   Item makeItem(Dataset parent,
-          [SQ sequence, Map<int, Element> eMap, DicomBytes bytes]) =>
+          [SQ sequence, Map<int, Element> eMap, BytesDicom bytes]) =>
       TagItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
 
-  Element fromBytes(DicomBytes bytes, Dataset ds, {bool isEvr}) =>
+  Element fromBytes(BytesDicom bytes, Dataset ds, {bool isEvr}) =>
       TagElement.fromBytes(bytes, ds, isEvr: isEvr);
 
-  Element maybeUndefinedFromBytes(DicomBytes bytes, Dataset ds,
+  Element maybeUndefinedFromBytes(BytesDicom bytes, Dataset ds,
           [TransferSyntax ts]) =>
       TagElement.maybeUndefinedFromBytes(bytes, ds);
 
   Element sqFromBytes(Dataset parent,
-          [Iterable<Item> items, DicomBytes bytes]) =>
+          [Iterable<Item> items, BytesDicom bytes]) =>
       SQtag(parent, Tag.lookup(bytes.code), items);
 
-  Element pixelDataFromBytes(DicomBytes bytes,
+  Element pixelDataFromBytes(BytesDicom bytes,
           [TransferSyntax ts, VFFragmentList _]) {
     switch (bytes.vrIndex) {
       case kOBIndex:
