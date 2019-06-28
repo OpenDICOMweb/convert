@@ -93,20 +93,21 @@ abstract class SubReader {
 
   /// Creates an Item.
   Item makeItem(Dataset parent,
-      [SQ sequence, Map<int, Element> eMap, BytesDicom bd]);
+      [SQ sequence, Map<int, Element> eMap, BytesElement bd]);
 
-  /// Creates an Element from [BytesDicom].
-  Element fromBytes(BytesDicom bytes, Dataset ds, {bool isEvr});
+  /// Creates an Element from [BytesElement].
+  Element fromBytes(BytesElement bytes, Dataset ds, {bool isEvr});
 
-  /// Creates an Element from [BytesDicom].
-  Element maybeUndefinedFromBytes(BytesDicom bytes, Dataset ds);
+  /// Creates an Element from [BytesElement].
+  Element maybeUndefinedFromBytes(BytesElement bytes, Dataset ds);
 
-  /// Creates an Element from [BytesDicom].
-  Element pixelDataFromBytes(BytesDicom bytes,
+  /// Creates an Element from [BytesElement].
+  Element pixelDataFromBytes(BytesElement bytes,
       [TransferSyntax ts, VFFragmentList vf]);
 
   /// Create an SQ Element.
-  Element sqFromBytes(Dataset parent, [Iterable<Item> items, BytesDicom bytes]);
+  Element sqFromBytes(Dataset parent,
+      [Iterable<Item> items, BytesElement bytes]);
 
   /// Returns a new [Element].
   // Note: Typically this may or may not be implemented.
@@ -120,7 +121,7 @@ abstract class SubReader {
 
   /// Creates a new Sequence ([SQ]) [Element].
   //  Designed to be overridden in TagElement.
-  SQ sqFromTag(Dataset parent, Tag tag, Iterable items, [BytesDicom bytes]) =>
+  SQ sqFromTag(Dataset parent, Tag tag, Iterable items, [BytesElement bytes]) =>
       unsupportedError();
 
   // **** Interface for Logging
@@ -240,7 +241,7 @@ abstract class SubReader {
     while (_rb.rIndex < dsEnd) _readDataset(ds);
 
     if (vlf.isOdd) {
-      final c = _rb.getUint8();
+      final c = _rb.bytes.getUint8(rb.rIndex);
       final s = String.fromCharCode(c);
       error('Odd length Dataset: $vlf c= $c 0x${hex(c)} c: "$s"');
     }
@@ -293,7 +294,7 @@ abstract class SubReader {
   /// delimiter is found the _read index_ is advanced to the end of
   /// the delimiter field (8 bytes); otherwise, readIndex does not change.
   bool _checkForDelimiter(int target) {
-    final delimiter = _rb.getCode(_rb.rIndex);
+    final delimiter = _rb.bytes.getCode(_rb.rIndex);
     if (target == delimiter) {
       _rb.rSkip(4);
       final length = _rb.readUint32();
@@ -310,7 +311,7 @@ abstract class SubReader {
     if (vlf.isOdd && vlf != kUndefinedLength) error('Odd vlf: $vlf');
 
     // Read but don't advance index
-    final next = _rb.getCode(start);
+    final next = _rb.bytes.getCode(start);
 
     if (vrIndex == kSQIndex) {
       return _readSequence(code, start, vrIndex, vfOffset, vlf);
@@ -368,7 +369,7 @@ abstract class SubReader {
     return fromBytes(dBytes, cds, isEvr: isEvr);
   }
 
-  BytesDicom _makeDicomStringBytes(int start, int end, int vfOffset) {
+  BytesElement _makeDicomStringBytes(int start, int end, int vfOffset) {
     var offset = end;
     if ((end - start) > vfOffset) {
       assert(end.isEven);
@@ -380,19 +381,20 @@ abstract class SubReader {
     return _makeBytesDicom(start, offset, vfOffset);
   }
 
-  BytesDicom _makeBytesDicom(int start, int end, int vfOffset) => (!isEvr)
+  BytesElement _makeBytesDicom(int start, int end, int vfOffset) => (!isEvr)
       ? BytesIvr.view(_rb.bytes, start, end)
       : (vfOffset == 8)
-          ? BytesLEShortEvr.view(_rb.bytes, start, end, endian)
-          : BytesEvrLongBytes.view(_rb.bytes, start, end, endian);
+          ? BytesLEShortEvr.view(_rb.bytes, start, end)
+          : BytesLELongEvr.view(_rb.bytes, start, end);
 
   /// Returns
-  BytesDicom _makeLongBytesDicom(int start, [int end]) {
+  BytesElement _makeLongBytesDicom(int start, [int end]) {
     end ??= _rb.rIndex;
     return (!isEvr)
         ? BytesIvr.view(_rb.bytes, start, end)
         : BytesEvrLong.view(_rb.bytes, start, end, endian);
   }
+
   bool _afterPixelData = false;
 
   /// Returns a new Pixel Data [Element].
@@ -520,7 +522,7 @@ abstract class SubReader {
     }
     final dBytes = _makeLongBytesDicom(start, _rb.rIndex - 8);
     print('dBytes: $dBytes');
-    final e =  sqFromBytes(cds, items, dBytes);
+    final e = sqFromBytes(cds, items, dBytes);
     print('e: $e');
     return e;
   }
@@ -857,9 +859,9 @@ abstract class IvrSubReader extends SubReader {
   @override
   bool get isEvr => false;
 
-  /// The [BytesDicom] being read by _this_.
+  /// The [BytesElement] being read by _this_.
   @override
-  BytesDicom get bytes => _rb.bytes;
+  BytesElement get bytes => _rb.bytes;
 
   void readRootDataset(int fmiEnd) {
     assert(fmiEnd == _rb.rIndex, 'fmiEnd: $fmiEnd != rb.index: ${_rb.rIndex}');

@@ -46,13 +46,13 @@ abstract class Writer {
       bytes = evrSubWriter.writeRootDataset(fmiEnd, ts);
       if (doLogging)
         log
-          ..debug('${bytes.dsLength} bytes written')
+          ..debug('${bytes.length} bytes written')
           ..debug('${evrSubWriter.count} Evr Elements written');
     } else {
       bytes = ivrSubWriter.writeRootDataset(fmiEnd, ts);
       if (doLogging)
         log
-          ..debug('${bytes.dsLength} bytes writen')
+          ..debug('${bytes.length} bytes writen')
           ..debug('${evrSubWriter.count} Evr Elements written')
           ..debug('${ivrSubWriter.count} Ivr Elements written');
     }

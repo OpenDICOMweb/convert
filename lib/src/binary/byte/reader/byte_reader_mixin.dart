@@ -18,20 +18,20 @@ mixin ByteReaderMixin {
   DicomReadBuffer get rb;
 
   RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
-          BytesDicom bytes, int fmiEnd) =>
+          BytesElement bytes, int fmiEnd) =>
       ByteRootDataset(fmi, eMap, path, bytes, fmiEnd);
 
   Item makeItem(Dataset parent,
-          [SQ sequence, Map<int, Element> eMap, BytesDicom bytes]) =>
+          [SQ sequence, Map<int, Element> eMap, BytesElement bytes]) =>
       ByteItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
 
-  Element fromBytes(BytesDicom bytes, Dataset ds, {bool isEvr}) =>
-      ByteElement.fromBytes(bytes, ds, isEvr: isEvr);
+  Element fromBytes(BytesElement bytes, Dataset ds, {bool isEvr}) =>
+      BytesElement.fromBytes(bytes, ds, isEvr: isEvr);
 
-  Element maybeUndefinedFromBytes(BytesDicom bytes, Dataset ds) =>
-      ByteElement.makeMaybeUndefinedFromBytes(bytes, ds);
+  Element maybeUndefinedFromBytes(BytesElement bytes, Dataset ds) =>
+      BytesElement.makeMaybeUndefinedFromBytes(bytes, ds);
 
-  Element pixelDataFromBytes(BytesDicom bytes,
+  Element pixelDataFromBytes(BytesElement bytes,
       [TransferSyntax ts, VFFragmentList fragments]) {
     switch (bytes.vrIndex) {
       case kOBIndex:
@@ -46,9 +46,9 @@ mixin ByteReaderMixin {
   }
 
   Element sqFromBytes(Dataset parent,
-          [Iterable<Item> items, BytesDicom bytes]) =>
+          [Iterable<Item> items, BytesElement bytes]) =>
       SQbytes.fromBytes(parent, items, bytes);
 
   Element fromValues<V>(int code, int vrIndex, List<V> vList) =>
-      ByteElement.fromValues(code, vrIndex, vList, isEvr: true, ds: cds);
+      BytesElement.fromValues(code, vrIndex, vList, isEvr: true, ds: cds);
 }

@@ -18,25 +18,25 @@ mixin TagReaderMixin {
   DicomReadBuffer get rb;
 
   RootDataset makeRootDataset(FmiMap fmi, Map<int, Element> eMap, String path,
-          BytesDicom bytes, int fmiEnd) =>
+          BytesElement bytes, int fmiEnd) =>
       TagRootDataset(fmi, eMap, path, bytes, fmiEnd);
 
   Item makeItem(Dataset parent,
-          [SQ sequence, Map<int, Element> eMap, BytesDicom bytes]) =>
+          [SQ sequence, Map<int, Element> eMap, BytesElement bytes]) =>
       TagItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
 
-  Element fromBytes(BytesDicom bytes, Dataset ds, {bool isEvr}) =>
+  Element fromBytes(BytesElement bytes, Dataset ds, {bool isEvr}) =>
       TagElement.fromBytes(bytes, ds, isEvr: isEvr);
 
-  Element maybeUndefinedFromBytes(BytesDicom bytes, Dataset ds,
+  Element maybeUndefinedFromBytes(BytesElement bytes, Dataset ds,
           [TransferSyntax ts]) =>
       TagElement.maybeUndefinedFromBytes(bytes, ds);
 
   Element sqFromBytes(Dataset parent,
-          [Iterable<Item> items, BytesDicom bytes]) =>
+          [Iterable<Item> items, BytesElement bytes]) =>
       SQtag(parent, Tag.lookup(bytes.code), items);
 
-  Element pixelDataFromBytes(BytesDicom bytes,
+  Element pixelDataFromBytes(BytesElement bytes,
           [TransferSyntax ts, VFFragmentList _]) {
     switch (bytes.vrIndex) {
       case kOBIndex:

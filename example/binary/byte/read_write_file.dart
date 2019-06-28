@@ -8,7 +8,6 @@
 //
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:converter/converter.dart';
 import 'package:core/server.dart';
@@ -50,7 +49,6 @@ Future<void> main() async {
     ..info('| ${outBytes.asUint8List(132, 32)}')
     ..info('| Done');
 
-  outBytes.endian = Endian.little;
   final rds1 = ByteReader.readBytes(outBytes, doLogging: true);
   if (rds1 == null) {
     log.warn('Invalid DICOM file: $outPath');

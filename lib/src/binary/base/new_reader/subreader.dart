@@ -240,7 +240,7 @@ abstract class SubReader {
   /// delimiter is found the _read index_ is advanced to the end
   /// of the delimiter field (8 bytes); otherwise, readIndex does not change.
   bool _checkForDelimiter(int target) {
-    final delimiter = rb.getUint32();
+    final delimiter = rb.bytes.getUint32(rb.rIndex);
     if (target == delimiter) {
       rb.rSkip(4);
       final length = rb.readUint32();
@@ -258,7 +258,7 @@ abstract class SubReader {
     if (vlf.isOdd && vlf != kUndefinedLength)
       log.error('Odd vlf: $vlf');
     // Read but don't advance index
-    final delimiter = rb.getUint32();
+    final delimiter = rb.bytes.getUint32(rb.rIndex);
 
     if (vrIndex == kSQIndex) {
       return _readSequence(code, start, vrIndex, vfOffset, vlf);
@@ -398,7 +398,7 @@ abstract class SubReader {
       int code, int start, int vrIndex, int vlf) {
     assert(vlf == kUndefinedLength);
     assert(isMaybeUndefinedLengthVR(vrIndex));
-    final delimiter = rb.getUint32();
+    final delimiter = rb.bytes.getUint32(rb.rIndex);
     if (delimiter == kItem32BitLE) {
       return _readPixelDataFragments(code, start, vrIndex, vlf);
     } else if (delimiter == kSequenceDelimitationItem32BitLE) {

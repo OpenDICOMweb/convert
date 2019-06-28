@@ -44,7 +44,7 @@ class TagReader extends Reader {
   factory TagReader.fromFile(File f,
       {DecodingParameters dParams = DecodingParameters.kNoChange,
       bool doLogging = false}) {
-    final Uint8List bList = f.readAsBytesSync();
+    final bList = f.readAsBytesSync();
     final bytes = Bytes.typedDataView(bList);
     return TagReader.fromBytes(bytes, dParams: dParams, doLogging: doLogging);
   }
@@ -88,7 +88,7 @@ class TagReader extends Reader {
       DecodingParameters dParams = DecodingParameters.kNoChange,
       bool doLogging = false}) {
     checkFile(file);
-    final Uint8List td = file.readAsBytesSync();
+    final td = file.readAsBytesSync();
     return TagReader.readTypedData(td,
         endian: endian, dParams: dParams, doLogging: doLogging);
   }
