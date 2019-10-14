@@ -26,7 +26,7 @@ mixin ByteReaderMixin {
       ByteItem(parent, sequence, eMap ?? <int, Element>{}, bytes);
 
   Element fromBytes(BytesElement bytes, Dataset ds, {bool isEvr}) =>
-      BytesElement.fromBytes(bytes, ds, isEvr: isEvr);
+      ByteElement.fromBytes(bytes, ds, isEvr: isEvr);
 
   Element maybeUndefinedFromBytes(BytesElement bytes, Dataset ds) =>
       BytesElement.makeMaybeUndefinedFromBytes(bytes, ds);
