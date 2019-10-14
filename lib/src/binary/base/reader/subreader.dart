@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:bytes_dicom/bytes_dicom.dart';
+import 'package:constants/constants.dart';
 import 'package:core/core.dart';
 import 'package:core/vf_fragments.dart';
 

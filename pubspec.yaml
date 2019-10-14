@@ -13,6 +13,9 @@ dependencies:
     path: C:/odw/sdk/bytes
   bytes_dicom:
     path: C:/odw/sdk/bytes_dicom
+  constants:
+    path: ../../constants
+    version: ^0.7.6
   core:
     path: C:/odw/sdk/core
     version: ^0.7.6

@@ -280,7 +280,7 @@ abstract class SubReader {
       rb.rSkip(4);
       final items = <Item>[_makeEmptyItem(cds)];
       return makeSequenceFromCode(
-          code, cds, items, vfOffset, kUndefinedLength, Bytes.kEmptyBytes);
+          code, cds, items, vfOffset, kUndefinedLength, Bytes.Bytes.kEmptyBytes);
     } else if (vlf == kUndefinedLength) {
       return _readLongUndefinedLength(code, start, vrIndex, vfOffset, vlf);
     } else {

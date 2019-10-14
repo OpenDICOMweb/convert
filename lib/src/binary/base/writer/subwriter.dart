@@ -9,6 +9,7 @@
 import 'dart:typed_data';
 
 import 'package:bytes_dicom/bytes_dicom.dart';
+import 'package:constants/constants.dart';
 import 'package:core/core.dart';
 
 import 'package:converter/src/binary/base/constants.dart';
@@ -36,7 +37,7 @@ abstract class SubWriter {
   final TransferSyntax outputTS;
 
   /// The [DicomWriteBuffer] currently being written.
-  DicomWriteBuffer _wb;
+  final DicomWriteBuffer _wb;
 
   /// Creates a new binary [SubWriter]
   SubWriter(this.cds, this.eParams, this.outputTS, int length)
@@ -684,7 +685,7 @@ mixin FmiMixin {
   /// beginning of the encoding.
   bool _writePreambleAndPrefix(RootDataset rds, {bool cleanPreamble = true}) {
     if (rds is! RootDataset) log.error('Not rds');
-    final v = (rds.prefix == kEmptyBytes || eParams.doCleanPreamble)
+    final v = (rds.prefix == Bytes.kEmptyBytes || eParams.doCleanPreamble)
         ? _writeEmptyPreambleAndPrefix()
         : _writeExistingPreambleAndPrefix();
     if (doLogging) log.info('|@W${_wb.wIndex} Preamble and Prefix written');
@@ -693,7 +694,7 @@ mixin FmiMixin {
 
   /// Writes a new Open DICOMweb FMI.
   bool _writeExistingPreambleAndPrefix() {
-    assert(rds.prefix != kEmptyBytes && !eParams.doCleanPreamble);
+    assert(rds.prefix != Bytes.kEmptyBytes && !eParams.doCleanPreamble);
     final preamble = rds.preamble;
     for (var i = 0; i < 128; i++) _wb.writeUint8(preamble.getUint8(i));
     return __writePrefix();
